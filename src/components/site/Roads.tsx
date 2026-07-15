@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { roadPath, fencePath } from "@/lib/site-layout";
+import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
 function buildRibbon(points: [number, number][], width: number, y: number) {
   const geom = new THREE.BufferGeometry();
@@ -36,19 +37,33 @@ function buildRibbon(points: [number, number][], width: number, y: number) {
 }
 
 export function Roads() {
+  const tex = getSiteTextures();
+  const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 40, 2), [tex]);
+  const asphaltRough = useMemo(() => setRepeat(tex.asphaltRough, 40, 2), [tex]);
+
   const roadGeom = useMemo(() => buildRibbon(roadPath, 6, 0.08), []);
-  const fenceGeom = useMemo(() => {
-    // Build fence as a thin vertical strip (extrude in Y later using two ribbons)
-    return buildRibbon(fencePath, 0.3, 1.2);
-  }, []);
+  const fenceGeom = useMemo(() => buildRibbon(fencePath, 0.3, 1.2), []);
 
   return (
     <group>
       <mesh geometry={roadGeom} receiveShadow>
-        <meshStandardMaterial color="#4a4a48" roughness={0.9} side={THREE.DoubleSide} />
+        <meshStandardMaterial
+          map={asphaltMap}
+          roughnessMap={asphaltRough}
+          color="#3a3a3c"
+          roughness={0.95}
+          side={THREE.DoubleSide}
+        />
       </mesh>
       <mesh geometry={fenceGeom}>
-        <meshStandardMaterial color="#7a7a75" roughness={0.8} side={THREE.DoubleSide} transparent opacity={0.7} />
+        <meshStandardMaterial
+          color="#8a8880"
+          metalness={0.6}
+          roughness={0.5}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0.75}
+        />
       </mesh>
     </group>
   );

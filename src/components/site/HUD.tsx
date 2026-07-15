@@ -1,11 +1,16 @@
 import type { ControlMode } from "./Controls";
+import type { TimeOfDay } from "./Lighting";
 
 export function HUD({
   mode,
   onModeChange,
+  time,
+  onTimeChange,
 }: {
   mode: ControlMode;
   onModeChange: (m: ControlMode) => void;
+  time: TimeOfDay;
+  onTimeChange: (t: TimeOfDay) => void;
 }) {
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 text-sm">
@@ -16,27 +21,51 @@ export function HUD({
             Approximated 3D reconstruction from overhead imagery
           </p>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => onModeChange("fly")}
-            className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-              mode === "fly"
-                ? "bg-white text-black"
-                : "bg-black/60 text-white hover:bg-black/80"
-            }`}
-          >
-            Free-fly
-          </button>
-          <button
-            onClick={() => onModeChange("fps")}
-            className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-              mode === "fps"
-                ? "bg-white text-black"
-                : "bg-black/60 text-white hover:bg-black/80"
-            }`}
-          >
-            First-person
-          </button>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex gap-2">
+            <button
+              onClick={() => onModeChange("fly")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                mode === "fly"
+                  ? "bg-white text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
+              }`}
+            >
+              Free-fly
+            </button>
+            <button
+              onClick={() => onModeChange("fps")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                mode === "fps"
+                  ? "bg-white text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
+              }`}
+            >
+              First-person
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => onTimeChange("day")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                time === "day"
+                  ? "bg-amber-300 text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
+              }`}
+            >
+              ☀ Day
+            </button>
+            <button
+              onClick={() => onTimeChange("night")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                time === "night"
+                  ? "bg-indigo-300 text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
+              }`}
+            >
+              ☾ Night
+            </button>
+          </div>
         </div>
       </div>
 
