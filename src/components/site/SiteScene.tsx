@@ -1,6 +1,6 @@
 import { Suspense, useState } from "react";
 import { Canvas } from "@react-three/fiber";
-import { BakeShadows } from "@react-three/drei";
+
 import * as THREE from "three";
 import { Terrain } from "./Terrain";
 import { Structures } from "./Structures";
@@ -38,7 +38,7 @@ export function SiteScene() {
           <Roads />
           <Structures />
           <fog attach="fog" args={[fogColor, 250, 800]} />
-          <BakeShadows />
+          
         </Suspense>
 
         <Controls mode={mode} />
