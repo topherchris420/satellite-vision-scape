@@ -1,9 +1,19 @@
+import { useMemo } from "react";
 import { domes, tanks, buildings } from "@/lib/site-layout";
+import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
 export function Structures() {
+  const tex = getSiteTextures();
+  const domeMap = useMemo(() => setRepeat(tex.domeColor, 2, 2), [tex]);
+  const metalMap = useMemo(() => setRepeat(tex.metalColor, 2, 4), [tex]);
+  const metalRough = useMemo(() => setRepeat(tex.metalRough, 2, 4), [tex]);
+  const concreteMap = useMemo(() => setRepeat(tex.concreteColor, 3, 3), [tex]);
+  const concreteRough = useMemo(() => setRepeat(tex.concreteRough, 3, 3), [tex]);
+  const gravelMap = useMemo(() => setRepeat(tex.gravelColor, 4, 4), [tex]);
+  const gravelRough = useMemo(() => setRepeat(tex.gravelRough, 4, 4), [tex]);
+
   return (
     <group>
-      {/* Domes (hemispheres) */}
       <group name="domes">
         {domes.map((d, i) => (
           <mesh
@@ -12,11 +22,16 @@ export function Structures() {
             castShadow
             receiveShadow
           >
-            <sphereGeometry args={[d.radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2]} />
-            <meshStandardMaterial color="#f2efe8" roughness={0.6} metalness={0.05} />
+            <sphereGeometry args={[d.radius, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} />
+            <meshStandardMaterial
+              map={domeMap}
+              color="#f2efe8"
+              roughness={0.35}
+              metalness={0.08}
+              envMapIntensity={0.8}
+            />
           </mesh>
         ))}
-        {/* Base pads */}
         {domes.map((d, i) => (
           <mesh
             key={`pad-${i}`}
@@ -24,28 +39,34 @@ export function Structures() {
             rotation={[-Math.PI / 2, 0, 0]}
             receiveShadow
           >
-            <circleGeometry args={[d.radius * 1.15, 24]} />
-            <meshStandardMaterial color="#9a9285" roughness={0.9} />
+            <circleGeometry args={[d.radius * 1.15, 32]} />
+            <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
           </mesh>
         ))}
       </group>
 
-      {/* Cylindrical tanks */}
       <group name="tanks">
         {tanks.map((t, i) => (
-          <mesh
-            key={`tank-${i}`}
-            position={[t.pos[0], t.height / 2, t.pos[1]]}
-            castShadow
-            receiveShadow
-          >
-            <cylinderGeometry args={[t.radius, t.radius, t.height, 24]} />
-            <meshStandardMaterial color="#dcd7cc" roughness={0.5} metalness={0.2} />
-          </mesh>
+          <group key={`tank-${i}`} position={[t.pos[0], 0, t.pos[1]]}>
+            <mesh position={[0, t.height / 2, 0]} castShadow receiveShadow>
+              <cylinderGeometry args={[t.radius, t.radius, t.height, 32]} />
+              <meshStandardMaterial
+                map={metalMap}
+                roughnessMap={metalRough}
+                color="#dcd7cc"
+                metalness={0.55}
+                roughness={0.35}
+                envMapIntensity={0.9}
+              />
+            </mesh>
+            <mesh position={[0, t.height + 0.02, 0]} castShadow>
+              <cylinderGeometry args={[t.radius, t.radius, 0.15, 32]} />
+              <meshStandardMaterial color="#9a938a" metalness={0.4} roughness={0.6} />
+            </mesh>
+          </group>
         ))}
       </group>
 
-      {/* Rectangular buildings */}
       <group name="buildings">
         {buildings.map((b, i) => (
           <group
@@ -55,12 +76,22 @@ export function Structures() {
           >
             <mesh position={[0, b.height / 2, 0]} castShadow receiveShadow>
               <boxGeometry args={[b.size[0], b.height, b.size[1]]} />
-              <meshStandardMaterial color={b.color ?? "#cfc9bd"} roughness={0.85} />
+              <meshStandardMaterial
+                map={concreteMap}
+                roughnessMap={concreteRough}
+                color={b.color ?? "#cfc9bd"}
+                roughness={0.85}
+              />
             </mesh>
-            {/* Roof cap slightly darker */}
-            <mesh position={[0, b.height + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+            <mesh position={[0, b.height + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[b.size[0], b.size[1]]} />
-              <meshStandardMaterial color="#8f8a7d" roughness={0.9} />
+              <meshStandardMaterial
+                map={metalMap}
+                roughnessMap={metalRough}
+                color="#6f6a5e"
+                metalness={0.3}
+                roughness={0.75}
+              />
             </mesh>
           </group>
         ))}
