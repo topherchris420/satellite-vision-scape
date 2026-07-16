@@ -16,6 +16,7 @@ const SHORTCUTS: [string, string][] = [
   ["1 / 2 / 3", "Free-fly · First-person · Cinematic"],
   ["W A S D", "Move"],
   ["Q / E", "Down / up (free-fly)"],
+  ["[ / ]", "Lens FOV (free-fly)"],
   ["Shift", "Boost / run"],
   ["N", "Toggle day / night"],
   ["Click", "Inspect a structure"],
@@ -96,7 +97,7 @@ export function HUD({
           {infoOpen ? (
             <div className="max-w-xs rounded-lg bg-black/60 px-4 py-3 text-white backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
-                <h1 className="text-base font-semibold">Industrial Site — Digital Twin</h1>
+                <h1 className="text-base font-semibold">OVERWATCH · Site K-7 “Ironvale”</h1>
                 <button
                   onClick={() => setInfoOpen(false)}
                   aria-label="Collapse info panel"
@@ -108,8 +109,9 @@ export function HUD({
                 </button>
               </div>
               <p className="mt-1 text-xs text-white/70">
-                Explorable 3D reconstruction from overhead imagery.{" "}
-                {isMobile ? "Tap any structure to inspect it." : "Click any structure to inspect it."}
+                Satellite intel, rebuilt in living 3D — every tank, radome and rooftop
+                reconstructed from orbital passes. Drop below the clouds and{" "}
+                {isMobile ? "tap any structure to pull its dossier." : "click any structure to pull its dossier."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/60">
                 <span>{objectSummary.spheres} spheres</span>

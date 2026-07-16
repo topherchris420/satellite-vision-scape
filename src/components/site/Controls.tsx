@@ -45,6 +45,7 @@ const BODY = 0.6;
 function FpsMover() {
   const { camera } = useThree();
   const keys = useKeys();
+  const vel = useRef(new THREE.Vector3());
 
   useEffect(() => {
     camera.position.set(-6, terrainHeight(-6, 78) + EYE, 78);
@@ -52,7 +53,8 @@ function FpsMover() {
   }, [camera]);
 
   useFrame((_, delta) => {
-    const speed = (keys.current["ShiftLeft"] ? 20 : 8) * Math.min(delta, 0.05);
+    const dt = Math.min(delta, 0.05);
+    const max = keys.current["ShiftLeft"] ? 20 : 8;
     const dir = new THREE.Vector3();
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -64,11 +66,16 @@ function FpsMover() {
     if (keys.current["KeyS"]) dir.sub(forward);
     if (keys.current["KeyD"]) dir.add(right);
     if (keys.current["KeyA"]) dir.sub(right);
+    if (dir.lengthSq() > 0) dir.normalize().multiplyScalar(max);
 
-    if (dir.lengthSq() > 0) {
-      dir.normalize().multiplyScalar(speed);
-      const nx = camera.position.x + dir.x;
-      const nz = camera.position.z + dir.z;
+    // Exponential approach toward the desired velocity: quick to accelerate,
+    // a touch of glide when the keys release — reads as body inertia.
+    const k = dir.lengthSq() > 0 ? 10 : 7;
+    vel.current.lerp(dir, 1 - Math.exp(-k * dt));
+
+    if (vel.current.lengthSq() > 1e-6) {
+      const nx = camera.position.x + vel.current.x * dt;
+      const nz = camera.position.z + vel.current.z * dt;
       const [rx, rz] = resolveCollision(nx, nz, BODY);
       camera.position.x = rx;
       camera.position.z = rz;
@@ -126,9 +133,11 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
     return () => controls.removeEventListener("start", cancel);
   }, [controls]);
 
+  const vel = useRef(new THREE.Vector3());
+
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    const speed = (keys.current["ShiftLeft"] ? 90 : 35) * dt;
+    const max = keys.current["ShiftLeft"] ? 90 : 35;
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
@@ -143,13 +152,35 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
       keys.current["Space"];
     if (moving) anim.current = null;
 
-    if (keys.current["KeyW"]) camera.position.addScaledVector(forward, speed);
-    if (keys.current["KeyS"]) camera.position.addScaledVector(forward, -speed);
-    if (keys.current["KeyD"]) camera.position.addScaledVector(right, speed);
-    if (keys.current["KeyA"]) camera.position.addScaledVector(right, -speed);
-    if (keys.current["KeyE"] || keys.current["Space"]) camera.position.y += speed;
-    if (keys.current["KeyQ"]) camera.position.y -= speed;
+    // Desired velocity from input, then an exponential approach toward it —
+    // the camera banks into motion and glides to a stop instead of snapping.
+    const want = new THREE.Vector3();
+    if (keys.current["KeyW"]) want.add(forward);
+    if (keys.current["KeyS"]) want.sub(forward);
+    if (keys.current["KeyD"]) want.add(right);
+    if (keys.current["KeyA"]) want.sub(right);
+    if (keys.current["KeyE"] || keys.current["Space"]) want.y += 1;
+    if (keys.current["KeyQ"]) want.y -= 1;
+    if (want.lengthSq() > 0) want.normalize().multiplyScalar(max);
+
+    const k = want.lengthSq() > 0 ? 8 : 5;
+    vel.current.lerp(want, 1 - Math.exp(-k * dt));
+    if (vel.current.lengthSq() > 1e-6) {
+      camera.position.addScaledVector(vel.current, dt);
+    }
     camera.position.y = Math.max(3, camera.position.y);
+
+    // Field-of-view trim on [ / ] — tighter for a sat-lens look, wider for
+    // an overview sweep.
+    if (keys.current["BracketLeft"] || keys.current["BracketRight"]) {
+      const persp = camera as THREE.PerspectiveCamera;
+      persp.fov = THREE.MathUtils.clamp(
+        persp.fov + (keys.current["BracketRight"] ? 1 : -1) * 30 * dt,
+        28,
+        85
+      );
+      persp.updateProjectionMatrix();
+    }
 
     if (anim.current && controls) {
       camera.position.lerp(anim.current.pos, 0.06);
@@ -215,12 +246,26 @@ function CinematicMover() {
   const tmpPos = useRef(new THREE.Vector3());
   const tmpLook = useRef(new THREE.Vector3());
 
-  useFrame((_, delta) => {
+  // The automated pass slowly breathes the lens; restore the default FOV
+  // when the user takes back control.
+  useEffect(() => {
+    const persp = camera as THREE.PerspectiveCamera;
+    const prevFov = persp.fov;
+    return () => {
+      persp.fov = prevFov;
+      persp.updateProjectionMatrix();
+    };
+  }, [camera]);
+
+  useFrame(({ clock }, delta) => {
     t.current = (t.current + delta * 0.012) % 1;
     CINE_PATH.getPointAt(t.current, tmpPos.current);
     CINE_LOOK.getPointAt(t.current, tmpLook.current);
     camera.position.lerp(tmpPos.current, 0.06);
     camera.lookAt(tmpLook.current);
+    const persp = camera as THREE.PerspectiveCamera;
+    persp.fov = 52 + Math.sin(clock.elapsedTime * 0.12) * 5;
+    persp.updateProjectionMatrix();
   });
 
   return null;
