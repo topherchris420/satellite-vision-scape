@@ -1,25 +1,27 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { roadPath, fencePath } from "@/lib/site-layout";
+import { roadPath, interiorRoads, dirtTracks } from "@/lib/site-layout";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
-function buildRibbon(points: [number, number][], width: number, y: number) {
+function buildRibbon(points: [number, number][], width: number, y: number, closed: boolean) {
   const geom = new THREE.BufferGeometry();
   const verts: number[] = [];
   const uvs: number[] = [];
   const idx: number[] = [];
 
-  const closed = true;
   const n = points.length;
+  let dist = 0;
   for (let i = 0; i < n; i++) {
-    const prev = points[(i - 1 + n) % n];
+    const prev = points[closed ? (i - 1 + n) % n : Math.max(0, i - 1)];
     const curr = points[i];
-    const next = points[(i + 1) % n];
+    const next = points[closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
     const t = new THREE.Vector2(next[0] - prev[0], next[1] - prev[1]).normalize();
     const normal = new THREE.Vector2(-t.y, t.x).multiplyScalar(width / 2);
     verts.push(curr[0] + normal.x, y, curr[1] + normal.y);
     verts.push(curr[0] - normal.x, y, curr[1] - normal.y);
-    uvs.push(0, i / n, 1, i / n);
+    if (i > 0) dist += Math.hypot(curr[0] - points[i - 1][0], curr[1] - points[i - 1][1]);
+    const v = dist / width;
+    uvs.push(0, v, 1, v);
   }
   const segs = closed ? n : n - 1;
   for (let i = 0; i < segs; i++) {
@@ -38,33 +40,60 @@ function buildRibbon(points: [number, number][], width: number, y: number) {
 
 export function Roads() {
   const tex = getSiteTextures();
-  const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 40, 2), [tex]);
-  const asphaltRough = useMemo(() => setRepeat(tex.asphaltRough, 40, 2), [tex]);
+  const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 2, 20), [tex]);
+  const asphaltRough = useMemo(() => setRepeat(tex.asphaltRough, 2, 20), [tex]);
+  const asphaltNormal = useMemo(() => setRepeat(tex.asphaltNormal, 2, 20), [tex]);
+  const dirtMap = useMemo(() => setRepeat(tex.dirtColor, 2, 24), [tex]);
+  const dirtRough = useMemo(() => setRepeat(tex.dirtRough, 2, 24), [tex]);
 
-  const roadGeom = useMemo(() => buildRibbon(roadPath, 6, 0.08), []);
-  const fenceGeom = useMemo(() => buildRibbon(fencePath, 0.3, 1.2), []);
+  const roadGeom = useMemo(() => buildRibbon(roadPath, 7, 0.09, true), []);
+  const interiorGeoms = useMemo(
+    () => interiorRoads.map((p) => buildRibbon(p, 5, 0.085, false)),
+    []
+  );
+  const dirtGeoms = useMemo(
+    () => dirtTracks.map((p) => buildRibbon(p, 4, 0.07, false)),
+    []
+  );
 
   return (
-    <group>
+    <group name="roads">
+      {/* Main perimeter access loop */}
       <mesh geometry={roadGeom} receiveShadow>
         <meshStandardMaterial
           map={asphaltMap}
           roughnessMap={asphaltRough}
+          normalMap={asphaltNormal}
           color="#3a3a3c"
           roughness={0.95}
           side={THREE.DoubleSide}
         />
       </mesh>
-      <mesh geometry={fenceGeom}>
-        <meshStandardMaterial
-          color="#8a8880"
-          metalness={0.6}
-          roughness={0.5}
-          side={THREE.DoubleSide}
-          transparent
-          opacity={0.75}
-        />
-      </mesh>
+      {/* Interior connector roads */}
+      {interiorGeoms.map((g, i) => (
+        <mesh key={`int-${i}`} geometry={g} receiveShadow>
+          <meshStandardMaterial
+            map={asphaltMap}
+            roughnessMap={asphaltRough}
+            normalMap={asphaltNormal}
+            color="#42413f"
+            roughness={0.95}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
+      {/* Winding dirt tracks over the eastern hills */}
+      {dirtGeoms.map((g, i) => (
+        <mesh key={`dirt-${i}`} geometry={g} receiveShadow>
+          <meshStandardMaterial
+            map={dirtMap}
+            roughnessMap={dirtRough}
+            color="#b39a72"
+            roughness={1}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      ))}
     </group>
   );
 }

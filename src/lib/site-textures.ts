@@ -72,6 +72,91 @@ function makeTexture(opts: MakeOpts) {
   return tex;
 }
 
+// Normal map derived from the luminance of a color map treated as a height
+// field. Cheap way to give flat PBR surfaces real relief under lighting.
+function makeNormal(color: THREE.CanvasTexture, strength = 2) {
+  const src = color.image as HTMLCanvasElement;
+  const size = src.width;
+  const read = document.createElement("canvas");
+  read.width = read.height = size;
+  const rctx = read.getContext("2d")!;
+  rctx.drawImage(src, 0, 0);
+  const data = rctx.getImageData(0, 0, size, size).data;
+  const lum = (x: number, y: number) => {
+    const xi = (x + size) % size;
+    const yi = (y + size) % size;
+    const i = (yi * size + xi) * 4;
+    return (data[i] + data[i + 1] + data[i + 2]) / (3 * 255);
+  };
+  const out = document.createElement("canvas");
+  out.width = out.height = size;
+  const octx = out.getContext("2d")!;
+  const img = octx.createImageData(size, size);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (lum(x - 1, y) - lum(x + 1, y)) * strength;
+      const dy = (lum(x, y - 1) - lum(x, y + 1)) * strength;
+      const nz = 1;
+      const len = Math.hypot(dx, dy, nz) || 1;
+      const idx = (y * size + x) * 4;
+      img.data[idx] = ((dx / len) * 0.5 + 0.5) * 255;
+      img.data[idx + 1] = ((dy / len) * 0.5 + 0.5) * 255;
+      img.data[idx + 2] = ((nz / len) * 0.5 + 0.5) * 255;
+      img.data[idx + 3] = 255;
+    }
+  }
+  octx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(out);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+// Painted-steel panel map: light shell with faint latitudinal seam banding,
+// used for the spherical gas tanks.
+function makePaintedSteel() {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#e9e6de";
+  ctx.fillRect(0, 0, size, size);
+  // subtle noise wash
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 12;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  ctx.putImageData(img, 0, 0);
+  // horizontal seam lines (panel plates)
+  ctx.strokeStyle = "rgba(120,118,110,0.35)";
+  ctx.lineWidth = 1.5;
+  for (let i = 1; i < 10; i++) {
+    const y = (i / 10) * size;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(size, y);
+    ctx.stroke();
+  }
+  // vertical seams, offset per band for a plate pattern
+  for (let b = 0; b < 10; b++) {
+    const off = (b % 2) * (size / 16);
+    for (let i = 0; i < 8; i++) {
+      const x = (i / 8) * size + off;
+      ctx.beginPath();
+      ctx.moveTo(x, (b / 10) * size);
+      ctx.lineTo(x, ((b + 1) / 10) * size);
+      ctx.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  return tex;
+}
+
 // Roughness map derived from luminance of a color map, inverted+biased
 function makeRoughness(color: THREE.CanvasTexture, invert = false, bias = 0.6) {
   const src = color.image as HTMLCanvasElement;
@@ -97,18 +182,24 @@ function makeRoughness(color: THREE.CanvasTexture, invert = false, bias = 0.6) {
 let cache: {
   dirtColor: THREE.Texture;
   dirtRough: THREE.Texture;
+  dirtNormal: THREE.Texture;
   grassColor: THREE.Texture;
   grassRough: THREE.Texture;
   vegColor: THREE.Texture;
   asphaltColor: THREE.Texture;
   asphaltRough: THREE.Texture;
+  asphaltNormal: THREE.Texture;
   concreteColor: THREE.Texture;
   concreteRough: THREE.Texture;
+  concreteNormal: THREE.Texture;
   metalColor: THREE.Texture;
   metalRough: THREE.Texture;
   domeColor: THREE.Texture;
+  steelColor: THREE.Texture;
+  steelNormal: THREE.Texture;
   gravelColor: THREE.Texture;
   gravelRough: THREE.Texture;
+  gravelNormal: THREE.Texture;
 } | null = null;
 
 export function getSiteTextures() {
@@ -138,22 +229,29 @@ export function getSiteTextures() {
   const gravelColor = makeTexture({
     base: [140, 130, 115], variation: [30, 28, 24], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
   });
+  const steelColor = makePaintedSteel();
 
   cache = {
     dirtColor,
     dirtRough: makeRoughness(dirtColor as THREE.CanvasTexture, true, 0.7),
+    dirtNormal: makeNormal(dirtColor as THREE.CanvasTexture, 2.5),
     grassColor,
     grassRough: makeRoughness(grassColor as THREE.CanvasTexture, false, 0.75),
     vegColor,
     asphaltColor,
     asphaltRough: makeRoughness(asphaltColor as THREE.CanvasTexture, true, 0.7),
+    asphaltNormal: makeNormal(asphaltColor as THREE.CanvasTexture, 1.5),
     concreteColor,
     concreteRough: makeRoughness(concreteColor as THREE.CanvasTexture, true, 0.65),
+    concreteNormal: makeNormal(concreteColor as THREE.CanvasTexture, 1.2),
     metalColor,
     metalRough: makeRoughness(metalColor as THREE.CanvasTexture, true, 0.3),
     domeColor,
+    steelColor,
+    steelNormal: makeNormal(steelColor as THREE.CanvasTexture, 1.0),
     gravelColor,
     gravelRough: makeRoughness(gravelColor as THREE.CanvasTexture, true, 0.85),
+    gravelNormal: makeNormal(gravelColor as THREE.CanvasTexture, 3),
   };
   return cache;
 }

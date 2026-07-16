@@ -4,6 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { Terrain } from "./Terrain";
 import { Structures } from "./Structures";
+import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
 import { Controls, type ControlMode } from "./Controls";
 import { Lighting, type TimeOfDay } from "./Lighting";
@@ -37,7 +38,8 @@ export function SiteScene() {
           <Terrain />
           <Roads />
           <Structures />
-          <fog attach="fog" args={[fogColor, 250, 800]} />
+          <SiteFeatures />
+          <fog attach="fog" args={[fogColor, 350, 1100]} />
           
         </Suspense>
 
