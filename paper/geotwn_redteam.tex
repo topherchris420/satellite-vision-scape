@@ -1,0 +1,758 @@
+%=============================================================================
+% Reconstructing the Unmappable
+% A reproducible red-team methodology for interactive digital-twin synthesis of
+% sensitive infrastructure from commodity tools and public imagery, validated on
+% the GeoTwn platform, with an integrated countermeasure design.
+%
+% Author: Christopher Woodyard, Vers3Dynamics
+%
+% Compiles with pdfLaTeX on Overleaf using the IEEEtran document class.
+% All figures are drawn with TikZ, so no external image files are required.
+%=============================================================================
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+% ---- packages -------------------------------------------------------------
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage[hidelinks]{hyperref}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,backgrounds}
+
+% ---- listing style (for the code excerpts) --------------------------------
+\definecolor{codegray}{gray}{0.95}
+\definecolor{codekw}{RGB}{0,0,180}
+\definecolor{codecomment}{RGB}{0,128,0}
+\definecolor{codestr}{RGB}{163,21,21}
+
+\lstdefinestyle{ts}{
+  backgroundcolor=\color{codegray},
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codekw}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codestr},
+  numbers=left, numberstyle=\tiny, numbersep=5pt,
+  breaklines=true, breakatwhitespace=true, showstringspaces=false,
+  frame=single, framesep=3pt, columns=fullflexible, keepspaces=true,
+  tabsize=2, captionpos=b, language=Java,
+  morekeywords={const,let,export,function,type,return,for,if,new,void,number,string,boolean,interface}
+}
+\lstset{style=ts}
+
+% ---- shared TikZ block style ---------------------------------------------
+\tikzset{
+  stage/.style={draw, rounded corners=2pt, align=center, minimum width=30mm,
+                minimum height=7mm, font=\scriptsize, fill=blue!5},
+  io/.style={draw, align=center, minimum width=30mm, minimum height=7mm,
+             font=\scriptsize\itshape, fill=gray!12},
+  flow/.style={-{Latex[length=2mm]}, thick}
+}
+
+\begin{document}
+
+\title{Reconstructing the Unmappable: A Reproducible Methodology\\
+for Interactive Digital-Twin Synthesis of Sensitive\\
+Infrastructure from Commodity Tools and Public Imagery}
+
+\author{\IEEEauthorblockN{Christopher Woodyard}
+\IEEEauthorblockA{\textit{Vers3Dynamics} --- Independent Security Research \& AI Red Teaming\\
+Artifact: \texttt{https://github.com/topherchris420/satellite-vision-scape} \quad
+Live: \texttt{https://geotwn.vercel.app/}}}
+
+\maketitle
+
+%=============================================================================
+\begin{abstract}
+Turning overhead imagery into a navigable, photoreal 3D model of a sensitive
+facility was, until recently, the province of national technical means:
+classified photogrammetry, analyst tradecraft, and non-commodity compute. We
+report a red-team study, conducted through the author's startup Vers3Dynamics,
+that measures whether this barrier still holds. Our contribution is not an
+application but a \emph{reproducible methodology}: a six-stage pipeline
+(reference tracing $\rightarrow$ metric coordinate mapping $\rightarrow$
+procedural terrain $\rightarrow$ parametric structure synthesis $\rightarrow$
+procedural texture synthesis $\rightarrow$ real-time multiview rendering) that
+produces an operationally useful interactive digital twin of a
+strategically significant installation using only publicly observable spatial
+information and off-the-shelf web technology. To evaluate feasibility we built
+\emph{GeoTwn}, an experimental platform that instantiates the pipeline for a
+fictionalized signals-intelligence (SIGINT) compound and deploys it as a
+static web application. GeoTwn comprises 41 parametrically modeled primary
+structures across 6 classes, 35 fully synthetic procedural textures, and three
+camera regimes (free-fly, first-person, cinematic), with \emph{zero} external
+image or 3D assets and a single non-synthetic input: one overhead reference.
+Contrary to our own expectations, no automated photogrammetry or neural
+reconstruction was required---manual tracing combined with procedural synthesis
+was sufficient to reach operationally useful fidelity. We characterize the
+artifact quantitatively, compare its capability envelope against Google Earth,
+CesiumJS, and manual imagery inspection, and argue that the principal barrier to
+reconstructing such facilities is no longer reconstruction \emph{technology} but
+access to public \emph{spatial information}. We close with a defense-in-depth
+countermeasure design---model-integrated facility-fingerprint guards, provenance
+watermarking, and geofenced generation, plus data-provider and policy
+controls---and a reproducibility appendix enabling independent verification.
+\end{abstract}
+
+\begin{IEEEkeywords}
+red teaming, geospatial intelligence, OSINT, digital twins, 3D reconstruction,
+procedural generation, AI safety, content provenance, critical infrastructure,
+responsible disclosure.
+\end{IEEEkeywords}
+
+%=============================================================================
+\section{Introduction}
+For most of the satellite era, a walkable 3D reconstruction of a sensitive
+facility required classified pipelines and compute that did not fit on a desk. We
+set out to test whether that barrier still exists. This paper reports a red-team
+study run through the author's startup, Vers3Dynamics, with a deliberately blunt
+research question: \emph{using only commodity software and publicly observable
+spatial information, how feasible is it for a single practitioner to produce an
+interactive, multiview digital twin of a strategically significant
+satellite-tracking / SIGINT installation and deploy it on the open web?}
+
+We answer the question by \emph{building} the capability and measuring it. Our
+central artifact---and the primary contribution---is a \emph{reproducible
+methodology}, a six-stage reconstruction pipeline (Fig.~\ref{fig:pipeline}) that
+transforms a single overhead reference into a navigable digital twin without any
+restricted input. To evaluate the methodology we developed an experimental
+platform, \emph{GeoTwn}\footnote{Artifact:
+\url{https://github.com/topherchris420/satellite-vision-scape}; live platform:
+\url{https://geotwn.vercel.app/}.}, which instantiates the pipeline for a
+fictionalized compound we call ``PINE VEIL,'' framed in-app as a country's
+``Area 51''---a stand-in for the class of real deep-desert signals-intelligence
+stations whose existence governments decline to confirm. Fictionalizing the
+target is an ethical choice, not a technical one: the methodology is
+target-agnostic, and it is the methodology, not any coordinate set, that
+constitutes the disclosure.
+
+Our most consequential empirical observation is negative. We expected to need
+automated photogrammetry, structure-from-motion, or a neural radiance field to
+reach useful fidelity. We needed none of them. \emph{Manual tracing combined with
+procedural synthesis was sufficient}, which means the cheapest possible method
+already clears the operational bar, and the more sophisticated methods are merely
+accelerants. This reframes the security problem: reconstruction is no longer gated
+by technology but by the availability of public spatial information, and that
+availability is expanding while the assembly cost of the tooling collapses toward
+zero.
+
+\textbf{Contributions.}
+\begin{itemize}
+\item \textbf{A reproducible methodology} (Section~\ref{sec:method}) for
+synthesizing operationally useful interactive digital twins of sensitive
+infrastructure from a single public overhead reference and commodity web
+technology, presented as a stage-by-stage pipeline defenders can recognize and
+interrupt.
+\item \textbf{An experimental validation platform, GeoTwn}
+(Section~\ref{sec:impl}), and a quantitative characterization of the artifact
+(Section~\ref{sec:eval}), including a capability comparison against Google Earth,
+CesiumJS, and manual imagery inspection.
+\item \textbf{A threat model} (Section~\ref{sec:threat}) that locates the risk in
+the \emph{ambient availability} of the pipeline and its AI-driven acceleration.
+\item \textbf{A defense-in-depth countermeasure design}
+(Section~\ref{sec:counter})---model-integrated facility-fingerprint guards,
+provenance watermarking, geofenced generation, data-provider controls, and policy
+norms---plus a reproducibility appendix (Section~\ref{sec:repro}).
+\end{itemize}
+
+%=============================================================================
+\section{Related Work}
+\label{sec:related}
+We situate the methodology against four bodies of work: 3D reconstruction,
+geospatial platforms and open data, content provenance, and GEOINT/OSINT
+practice.
+
+\subsection{Image-based and neural 3D reconstruction}
+Structure-from-motion (SfM) and multi-view stereo recover geometry from
+overlapping views \cite{sfm}, and neural methods---Neural Radiance Fields
+(NeRF)~\cite{nerf} and 3D Gaussian Splatting~\cite{gsplat}---synthesize photoreal
+novel views from sparse captures. These techniques define the ``high end'' of the
+reconstruction spectrum and require multiple viewpoints or dense imagery. Our
+finding is that they are \emph{not necessary}: a methodology built from manual
+tracing and procedural generation reaches operationally useful fidelity from a
+single overhead reference, which makes the neural techniques an upper bound on
+adversary capability rather than a prerequisite.
+
+\subsection{Geospatial platforms, digital twins, and open data}
+Interactive globe and digital-twin platforms such as Google Earth and
+CesiumJS~\cite{cesium} render 3D scenes, but only where a provider has modeled or
+supplied the tileset; sensitive sites are frequently omitted, degraded, or
+blurred at the provider's discretion. Open imagery and data ecosystems---the
+Microsoft Planetary Computer~\cite{planetary}, OpenStreetMap~\cite{osm},
+OpenAerialMap~\cite{oam}, and the SpatioTemporal Asset Catalog (STAC)
+metadata standard~\cite{stac}---lower the cost of \emph{obtaining} the underlying
+spatial information. The gap our work exposes is that an adversary need not wait
+for a provider to model a site: the methodology lets them synthesize the twin
+themselves for any location with a public footprint, bypassing the provider's
+editorial control entirely (Section~\ref{sec:eval}).
+
+\subsection{Content provenance and authenticity}
+The Coalition for Content Provenance and Authenticity (C2PA) defines signed,
+tamper-evident content credentials~\cite{c2pa}, and robust invisible watermarking
+has been studied for attributing synthetic media~\cite{watermark}. These are
+central to our countermeasure design (Section~\ref{sec:counter}): they do not
+prevent synthesis but make a synthetic twin \emph{attributable}, countering the
+``presentation laundering'' by which a rendered scene acquires the false authority
+of genuine reconnaissance.
+
+\subsection{GEOINT and OSINT practice}
+Open-source intelligence tradecraft has long reconstructed facilities by hand from
+public imagery and records~\cite{osint}, and NATO and allied doctrine formalize
+OSINT as an intelligence discipline~\cite{natoosint}. Our contribution to this
+literature is to show that the ``by hand'' reconstruction step is now trivially
+\emph{interactive and shareable}: the analyst's mental model becomes a public,
+navigable web artifact, and the marginal cost of that transformation is a few
+hundred lines of code.
+
+%=============================================================================
+\section{Threat Model}
+\label{sec:threat}
+
+\subsection{Adversary, resources, and goal}
+We model an adversary with the resources of a single motivated individual
+(Fig.~\ref{fig:threat-adv}): a consumer GPU or even integrated graphics,
+free-tier hosting, publicly reachable imagery, and current open-source or SaaS
+tooling. No clearance, no insider access, no export-controlled software. The goal
+is a \emph{usable} twin---supporting free navigation, structure-level inspection,
+diurnal and viewpoint variation, and one-click deployment---not a survey-grade
+metric model.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=4.2mm]
+\node[io]    (a) {Public overhead imagery};
+\node[stage] (b) [below=of a] {Commodity open-source tools};
+\node[stage] (c) [below=of b] {Single practitioner (no clearance)};
+\node[stage] (d) [below=of c] {Interactive reconstruction (this pipeline)};
+\node[io]    (e) [below=of d] {Public web deployment (a URL)};
+\draw[flow] (a)--(b); \draw[flow] (b)--(c); \draw[flow] (c)--(d); \draw[flow] (d)--(e);
+\end{tikzpicture}
+\caption{Adversary pipeline. Every element is commodity; the only non-synthetic
+input is public imagery, and the output is an unauthenticated public URL.}
+\label{fig:threat-adv}
+\end{figure}
+
+\subsection{Why ``good enough'' is the dangerous threshold}
+Intelligence value does not require centimeter accuracy. A twin that correctly
+conveys \emph{layout, structure taxonomy, sight lines, approach corridors,
+relative scale, and diurnal lighting} is already useful for familiarization,
+briefing, mission rehearsal, influence operations, or eroding the deterrent value
+of secrecy. Our evaluation (Section~\ref{sec:eval}) shows GeoTwn occupies exactly
+this ``good enough'' band, which is why we treat operational sufficiency, not
+photogrammetric precision, as the relevant threshold.
+
+\subsection{The AI-acceleration trajectory}
+The methodology's danger is not any single instantiation but its \emph{ambient
+availability} and its trajectory under generative AI (Fig.~\ref{fig:threat-ai}).
+Each manual stage in Section~\ref{sec:method} has an emerging automated
+counterpart: segmentation models can propose the traced perimeter, image models
+can synthesize façades, and a text prompt can request a camera tour. The vector is
+lower cost, lower required skill, and higher scale.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=3.6mm]
+\node[stage] (a) {Generative AI folds in each pipeline stage};
+\node[stage] (b) [below=of a] {Automation of tracing, texturing, staging};
+\node[stage] (c) [below=of b] {Lower monetary + skill cost};
+\node[stage] (d) [below=of c] {Reconstruction accessible to non-experts};
+\node[io]    (e) [below=of d] {Higher scale: many sites, on demand};
+\draw[flow] (a)--(b); \draw[flow] (b)--(c); \draw[flow] (c)--(d); \draw[flow] (d)--(e);
+\end{tikzpicture}
+\caption{AI-acceleration trajectory. Automation drives the ``cost to first twin''
+toward zero and generalizes the capability from experts to non-experts.}
+\label{fig:threat-ai}
+\end{figure}
+
+%=============================================================================
+\section{Methodology}
+\label{sec:method}
+We present the reconstruction pipeline (Fig.~\ref{fig:pipeline}) as a
+target-agnostic, reproducible method. We describe it at the level of
+\emph{technique} so that defenders can recognize and interrupt each stage; we
+deliberately omit any real-world georeferencing. GeoTwn (Section~\ref{sec:impl})
+is one instantiation used to validate feasibility.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[node distance=3.6mm]
+\node[io]    (s0) {Single public overhead reference};
+\node[stage] (s1) [below=of s0] {\textbf{1.} Layout extraction (manual tracing)};
+\node[stage] (s2) [below=of s1] {\textbf{2.} Metric coordinate mapping};
+\node[stage] (s3) [below=of s2] {\textbf{3.} Procedural terrain (analytic fBm)};
+\node[stage] (s4) [below=of s3] {\textbf{4.} Parametric structure synthesis};
+\node[stage] (s5) [below=of s4] {\textbf{5.} Procedural texture synthesis};
+\node[stage] (s6) [below=of s5] {\textbf{6.} Real-time multiview WebGL scene};
+\node[io]    (s7) [below=of s6] {Interactive digital twin (deployed)};
+\draw[flow] (s0)--(s1); \draw[flow] (s1)--(s2); \draw[flow] (s2)--(s3);
+\draw[flow] (s3)--(s4); \draw[flow] (s4)--(s5); \draw[flow] (s5)--(s6);
+\draw[flow] (s6)--(s7);
+\end{tikzpicture}
+\caption{The reproducible reconstruction pipeline. The only non-synthetic input is
+a single public overhead reference; every subsequent stage is procedural and
+runs on commodity hardware in a web browser.}
+\label{fig:pipeline}
+\end{figure}
+
+\subsection{Stage 1 --- Layout extraction by manual tracing}
+The single non-synthetic input is one overhead reference. Features---security
+perimeter, interior roads, and each structure footprint---are traced by hand into
+coordinate lists. We emphasize this stage because it is our strongest scientific
+observation: \emph{contrary to expectations, no automated photogrammetry or neural
+reconstruction was required.} A human tracing perimeters against a single image,
+combined with the procedural stages below, was sufficient to produce a navigable
+twin exhibiting operationally useful fidelity. The implication is that the entire
+high-end reconstruction literature (Section~\ref{sec:related}) is, from a
+defender's perspective, an accelerant on top of an already-sufficient manual
+baseline.
+
+\subsection{Stage 2 --- Metric coordinate mapping}
+Traced pixels are mapped by a fixed linear transform into a consistent metric
+$XZ$ plane (meters, $Y$ up), origin near the compound center:
+\[
+x_{\text{world}} = (p_x - c_x)\cdot s, \qquad
+z_{\text{world}} = (p_y - c_y)\cdot s ,
+\]
+with scale $s = 0.28$~m/px in our instantiation, giving a compound span of
+$\approx \pm 170$~m. This single transform lets every downstream subsystem---mesh,
+foliage, colliders, cameras---share one coordinate frame with no proprietary
+format.
+
+\subsection{Stage 3 --- Procedural terrain}
+A single analytic height field, a pure function of $(x,z)$, keeps the ground mesh,
+foliage placement, and the walking camera in agreement without shared state: the
+fenced compound is held flat while fractional Brownian motion raises surrounding
+relief. Being analytic, it needs no elevation dataset.
+
+\subsection{Stage 4 --- Parametric structure synthesis}
+The facility is expressed as a small vocabulary of parametric primitive classes
+(spherical pressure tanks, hemispherical radomes, cylindrical tanks, buildings,
+pipe racks, paved aprons). This vocabulary is the intelligence payload: it turns
+``blobs in a photo'' into a typed inventory---an antenna field with a tank farm
+and barracks. Counts and classes are quantified in Section~\ref{sec:eval}.
+
+\subsection{Stage 5 --- Procedural texture synthesis}
+Every surface is drawn at load time from seeded value noise onto an HTML canvas,
+then promoted to a WebGL texture with derived normal and roughness maps. No
+copyrighted or restricted imagery is embedded. Beyond avoiding licensing exposure,
+this defeats naive provenance checks: the artifact carries \emph{no forensic trace
+of source imagery}.
+
+\subsection{Stage 6 --- Real-time multiview rendering}
+The scene is rendered in-browser with WebGL. Three camera regimes provide the
+``multiview'' capability that makes the twin operationally useful: free-fly
+(overhead-to-oblique), first-person walk (eye-height, collider-constrained,
+exposing ground-level sight lines a satellite never provides), and a scripted
+cinematic tour. A commercial-imagery-grade post-processing chain (ambient
+occlusion, HDR bloom, filmic tone mapping, an imagery-grade saturation/contrast
+bump) makes the synthetic scene read as authentic reconnaissance---the step that
+manufactures false authority, and thus a first-class target for the provenance
+countermeasures of Section~\ref{sec:counter}.
+
+%=============================================================================
+\section{Implementation: The GeoTwn Validation Platform}
+\label{sec:impl}
+GeoTwn instantiates the pipeline as a single-page web application (React, Three.js
+via React Three Fiber). It is the experimental apparatus by which we measure the
+methodology's feasibility, not the contribution itself. We include representative
+code to establish that the artifact is real and reproducible; full source is
+public (Section~\ref{sec:repro}).
+
+\textbf{Stage 1--2 (tracing + mapping).} The perimeter is a hand-traced polyline
+in the metric frame:
+\begin{lstlisting}[caption={Traced perimeter in the metric frame (\texttt{src/lib/site-layout.ts}).},label={lst:layout}]
+// world_x = (px-605)*0.28, world_z = (py-628)*0.28
+export const perimeterPath: [number, number][] = [
+  [-136, -114], [-32, -114], [-32, 3], [14, 3], [14, 9],
+  [144, 13], [144, 73], [29, 75], [29, 165],
+  [-98, 165], [-98, 3], [-120, -33], [-139, -43],
+];
+\end{lstlisting}
+
+\textbf{Stage 3 (terrain).} One analytic function serves the whole system:
+\begin{lstlisting}[caption={Analytic terrain shared by mesh, foliage, and camera (\texttt{src/lib/terrain.ts}).},label={lst:terrain}]
+export function terrainHeight(x: number, z: number): number {
+  const eastFactor = ss(FENCE_EAST, FENCE_EAST + 90, x);
+  const hills = fbm(x*0.012+10, z*0.012+4) * 38 * eastFactor;
+  const ridge = Math.max(0, Math.sin((z+200)*0.004)) * 10 * eastFactor;
+  const micro = fbm(x*0.04+3, z*0.04+7) * 0.4;
+  return hills + ridge + micro; // + western roll term
+}
+\end{lstlisting}
+
+\textbf{Stage 5 (textures).} A seeded LCG makes every texture byte-identical
+across loads, so the artifact is deterministic and carries no source imagery:
+\begin{lstlisting}[caption={Deterministic procedural texture core (\texttt{src/lib/site-textures.ts}).},label={lst:tex}]
+function lcg(seed: number) {            // deterministic per-load noise
+  let s = seed >>> 0 || 1;
+  return () => (s = (s*1664525 + 1013904223) >>> 0) / 4294967296;
+}
+// 9 generator functions synthesize 35 textures (color + derived
+// normal/roughness); zero external image assets are bundled.
+\end{lstlisting}
+
+\textbf{Stage 6 (rendering + adaptive quality).} The post chain launders
+presentation, and a runtime monitor sheds expensive passes before render
+resolution, so the twin sustains interactivity on commodity hardware:
+\begin{lstlisting}[caption={Post-processing and adaptive-quality rig (\texttt{src/components/site/SiteScene.tsx}).},label={lst:post}]
+<PerformanceMonitor onDecline={() => {        // shed AO/DoF, then DPR
+  declineStage.current += 1;
+  declineStage.current === 1 ? setQuality("low") : setDpr(1);
+}}/>
+<EffectComposer>
+  {quality==="high" && <N8AO aoRadius={10} intensity={2.5}/>}
+  <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0}/>
+  <ToneMapping mode={ToneMappingMode.ACES_FILMIC}/>
+  <HueSaturation saturation={0.12}/>          {/* imagery-grade */}
+  <BrightnessContrast contrast={0.07}/><SMAA/><Vignette/>
+</EffectComposer>
+\end{lstlisting}
+
+%=============================================================================
+\section{Evaluation}
+\label{sec:eval}
+We evaluate along three axes: (i) what the artifact \emph{is}, quantitatively;
+(ii) how much operational intelligence it captures; and (iii) how its capability
+envelope compares with existing tools. All counts in
+Table~\ref{tab:sysvals} are measured directly from the public source tree.
+
+\subsection{System characterization}
+\begin{table}[t]
+\caption{Measured characterization of the GeoTwn artifact}
+\label{tab:sysvals}
+\centering
+\renewcommand{\arraystretch}{1.05}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Property} & \textbf{Value} \\
+\midrule
+Total source (TypeScript/TSX)                 & 8{,}523 LOC \\
+Reconstruction logic (excl. vendored UI, generated router) & 4{,}094 LOC \\
+Core reconstruction modules (6 files)         & 1{,}923 LOC \\
+Parametric structure classes                  & 6 \\
+Primary modeled structures                    & 41 \\
+\;\; spheres / radomes / cyl.\ tanks / buildings / pipe racks & 9 / 7 / 6 / 16 / 3 \\
+Paved aprons                                   & 3 \\
+Procedurally placed trees                      & 173 \\
+Distinct procedural textures                   & 35 \\
+Texture generator functions                    & 9 \\
+External image / 3D assets bundled             & \textbf{0} \\
+Non-synthetic inputs                           & 1 (overhead ref.) \\
+Camera / view modes                            & 3 \\
+Backend services                               & 0 (static SPA) \\
+Pixel-to-world scale                           & 0.28 m/px \\
+Production build                               & static SPA$^{\ddagger}$ \\
+Deployment                                     & free-tier static host \\
+Development effort (author est.)$^{\dagger}$    & $\approx$1 working day \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+{\footnotesize $^{\dagger}$Order-of-magnitude author estimate; not instrumented.
+$^{\ddagger}$No backend; a single static bundle reproducible via the build command
+in Section~\ref{sec:repro}.}
+\end{table}
+
+The headline is the combination of the last several rows: an operationally useful
+twin with \textbf{zero} external assets, \textbf{one} non-synthetic input, and
+\textbf{no} backend, assembled in roughly a working day. The ``cost to first
+twin''---not any pixel-accuracy metric---is the result that matters.
+
+\subsection{Operational fidelity}
+We assess fidelity against \emph{operational} rather than photogrammetric criteria
+(Table~\ref{tab:fidelity}), because operational sufficiency is the threat
+threshold (Section~\ref{sec:threat}).
+
+\begin{table}[t]
+\caption{Operational intelligence captured by the reconstruction}
+\label{tab:fidelity}
+\centering
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Intelligence attribute} & \textbf{Captured} & \textbf{Basis} \\
+\midrule
+Perimeter geometry \& gates   & Yes  & Traced polyline \\
+Structure taxonomy \& counts  & Yes  & Parametric primitives \\
+Relative scale \& spacing     & Yes  & Metric $XZ$ frame \\
+Ground-level sight lines      & Yes  & First-person walker \\
+Diurnal lighting variation    & Yes  & Day/night rig \\
+Approach corridors / roads    & Yes  & Traced road network \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{What was deliberately \emph{not} demonstrated}
+To bound the disclosure and be explicit for reviewers, Table~\ref{tab:notdemo}
+lists capabilities the artifact intentionally excludes. Absent rows are either
+self-imposed ethical guardrails (georeference) or irrelevant to operational use
+(exact materials); none reflects a technical wall the methodology could not clear.
+
+\begin{table}[t]
+\caption{Capabilities intentionally excluded from the demonstration}
+\label{tab:notdemo}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Capability} & \textbf{Included} \\
+\midrule
+Exact absolute coordinates / georeference & No (withheld) \\
+Interior / floor-plan structure           & No \\
+Underground or buried assets              & No \\
+Specific sensor / emitter locations       & No \\
+Classified imagery                        & No \\
+Proprietary / licensed data               & No \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison with existing tools}
+The natural objection is that interactive globes already exist. They do not close
+this gap. Table~\ref{tab:compare} compares GeoTwn's capability envelope against
+Google Earth, CesiumJS, and manual imagery inspection. The decisive row is the
+last: existing platforms render a site \emph{only where a provider chose to model
+it}, and sensitive facilities are precisely where providers omit or degrade
+coverage. The methodology removes that dependency---an adversary self-synthesizes
+the twin for any site with a public footprint, bypassing the provider's editorial
+control.
+
+\begin{table}[t]
+\caption{Capability comparison (S = self-synthesized here)}
+\label{tab:compare}
+\centering
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Capability} & \textbf{GeoTwn} & \textbf{G.\ Earth} & \textbf{Cesium} & \textbf{Manual} \\
+\midrule
+Free-fly navigation            & Yes & Yes  & Yes  & No  \\
+Ground-level first-person view & Yes & Ltd. & Data & No  \\
+Structure-level inspection     & Yes & No   & Data & Man.\\
+Diurnal lighting control       & Yes & Ltd. & Yes  & No  \\
+Self-hosted / offline          & Yes & No   & Yes  & --  \\
+Works for \emph{unmodeled} sites & \textbf{Yes} & \textbf{No} & \textbf{No} & Man. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%=============================================================================
+\section{Discussion}
+\label{sec:discussion}
+The methodology reframes secrecy-by-reconstruction-difficulty as a failing control
+for physical infrastructure, in the same way it long ago failed for software. Each
+pipeline stage is independently commoditized, and generative AI is compressing the
+chain (Fig.~\ref{fig:threat-ai}). Defenders therefore need controls that assume
+reconstruction \emph{will} be attempted and focus on detection, provenance,
+friction, and consequence---not on preventing the mathematically inevitable. The
+comparison in Table~\ref{tab:compare} sharpens the point: the protective value of a
+provider's decision \emph{not} to model a site evaporates once adversaries can
+model it themselves.
+
+%=============================================================================
+\section{Countermeasures and Policy}
+\label{sec:counter}
+We organize defenses in three layers (Table~\ref{tab:defense}): model-integrated
+guards, data-provider controls, and policy/disclosure norms. None suffices alone;
+the design is defense-in-depth.
+
+\subsection{Layer 1 --- Model-integrated guards}
+
+\subsubsection{A facility-fingerprint generation guard}
+Generative and 3D-reconstruction pipelines can be taught to recognize when they are
+being steered toward sensitive-facility synthesis and to gate the request. The
+signal is the \emph{co-occurrence} of the structure taxonomy (radome fields,
+regular tank rows, barracks grids, a hardened perimeter) with prompt intent cues
+and any georeference. Listing~\ref{lst:guard} sketches a pre-generation guard.
+
+\begin{lstlisting}[caption={Illustrative pre-generation facility-fingerprint guard.},label={lst:guard}]
+const SENSITIVE_TAXONOMY = ["radome","antenna field","sigint",
+  "spherical tank farm","barracks grid","hardened perimeter"];
+const INTENT_CUES = ["classified","top secret","area 51",
+  "military base","surveillance station","recon"];
+
+function facilityFingerprintScore(prompt, refImageTags) {
+  const tax = SENSITIVE_TAXONOMY.filter(t => refImageTags.includes(t)).length;
+  const intent = INTENT_CUES.filter(c => prompt.toLowerCase().includes(c)).length;
+  const georef = /-?\d{1,3}\.\d{3,}\s*,\s*-?\d{1,3}\.\d{3,}/.test(prompt);
+  return 0.5*tax + 0.4*intent + (georef ? 1.0 : 0); // co-occurrence
+}
+function guard(req) {
+  const s = facilityFingerprintScore(req.prompt, req.refImageTags);
+  if (s >= BLOCK)  return refuse(req, "sensitive-facility synthesis");
+  if (s >= REVIEW) return degrade(req, {georef:false, navigable:false});
+  return allow(req);
+}
+\end{lstlisting}
+
+\noindent This is a speed bump, not a wall: a determined adversary can decompose
+the request or self-host an open model. Its value is raising cost, catching the
+careless majority, and creating an auditable refusal signal. Building a labeled
+``sensitive-facility synthesis'' benchmark to measure its false-positive/negative
+rates is future work (Section~\ref{sec:future}).
+
+\subsubsection{Provenance watermarking and content credentials}
+Compliant generators should emit signed C2PA content credentials~\cite{c2pa} plus
+a robust invisible watermark~\cite{watermark} that survives screenshotting and
+re-encoding, applied at the \emph{render} stage so even client-side WebGL twins
+embed a detectable signal. This does not stop synthesis; it makes a twin
+attributable and counters presentation laundering.
+
+\subsubsection{Geofenced generation}
+Where a request implies coordinates, models should consult a protected-zone policy
+layer (analogous to drone no-fly geofencing) and refuse or degrade georeferenced
+synthesis inside it. Private-set-intersection lets the model test membership
+without learning---or leaking---the full protected catalog.
+
+\subsection{Layer 2 --- Data-provider controls}
+Imagery is the one non-synthetic input, hence a natural choke point: graduated
+resolution/obfuscation applied \emph{consistently across providers}; query-pattern
+telemetry (repeated high-zoom, multi-angle tasking over a protected footprint is
+itself a reconnaissance signal); and licensing terms that prohibit derivative 3D
+reconstruction of designated sites, giving platforms a takedown basis.
+
+\subsection{Layer 3 --- Policy, disclosure, and red-team norms}
+Facility-protection doctrine should adopt \emph{assume-reconstruction} planning; a
+CVE-like channel should institutionalize coordinated disclosure of geospatial/AI
+capability; agencies and providers should fund standing red-team programs that
+track the ``cost to first twin'' as a living metric; and hosting platforms should
+require content-credential support for photoreal geospatial renders of real
+locations.
+
+\begin{table}[t]
+\caption{Countermeasures mapped to the pipeline}
+\label{tab:defense}
+\centering
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Pipeline stage} & \textbf{Primary countermeasure} \\
+\midrule
+1--2 Tracing / georeferencing & Provider obfuscation; geofenced generation; PSI \\
+3--4 Terrain / structures     & Facility-fingerprint generation guard \\
+5\phantom{--6} Textures       & (no source imagery to trace --- provenance shifts) \\
+6\phantom{--6} Rendering      & Render-stage watermarking \\
+Deploy                        & C2PA credentials; platform provenance mandates \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%=============================================================================
+\section{Reproducibility}
+\label{sec:repro}
+The artifact is public to support independent verification. GeoTwn is a static
+single-page application with no backend, so reproduction requires only a browser
+and a Node toolchain.
+
+\begin{itemize}
+\item \textbf{Repository:} \url{https://github.com/topherchris420/satellite-vision-scape}
+(branch used for this study noted in the repository). \textbf{Live platform:}
+\url{https://geotwn.vercel.app/}.
+\item \textbf{Runtime:} any WebGL2 browser (evaluated on current Chromium/Chrome).
+No GPU beyond an integrated/consumer class is required; an adaptive-quality monitor
+(Listing~\ref{lst:post}) degrades gracefully.
+\item \textbf{Build toolchain:} Node.js~22.x, Bun~1.3.x (or npm); Vite~8;
+TypeScript~5.8.
+\item \textbf{Key dependencies:} \texttt{three}~0.185, \texttt{@react-three/fiber}~9.6,
+\texttt{@react-three/drei}~10.7, \texttt{@react-three/postprocessing}~3.0,
+\texttt{postprocessing}~6.39, \texttt{react}~19.2.
+\item \textbf{Build \& run:} \texttt{bun install \&\& bun run build} (production)
+or \texttt{bun run dev} (local). Output is a static bundle deployable to any
+static host.
+\item \textbf{Determinism:} all procedural textures and foliage use seeded
+generators, so scenes are byte-reproducible across loads.
+\end{itemize}
+
+%=============================================================================
+\section{Ethical Considerations and Responsible Disclosure}
+\label{sec:ethics}
+This work was conducted as authorized red-team research by the author's startup,
+against a \emph{fictionalized} target, with absolute georeferencing deliberately
+withheld (Table~\ref{tab:notdemo}). Our aim is to shorten defenders' reaction time,
+not to hand adversaries a recipe for a specific site. We judge that method-level
+disclosure does not meaningfully advantage a capable adversary---who can already
+assemble these commodity parts---while it materially helps defenders who have not
+internalized that the capability is ambient. We publish the countermeasures
+(Section~\ref{sec:counter}) alongside the demonstration and welcome coordinated
+contact on any element a reader believes crosses that line.
+
+%=============================================================================
+\section{Limitations and Future Work}
+\label{sec:future}
+GeoTwn uses manual tracing and procedural generation rather than automated neural
+reconstruction; quantifying the fidelity/effort delta of an automated
+NeRF/Gaussian-splat variant is open. We have not empirically measured the proposed
+facility-fingerprint guard on a labeled corpus. Concrete next steps:
+\begin{itemize}
+\item Automatic building/structure classification from overhead references.
+\item Multi-temporal satellite change detection to keep twins current.
+\item Reconstruction uncertainty estimation and per-structure confidence metrics.
+\item AI-assisted procedural generation to quantify the automation trajectory.
+\item A public ``sensitive-facility synthesis'' benchmark for facility-fingerprint
+detection, with reported false-positive/negative rates.
+\item Defensive evaluation benchmarks and synthetic-data generation for standing
+red-team programs.
+\end{itemize}
+
+%=============================================================================
+\section{Conclusion}
+This work suggests that the principal barrier to constructing interactive digital
+twins of strategically significant facilities is no longer access to specialized
+reconstruction technology but rather access to publicly observable spatial
+information. Our reproducible six-stage methodology reaches operationally useful
+fidelity from a single public overhead reference using only commodity web
+technology, and our GeoTwn validation platform---41 modeled structures, 35 synthetic
+textures, zero external assets, one non-synthetic input, assembled in about a
+working day---demonstrates that even the cheapest reconstruction path already
+clears the operational bar. As commodity, AI-assisted tooling matures,
+reconstruction costs will decrease further, increasing the importance of
+provenance mechanisms, policy controls, and defensive evaluation. We have proposed
+a defense-in-depth response and released the artifact to support the standing
+red-team programs we argue defenders now require.
+
+\section*{Acknowledgment}
+Conducted as independent security research by Vers3Dynamics. The artifact and its
+source are public to support reproducibility and defensive study.
+
+%=============================================================================
+\begin{thebibliography}{00}
+\bibitem{sfm} J. L. Sch\"onberger and J.-M. Frahm, ``Structure-from-Motion
+Revisited,'' in \emph{IEEE CVPR}, 2016.
+\bibitem{nerf} B. Mildenhall \emph{et al.}, ``NeRF: Representing Scenes as Neural
+Radiance Fields for View Synthesis,'' in \emph{ECCV}, 2020.
+\bibitem{gsplat} B. Kerbl, G. Kopanas, T. Leimk\"uhler, and G. Drettakis, ``3D
+Gaussian Splatting for Real-Time Radiance Field Rendering,'' \emph{ACM Trans.
+Graph.}, vol.~42, no.~4, 2023.
+\bibitem{cesium} P. Cozzi \emph{et al.}, ``Cesium: 3D Geospatial Visualization,''
+Cesium GS, Inc. [Online]. Available: \url{https://cesium.com/}
+\bibitem{planetary} Microsoft, ``Planetary Computer.'' [Online]. Available:
+\url{https://planetarycomputer.microsoft.com/}
+\bibitem{osm} OpenStreetMap contributors, ``OpenStreetMap.'' [Online]. Available:
+\url{https://www.openstreetmap.org/}
+\bibitem{oam} OpenAerialMap contributors, ``OpenAerialMap.'' [Online]. Available:
+\url{https://openaerialmap.org/}
+\bibitem{stac} STAC contributors, ``SpatioTemporal Asset Catalog (STAC)
+Specification.'' [Online]. Available: \url{https://stacspec.org/}
+\bibitem{c2pa} Coalition for Content Provenance and Authenticity, ``C2PA Technical
+Specification,'' 2024. [Online]. Available: \url{https://c2pa.org/}
+\bibitem{watermark} S. Abdelnabi and M. Fritz, ``Adversarial Watermarking
+Transformer,'' in \emph{IEEE S\&P}, 2021.
+\bibitem{osint} M. Bazzell, \emph{Open Source Intelligence Techniques}, 9th ed.,
+2023.
+\bibitem{natoosint} NATO, ``Open Source Intelligence Handbook,'' NATO
+Supreme Allied Commander Transformation, 2001.
+\bibitem{threejs} Three.js contributors, ``Three.js -- JavaScript 3D Library.''
+[Online]. Available: \url{https://threejs.org/}
+\bibitem{r3f} Poimandres, ``React Three Fiber.'' [Online]. Available:
+\url{https://docs.pmnd.rs/react-three-fiber}
+\bibitem{getwn} C. Woodyard (Vers3Dynamics), ``GeoTwn / satellite-vision-scape,''
+2025. [Online]. Available:
+\url{https://github.com/topherchris420/satellite-vision-scape}
+\bibitem{demo} C. Woodyard, ``GeoTwn live platform,'' 2025. [Online]. Available:
+\url{https://geotwn.vercel.app/}
+\end{thebibliography}
+
+\end{document}
