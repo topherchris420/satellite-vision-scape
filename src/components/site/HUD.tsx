@@ -97,7 +97,7 @@ export function HUD({
           {infoOpen ? (
             <div className="max-w-xs rounded-lg bg-black/60 px-4 py-3 text-white backdrop-blur-sm">
               <div className="flex items-start justify-between gap-3">
-                <h1 className="text-base font-semibold">OVERWATCH · Site K-7 “Ironvale”</h1>
+                <h1 className="text-base font-semibold">PINE VEIL — Australia’s “Area 51”</h1>
                 <button
                   onClick={() => setInfoOpen(false)}
                   aria-label="Collapse info panel"
@@ -109,9 +109,10 @@ export function HUD({
                 </button>
               </div>
               <p className="mt-1 text-xs text-white/70">
-                Satellite intel, rebuilt in living 3D — every tank, radome and rooftop
-                reconstructed from orbital passes. Drop below the clouds and{" "}
-                {isMobile ? "tap any structure to pull its dossier." : "click any structure to pull its dossier."}
+                A compound in the Red Centre that never made the maps — radomes, tank
+                farms and bunkers the government won’t confirm exist. Rebuilt in living 3D
+                from orbital passes. Drop below the clouds and{" "}
+                {isMobile ? "tap any structure to crack open its file." : "click any structure to crack open its file."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/60">
                 <span>{objectSummary.spheres} spheres</span>
