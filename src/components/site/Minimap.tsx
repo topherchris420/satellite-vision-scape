@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import {
   roadPath,
+  topEnclosurePath,
   interiorRoads,
   dirtTracks,
   buildings,
@@ -18,11 +19,19 @@ import {
 export function Minimap({ markerRef }: { markerRef: RefObject<SVGGElement | null> }) {
   return (
     <svg
-      viewBox="-155 -180 405 375"
+      viewBox="-155 -185 405 385"
       className="w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm"
       aria-label="Site minimap"
     >
-      {/* perimeter access loop */}
+      {/* northern antenna enclosure */}
+      <polygon
+        points={topEnclosurePath.map((p) => p.join(",")).join(" ")}
+        fill="#1c2333"
+        fillOpacity={0.4}
+        stroke="#6b675e"
+        strokeWidth={4}
+      />
+      {/* main perimeter boundary */}
       <polygon
         points={roadPath.map((p) => p.join(",")).join(" ")}
         fill="#1c2333"

@@ -91,9 +91,9 @@ export function Terrain() {
         <meshStandardMaterial map={vegColor} roughness={1} color="#8a8452" transparent opacity={0.85} />
       </mesh>
 
-      {/* Green landscaped compound (lower-right, inside fence) */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[55, 0.06, 110]} receiveShadow>
-        <planeGeometry args={[90, 70]} />
+      {/* Green landscaped patch in the lower yard (inside the fence) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-40, 0.06, 132]} receiveShadow>
+        <planeGeometry args={[80, 60]} />
         <meshStandardMaterial map={grassColor} roughnessMap={grassRough} roughness={0.9} color="#6f8a48" transparent opacity={0.9} />
       </mesh>
 

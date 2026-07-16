@@ -5,6 +5,7 @@ import {
   parkingLots,
   channels,
   fencePath,
+  topEnclosurePath,
 } from "@/lib/site-layout";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
@@ -123,13 +124,13 @@ function ParkingLots() {
 // ---------------------------------------------------------------------------
 // Perimeter fence — chain-link ribbon with regularly spaced posts.
 // ---------------------------------------------------------------------------
-function Fence() {
+function Fence({ path = fencePath, name = "perimeter-fence" }: { path?: [number, number][]; name?: string }) {
   const postPositions = useMemo(() => {
     const pts: [number, number][] = [];
-    const n = fencePath.length;
+    const n = path.length;
     for (let i = 0; i < n; i++) {
-      const a = fencePath[i];
-      const b = fencePath[(i + 1) % n];
+      const a = path[i];
+      const b = path[(i + 1) % n];
       const seg = Math.hypot(b[0] - a[0], b[1] - a[1]);
       const count = Math.max(1, Math.round(seg / 8));
       for (let k = 0; k < count; k++) {
@@ -138,17 +139,17 @@ function Fence() {
       }
     }
     return pts;
-  }, []);
+  }, [path]);
 
   const fenceGeom = useMemo(() => {
     const geom = new THREE.BufferGeometry();
     const verts: number[] = [];
     const idx: number[] = [];
-    const n = fencePath.length;
+    const n = path.length;
     const y0 = 0;
     const y1 = 2.2;
     for (let i = 0; i < n; i++) {
-      const [x, z] = fencePath[i];
+      const [x, z] = path[i];
       verts.push(x, y0, z, x, y1, z);
     }
     for (let i = 0; i < n; i++) {
@@ -162,10 +163,10 @@ function Fence() {
     geom.setIndex(idx);
     geom.computeVertexNormals();
     return geom;
-  }, []);
+  }, [path]);
 
   return (
-    <group name="perimeter-fence">
+    <group name={name}>
       <mesh geometry={fenceGeom}>
         <meshStandardMaterial
           color="#9a988f"
@@ -260,6 +261,7 @@ export function SiteFeatures() {
       <PipeRacks />
       <ParkingLots />
       <Fence />
+      <Fence path={topEnclosurePath} name="top-enclosure-fence" />
       <DrainageChannels />
     </group>
   );

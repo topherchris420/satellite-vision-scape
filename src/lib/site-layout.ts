@@ -107,12 +107,12 @@ export const buildings: Building[] = [
     roof: "gable" as const,
   })),
   // Lower-central smaller service buildings
-  { pos: [8, 96], size: [30, 10], height: 5, color: "#bdb7a9", kind: "shed" },
-  { pos: [10, 112], size: [34, 8], height: 5, color: "#c9c3b5", kind: "shed" },
-  { pos: [30, 128], size: [24, 8], height: 4, color: "#b8b1a2", kind: "shed" },
-  // Right landscaped compound buildings
-  { pos: [50, 100], size: [12, 16], height: 6, color: "#e0dccf", kind: "office" },
-  { pos: [68, 108], size: [10, 14], height: 6, color: "#e0dccf", kind: "office" },
+  { pos: [6, 96], size: [28, 10], height: 5, color: "#bdb7a9", kind: "shed" },
+  { pos: [8, 112], size: [30, 8], height: 5, color: "#c9c3b5", kind: "shed" },
+  { pos: [18, 128], size: [20, 8], height: 4, color: "#b8b1a2", kind: "shed" },
+  // Lower landscaped compound buildings (inside the lower yard)
+  { pos: [14, 122], size: [12, 14], height: 6, color: "#e0dccf", kind: "office" },
+  { pos: [22, 144], size: [10, 12], height: 6, color: "#e0dccf", kind: "office" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -131,48 +131,54 @@ export const pipeRacks: PipeRack[] = [
 // ---------------------------------------------------------------------------
 export const parkingLots: Parking[] = [
   { pos: [-40, 118], size: [26, 20], rows: 4 },
-  { pos: [52, 128], size: [22, 16], rows: 3 },
-  { pos: [-6, 66], size: [46, 10], rows: 2 },
+  { pos: [8, 138], size: [22, 16], rows: 3 },
+  { pos: [-6, 66], size: [40, 10], rows: 2 },
 ];
 
 // ---------------------------------------------------------------------------
-// Roads. The main perimeter access loop plus interior connectors, and the
-// winding dirt tracks over the hills to the right (east) of the fence.
-// ---------------------------------------------------------------------------
-export const roadPath: [number, number][] = [
-  [-118, -120],
-  [-70, -118],
-  [-40, -108],
-  [-20, -80],
-  [2, -50],
-  [22, -20],
-  [40, 6],
-  [55, 30],
-  [70, 55],
-  [78, 85],
-  [70, 110],
-  [45, 132],
-  [8, 142],
-  [-30, 140],
-  [-70, 130],
-  [-100, 112],
-  [-116, 82],
-  [-120, 45],
-  [-122, 5],
-  [-124, -35],
-  [-122, -75],
-  [-120, -100],
+// Perimeter boundary — the thick fence line from the reference image. Traced
+// clockwise from the top-left of the upper-left lobe and converted from image
+// pixels with world_x = (px-605)*0.28, world_z = (py-628)*0.28, so it lines up
+// with the structures. This is the site's dominant silhouette: a wide upper
+// lobe, a stepped notch on the left, a right-reaching middle band around the
+// tank farm, and a lower extension over the barracks.
+export const perimeterPath: [number, number][] = [
+  [-136, -114], // TL of upper-left lobe
+  [-32, -114], //  top edge → TR of lobe
+  [-32, 3], //     down the lobe's right edge to the throat
+  [14, 3], //      notch steps right
+  [14, 9],
+  [144, 13], //    right along the middle band (tank farm)
+  [144, 73], //    down the far-right edge
+  [29, 75], //     step left
+  [29, 165], //    down the lower area's right edge
+  [-98, 165], //   bottom edge (barracks yard)
+  [-98, 3], //     up the lower area's left edge
+  [-120, -33], //  stepped notch on the left
+  [-139, -43],
+];
+
+// The main perimeter road runs on the boundary line.
+export const roadPath: [number, number][] = perimeterPath;
+
+// Separate northern enclosure (the thin-fenced antenna field carrying the
+// three radomes across the top of the image).
+export const topEnclosurePath: [number, number][] = [
+  [-136, -166],
+  [7, -166],
+  [7, -116],
+  [-136, -116],
 ];
 
 // Interior spine road along the tank farm / process area
 export const interiorRoads: [number, number][][] = [
   [
-    [-116, 20],
-    [-60, 22],
-    [-20, 24],
-    [40, 24],
-    [110, 26],
-    [128, 40],
+    [-92, 22],
+    [-60, 24],
+    [-20, 26],
+    [40, 26],
+    [110, 30],
+    [136, 42],
   ],
   [
     [-6, 26],
@@ -207,10 +213,8 @@ export const dirtTracks: [number, number][][] = [
   ],
 ];
 
-// Fence roughly follows the outer road but slightly larger.
-export const fencePath: [number, number][] = roadPath.map(
-  ([x, z]) => [x * 1.07, z * 1.07] as [number, number]
-);
+// The fence sits on the perimeter boundary line.
+export const fencePath: [number, number][] = perimeterPath;
 
 // ---------------------------------------------------------------------------
 // Drainage channels crossing the terrain.
@@ -256,9 +260,9 @@ export const trees: [number, number][] = (() => {
     if (x < 165 && r() < 0.6) continue;
     pts.push([x, z]);
   }
-  // Landscaped compound (lower-right inside the fence)
+  // Landscaped tree cluster in the lower yard (inside the fence)
   for (let i = 0; i < 40; i++) {
-    pts.push([40 + r() * 55, 92 + r() * 55]);
+    pts.push([-70 + r() * 62, 110 + r() * 46]);
   }
   // Sparse northern scrub
   for (let i = 0; i < 25; i++) {
