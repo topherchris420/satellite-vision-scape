@@ -1,7 +1,70 @@
-import { Sky, Environment } from "@react-three/drei";
-import { buildings, domes } from "@/lib/site-layout";
+import { useEffect, useMemo } from "react";
+import { useThree } from "@react-three/fiber";
+import { Sky } from "@react-three/drei";
+import * as THREE from "three";
+import { buildings, domes, spheres } from "@/lib/site-layout";
 
 export type TimeOfDay = "day" | "night";
+
+// Procedural equirectangular gradient environment, baked to an IBL map through
+// PMREM. Fully offline (no CDN HDR fetch) so it works in a sandboxed runtime.
+function makeGradientEquirect(isDay: boolean) {
+  const w = 512;
+  const h = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d")!;
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  if (isDay) {
+    g.addColorStop(0.0, "#5b86c4"); // zenith
+    g.addColorStop(0.45, "#a9c3e0");
+    g.addColorStop(0.5, "#e8e0cf"); // horizon haze
+    g.addColorStop(0.55, "#c9b58e");
+    g.addColorStop(1.0, "#7a6a4c"); // ground bounce
+  } else {
+    g.addColorStop(0.0, "#0a1226");
+    g.addColorStop(0.48, "#141d33");
+    g.addColorStop(0.5, "#26304a");
+    g.addColorStop(0.55, "#161c2c");
+    g.addColorStop(1.0, "#05070d");
+  }
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, w, h);
+  // warm sun disc smear near the horizon for day
+  if (isDay) {
+    const sun = ctx.createRadialGradient(w * 0.72, h * 0.42, 2, w * 0.72, h * 0.42, 60);
+    sun.addColorStop(0, "rgba(255,244,214,0.9)");
+    sun.addColorStop(1, "rgba(255,244,214,0)");
+    ctx.fillStyle = sun;
+    ctx.fillRect(0, 0, w, h);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.mapping = THREE.EquirectangularReflectionMapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function ProceduralEnvironment({ isDay }: { isDay: boolean }) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const envTex = useMemo(() => makeGradientEquirect(isDay), [isDay]);
+
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    pmrem.compileEquirectangularShader();
+    const rt = pmrem.fromEquirectangular(envTex);
+    scene.environment = rt.texture;
+    return () => {
+      scene.environment = null;
+      rt.dispose();
+      pmrem.dispose();
+      envTex.dispose();
+    };
+  }, [gl, scene, envTex]);
+
+  return null;
+}
 
 export function Lighting({ time }: { time: TimeOfDay }) {
   const isDay = time === "day";
@@ -26,7 +89,7 @@ export function Lighting({ time }: { time: TimeOfDay }) {
         />
       )}
 
-      <Environment preset={isDay ? "sunset" : "night"} />
+      <ProceduralEnvironment isDay={isDay} />
 
       {isDay ? (
         <>
@@ -77,14 +140,13 @@ export function Lighting({ time }: { time: TimeOfDay }) {
               distance={45}
               decay={2}
               color="#ffb35a"
-              castShadow={false}
             />
           ))}
-          {/* Dome accent lights */}
-          {domes.slice(0, 6).map((d, i) => (
+          {/* Tank-farm accent lights */}
+          {[...domes.slice(0, 4), ...spheres.slice(0, 4).map((s) => ({ pos: s.pos, radius: s.radius }))].map((d, i) => (
             <pointLight
-              key={`domelight-${i}`}
-              position={[d.pos[0], d.radius + 1, d.pos[1]]}
+              key={`accent-${i}`}
+              position={[d.pos[0], d.radius + 2, d.pos[1]]}
               intensity={6}
               distance={30}
               decay={2}
