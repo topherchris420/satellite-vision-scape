@@ -6,8 +6,29 @@ import {
   channels,
   fencePath,
   topEnclosurePath,
+  interiorRoads,
 } from "@/lib/site-layout";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
+
+function rng(seed: number) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+
+function fillInstances(
+  inst: THREE.InstancedMesh | null,
+  matrices: THREE.Matrix4[],
+  colors?: THREE.Color[]
+) {
+  if (!inst) return;
+  matrices.forEach((m, i) => inst.setMatrixAt(i, m));
+  inst.instanceMatrix.needsUpdate = true;
+  if (colors) {
+    colors.forEach((c, i) => inst.setColorAt(i, c));
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Pipe racks — parallel horizontal pipes on regularly spaced portal bents.
@@ -255,6 +276,219 @@ function DrainageChannels() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Standing water in the drainage channels — a narrow reflective ribbon laid
+// just above the channel floor. Env-map reflections sell it cheaply.
+// ---------------------------------------------------------------------------
+function ChannelWater() {
+  const geoms = useMemo(() => {
+    return channels.map((c) => {
+      const geom = new THREE.BufferGeometry();
+      const verts: number[] = [];
+      const idx: number[] = [];
+      const pts = c.path;
+      const y = -0.62;
+      for (let i = 0; i < pts.length; i++) {
+        const prev = pts[Math.max(0, i - 1)];
+        const next = pts[Math.min(pts.length - 1, i + 1)];
+        const t = new THREE.Vector2(next[0] - prev[0], next[1] - prev[1]).normalize();
+        const nrm = new THREE.Vector2(-t.y, t.x);
+        const w = c.width * 0.34;
+        const [x, z] = pts[i];
+        verts.push(x + nrm.x * w, y, z + nrm.y * w);
+        verts.push(x - nrm.x * w, y, z - nrm.y * w);
+      }
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = i * 2;
+        idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+      }
+      geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+      geom.setIndex(idx);
+      geom.computeVertexNormals();
+      return geom;
+    });
+  }, []);
+
+  return (
+    <group name="channel-water">
+      {geoms.map((g, i) => (
+        <mesh key={`water-${i}`} geometry={g}>
+          <meshPhysicalMaterial
+            color="#2e3d42"
+            metalness={0.1}
+            roughness={0.08}
+            clearcoat={1}
+            clearcoatRoughness={0.1}
+            envMapIntensity={1.4}
+            transparent
+            opacity={0.92}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Utility poles with sagging catenary conductors along the interior spine
+// road. Poles + crossarms are instanced; all wire spans share one
+// LineSegments geometry.
+// ---------------------------------------------------------------------------
+const POLE_H = 7.2;
+function UtilityLines() {
+  const { poleMatrices, armMatrices, wireGeom } = useMemo(() => {
+    const spine = interiorRoads[0];
+    // resample the polyline into pole positions every ~26 m, offset 4.5 m
+    // north of the carriageway
+    const poles: { x: number; z: number; dir: THREE.Vector2 }[] = [];
+    for (let i = 0; i < spine.length - 1; i++) {
+      const [ax, az] = spine[i];
+      const [bx, bz] = spine[i + 1];
+      const seg = Math.hypot(bx - ax, bz - az);
+      const dir = new THREE.Vector2((bx - ax) / seg, (bz - az) / seg);
+      const nrm = new THREE.Vector2(-dir.y, dir.x);
+      const count = Math.max(1, Math.round(seg / 26));
+      for (let k = 0; k < count; k++) {
+        const t = k / count;
+        poles.push({
+          x: ax + (bx - ax) * t - nrm.x * 4.5,
+          z: az + (bz - az) * t - nrm.y * 4.5,
+          dir,
+        });
+      }
+    }
+
+    const poleMatrices = poles.map((p) => {
+      const m = new THREE.Matrix4();
+      m.compose(
+        new THREE.Vector3(p.x, POLE_H / 2, p.z),
+        new THREE.Quaternion(),
+        new THREE.Vector3(1, 1, 1)
+      );
+      return m;
+    });
+    const armMatrices = poles.map((p) => {
+      const m = new THREE.Matrix4();
+      const angle = Math.atan2(p.dir.x, p.dir.y);
+      m.compose(
+        new THREE.Vector3(p.x, POLE_H - 0.5, p.z),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle + Math.PI / 2),
+        new THREE.Vector3(1, 1, 1)
+      );
+      return m;
+    });
+
+    // wire spans: two conductors per span, 8 segments each, catenary sag
+    const verts: number[] = [];
+    for (let i = 0; i < poles.length - 1; i++) {
+      const a = poles[i];
+      const b = poles[i + 1];
+      const span = Math.hypot(b.x - a.x, b.z - a.z);
+      if (span > 40) continue; // don't string wires across the resample seams
+      const nrm = new THREE.Vector2(-a.dir.y, a.dir.x);
+      for (const off of [-0.9, 0.9]) {
+        let px = 0, py = 0, pz = 0;
+        for (let k = 0; k <= 8; k++) {
+          const t = k / 8;
+          const x = a.x + (b.x - a.x) * t + nrm.x * off;
+          const z = a.z + (b.z - a.z) * t + nrm.y * off;
+          const y = POLE_H - 0.55 - Math.min(1.2, span * 0.022) * 4 * t * (1 - t);
+          if (k > 0) verts.push(px, py, pz, x, y, z);
+          px = x; py = y; pz = z;
+        }
+      }
+    }
+    const wireGeom = new THREE.BufferGeometry();
+    wireGeom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+    return { poleMatrices, armMatrices, wireGeom };
+  }, []);
+
+  return (
+    <group name="utility-lines">
+      <instancedMesh
+        args={[undefined, undefined, poleMatrices.length]}
+        castShadow
+        ref={(inst) => fillInstances(inst, poleMatrices)}
+      >
+        <cylinderGeometry args={[0.11, 0.16, POLE_H, 6]} />
+        <meshStandardMaterial color="#4f4436" roughness={0.95} />
+      </instancedMesh>
+      <instancedMesh
+        args={[undefined, undefined, armMatrices.length]}
+        castShadow
+        ref={(inst) => fillInstances(inst, armMatrices)}
+      >
+        <boxGeometry args={[2.4, 0.14, 0.14]} />
+        <meshStandardMaterial color="#5a4e3e" roughness={0.9} />
+      </instancedMesh>
+      <lineSegments geometry={wireGeom}>
+        <lineBasicMaterial color="#1c1c1e" transparent opacity={0.75} />
+      </lineSegments>
+    </group>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Container laydown yard — colour-tinted corrugated boxes on a gravel pad,
+// some double-stacked, west of the barracks connector road.
+// ---------------------------------------------------------------------------
+function ContainerYard() {
+  const tex = getSiteTextures();
+  const gravelMap = useMemo(() => setRepeat(tex.gravelColor, 3, 4), [tex]);
+
+  const { mats, cols } = useMemo(() => {
+    const r = rng(60601);
+    const palette = ["#8a3a2c", "#2c5a7a", "#3a6b46", "#b8b0a0", "#7a5c34", "#5a5e66"];
+    const mats: THREE.Matrix4[] = [];
+    const cols: THREE.Color[] = [];
+    const place = (x: number, z: number, y: number, rot: number) => {
+      const m = new THREE.Matrix4();
+      m.compose(
+        new THREE.Vector3(x, y, z),
+        new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot),
+        new THREE.Vector3(1, 1, 1)
+      );
+      mats.push(m);
+      cols.push(new THREE.Color(palette[Math.floor(r() * palette.length)]));
+    };
+    // three rows of containers aligned with the yard, slight jitter
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 5; col++) {
+        if (r() < 0.18) continue; // leave gaps
+        const x = -87 + col * 3.1 + (r() - 0.5) * 0.4;
+        const z = 38 + row * 7.5 + (r() - 0.5) * 0.8;
+        const rot = Math.PI / 2 + (r() - 0.5) * 0.06;
+        place(x, z, 1.3, rot);
+        if (r() < 0.4) place(x, z, 3.9, rot + (r() - 0.5) * 0.03); // stacked
+      }
+    }
+    return { mats, cols };
+  }, []);
+
+  return (
+    <group name="container-yard">
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-80, 0.055, 46]} receiveShadow>
+        <planeGeometry args={[24, 30]} />
+        <meshStandardMaterial map={gravelMap} color="#9c8e7a" roughness={1} />
+      </mesh>
+      <instancedMesh
+        args={[undefined, undefined, mats.length]}
+        castShadow
+        receiveShadow
+        ref={(inst) => fillInstances(inst, mats, cols)}
+      >
+        <boxGeometry args={[6.1, 2.6, 2.45]} />
+        <meshStandardMaterial
+          map={tex.containerColor}
+          color="#ffffff"
+          metalness={0.35}
+          roughness={0.6}
+        />
+      </instancedMesh>
+    </group>
+  );
+}
+
 export function SiteFeatures() {
   return (
     <group name="site-features">
@@ -263,6 +497,9 @@ export function SiteFeatures() {
       <Fence />
       <Fence path={topEnclosurePath} name="top-enclosure-fence" />
       <DrainageChannels />
+      <ChannelWater />
+      <UtilityLines />
+      <ContainerYard />
     </group>
   );
 }

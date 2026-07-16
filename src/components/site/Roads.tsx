@@ -40,9 +40,11 @@ function buildRibbon(points: [number, number][], width: number, y: number, close
 
 export function Roads() {
   const tex = getSiteTextures();
-  const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 2, 20), [tex]);
-  const asphaltRough = useMemo(() => setRepeat(tex.asphaltRough, 2, 20), [tex]);
-  const asphaltNormal = useMemo(() => setRepeat(tex.asphaltNormal, 2, 20), [tex]);
+  // Marked road surface: u spans the carriageway (edge lines + dashed
+  // centreline are baked in), v tiles along it — one repeat every ~14 m.
+  const roadMap = useMemo(() => setRepeat(tex.roadColor, 1, 0.5), [tex]);
+  const roadRough = useMemo(() => setRepeat(tex.roadRough, 1, 0.5), [tex]);
+  const roadNormal = useMemo(() => setRepeat(tex.roadNormal, 1, 0.5), [tex]);
   const dirtMap = useMemo(() => setRepeat(tex.dirtColor, 2, 24), [tex]);
   const dirtRough = useMemo(() => setRepeat(tex.dirtRough, 2, 24), [tex]);
 
@@ -61,10 +63,9 @@ export function Roads() {
       {/* Main perimeter access loop */}
       <mesh geometry={roadGeom} receiveShadow>
         <meshStandardMaterial
-          map={asphaltMap}
-          roughnessMap={asphaltRough}
-          normalMap={asphaltNormal}
-          color="#3a3a3c"
+          map={roadMap}
+          roughnessMap={roadRough}
+          normalMap={roadNormal}
           roughness={0.95}
           side={THREE.DoubleSide}
         />
@@ -73,10 +74,10 @@ export function Roads() {
       {interiorGeoms.map((g, i) => (
         <mesh key={`int-${i}`} geometry={g} receiveShadow>
           <meshStandardMaterial
-            map={asphaltMap}
-            roughnessMap={asphaltRough}
-            normalMap={asphaltNormal}
-            color="#42413f"
+            map={roadMap}
+            roughnessMap={roadRough}
+            normalMap={roadNormal}
+            color="#b5b3b0"
             roughness={0.95}
             side={THREE.DoubleSide}
           />

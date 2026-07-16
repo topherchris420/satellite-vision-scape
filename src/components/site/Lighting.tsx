@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react";
 import { useThree } from "@react-three/fiber";
-import { Sky } from "@react-three/drei";
+import { Sky, Stars } from "@react-three/drei";
 import * as THREE from "three";
 import { buildings, domes, spheres } from "@/lib/site-layout";
 
@@ -93,16 +93,19 @@ export function Lighting({ time }: { time: TimeOfDay }) {
 
       {isDay ? (
         <>
-          <ambientLight intensity={0.45} color="#ffe8c4" />
-          <hemisphereLight args={["#dbe7ff", "#c9a26e", 0.7]} />
+          <ambientLight intensity={0.35} color="#ffe8c4" />
+          <hemisphereLight args={["#cfe0ff", "#c9a26e", 0.65]} />
+          {/* Sun */}
           <directionalLight
             position={[140, 220, 90]}
-            intensity={2.6}
+            intensity={2.8}
             color="#fff2d6"
             castShadow
             shadow-mapSize-width={4096}
             shadow-mapSize-height={4096}
-            shadow-bias={-0.0005}
+            shadow-bias={-0.0004}
+            shadow-normalBias={0.02}
+            shadow-radius={4}
             shadow-camera-left={-250}
             shadow-camera-right={250}
             shadow-camera-top={250}
@@ -110,9 +113,12 @@ export function Lighting({ time }: { time: TimeOfDay }) {
             shadow-camera-near={1}
             shadow-camera-far={700}
           />
+          {/* Cool sky-bounce fill from the shadow side, keeps shade readable */}
+          <directionalLight position={[-120, 90, -80]} intensity={0.35} color="#bcd0f0" />
         </>
       ) : (
         <>
+          <Stars radius={800} depth={120} count={4000} factor={6} saturation={0.1} fade speed={0.4} />
           <ambientLight intensity={0.08} color="#1b2540" />
           <hemisphereLight args={["#1e2a4a", "#050810", 0.35]} />
           {/* Moonlight */}
@@ -123,7 +129,9 @@ export function Lighting({ time }: { time: TimeOfDay }) {
             castShadow
             shadow-mapSize-width={4096}
             shadow-mapSize-height={4096}
-            shadow-bias={-0.0005}
+            shadow-bias={-0.0004}
+            shadow-normalBias={0.02}
+            shadow-radius={4}
             shadow-camera-left={-250}
             shadow-camera-right={250}
             shadow-camera-top={250}

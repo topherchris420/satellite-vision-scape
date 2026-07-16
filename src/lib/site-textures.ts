@@ -167,6 +167,271 @@ function makePaintedSteel() {
   return tex;
 }
 
+// Weathered tank shell: pale painted steel with vertical rust streaks bleeding
+// down from the top rim and random blemishes — reads as years of outdoor duty.
+function makeTankShell() {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#d8d3c8";
+  ctx.fillRect(0, 0, size, size);
+  const rand = lcg(9013);
+  // subtle horizontal plate bands
+  ctx.strokeStyle = "rgba(105,100,92,0.4)";
+  ctx.lineWidth = 2;
+  for (let i = 1; i < 6; i++) {
+    const y = (i / 6) * size + (rand() - 0.5) * 4;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(size, y);
+    ctx.stroke();
+  }
+  // vertical weld seams
+  ctx.strokeStyle = "rgba(110,106,98,0.3)";
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 9; i++) {
+    const x = (i / 9) * size + (rand() - 0.5) * 8;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, size);
+    ctx.stroke();
+  }
+  // rust streaks running down from the rim and from seam intersections
+  for (let i = 0; i < 26; i++) {
+    const x = rand() * size;
+    const top = rand() < 0.5 ? 0 : rand() * size * 0.5;
+    const len = size * (0.12 + rand() * 0.5);
+    const w = 1.5 + rand() * 5;
+    const g = ctx.createLinearGradient(0, top, 0, top + len);
+    const a = 0.1 + rand() * 0.3;
+    g.addColorStop(0, `rgba(126,72,38,${a})`);
+    g.addColorStop(0.6, `rgba(110,64,34,${a * 0.55})`);
+    g.addColorStop(1, "rgba(96,58,32,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x - w / 2, top, w, len);
+  }
+  // grime blotches
+  for (let i = 0; i < 40; i++) {
+    const x = rand() * size;
+    const y = rand() * size;
+    const r = 3 + rand() * 14;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(90,84,74,${0.05 + rand() * 0.12})`);
+    g.addColorStop(1, "rgba(90,84,74,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 16;
+  return tex;
+}
+
+// Facade sheet: tilable grid of recessed windows on a panelled wall. The color
+// variant has dark glazing on a light wall (tinted by material.color); the
+// emissive variant is black except for a random subset of warm lit windows, so
+// buildings glow convincingly at night under bloom.
+function makeFacade(): { color: THREE.CanvasTexture; emissive: THREE.CanvasTexture } {
+  const size = 512;
+  const cols = 8;
+  const rows = 4;
+  const rand = lcg(6151);
+
+  const wall = document.createElement("canvas");
+  wall.width = wall.height = size;
+  const wctx = wall.getContext("2d")!;
+  wctx.fillStyle = "#d6d2c8";
+  wctx.fillRect(0, 0, size, size);
+  // faint panel noise
+  const img = wctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (rand() - 0.5) * 14;
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n;
+  }
+  wctx.putImageData(img, 0, 0);
+  // panel seams between window bays
+  wctx.strokeStyle = "rgba(120,116,108,0.35)";
+  wctx.lineWidth = 2;
+  for (let c = 0; c <= cols; c++) {
+    const x = (c / cols) * size;
+    wctx.beginPath();
+    wctx.moveTo(x, 0);
+    wctx.lineTo(x, size);
+    wctx.stroke();
+  }
+
+  const glow = document.createElement("canvas");
+  glow.width = glow.height = size;
+  const gctx = glow.getContext("2d")!;
+  gctx.fillStyle = "#000000";
+  gctx.fillRect(0, 0, size, size);
+
+  const cw = size / cols;
+  const ch = size / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = c * cw + cw * 0.22;
+      const y = r * ch + ch * 0.28;
+      const w = cw * 0.56;
+      const h = ch * 0.44;
+      // glazing: dark blue-grey with a diagonal sky glint
+      const g = wctx.createLinearGradient(x, y, x + w, y + h);
+      g.addColorStop(0, "#3d4a55");
+      g.addColorStop(0.5, "#55656f");
+      g.addColorStop(1, "#2c3640");
+      wctx.fillStyle = g;
+      wctx.fillRect(x, y, w, h);
+      wctx.strokeStyle = "rgba(60,58,52,0.8)";
+      wctx.lineWidth = 2;
+      wctx.strokeRect(x, y, w, h);
+      // mullion
+      wctx.strokeStyle = "rgba(40,44,48,0.7)";
+      wctx.lineWidth = 1;
+      wctx.beginPath();
+      wctx.moveTo(x + w / 2, y);
+      wctx.lineTo(x + w / 2, y + h);
+      wctx.stroke();
+      // ~45% of windows are lit at night, in two warmths
+      if (rand() < 0.45) {
+        gctx.fillStyle = rand() < 0.6 ? "#ffb45e" : "#ffd9a0";
+        gctx.fillRect(x, y, w, h);
+      }
+    }
+  }
+
+  const color = new THREE.CanvasTexture(wall);
+  color.wrapS = color.wrapT = THREE.RepeatWrapping;
+  color.anisotropy = 16;
+  const emissive = new THREE.CanvasTexture(glow);
+  emissive.wrapS = emissive.wrapT = THREE.RepeatWrapping;
+  emissive.anisotropy = 8;
+  return { color, emissive };
+}
+
+// Road surface: worn asphalt with baked-in edge lines and a dashed centreline.
+// Painted along the V axis so it lines up with the ribbon UVs (u across the
+// road, v along it). Markings are slightly eroded for realism.
+function makeRoadSurface() {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const rand = lcg(3271);
+  // asphalt base with aggregate speckle
+  ctx.fillStyle = "#3b3b3d";
+  ctx.fillRect(0, 0, size, size);
+  const img = ctx.getImageData(0, 0, size, size);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = (rand() - 0.5) * 22 + (rand() < 0.04 ? rand() * 46 : 0);
+    img.data[i] += n;
+    img.data[i + 1] += n;
+    img.data[i + 2] += n + (rand() - 0.5) * 4;
+  }
+  ctx.putImageData(img, 0, 0);
+  // wheel-track polish: two darker worn bands
+  for (const cx of [size * 0.3, size * 0.7]) {
+    const g = ctx.createLinearGradient(cx - size * 0.1, 0, cx + size * 0.1, 0);
+    g.addColorStop(0, "rgba(0,0,0,0)");
+    g.addColorStop(0.5, "rgba(20,20,22,0.28)");
+    g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g;
+    ctx.fillRect(cx - size * 0.1, 0, size * 0.2, size);
+  }
+  // edge lines (solid, slightly weathered)
+  const paint = (x: number, w: number, y0: number, y1: number, alpha: number) => {
+    ctx.fillStyle = `rgba(214,208,190,${alpha})`;
+    ctx.fillRect(x - w / 2, y0, w, y1 - y0);
+  };
+  for (const ex of [size * 0.06, size * 0.94]) {
+    for (let y = 0; y < size; y += 8) paint(ex, 5, y, y + 8, 0.5 + rand() * 0.35);
+  }
+  // dashed centreline
+  const dash = size / 4;
+  for (let y = 0; y < size; y += dash * 2) {
+    for (let s = 0; s < dash; s += 6) paint(size / 2, 6, y + s, y + s + 6, 0.55 + rand() * 0.35);
+  }
+  // cracks
+  ctx.strokeStyle = "rgba(18,18,20,0.5)";
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 10; i++) {
+    let x = rand() * size;
+    let y = rand() * size;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    for (let s = 0; s < 6; s++) {
+      x += (rand() - 0.5) * 40;
+      y += rand() * 30;
+      ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 16;
+  return tex;
+}
+
+// Ribbed shipping-container side, grayscale so instanceColor can tint it.
+function makeContainerSide() {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#b8b8b8";
+  ctx.fillRect(0, 0, size, size);
+  const rand = lcg(7817);
+  // vertical corrugation ribs
+  for (let x = 0; x < size; x += 16) {
+    const g = ctx.createLinearGradient(x, 0, x + 16, 0);
+    g.addColorStop(0, "rgba(255,255,255,0.22)");
+    g.addColorStop(0.45, "rgba(0,0,0,0.16)");
+    g.addColorStop(0.55, "rgba(0,0,0,0.2)");
+    g.addColorStop(1, "rgba(255,255,255,0.14)");
+    ctx.fillStyle = g;
+    ctx.fillRect(x, 0, 16, size);
+  }
+  // scuffs
+  for (let i = 0; i < 26; i++) {
+    ctx.fillStyle = `rgba(60,55,48,${0.05 + rand() * 0.14})`;
+    ctx.fillRect(rand() * size, rand() * size, 4 + rand() * 30, 2 + rand() * 8);
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+// Soft radial puff used by both the cloud billboards and smoke/steam
+// particles. A cluster of offset blobs so sprites don't read as circles.
+function makePuffSprite(seed: number, blobs: number) {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  const rand = lcg(seed);
+  for (let i = 0; i < blobs; i++) {
+    const x = size * (0.32 + rand() * 0.36);
+    const y = size * (0.32 + rand() * 0.36);
+    const r = size * (0.14 + rand() * 0.2);
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, `rgba(255,255,255,${0.24 + rand() * 0.22})`);
+    g.addColorStop(0.6, `rgba(255,255,255,${0.1 + rand() * 0.1})`);
+    g.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 // Roughness map derived from luminance of a color map, inverted+biased
 function makeRoughness(color: THREE.CanvasTexture, invert = false, bias = 0.6) {
   const src = color.image as HTMLCanvasElement;
@@ -210,6 +475,21 @@ let cache: {
   gravelColor: THREE.Texture;
   gravelRough: THREE.Texture;
   gravelNormal: THREE.Texture;
+  rockColor: THREE.Texture;
+  rockRough: THREE.Texture;
+  rockNormal: THREE.Texture;
+  noiseMask: THREE.Texture;
+  roadColor: THREE.Texture;
+  roadRough: THREE.Texture;
+  roadNormal: THREE.Texture;
+  facadeColor: THREE.Texture;
+  facadeEmissive: THREE.Texture;
+  tankColor: THREE.Texture;
+  tankRough: THREE.Texture;
+  tankNormal: THREE.Texture;
+  containerColor: THREE.Texture;
+  cloudSprite: THREE.Texture;
+  smokeSprite: THREE.Texture;
 } | null = null;
 
 export function getSiteTextures() {
@@ -239,7 +519,16 @@ export function getSiteTextures() {
   const gravelColor = makeTexture({
     base: [155, 125, 95], variation: [35, 30, 20], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
   });
+  const rockColor = makeTexture({
+    base: [138, 118, 96], variation: [42, 38, 32], scale: 7, octaves: 6, seed: 9, contrast: 1.5, speckle: 0.02, size: 512,
+  });
+  const noiseMask = makeTexture({
+    base: [128, 128, 128], variation: [127, 127, 127], scale: 4, octaves: 5, seed: 10, size: 256,
+  });
   const steelColor = makePaintedSteel();
+  const roadColor = makeRoadSurface();
+  const tankColor = makeTankShell();
+  const facade = makeFacade();
 
   cache = {
     dirtColor,
@@ -262,6 +551,21 @@ export function getSiteTextures() {
     gravelColor,
     gravelRough: makeRoughness(gravelColor as THREE.CanvasTexture, true, 0.85),
     gravelNormal: makeNormal(gravelColor as THREE.CanvasTexture, 4),
+    rockColor,
+    rockRough: makeRoughness(rockColor as THREE.CanvasTexture, true, 0.75),
+    rockNormal: makeNormal(rockColor as THREE.CanvasTexture, 5),
+    noiseMask,
+    roadColor,
+    roadRough: makeRoughness(roadColor as THREE.CanvasTexture, true, 0.72),
+    roadNormal: makeNormal(roadColor as THREE.CanvasTexture, 1.6),
+    facadeColor: facade.color,
+    facadeEmissive: facade.emissive,
+    tankColor,
+    tankRough: makeRoughness(tankColor as THREE.CanvasTexture, true, 0.42),
+    tankNormal: makeNormal(tankColor as THREE.CanvasTexture, 1.4),
+    containerColor: makeContainerSide(),
+    cloudSprite: makePuffSprite(1201, 7),
+    smokeSprite: makePuffSprite(5309, 4),
   };
   return cache;
 }

@@ -1,12 +1,25 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
+import {
+  EffectComposer,
+  Bloom,
+  N8AO,
+  SMAA,
+  Vignette,
+  ToneMapping,
+  DepthOfField,
+  BrightnessContrast,
+  HueSaturation,
+} from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 
 import * as THREE from "three";
 import { Terrain } from "./Terrain";
 import { Structures } from "./Structures";
 import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
+import { Atmosphere } from "./Atmosphere";
 import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
 import { Lighting, type TimeOfDay } from "./Lighting";
 import { HUD } from "./HUD";
@@ -66,6 +79,10 @@ export function SiteScene() {
   const [focus, setFocus] = useState<FocusRequest | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
+  // "high" runs the full post chain (AO, DoF); a sustained frame-rate drop
+  // sheds the expensive passes first, then render resolution.
+  const [quality, setQuality] = useState<"high" | "low">("high");
+  const declineStage = useRef(0);
   const markerRef = useRef<SVGGElement>(null);
   const isMobile = useIsMobile();
 
@@ -135,7 +152,7 @@ export function SiteScene() {
         }`}
       >
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" />
-        <div className="text-sm text-white/70">Building site model…</div>
+        <div className="text-sm text-white/70">Acquiring satellite downlink…</div>
       </div>
 
       <Canvas
@@ -143,24 +160,48 @@ export function SiteScene() {
         dpr={dpr}
         camera={{ fov: 55, near: 0.1, far: 2000, position: HOME_POSITION }}
         gl={{
-          antialias: true,
+          antialias: false, // AA is handled by SMAA in the post chain
           toneMapping: THREE.ACESFilmicToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
         }}
         onPointerMissed={() => setSelected(null)}
       >
-        {/* Drop render resolution instead of frame rate on weaker machines */}
-        <PerformanceMonitor onDecline={() => setDpr(1)} />
+        {/* Shed the expensive post passes first, then render resolution */}
+        <PerformanceMonitor
+          onDecline={() => {
+            declineStage.current += 1;
+            if (declineStage.current === 1) setQuality("low");
+            else setDpr(1);
+          }}
+        />
         <Suspense fallback={null}>
           <Lighting time={time} />
           <Terrain />
           <Roads />
-          <Structures onSelect={setSelected} />
+          <Structures onSelect={setSelected} time={time} />
           <SiteFeatures />
+          <Atmosphere time={time} />
           {selected && <SelectionRing sel={selected} />}
-          <fog attach="fog" args={[fogColor, 500, 1400]} />
+          <fog attach="fog" args={[fogColor, 450, 1500]} />
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
+
+        <EffectComposer multisampling={0}>
+          {/* Ground-truth contact shadows in corners and under structures */}
+          {quality === "high" && <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />}
+          {/* HDR highlights: lit windows, beacons, sun glints */}
+          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
+          {/* Shallow focus only for the automated cinematic pass */}
+          {mode === "cinematic" && quality === "high" && (
+            <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />
+          )}
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          {/* Commercial-imagery grade: a touch more saturation + contrast */}
+          <HueSaturation saturation={0.12} />
+          <BrightnessContrast contrast={0.07} />
+          <SMAA />
+          <Vignette eskil={false} offset={0.22} darkness={0.5} />
+        </EffectComposer>
 
         <CameraTracker markerRef={markerRef} />
         <Controls mode={mode} focus={focus} />
