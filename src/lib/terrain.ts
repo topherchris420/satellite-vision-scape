@@ -26,7 +26,7 @@ function fbm(x: number, y: number) {
   let v = 0,
     amp = 0.5,
     freq = 1;
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 6; i++) {
     v += amp * smooth(x * freq, y * freq);
     freq *= 2;
     amp *= 0.5;
@@ -45,10 +45,12 @@ const FENCE_EAST = 135; // compound edge; hills start beyond this
 export function terrainHeight(x: number, z: number): number {
   // Flat pad across the fenced compound.
   const eastFactor = ss(FENCE_EAST, FENCE_EAST + 90, x);
-  const hills = fbm(x * 0.012 + 10, z * 0.012 + 4) * 34 * eastFactor;
+  const hills = fbm(x * 0.012 + 10, z * 0.012 + 4) * 38 * eastFactor;
   // gentle ridge line
-  const ridge = Math.max(0, Math.sin((z + 200) * 0.004)) * 8 * eastFactor;
+  const ridge = Math.max(0, Math.sin((z + 200) * 0.004)) * 10 * eastFactor;
   // very slight roll on the western scrub so it is not perfectly flat
-  const westRoll = fbm(x * 0.01, z * 0.01) * 2.2 * ss(-90, -160, x);
-  return hills + ridge + westRoll;
+  const westRoll = fbm(x * 0.01, z * 0.01) * 2.8 * ss(-90, -160, x);
+  // micro-undulation everywhere for realism (eliminates perfectly flat patches)
+  const micro = fbm(x * 0.04 + 3, z * 0.04 + 7) * 0.4;
+  return hills + ridge + westRoll + micro;
 }

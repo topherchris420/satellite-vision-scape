@@ -120,14 +120,14 @@ export function Structures({ onSelect }: { onSelect?: (s: Selection) => void }) 
               {/* the sphere itself — LOD: full-res near, coarse far */}
               <Detailed distances={[0, 110, 260]}>
                 <mesh position={[0, rest + s.radius, 0]} castShadow receiveShadow>
-                  <sphereGeometry args={[s.radius, 48, 32]} />
+                  <sphereGeometry args={[s.radius, 64, 48]} />
                   <meshStandardMaterial
                     map={steelMap}
                     normalMap={steelNormal}
                     color="#f0ede5"
                     metalness={0.35}
-                    roughness={0.4}
-                    envMapIntensity={0.9}
+                    roughness={0.3}
+                    envMapIntensity={1.1}
                   />
                 </mesh>
                 <mesh position={[0, rest + s.radius, 0]} castShadow>
@@ -179,10 +179,10 @@ export function Structures({ onSelect }: { onSelect?: (s: Selection) => void }) 
               <sphereGeometry args={[d.radius, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} />
               <meshStandardMaterial
                 map={domeMap}
-                color="#f2efe8"
-                roughness={0.35}
+                color="#f5f2ec"
+                roughness={0.25}
                 metalness={0.08}
-                envMapIntensity={0.8}
+                envMapIntensity={1.0}
               />
             </mesh>
           </group>
@@ -221,8 +221,8 @@ export function Structures({ onSelect }: { onSelect?: (s: Selection) => void }) 
                 map={metalMap}
                 roughnessMap={metalRough}
                 color="#dcd7cc"
-                metalness={0.55}
-                roughness={0.4}
+                metalness={0.65}
+                roughness={0.35}
                 envMapIntensity={0.9}
               />
             </mesh>
@@ -268,7 +268,7 @@ export function Structures({ onSelect }: { onSelect?: (s: Selection) => void }) 
                   roughnessMap={concreteRough}
                   normalMap={concreteNormal}
                   color={b.color ?? "#cfc9bd"}
-                  roughness={0.85}
+                  roughness={0.8}
                 />
               </mesh>
               {gable ? (

@@ -46,7 +46,7 @@ type MakeOpts = {
 };
 
 function makeTexture(opts: MakeOpts) {
-  const size = opts.size ?? 512;
+  const size = opts.size ?? 1024;
   const scale = opts.scale ?? 8;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
@@ -77,13 +77,13 @@ function makeTexture(opts: MakeOpts) {
   ctx.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 8;
+  tex.anisotropy = 16;
   return tex;
 }
 
 // Normal map derived from the luminance of a color map treated as a height
 // field. Cheap way to give flat PBR surfaces real relief under lighting.
-function makeNormal(color: THREE.CanvasTexture, strength = 2) {
+function makeNormal(color: THREE.CanvasTexture, strength = 3) {
   const src = color.image as HTMLCanvasElement;
   const size = src.width;
   const read = document.createElement("canvas");
@@ -117,7 +117,7 @@ function makeNormal(color: THREE.CanvasTexture, strength = 2) {
   octx.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(out);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 8;
+  tex.anisotropy = 16;
   return tex;
 }
 
@@ -163,7 +163,7 @@ function makePaintedSteel() {
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 8;
+  tex.anisotropy = 16;
   return tex;
 }
 
@@ -216,13 +216,13 @@ export function getSiteTextures() {
   if (cache) return cache;
 
   const dirtColor = makeTexture({
-    base: [175, 130, 88], variation: [35, 28, 22], scale: 6, octaves: 6, seed: 1, speckle: 0.02,
+    base: [185, 120, 72], variation: [40, 30, 18], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
   });
   const grassColor = makeTexture({
-    base: [110, 118, 62], variation: [30, 32, 22], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
+    base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
   });
   const vegColor = makeTexture({
-    base: [88, 96, 52], variation: [35, 34, 24], scale: 8, octaves: 5, seed: 3,
+    base: [78, 88, 48], variation: [35, 34, 24], scale: 8, octaves: 5, seed: 3,
   });
   const asphaltColor = makeTexture({
     base: [58, 58, 60], variation: [12, 12, 12], scale: 20, octaves: 5, seed: 4, speckle: 0.03,
@@ -237,14 +237,14 @@ export function getSiteTextures() {
     base: [238, 236, 230], variation: [6, 6, 6], scale: 3, octaves: 3, seed: 7,
   });
   const gravelColor = makeTexture({
-    base: [140, 130, 115], variation: [30, 28, 24], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
+    base: [155, 125, 95], variation: [35, 30, 20], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
   });
   const steelColor = makePaintedSteel();
 
   cache = {
     dirtColor,
     dirtRough: makeRoughness(dirtColor as THREE.CanvasTexture, true, 0.7),
-    dirtNormal: makeNormal(dirtColor as THREE.CanvasTexture, 2.5),
+    dirtNormal: makeNormal(dirtColor as THREE.CanvasTexture, 3.5),
     grassColor,
     grassRough: makeRoughness(grassColor as THREE.CanvasTexture, false, 0.75),
     vegColor,
@@ -261,7 +261,7 @@ export function getSiteTextures() {
     steelNormal: makeNormal(steelColor as THREE.CanvasTexture, 1.0),
     gravelColor,
     gravelRough: makeRoughness(gravelColor as THREE.CanvasTexture, true, 0.85),
-    gravelNormal: makeNormal(gravelColor as THREE.CanvasTexture, 3),
+    gravelNormal: makeNormal(gravelColor as THREE.CanvasTexture, 4),
   };
   return cache;
 }

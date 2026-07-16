@@ -65,7 +65,7 @@ export function SiteScene() {
   const [selected, setSelected] = useState<Selection | null>(null);
   const [focus, setFocus] = useState<FocusRequest | null>(null);
   const [showHelp, setShowHelp] = useState(false);
-  const [dpr, setDpr] = useState<number | [number, number]>([1, 1.75]);
+  const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
   const markerRef = useRef<SVGGElement>(null);
   const isMobile = useIsMobile();
 
@@ -110,7 +110,7 @@ export function SiteScene() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isMobile]);
 
-  const fogColor = time === "day" ? "#d9c9a8" : "#0a1024";
+  const fogColor = time === "day" ? "#d4be98" : "#0a1024";
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
@@ -158,7 +158,7 @@ export function SiteScene() {
           <Structures onSelect={setSelected} />
           <SiteFeatures />
           {selected && <SelectionRing sel={selected} />}
-          <fog attach="fog" args={[fogColor, 350, 1100]} />
+          <fog attach="fog" args={[fogColor, 500, 1400]} />
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
 

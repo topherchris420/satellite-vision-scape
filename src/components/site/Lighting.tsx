@@ -9,19 +9,19 @@ export type TimeOfDay = "day" | "night";
 // Procedural equirectangular gradient environment, baked to an IBL map through
 // PMREM. Fully offline (no CDN HDR fetch) so it works in a sandboxed runtime.
 function makeGradientEquirect(isDay: boolean) {
-  const w = 512;
-  const h = 256;
+  const w = 1024;
+  const h = 512;
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d")!;
   const g = ctx.createLinearGradient(0, 0, 0, h);
   if (isDay) {
-    g.addColorStop(0.0, "#5b86c4"); // zenith
-    g.addColorStop(0.45, "#a9c3e0");
-    g.addColorStop(0.5, "#e8e0cf"); // horizon haze
-    g.addColorStop(0.55, "#c9b58e");
-    g.addColorStop(1.0, "#7a6a4c"); // ground bounce
+    g.addColorStop(0.0, "#4a7ab8"); // zenith
+    g.addColorStop(0.45, "#c4b89e");
+    g.addColorStop(0.5, "#e8d5b0"); // horizon haze
+    g.addColorStop(0.55, "#d4a86e");
+    g.addColorStop(1.0, "#8a6842"); // ground bounce
   } else {
     g.addColorStop(0.0, "#0a1226");
     g.addColorStop(0.48, "#141d33");
@@ -33,7 +33,7 @@ function makeGradientEquirect(isDay: boolean) {
   ctx.fillRect(0, 0, w, h);
   // warm sun disc smear near the horizon for day
   if (isDay) {
-    const sun = ctx.createRadialGradient(w * 0.72, h * 0.42, 2, w * 0.72, h * 0.42, 60);
+    const sun = ctx.createRadialGradient(w * 0.72, h * 0.42, 2, w * 0.72, h * 0.42, 90);
     sun.addColorStop(0, "rgba(255,244,214,0.9)");
     sun.addColorStop(1, "rgba(255,244,214,0)");
     ctx.fillStyle = sun;
@@ -93,15 +93,15 @@ export function Lighting({ time }: { time: TimeOfDay }) {
 
       {isDay ? (
         <>
-          <ambientLight intensity={0.35} color="#fff2dc" />
-          <hemisphereLight args={["#dbe7ff", "#c9a26e", 0.55]} />
+          <ambientLight intensity={0.45} color="#ffe8c4" />
+          <hemisphereLight args={["#dbe7ff", "#c9a26e", 0.7]} />
           <directionalLight
             position={[140, 220, 90]}
             intensity={2.6}
             color="#fff2d6"
             castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={4096}
+            shadow-mapSize-height={4096}
             shadow-bias={-0.0005}
             shadow-camera-left={-250}
             shadow-camera-right={250}
@@ -121,8 +121,8 @@ export function Lighting({ time }: { time: TimeOfDay }) {
             intensity={0.55}
             color="#9db8ff"
             castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
+            shadow-mapSize-width={4096}
+            shadow-mapSize-height={4096}
             shadow-bias={-0.0005}
             shadow-camera-left={-250}
             shadow-camera-right={250}

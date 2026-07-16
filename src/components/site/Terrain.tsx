@@ -24,7 +24,7 @@ export function Terrain() {
   // rise up while the fenced pad stays flat.
   const groundGeom = useMemo(() => {
     const size = 900;
-    const segs = 200;
+    const segs = 300;
     const geom = new THREE.PlaneGeometry(size, size, segs, segs);
     const pos = geom.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {
@@ -80,7 +80,7 @@ export function Terrain() {
           map={dirtColor}
           roughnessMap={dirtRough}
           normalMap={dirtNormal}
-          normalScale={new THREE.Vector2(0.6, 0.6)}
+          normalScale={new THREE.Vector2(0.8, 0.8)}
           roughness={1}
         />
       </mesh>
@@ -88,14 +88,14 @@ export function Terrain() {
       {/* Western dry scrub overlay */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-190, 0.05, 0]} receiveShadow>
         <planeGeometry args={[240, 520]} />
-        <meshStandardMaterial map={vegColor} roughness={1} color="#8a8452" transparent opacity={0.85} />
+        <meshStandardMaterial map={vegColor} roughness={1} color="#9a7a48" transparent opacity={0.85} />
       </mesh>
 
       {/* Green landscaped patch in the lower yard (inside the fence).
           y sits below the parking aprons (0.06) to avoid z-fighting. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-40, 0.045, 132]} receiveShadow>
         <planeGeometry args={[80, 60]} />
-        <meshStandardMaterial map={grassColor} roughnessMap={grassRough} roughness={0.9} color="#6f8a48" transparent opacity={0.9} />
+        <meshStandardMaterial map={grassColor} roughnessMap={grassRough} roughness={0.9} color="#5a7d3a" transparent opacity={0.9} />
       </mesh>
 
       {/* Tree trunks */}
@@ -110,7 +110,7 @@ export function Terrain() {
         }}
       >
         <cylinderGeometry args={[0.3, 0.4, 2, 6]} />
-        <meshStandardMaterial color="#5a4632" roughness={1} />
+        <meshStandardMaterial color="#4a3828" roughness={1} />
       </instancedMesh>
 
       {/* Tree canopies */}
@@ -125,7 +125,7 @@ export function Terrain() {
         }}
       >
         <coneGeometry args={[2.4, 6, 8]} />
-        <meshStandardMaterial color="#3a4a24" roughness={1} />
+        <meshStandardMaterial color="#2e3e1c" roughness={1} />
       </instancedMesh>
     </group>
   );
