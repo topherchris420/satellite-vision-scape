@@ -1,8 +1,18 @@
 import { useMemo } from "react";
 import * as THREE from "three";
+import type { ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
-import { domes, tanks, buildings, spheres } from "@/lib/site-layout";
+import { domes, tanks, buildings, spheres, type BuildingKind } from "@/lib/site-layout";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
+import type { Selection } from "@/lib/selection";
+
+const KIND_LABEL: Record<BuildingKind, string> = {
+  hall: "Process hall",
+  warehouse: "Warehouse",
+  shed: "Service shed",
+  barracks: "Barracks block",
+  office: "Office / admin",
+};
 
 // Triangular-prism gable roof. Ridge runs along local Z (building depth); the
 // two slopes fall to ±X eaves. Cached per unique (w, d, rise).
@@ -33,8 +43,21 @@ function gableGeometry(w: number, d: number, rise: number) {
   return geom;
 }
 
-export function Structures() {
+export function Structures({ onSelect }: { onSelect?: (s: Selection) => void }) {
   const tex = getSiteTextures();
+
+  // Click-to-inspect: pick handler + hover cursor, shared by every structure.
+  const pick = (e: ThreeEvent<MouseEvent>, s: Selection) => {
+    e.stopPropagation();
+    onSelect?.(s);
+  };
+  const over = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    document.body.style.cursor = "pointer";
+  };
+  const out = () => {
+    document.body.style.cursor = "auto";
+  };
   const domeMap = useMemo(() => setRepeat(tex.domeColor, 2, 2), [tex]);
   const steelMap = useMemo(() => setRepeat(tex.steelColor, 3, 2), [tex]);
   const steelNormal = useMemo(() => setRepeat(tex.steelNormal, 3, 2), [tex]);
@@ -54,7 +77,26 @@ export function Structures() {
           const rest = s.radius * 0.62; // height of sphere centre above grade
           const legs = s.legs ?? 10;
           return (
-            <group key={`sphere-${i}`} name={`sphere-${i}`} position={[s.pos[0], 0, s.pos[1]]}>
+            <group
+              key={`sphere-${i}`}
+              name={`sphere-${i}`}
+              position={[s.pos[0], 0, s.pos[1]]}
+              onClick={(e) =>
+                pick(e, {
+                  kind: "Spherical storage tank",
+                  name: `Sphere S-${i + 1}`,
+                  pos: s.pos,
+                  radius: s.radius * 1.2,
+                  details: [
+                    `Diameter ${(s.radius * 2).toFixed(0)} m`,
+                    `Capacity ≈ ${Math.round((4 / 3) * Math.PI * s.radius ** 3).toLocaleString()} m³`,
+                    `${s.legs ?? 10} support legs, equatorial platform`,
+                  ],
+                })
+              }
+              onPointerOver={over}
+              onPointerOut={out}
+            >
               {/* concrete pad */}
               <mesh position={[0, 0.15, 0]} receiveShadow>
                 <cylinderGeometry args={[s.radius * 1.1, s.radius * 1.15, 0.3, 24]} />
@@ -110,7 +152,25 @@ export function Structures() {
       {/* -------- Radomes (hemispheres on gravel pads) -------- */}
       <group name="radomes">
         {domes.map((d, i) => (
-          <group key={`dome-${i}`} name={`dome-${i}`} position={[d.pos[0], 0, d.pos[1]]}>
+          <group
+            key={`dome-${i}`}
+            name={`dome-${i}`}
+            position={[d.pos[0], 0, d.pos[1]]}
+            onClick={(e) =>
+              pick(e, {
+                kind: "Radome",
+                name: `Radome R-${i + 1}`,
+                pos: d.pos,
+                radius: d.radius * 1.25,
+                details: [
+                  `Diameter ${(d.radius * 2).toFixed(0)} m`,
+                  "Protective enclosure for antenna equipment",
+                ],
+              })
+            }
+            onPointerOver={over}
+            onPointerOut={out}
+          >
             <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <circleGeometry args={[d.radius * 1.2, 32]} />
               <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
@@ -132,7 +192,25 @@ export function Structures() {
       {/* -------- Cylindrical storage tanks (domed tops) -------- */}
       <group name="tanks">
         {tanks.map((t, i) => (
-          <group key={`tank-${i}`} name={`tank-${i}`} position={[t.pos[0], 0, t.pos[1]]}>
+          <group
+            key={`tank-${i}`}
+            name={`tank-${i}`}
+            position={[t.pos[0], 0, t.pos[1]]}
+            onClick={(e) =>
+              pick(e, {
+                kind: "Cylindrical storage tank",
+                name: `Tank T-${i + 1}`,
+                pos: t.pos,
+                radius: t.radius * 1.4,
+                details: [
+                  `Diameter ${(t.radius * 2).toFixed(0)} m · height ${t.height} m`,
+                  `Capacity ≈ ${Math.round(Math.PI * t.radius ** 2 * t.height).toLocaleString()} m³`,
+                ],
+              })
+            }
+            onPointerOver={over}
+            onPointerOut={out}
+          >
             <mesh position={[0, 0.1, 0]} receiveShadow>
               <cylinderGeometry args={[t.radius * 1.15, t.radius * 1.2, 0.2, 24]} />
               <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
@@ -167,6 +245,21 @@ export function Structures() {
               name={`building-${i}`}
               position={[b.pos[0], 0, b.pos[1]]}
               rotation={[0, b.rotY ?? 0, 0]}
+              onClick={(e) =>
+                pick(e, {
+                  kind: KIND_LABEL[b.kind ?? "warehouse"],
+                  name: `Building B-${i + 1}`,
+                  pos: b.pos,
+                  radius: Math.hypot(b.size[0], b.size[1]) / 2 + 1,
+                  details: [
+                    `Footprint ${b.size[0]} × ${b.size[1]} m`,
+                    `Height ${b.height} m`,
+                    b.roof === "gable" ? "Gable roof" : "Flat roof",
+                  ],
+                })
+              }
+              onPointerOver={over}
+              onPointerOut={out}
             >
               <mesh position={[0, b.height / 2, 0]} castShadow receiveShadow>
                 <boxGeometry args={[b.size[0], b.height, b.size[1]]} />

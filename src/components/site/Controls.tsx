@@ -7,6 +7,19 @@ import { terrainHeight } from "@/lib/terrain";
 
 export type ControlMode = "fly" | "fps" | "cinematic";
 
+// A one-shot request to glide the fly camera to a structure. `ts` makes each
+// request unique so clicking the same structure twice re-triggers the flight.
+export type FocusRequest = { x: number; z: number; r: number; ts: number };
+
+// The subset of MapControls the focus animation needs (drei registers the
+// instance on R3F state via makeDefault).
+type OrbitLike = {
+  target: THREE.Vector3;
+  update: () => void;
+  addEventListener: (type: string, fn: () => void) => void;
+  removeEventListener: (type: string, fn: () => void) => void;
+};
+
 function useKeys() {
   const keys = useRef<Record<string, boolean>>({});
   useEffect(() => {
@@ -66,14 +79,45 @@ function FpsMover() {
   return <PointerLockControls />;
 }
 
-function FlyMover() {
+function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   const { camera } = useThree();
+  const controls = useThree((s) => s.controls) as unknown as OrbitLike | null;
   const keys = useKeys();
+  const anim = useRef<{ pos: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
   useEffect(() => {
     camera.position.set(-40, 150, 220);
     camera.lookAt(0, 0, 20);
   }, [camera]);
+
+  // Turn a focus request into a glide destination: keep the camera's current
+  // bearing to the structure, back off proportionally to its size.
+  useEffect(() => {
+    if (!focus) return;
+    const dir = new THREE.Vector3(camera.position.x - focus.x, 0, camera.position.z - focus.z);
+    if (dir.lengthSq() < 1) dir.set(0.7, 0, 0.7);
+    dir.normalize();
+    const dist = Math.max(38, focus.r * 6.5);
+    anim.current = {
+      pos: new THREE.Vector3(
+        focus.x + dir.x * dist,
+        Math.max(16, focus.r * 3.2),
+        focus.z + dir.z * dist
+      ),
+      target: new THREE.Vector3(focus.x, Math.max(4, focus.r * 1.2), focus.z),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focus?.ts]);
+
+  // A manual drag cancels the glide so the user is never fighting the camera.
+  useEffect(() => {
+    if (!controls) return;
+    const cancel = () => {
+      anim.current = null;
+    };
+    controls.addEventListener("start", cancel);
+    return () => controls.removeEventListener("start", cancel);
+  }, [controls]);
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -82,6 +126,16 @@ function FlyMover() {
     camera.getWorldDirection(forward);
     const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
 
+    const moving =
+      keys.current["KeyW"] ||
+      keys.current["KeyS"] ||
+      keys.current["KeyA"] ||
+      keys.current["KeyD"] ||
+      keys.current["KeyQ"] ||
+      keys.current["KeyE"] ||
+      keys.current["Space"];
+    if (moving) anim.current = null;
+
     if (keys.current["KeyW"]) camera.position.addScaledVector(forward, speed);
     if (keys.current["KeyS"]) camera.position.addScaledVector(forward, -speed);
     if (keys.current["KeyD"]) camera.position.addScaledVector(right, speed);
@@ -89,6 +143,13 @@ function FlyMover() {
     if (keys.current["KeyE"] || keys.current["Space"]) camera.position.y += speed;
     if (keys.current["KeyQ"]) camera.position.y -= speed;
     camera.position.y = Math.max(3, camera.position.y);
+
+    if (anim.current && controls) {
+      camera.position.lerp(anim.current.pos, 0.06);
+      controls.target.lerp(anim.current.target, 0.08);
+      controls.update();
+      if (camera.position.distanceTo(anim.current.pos) < 0.8) anim.current = null;
+    }
   });
 
   return (
@@ -157,8 +218,8 @@ function CinematicMover() {
   return null;
 }
 
-export function Controls({ mode }: { mode: ControlMode }) {
-  if (mode === "fly") return <FlyMover />;
+export function Controls({ mode, focus }: { mode: ControlMode; focus?: FocusRequest | null }) {
+  if (mode === "fly") return <FlyMover focus={focus} />;
   if (mode === "fps") return <FpsMover />;
   return <CinematicMover />;
 }
