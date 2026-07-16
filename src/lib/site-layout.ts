@@ -40,16 +40,18 @@ export type Channel = { path: [number, number][]; width: number };
 // These sit on a ring of support legs like pressurised gas / LNG spheres.
 // ---------------------------------------------------------------------------
 export const spheres: Sphere[] = [
-  { pos: [-21, 33], radius: 5, legs: 8 },
-  { pos: [-8, 36], radius: 6.5, legs: 10 },
-  { pos: [13, 31], radius: 8, legs: 10 },
-  { pos: [40, 38], radius: 7, legs: 10 },
-  { pos: [55, 40], radius: 6.5, legs: 10 },
-  { pos: [72, 41], radius: 8.5, legs: 12 },
-  { pos: [108, 37], radius: 7.5, legs: 10 },
-  // large lower sphere sitting slightly south of the main row
-  { pos: [88, 71], radius: 9, legs: 12 },
-  { pos: [104, 74], radius: 4.5, legs: 8 },
+  // Main row — kept north of the process hall (z ≥ 38) so the shells and
+  // their pads never intersect it.
+  { pos: [-21, 28], radius: 5, legs: 8 },
+  { pos: [-8, 30], radius: 6.5, legs: 10 },
+  { pos: [13, 29], radius: 8, legs: 10 },
+  { pos: [40, 36], radius: 7, legs: 10 },
+  { pos: [55, 38], radius: 6.5, legs: 10 },
+  { pos: [72, 39], radius: 8.5, legs: 12 },
+  { pos: [108, 36], radius: 7.5, legs: 10 },
+  // large lower pair tucked against the band's south fence (z = 73)
+  { pos: [86, 62], radius: 9, legs: 12 },
+  { pos: [120, 65], radius: 4.5, legs: 8 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -60,7 +62,7 @@ export const domes: Dome[] = [
   // Three across the very top (separate northern enclosure)
   { pos: [-116, -152], radius: 7 },
   { pos: [-55, -152], radius: 7 },
-  { pos: [2, -152], radius: 7 },
+  { pos: [-2, -152], radius: 7 },
   // Upper-left cluster of four
   { pos: [-113, -82], radius: 8 },
   { pos: [-80, -81], radius: 6.5 },
@@ -72,10 +74,11 @@ export const domes: Dome[] = [
 // Cylindrical storage / process tanks scattered around the process area.
 // ---------------------------------------------------------------------------
 export const tanks: Tank[] = [
-  { pos: [-30, 24], radius: 3.5, height: 9 },
-  { pos: [-38, 30], radius: 3, height: 7 },
-  { pos: [26, 55], radius: 4, height: 11 },
-  { pos: [34, 58], radius: 4, height: 11 },
+  { pos: [-30, 20], radius: 3.5, height: 9 },
+  { pos: [-38, 26], radius: 3, height: 7 },
+  // twin tanks east of the process hall (1 m clear of its wall)
+  { pos: [28, 55], radius: 4, height: 11 },
+  { pos: [36, 60], radius: 4, height: 11 },
   { pos: [-95, -70], radius: 3, height: 6 },
   { pos: [120, 55], radius: 3.5, height: 8 },
 ];
@@ -84,19 +87,16 @@ export const tanks: Tank[] = [
 // Buildings.
 // ---------------------------------------------------------------------------
 export const buildings: Building[] = [
-  // Big bright process hall (central-lower large rectangle)
-  { pos: [-6, 47], size: [58, 34], height: 12, color: "#e2ddd2", kind: "hall", roof: "flat" },
-  { pos: [-2, 20], size: [26, 16], height: 9, color: "#cfc9bd", kind: "warehouse" },
+  // Big bright process hall — z 38..64, clear of the sphere row to its north
+  { pos: [-6, 51], size: [58, 26], height: 12, color: "#e2ddd2", kind: "hall", roof: "flat" },
+  // small warehouse against the notch fence, north of the sphere pads
+  { pos: [-2, 10], size: [26, 12], height: 9, color: "#cfc9bd", kind: "warehouse" },
   // Long dark striped building (upper-left — reads like a solar / louvered roof)
   { pos: [-74, -26], size: [22, 30], height: 5, color: "#3a3f34", kind: "shed", rotY: 0 },
   // Upper-left support buildings around the radome cluster
   { pos: [-100, -60], size: [16, 10], height: 5, color: "#c4bdae", kind: "office" },
   { pos: [-88, -50], size: [12, 8], height: 4, color: "#b8b1a2", kind: "office" },
   { pos: [-70, -55], size: [10, 14], height: 5, color: "#cfc9bd", kind: "office" },
-  // Right-side process buildings behind the tank row
-  { pos: [30, 20], size: [18, 20], height: 8, color: "#d4cec0", kind: "warehouse" },
-  { pos: [60, 18], size: [14, 22], height: 7, color: "#c9c3b5", kind: "warehouse" },
-  { pos: [95, 15], size: [16, 20], height: 7, color: "#d4cec0", kind: "warehouse" },
   // Lower-left barracks: rows of long parallel buildings
   ...Array.from({ length: 5 }, (_, i) => ({
     pos: [-88 + i * 15, 92] as [number, number],
@@ -110,29 +110,32 @@ export const buildings: Building[] = [
   { pos: [6, 96], size: [28, 10], height: 5, color: "#bdb7a9", kind: "shed" },
   { pos: [8, 112], size: [30, 8], height: 5, color: "#c9c3b5", kind: "shed" },
   { pos: [18, 128], size: [20, 8], height: 4, color: "#b8b1a2", kind: "shed" },
-  // Lower landscaped compound buildings (inside the lower yard)
-  { pos: [14, 122], size: [12, 14], height: 6, color: "#e0dccf", kind: "office" },
-  { pos: [22, 144], size: [10, 12], height: 6, color: "#e0dccf", kind: "office" },
+  // Lower landscaped compound buildings (inside the lower yard, clear of the
+  // service sheds and the parking apron)
+  { pos: [-16, 140], size: [12, 14], height: 6, color: "#e0dccf", kind: "office" },
+  { pos: [20, 154], size: [10, 12], height: 6, color: "#e0dccf", kind: "office" },
 ];
 
 // ---------------------------------------------------------------------------
 // Pipe racks connecting the tank farm and process halls.
 // ---------------------------------------------------------------------------
 export const pipeRacks: PipeRack[] = [
-  { from: [-21, 26], to: [108, 30], lines: 4, height: 2.4 },
-  { from: [-6, 30], to: [-6, 64], lines: 3, height: 2.2 },
-  { from: [72, 46], to: [88, 62], lines: 3, height: 2.2 },
-  { from: [30, 30], to: [30, 47], lines: 2, height: 2.0 },
-  { from: [-30, 28], to: [-30, 40], lines: 2, height: 2.0 },
+  // sphere row → twin tanks, threading the gap between the sphere pads
+  { from: [30, 30], to: [30, 51], lines: 2, height: 2.0 },
+  // west tank pair header
+  { from: [-30, 24], to: [-30, 34], lines: 2, height: 2.0 },
+  // sphere row → large lower sphere
+  { from: [72, 46], to: [88, 60], lines: 3, height: 2.2 },
 ];
 
 // ---------------------------------------------------------------------------
 // Parking lots / paved aprons.
 // ---------------------------------------------------------------------------
 export const parkingLots: Parking[] = [
-  { pos: [-40, 118], size: [26, 20], rows: 4 },
+  { pos: [-34, 118], size: [26, 20], rows: 4 },
   { pos: [8, 138], size: [22, 16], rows: 3 },
-  { pos: [-6, 66], size: [40, 10], rows: 2 },
+  // apron between the hall and the barracks yard
+  { pos: [-6, 70], size: [40, 10], rows: 2 },
 ];
 
 // ---------------------------------------------------------------------------
@@ -172,29 +175,32 @@ export const topEnclosurePath: [number, number][] = [
 
 // Interior spine road along the tank farm / process area
 export const interiorRoads: [number, number][][] = [
+  // E-W spine: hugs the band's north fence, staying north of the sphere pads
   [
     [-92, 22],
-    [-60, 24],
-    [-20, 26],
-    [40, 26],
-    [110, 30],
+    [-40, 20],
+    [-10, 19],
+    [20, 17],
+    [60, 17],
+    [110, 20],
     [136, 42],
   ],
+  // N-S connector, running down the gap between barracks rows 2 and 3
   [
-    [-6, 26],
-    [-6, 88],
-    [10, 118],
+    [-50.5, 20],
+    [-50.5, 132],
   ],
+  // short lane down the gap between barracks rows 1 and 2
   [
-    [-88, 70],
-    [-88, 120],
+    [-65.5, 66],
+    [-65.5, 124],
   ],
 ];
 
 // Winding dirt tracks over the eastern hills (right side of the image)
 export const dirtTracks: [number, number][][] = [
   [
-    [132, 44],
+    [146, 40],
     [160, 20],
     [185, -20],
     [200, -70],
@@ -220,12 +226,13 @@ export const fencePath: [number, number][] = perimeterPath;
 // Drainage channels crossing the terrain.
 // ---------------------------------------------------------------------------
 export const channels: Channel[] = [
+  // western wash, running outside the fence line
   {
     path: [
       [-160, 150],
-      [-120, 130],
-      [-90, 100],
-      [-60, 60],
+      [-130, 110],
+      [-118, 60],
+      [-112, 10],
     ],
     width: 3,
   },
@@ -260,13 +267,20 @@ export const trees: [number, number][] = (() => {
     if (x < 165 && r() < 0.6) continue;
     pts.push([x, z]);
   }
-  // Landscaped tree cluster in the lower yard (inside the fence)
-  for (let i = 0; i < 40; i++) {
-    pts.push([-70 + r() * 62, 110 + r() * 46]);
+  // Landscaped tree cluster in the lower yard: south of the barracks,
+  // keeping clear of the parking apron and the N-S connector road.
+  let planted = 0;
+  while (planted < 40) {
+    const x = -58 + r() * 34; // [-58, -24]
+    const z = 116 + r() * 40; // [116, 156]
+    if (x > -56 && x < -45) continue; // N-S road corridor
+    if (x > -47 && z < 128) continue; // parking apron
+    pts.push([x, z]);
+    planted++;
   }
-  // Sparse northern scrub
+  // Sparse northern scrub, clear of the antenna enclosure (z ≥ -166)
   for (let i = 0; i < 25; i++) {
-    pts.push([-40 + r() * 160, -200 + r() * 40]);
+    pts.push([-40 + r() * 160, -210 + r() * 35]);
   }
   return pts;
 })();
