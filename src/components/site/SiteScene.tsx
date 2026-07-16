@@ -7,7 +7,7 @@ import { Terrain } from "./Terrain";
 import { Structures } from "./Structures";
 import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
-import { Controls, type ControlMode, type FocusRequest } from "./Controls";
+import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
 import { Lighting, type TimeOfDay } from "./Lighting";
 import { HUD } from "./HUD";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -141,7 +141,7 @@ export function SiteScene() {
       <Canvas
         shadows
         dpr={dpr}
-        camera={{ fov: 55, near: 0.1, far: 2000, position: [0, 120, 180] }}
+        camera={{ fov: 55, near: 0.1, far: 2000, position: HOME_POSITION }}
         gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,

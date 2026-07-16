@@ -1,5 +1,13 @@
 import * as THREE from "three";
 
+// Seeded LCG so every texture is byte-identical between page loads — the
+// speckle and panel noise must not vary or the opening shot won't be
+// reproducible.
+function lcg(seed: number) {
+  let s = seed >>> 0 || 1;
+  return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+}
+
 // Simple hash-based value noise
 function hash(x: number, y: number, seed: number) {
   const s = Math.sin(x * 127.1 + y * 311.7 + seed * 74.7) * 43758.5453;
@@ -50,6 +58,7 @@ function makeTexture(opts: MakeOpts) {
   const contrast = opts.contrast ?? 1;
   const seed = opts.seed ?? 1;
   const speckle = opts.speckle ?? 0;
+  const rand = lcg(seed * 7919 + 17);
 
   for (let y = 0; y < size; y++) {
     for (let x = 0; x < size; x++) {
@@ -57,7 +66,7 @@ function makeTexture(opts: MakeOpts) {
       const ny = (y / size) * scale;
       let n = fbm(nx, ny, octaves, seed);
       n = (n - 0.5) * contrast + 0.5;
-      const sp = speckle > 0 ? (Math.random() < speckle ? (Math.random() - 0.5) * 60 : 0) : 0;
+      const sp = speckle > 0 ? (rand() < speckle ? (rand() - 0.5) * 60 : 0) : 0;
       const idx = (y * size + x) * 4;
       img.data[idx] = Math.max(0, Math.min(255, br + (n - 0.5) * vr * 2 + sp));
       img.data[idx + 1] = Math.max(0, Math.min(255, bg + (n - 0.5) * vg * 2 + sp));
@@ -122,9 +131,10 @@ function makePaintedSteel() {
   ctx.fillStyle = "#e9e6de";
   ctx.fillRect(0, 0, size, size);
   // subtle noise wash
+  const rand = lcg(4321);
   const img = ctx.getImageData(0, 0, size, size);
   for (let i = 0; i < img.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 12;
+    const n = (rand() - 0.5) * 12;
     img.data[i] += n;
     img.data[i + 1] += n;
     img.data[i + 2] += n;

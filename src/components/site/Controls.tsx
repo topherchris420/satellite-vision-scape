@@ -79,6 +79,13 @@ function FpsMover() {
   return <PointerLockControls />;
 }
 
+// Home view shared by the Canvas default camera and the fly-mode reset, so
+// the opening frame is identical on every load: the camera starts exactly
+// here and MapControls' target matches the lookAt, leaving damping nothing
+// to settle.
+export const HOME_POSITION: [number, number, number] = [-40, 150, 220];
+export const HOME_TARGET: [number, number, number] = [0, 0, 20];
+
 function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   const { camera } = useThree();
   const controls = useThree((s) => s.controls) as unknown as OrbitLike | null;
@@ -86,8 +93,8 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   const anim = useRef<{ pos: THREE.Vector3; target: THREE.Vector3 } | null>(null);
 
   useEffect(() => {
-    camera.position.set(-40, 150, 220);
-    camera.lookAt(0, 0, 20);
+    camera.position.set(...HOME_POSITION);
+    camera.lookAt(...HOME_TARGET);
   }, [camera]);
 
   // Turn a focus request into a glide destination: keep the camera's current
@@ -155,6 +162,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   return (
     <MapControls
       makeDefault
+      target={HOME_TARGET}
       enableDamping
       dampingFactor={0.1}
       maxPolarAngle={Math.PI / 2 - 0.03}
