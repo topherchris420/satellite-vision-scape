@@ -18,14 +18,9 @@ export const Route = createFileRoute("/thesis")({
       { property: "og:title", content: "Digital Twin Thesis — GeoTwn" },
       { property: "og:type", content: "website" },
     ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap",
-      },
-    ],
+    // Self-hosted JetBrains Mono (public/fonts) so the piece renders
+    // identically with no external font dependency.
+    links: [{ rel: "stylesheet", href: "/fonts/jetbrains-mono.css" }],
   }),
   component: ThesisPage,
 });
