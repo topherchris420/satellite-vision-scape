@@ -1,8 +1,7 @@
-# GeoTwn — satellite-vision-scape
+# GeoTwn 
 
 An interactive geospatial-intelligence demo: a navigable 3D reconstruction of a
-remote desert site, an animated **Digital Twin Thesis** motion piece, and an
-IEEE-style red-team paper — all making one argument:
+remote desert site, an animated **Digital Twin Thesis** motion piece, and a paper — all making one argument:
 
 > Commodity graphics pipelines + publicly available imagery ⇒ convincing,
 > navigable digital twins of complex infrastructure. Treat this as a baseline
@@ -52,19 +51,6 @@ bun run preview    # preview the production build
 bun run lint       # eslint
 bun run format     # prettier
 ```
-
-## Re-recording the README video
-
-With the dev server running (and Playwright + ffmpeg available):
-
-```sh
-node scripts/record-thesis.mjs http://localhost:5173
-```
-
-The script seeks the piece frame-by-frame in headless Chromium via the
-`window.__thesisSeek` hook, screenshots each frame, and encodes
-`docs/media/digital-twin-thesis.{gif,mp4}` with ffmpeg — so the recording is
-deterministic and pixel-exact.
 
 ## Project structure
 
