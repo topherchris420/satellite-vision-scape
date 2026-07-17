@@ -34,14 +34,20 @@ function gableGeometry(w: number, d: number, rise: number) {
   const hd = d / 2;
   // 6 vertices: bottom-left/right + peak, at each Z end
   const v = [
-    [-hw, 0, hd], [hw, 0, hd], [0, rise, hd], // front
-    [-hw, 0, -hd], [hw, 0, -hd], [0, rise, -hd], // back
+    [-hw, 0, hd],
+    [hw, 0, hd],
+    [0, rise, hd], // front
+    [-hw, 0, -hd],
+    [hw, 0, -hd],
+    [0, rise, -hd], // back
   ];
   const tris = [
     [0, 1, 2], // front gable
     [5, 4, 3], // back gable
-    [0, 2, 5], [0, 5, 3], // left slope
-    [2, 1, 4], [2, 4, 5], // right slope
+    [0, 2, 5],
+    [0, 5, 3], // left slope
+    [2, 1, 4],
+    [2, 4, 5], // right slope
   ];
   const pos: number[] = [];
   for (const t of tris) for (const i of t) pos.push(...v[i]);
@@ -111,11 +117,16 @@ function useRooftopEquipment() {
         const wz = b.pos[1] - lx * Math.sin(rot) + lz * Math.cos(rot);
         const m = new THREE.Matrix4();
         q.setFromAxisAngle(axisY, rot + (r() < 0.5 ? 0 : Math.PI / 2));
-        m.compose(new THREE.Vector3(wx, b.height + sy / 2 + 0.05, wz), q, new THREE.Vector3(sx, sy, sz));
+        m.compose(
+          new THREE.Vector3(wx, b.height + sy / 2 + 0.05, wz),
+          q,
+          new THREE.Vector3(sx, sy, sz),
+        );
         out.push(m);
       };
       for (let i = 0; i < nAc; i++) place(acs, 1.4 + r() * 1.2, 0.8 + r() * 0.5, 1.1 + r() * 0.8);
-      for (let i = 0; i < nVent; i++) place(vents, 0.5 + r() * 0.3, 0.9 + r() * 0.8, 0.5 + r() * 0.3);
+      for (let i = 0; i < nVent; i++)
+        place(vents, 0.5 + r() * 0.3, 0.9 + r() * 0.8, 0.5 + r() * 0.3);
     }
     return { acs, vents };
   }, []);
@@ -184,7 +195,11 @@ export function Structures({
               {/* concrete pad */}
               <mesh position={[0, 0.15, 0]} receiveShadow>
                 <cylinderGeometry args={[s.radius * 1.1, s.radius * 1.15, 0.3, 24]} />
-                <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+                <meshStandardMaterial
+                  map={concreteMap}
+                  roughnessMap={concreteRough}
+                  roughness={0.9}
+                />
               </mesh>
               {/* support legs in a ring */}
               {Array.from({ length: legs }).map((_, j) => {
@@ -229,17 +244,19 @@ export function Structures({
               {/* equatorial maintenance platform + handrail */}
               <mesh position={[0, rest + s.radius, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <ringGeometry args={[s.radius * 1.0, s.radius * 1.12, 32]} />
-                <meshStandardMaterial color="#6f6a60" metalness={0.5} roughness={0.6} side={THREE.DoubleSide} />
+                <meshStandardMaterial
+                  color="#6f6a60"
+                  metalness={0.5}
+                  roughness={0.6}
+                  side={THREE.DoubleSide}
+                />
               </mesh>
               <mesh position={[0, rest + s.radius + 0.55, 0]}>
                 <torusGeometry args={[s.radius * 1.12, 0.035, 6, 40]} />
                 <meshStandardMaterial color="#84796a" metalness={0.7} roughness={0.4} />
               </mesh>
               {/* access ladder from grade to the platform */}
-              <mesh
-                position={[s.radius * 1.12, (rest + s.radius) / 2, 0]}
-                castShadow
-              >
+              <mesh position={[s.radius * 1.12, (rest + s.radius) / 2, 0]} castShadow>
                 <boxGeometry args={[0.12, rest + s.radius, 0.5]} />
                 <meshStandardMaterial color="#7a7264" metalness={0.6} roughness={0.5} />
               </mesh>
@@ -266,7 +283,11 @@ export function Structures({
             {/* low concrete plinth under the dome */}
             <mesh position={[0, 0.35, 0]} receiveShadow castShadow>
               <cylinderGeometry args={[d.radius * 1.02, d.radius * 1.06, 0.5, 32]} />
-              <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+              <meshStandardMaterial
+                map={concreteMap}
+                roughnessMap={concreteRough}
+                roughness={0.9}
+              />
             </mesh>
             <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
               <sphereGeometry args={[d.radius, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -297,7 +318,11 @@ export function Structures({
           >
             <mesh position={[0, 0.1, 0]} receiveShadow>
               <cylinderGeometry args={[t.radius * 1.15, t.radius * 1.2, 0.2, 24]} />
-              <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+              <meshStandardMaterial
+                map={concreteMap}
+                roughnessMap={concreteRough}
+                roughness={0.9}
+              />
             </mesh>
             {/* weathered shell with rust streaks */}
             <mesh position={[0, t.height / 2, 0]} castShadow receiveShadow>
@@ -330,11 +355,7 @@ export function Structures({
               <boxGeometry args={[0.12, t.height, 0.5]} />
               <meshStandardMaterial color="#7a7264" metalness={0.6} roughness={0.5} />
             </mesh>
-            <mesh
-              position={[0, 0.55, t.radius * 0.9]}
-              rotation={[Math.PI / 2, 0, 0]}
-              castShadow
-            >
+            <mesh position={[0, 0.55, t.radius * 0.9]} rotation={[Math.PI / 2, 0, 0]} castShadow>
               <cylinderGeometry args={[0.14, 0.14, t.radius * 0.9, 8]} />
               <meshStandardMaterial color="#6d675c" metalness={0.7} roughness={0.45} />
             </mesh>
@@ -404,7 +425,11 @@ export function Structures({
                 </mesh>
               ) : (
                 <>
-                  <mesh position={[0, b.height + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                  <mesh
+                    position={[0, b.height + 0.05, 0]}
+                    rotation={[-Math.PI / 2, 0, 0]}
+                    receiveShadow
+                  >
                     <planeGeometry args={[b.size[0], b.size[1]]} />
                     <meshStandardMaterial
                       map={metalMap}

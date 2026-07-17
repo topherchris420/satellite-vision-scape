@@ -114,16 +114,25 @@ export function HUD({
                   aria-label="Collapse info panel"
                   className="rounded p-0.5 text-white/50 transition hover:bg-white/10 hover:text-white"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <path d="M18 15l-6-6-6 6" />
                   </svg>
                 </button>
               </div>
               <p className="mt-1 text-xs text-white/70">
-                A compound in the Red Centre that never made the maps — radomes, tank
-                farms and bunkers the government won’t confirm exist. Rebuilt in living 3D
-                from orbital passes. Drop below the clouds and{" "}
-                {isMobile ? "tap any structure to crack open its file." : "click any structure to crack open its file."}
+                A compound in the Red Centre that never made the maps — radomes, tank farms and
+                bunkers the government won’t confirm exist. Rebuilt in living 3D from orbital
+                passes. Drop below the clouds and{" "}
+                {isMobile
+                  ? "tap any structure to crack open its file."
+                  : "click any structure to crack open its file."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/60">
                 <span>{objectSummary.spheres} spheres</span>
@@ -162,7 +171,9 @@ export function HUD({
             <button
               onClick={() => onTimeChange("day")}
               className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-                time === "day" ? "bg-amber-300 text-black" : "bg-black/60 text-white hover:bg-black/80"
+                time === "day"
+                  ? "bg-amber-300 text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
               }`}
             >
               ☀ Day
@@ -170,7 +181,9 @@ export function HUD({
             <button
               onClick={() => onTimeChange("night")}
               className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-                time === "night" ? "bg-indigo-300 text-black" : "bg-black/60 text-white hover:bg-black/80"
+                time === "night"
+                  ? "bg-indigo-300 text-black"
+                  : "bg-black/60 text-white hover:bg-black/80"
               }`}
             >
               ☾ Night
@@ -218,7 +231,9 @@ export function HUD({
                         key={item.name}
                         onClick={() => onInspect(item)}
                         className={`flex w-full items-baseline justify-between gap-2 px-3 py-1 text-left text-xs transition ${
-                          active ? "bg-amber-300/20 text-amber-200" : "text-white/80 hover:bg-white/10"
+                          active
+                            ? "bg-amber-300/20 text-amber-200"
+                            : "text-white/80 hover:bg-white/10"
                         }`}
                       >
                         <span className="font-medium">{item.name}</span>

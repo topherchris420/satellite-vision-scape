@@ -118,7 +118,15 @@ export function Lighting({ time }: { time: TimeOfDay }) {
         </>
       ) : (
         <>
-          <Stars radius={800} depth={120} count={4000} factor={6} saturation={0.1} fade speed={0.4} />
+          <Stars
+            radius={800}
+            depth={120}
+            count={4000}
+            factor={6}
+            saturation={0.1}
+            fade
+            speed={0.4}
+          />
           <ambientLight intensity={0.08} color="#1b2540" />
           <hemisphereLight args={["#1e2a4a", "#050810", 0.35]} />
           {/* Moonlight */}
@@ -151,7 +159,10 @@ export function Lighting({ time }: { time: TimeOfDay }) {
             />
           ))}
           {/* Tank-farm accent lights */}
-          {[...domes.slice(0, 4), ...spheres.slice(0, 4).map((s) => ({ pos: s.pos, radius: s.radius }))].map((d, i) => (
+          {[
+            ...domes.slice(0, 4),
+            ...spheres.slice(0, 4).map((s) => ({ pos: s.pos, radius: s.radius })),
+          ].map((d, i) => (
             <pointLight
               key={`accent-${i}`}
               position={[d.pos[0], d.radius + 2, d.pos[1]]}

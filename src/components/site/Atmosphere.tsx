@@ -132,7 +132,7 @@ function ParticleColumn({
       sp.position.set(
         pos[0] + WIND.x * age * 0.9 + Math.sin(age * 1.3 + s.swayA) * s.swayR * k * spread,
         pos[1] + age * rise,
-        pos[2] + WIND.z * age * 0.9 + Math.cos(age * 1.1 + s.swayA) * s.swayR * k * spread
+        pos[2] + WIND.z * age * 0.9 + Math.cos(age * 1.1 + s.swayA) * s.swayR * k * spread,
       );
       const size = baseSize * (0.5 + k * grow);
       sp.scale.set(size, size, 1);

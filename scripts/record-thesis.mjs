@@ -48,19 +48,46 @@ for (let i = 0; i < total; i++) {
 await browser.close();
 
 const frames = path.join(FRAMES_DIR, "f%04d.png");
-const run = (args) => execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", ...args], { stdio: "inherit" });
+const run = (args) =>
+  execFileSync("ffmpeg", ["-hide_banner", "-loglevel", "error", "-y", ...args], {
+    stdio: "inherit",
+  });
 
 run([
-  "-framerate", String(FPS), "-i", frames,
-  "-c:v", "libx264", "-pix_fmt", "yuv420p", "-vf", "scale=1280:-2", "-crf", "24",
+  "-framerate",
+  String(FPS),
+  "-i",
+  frames,
+  "-c:v",
+  "libx264",
+  "-pix_fmt",
+  "yuv420p",
+  "-vf",
+  "scale=1280:-2",
+  "-crf",
+  "24",
   path.join(OUT_DIR, "digital-twin-thesis.mp4"),
 ]);
 
 const palette = path.join(FRAMES_DIR, "palette.png");
-run(["-framerate", String(FPS), "-i", frames, "-vf", "fps=10,scale=800:-1:flags=lanczos,palettegen=max_colors=128", palette]);
 run([
-  "-framerate", String(FPS), "-i", frames, "-i", palette,
-  "-lavfi", "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5",
+  "-framerate",
+  String(FPS),
+  "-i",
+  frames,
+  "-vf",
+  "fps=10,scale=800:-1:flags=lanczos,palettegen=max_colors=128",
+  palette,
+]);
+run([
+  "-framerate",
+  String(FPS),
+  "-i",
+  frames,
+  "-i",
+  palette,
+  "-lavfi",
+  "fps=10,scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5",
   path.join(OUT_DIR, "digital-twin-thesis.gif"),
 ]);
 console.log("wrote docs/media/digital-twin-thesis.{mp4,gif}");

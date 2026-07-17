@@ -25,11 +25,17 @@ export const colliders: Collider[] = [
       hx: b.size[0] / 2,
       hz: b.size[1] / 2,
       rotY: b.rotY ?? 0,
-    })
+    }),
   ),
-  ...tanks.map((t): CircleCollider => ({ type: "circle", cx: t.pos[0], cz: t.pos[1], r: t.radius + 0.4 })),
-  ...domes.map((d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius })),
-  ...spheres.map((s): CircleCollider => ({ type: "circle", cx: s.pos[0], cz: s.pos[1], r: s.radius * 0.9 })),
+  ...tanks.map(
+    (t): CircleCollider => ({ type: "circle", cx: t.pos[0], cz: t.pos[1], r: t.radius + 0.4 }),
+  ),
+  ...domes.map(
+    (d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius }),
+  ),
+  ...spheres.map(
+    (s): CircleCollider => ({ type: "circle", cx: s.pos[0], cz: s.pos[1], r: s.radius * 0.9 }),
+  ),
 ];
 
 // Resolve a desired position against all colliders, pushing the point out to

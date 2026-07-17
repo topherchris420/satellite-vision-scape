@@ -3,13 +3,7 @@
 // in authored order on a single clock, loop forever, and hard-cut at
 // boundaries — exactly one scene is mounted at a time, keyed by index, so a
 // scene never leaks state into a neighbor.
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type ComponentType,
-} from "react";
+import { useCallback, useEffect, useRef, useState, type ComponentType } from "react";
 import { flushSync } from "react-dom";
 
 export interface SceneDef {
@@ -25,8 +19,7 @@ export interface SceneProps {
   count: number;
 }
 
-const clamp = (v: number, min: number, max: number) =>
-  Math.max(min, Math.min(max, v));
+const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
 const MONO = "'JetBrains Mono', ui-monospace, SFMono-Regular, monospace";
 

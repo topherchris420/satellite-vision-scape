@@ -14,8 +14,10 @@ function hash(x: number, y: number, seed: number) {
   return s - Math.floor(s);
 }
 function smoothNoise(x: number, y: number, seed: number) {
-  const ix = Math.floor(x), iy = Math.floor(y);
-  const fx = x - ix, fy = y - iy;
+  const ix = Math.floor(x),
+    iy = Math.floor(y);
+  const fx = x - ix,
+    fy = y - iy;
   const a = hash(ix, iy, seed);
   const b = hash(ix + 1, iy, seed);
   const c = hash(ix, iy + 1, seed);
@@ -25,7 +27,9 @@ function smoothNoise(x: number, y: number, seed: number) {
   return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy;
 }
 function fbm(x: number, y: number, octaves: number, seed = 1) {
-  let v = 0, amp = 0.5, freq = 1;
+  let v = 0,
+    amp = 0.5,
+    freq = 1;
   for (let i = 0; i < octaves; i++) {
     v += amp * smoothNoise(x * freq, y * freq, seed + i);
     freq *= 2;
@@ -496,34 +500,83 @@ export function getSiteTextures() {
   if (cache) return cache;
 
   const dirtColor = makeTexture({
-    base: [185, 120, 72], variation: [40, 30, 18], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
+    base: [185, 120, 72],
+    variation: [40, 30, 18],
+    scale: 6,
+    octaves: 7,
+    seed: 1,
+    speckle: 0.02,
   });
   const grassColor = makeTexture({
-    base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
+    base: [90, 110, 50],
+    variation: [35, 35, 20],
+    scale: 10,
+    octaves: 5,
+    seed: 2,
+    speckle: 0.01,
   });
   const vegColor = makeTexture({
-    base: [78, 88, 48], variation: [35, 34, 24], scale: 8, octaves: 5, seed: 3,
+    base: [78, 88, 48],
+    variation: [35, 34, 24],
+    scale: 8,
+    octaves: 5,
+    seed: 3,
   });
   const asphaltColor = makeTexture({
-    base: [58, 58, 60], variation: [12, 12, 12], scale: 20, octaves: 5, seed: 4, speckle: 0.03,
+    base: [58, 58, 60],
+    variation: [12, 12, 12],
+    scale: 20,
+    octaves: 5,
+    seed: 4,
+    speckle: 0.03,
   });
   const concreteColor = makeTexture({
-    base: [190, 185, 174], variation: [15, 14, 12], scale: 12, octaves: 5, seed: 5, speckle: 0.01,
+    base: [190, 185, 174],
+    variation: [15, 14, 12],
+    scale: 12,
+    octaves: 5,
+    seed: 5,
+    speckle: 0.01,
   });
   const metalColor = makeTexture({
-    base: [215, 212, 205], variation: [8, 8, 8], scale: 4, octaves: 4, seed: 6,
+    base: [215, 212, 205],
+    variation: [8, 8, 8],
+    scale: 4,
+    octaves: 4,
+    seed: 6,
   });
   const domeColor = makeTexture({
-    base: [238, 236, 230], variation: [6, 6, 6], scale: 3, octaves: 3, seed: 7,
+    base: [238, 236, 230],
+    variation: [6, 6, 6],
+    scale: 3,
+    octaves: 3,
+    seed: 7,
   });
   const gravelColor = makeTexture({
-    base: [155, 125, 95], variation: [35, 30, 20], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
+    base: [155, 125, 95],
+    variation: [35, 30, 20],
+    scale: 24,
+    octaves: 4,
+    seed: 8,
+    speckle: 0.06,
   });
   const rockColor = makeTexture({
-    base: [138, 118, 96], variation: [42, 38, 32], scale: 7, octaves: 6, seed: 9, contrast: 1.5, speckle: 0.02, size: 512,
+    base: [138, 118, 96],
+    variation: [42, 38, 32],
+    scale: 7,
+    octaves: 6,
+    seed: 9,
+    contrast: 1.5,
+    speckle: 0.02,
+    size: 512,
   });
   const noiseMask = makeTexture({
-    base: [128, 128, 128], variation: [127, 127, 127], scale: 4, octaves: 5, seed: 10, size: 256,
+    base: [128, 128, 128],
+    variation: [127, 127, 127],
+    scale: 4,
+    octaves: 5,
+    seed: 10,
+    size: 256,
   });
   const steelColor = makePaintedSteel();
   const roadColor = makeRoadSurface();

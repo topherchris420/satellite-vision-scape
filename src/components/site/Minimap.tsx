@@ -104,14 +104,32 @@ export function Minimap({
       ))}
       {/* cylindrical tanks */}
       {tanks.map((t, i) => (
-        <circle key={`t-${i}`} cx={t.pos[0]} cy={t.pos[1]} r={Math.max(4, t.radius)} fill="#d8d2c6" />
+        <circle
+          key={`t-${i}`}
+          cx={t.pos[0]}
+          cy={t.pos[1]}
+          r={Math.max(4, t.radius)}
+          fill="#d8d2c6"
+        />
       ))}
       {/* spheres + radomes */}
       {spheres.map((s, i) => (
-        <circle key={`s-${i}`} cx={s.pos[0]} cy={s.pos[1]} r={Math.max(5, s.radius)} fill="#f5f2ea" />
+        <circle
+          key={`s-${i}`}
+          cx={s.pos[0]}
+          cy={s.pos[1]}
+          r={Math.max(5, s.radius)}
+          fill="#f5f2ea"
+        />
       ))}
       {domes.map((d, i) => (
-        <circle key={`d-${i}`} cx={d.pos[0]} cy={d.pos[1]} r={Math.max(5, d.radius)} fill="#f5f2ea" />
+        <circle
+          key={`d-${i}`}
+          cx={d.pos[0]}
+          cy={d.pos[1]}
+          r={Math.max(5, d.radius)}
+          fill="#f5f2ea"
+        />
       ))}
       {/* north arrow (map "up" is −z = grid north) */}
       <g fill="#ffffff" fillOpacity={0.55}>
@@ -139,7 +157,13 @@ export function Minimap({
       </text>
       {/* camera marker — transform driven imperatively by CameraTracker */}
       <g ref={markerRef}>
-        <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />
+        <path
+          d="M0,-22 L14,18 L0,9 L-14,18 Z"
+          fill="#fbbf24"
+          stroke="#000"
+          strokeOpacity={0.4}
+          strokeWidth={2}
+        />
       </g>
     </svg>
   );

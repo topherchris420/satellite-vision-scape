@@ -51,12 +51,9 @@ export function Roads() {
   const roadGeom = useMemo(() => buildRibbon(roadPath, 7, 0.09, true), []);
   const interiorGeoms = useMemo(
     () => interiorRoads.map((p) => buildRibbon(p, 5, 0.085, false)),
-    []
+    [],
   );
-  const dirtGeoms = useMemo(
-    () => dirtTracks.map((p) => buildRibbon(p, 4, 0.07, false)),
-    []
-  );
+  const dirtGeoms = useMemo(() => dirtTracks.map((p) => buildRibbon(p, 4, 0.07, false)), []);
 
   return (
     <group name="roads">

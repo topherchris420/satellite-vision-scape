@@ -1,4 +1,4 @@
-# GeoTwn 
+# GeoTwn
 
 An interactive geospatial-intelligence demo: a navigable 3D reconstruction of a
 remote desert site, an animated **Digital Twin Thesis** motion piece, and a paper — all making one argument:
@@ -24,19 +24,19 @@ rewinds, and the **TWEAKS** panel switches the accent color and toggles the
 disclaimer/telemetry overlays. Everything on screen is a synthetic
 composite — illustrative, not actual imagery.
 
-| Scene | What it shows |
-| --- | --- |
-| 01 · Thesis | Commodity graphics pipelines + publicly available imagery ⇒ navigable digital twins |
-| 02 · Sources | Satellite tiles, street-level, drone/UGC, open aerial, map vectors, crowd photos being indexed |
-| 03 · Pipeline | Ingest → structure-from-motion → point cloud → mesh + texture → navigable twin |
-| 04 · Twin | Free navigation through the reconstructed site with waypoints (HANGAR-A, TWR-01, DEPOT) |
-| 05 · Implication | Capability confirmed — treat it as a baseline adversary capability |
+| Scene            | What it shows                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| 01 · Thesis      | Commodity graphics pipelines + publicly available imagery ⇒ navigable digital twins            |
+| 02 · Sources     | Satellite tiles, street-level, drone/UGC, open aerial, map vectors, crowd photos being indexed |
+| 03 · Pipeline    | Ingest → structure-from-motion → point cloud → mesh + texture → navigable twin                 |
+| 04 · Twin        | Free navigation through the reconstructed site with waypoints (HANGAR-A, TWR-01, DEPOT)        |
+| 05 · Implication | Capability confirmed — treat it as a baseline adversary capability                             |
 
 ## Routes
 
-| Route | Description |
-| --- | --- |
-| `/` | Interactive 3D site reconstruction (free-fly and first-person cameras) |
+| Route     | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `/`       | Interactive 3D site reconstruction (free-fly and first-person cameras)                     |
 | `/thesis` | The Digital Twin Thesis motion piece (`?chrome=0` hides the playback bar and tweaks panel) |
 
 ## Site viewer

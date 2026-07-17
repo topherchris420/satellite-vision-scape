@@ -13,8 +13,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "GeoTwn" },
       {
         property: "og:description",
-        content:
-          "An interactive geospatial intelligence platform",
+        content: "An interactive geospatial intelligence platform",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -34,8 +34,20 @@ export function DigitalTwinPiece({ chrome = true }: { chrome?: boolean }) {
   return (
     <TweakCtx.Provider value={ctxVal}>
       <div style={{ position: "absolute", inset: 0 }}>
-        <SceneStage width={1920} height={1080} bg="#060a0d" scenes={SCENES} components={COMPONENTS} chrome={chrome} />
-        {chrome && <TweaksPanel tweaks={tweaks} onChange={(edits) => setTweaks((t) => ({ ...t, ...edits }))} />}
+        <SceneStage
+          width={1920}
+          height={1080}
+          bg="#060a0d"
+          scenes={SCENES}
+          components={COMPONENTS}
+          chrome={chrome}
+        />
+        {chrome && (
+          <TweaksPanel
+            tweaks={tweaks}
+            onChange={(edits) => setTweaks((t) => ({ ...t, ...edits }))}
+          />
+        )}
       </div>
     </TweakCtx.Provider>
   );
@@ -68,7 +80,9 @@ function TweaksPanel({
             fontSize: 12,
           }}
         >
-          <div style={{ letterSpacing: "0.12em", color: "rgba(234,246,248,0.55)", fontSize: 10 }}>TWEAKS</div>
+          <div style={{ letterSpacing: "0.12em", color: "rgba(234,246,248,0.55)", fontSize: 10 }}>
+            TWEAKS
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span style={{ color: "rgba(234,246,248,0.72)" }}>Accent color</span>
             <div style={{ display: "flex", gap: 6 }}>
@@ -137,7 +151,9 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+    <div
+      style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}
+    >
       <span style={{ color: "rgba(234,246,248,0.72)" }}>{label}</span>
       <button
         type="button"

@@ -19,7 +19,7 @@ function rng(seed: number) {
 function fillInstances(
   inst: THREE.InstancedMesh | null,
   matrices: THREE.Matrix4[],
-  colors?: THREE.Color[]
+  colors?: THREE.Color[],
 ) {
   if (!inst) return;
   matrices.forEach((m, i) => inst.setMatrixAt(i, m));
@@ -54,14 +54,28 @@ function PipeRacks() {
         const bents = Math.max(2, Math.round(len / 8));
         const width = (lines - 1) * 0.6 + 1.2;
         return (
-          <group key={`rack-${i}`} name={`pipe-rack-${i}`} position={[mid.x, 0, mid.z]} rotation={[0, angle, 0]}>
+          <group
+            key={`rack-${i}`}
+            name={`pipe-rack-${i}`}
+            position={[mid.x, 0, mid.z]}
+            rotation={[0, angle, 0]}
+          >
             {/* pipes run along local Z */}
             {Array.from({ length: lines }).map((_, j) => {
               const off = (j - (lines - 1) / 2) * 0.6;
               return (
-                <mesh key={`p-${j}`} position={[off, h, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+                <mesh
+                  key={`p-${j}`}
+                  position={[off, h, 0]}
+                  rotation={[Math.PI / 2, 0, 0]}
+                  castShadow
+                >
                   <cylinderGeometry args={[0.18, 0.18, len, 12]} />
-                  <meshStandardMaterial color={j % 2 ? "#b7b1a4" : "#9aa0a6"} metalness={0.6} roughness={0.45} />
+                  <meshStandardMaterial
+                    color={j % 2 ? "#b7b1a4" : "#9aa0a6"}
+                    metalness={0.6}
+                    roughness={0.45}
+                  />
                 </mesh>
               );
             })}
@@ -107,7 +121,12 @@ function ParkingLots() {
         const rows = p.rows ?? 3;
         const stalls = Math.floor(p.size[0] / 2.6);
         return (
-          <group key={`lot-${i}`} name={`parking-${i}`} position={[p.pos[0], 0, p.pos[1]]} rotation={[0, p.rotY ?? 0, 0]}>
+          <group
+            key={`lot-${i}`}
+            name={`parking-${i}`}
+            position={[p.pos[0], 0, p.pos[1]]}
+            rotation={[0, p.rotY ?? 0, 0]}
+          >
             <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[p.size[0], p.size[1]]} />
               <meshStandardMaterial
@@ -133,7 +152,7 @@ function ParkingLots() {
                   <planeGeometry args={[0.12, (p.size[1] / rows) * 0.8]} />
                   <meshStandardMaterial color="#d8d4c6" roughness={0.9} />
                 </mesh>
-              ))
+              )),
             )}
           </group>
         );
@@ -145,7 +164,13 @@ function ParkingLots() {
 // ---------------------------------------------------------------------------
 // Perimeter fence — chain-link ribbon with regularly spaced posts.
 // ---------------------------------------------------------------------------
-function Fence({ path = fencePath, name = "perimeter-fence" }: { path?: [number, number][]; name?: string }) {
+function Fence({
+  path = fencePath,
+  name = "perimeter-fence",
+}: {
+  path?: [number, number][];
+  name?: string;
+}) {
   const postPositions = useMemo(() => {
     const pts: [number, number][] = [];
     const n = path.length;
@@ -269,7 +294,12 @@ function DrainageChannels() {
     <group name="drainage-channels">
       {geoms.map((g, i) => (
         <mesh key={`chan-${i}`} geometry={g} receiveShadow>
-          <meshStandardMaterial map={concreteMap} color="#a9a396" roughness={1} side={THREE.DoubleSide} />
+          <meshStandardMaterial
+            map={concreteMap}
+            color="#a9a396"
+            roughness={1}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       ))}
     </group>
@@ -363,7 +393,7 @@ function UtilityLines() {
       m.compose(
         new THREE.Vector3(p.x, POLE_H / 2, p.z),
         new THREE.Quaternion(),
-        new THREE.Vector3(1, 1, 1)
+        new THREE.Vector3(1, 1, 1),
       );
       return m;
     });
@@ -373,7 +403,7 @@ function UtilityLines() {
       m.compose(
         new THREE.Vector3(p.x, POLE_H - 0.5, p.z),
         new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), angle + Math.PI / 2),
-        new THREE.Vector3(1, 1, 1)
+        new THREE.Vector3(1, 1, 1),
       );
       return m;
     });
@@ -387,14 +417,18 @@ function UtilityLines() {
       if (span > 40) continue; // don't string wires across the resample seams
       const nrm = new THREE.Vector2(-a.dir.y, a.dir.x);
       for (const off of [-0.9, 0.9]) {
-        let px = 0, py = 0, pz = 0;
+        let px = 0,
+          py = 0,
+          pz = 0;
         for (let k = 0; k <= 8; k++) {
           const t = k / 8;
           const x = a.x + (b.x - a.x) * t + nrm.x * off;
           const z = a.z + (b.z - a.z) * t + nrm.y * off;
           const y = POLE_H - 0.55 - Math.min(1.2, span * 0.022) * 4 * t * (1 - t);
           if (k > 0) verts.push(px, py, pz, x, y, z);
-          px = x; py = y; pz = z;
+          px = x;
+          py = y;
+          pz = z;
         }
       }
     }
@@ -446,7 +480,7 @@ function ContainerYard() {
       m.compose(
         new THREE.Vector3(x, y, z),
         new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), rot),
-        new THREE.Vector3(1, 1, 1)
+        new THREE.Vector3(1, 1, 1),
       );
       mats.push(m);
       cols.push(new THREE.Color(palette[Math.floor(r() * palette.length)]));

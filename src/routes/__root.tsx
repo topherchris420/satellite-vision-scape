@@ -78,15 +78,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Australia" },
-      { name: "description", content: "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes." },
+      {
+        name: "description",
+        content:
+          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+      },
       { property: "og:title", content: "Australia" },
-      { property: "og:description", content: "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes." },
+      {
+        property: "og:description",
+        content:
+          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Australia" },
-      { name: "twitter:description", content: "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png" },
+      {
+        name: "twitter:description",
+        content:
+          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png",
+      },
     ],
     links: [
       {

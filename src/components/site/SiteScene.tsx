@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, type ReactElement } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import {
@@ -59,7 +59,7 @@ function CameraTracker({
     if (el) {
       el.setAttribute(
         "transform",
-        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`
+        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`,
       );
     }
     // The readout only needs a few updates a second; fixed-width formatting
@@ -87,7 +87,13 @@ function SelectionRing({ sel }: { sel: Selection }) {
   return (
     <mesh ref={ref} position={[sel.pos[0], 0.25, sel.pos[1]]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[sel.radius + 1, sel.radius + 1.9, 48]} />
-      <meshBasicMaterial color="#fbbf24" transparent opacity={0.8} depthWrite={false} side={THREE.DoubleSide} />
+      <meshBasicMaterial
+        color="#fbbf24"
+        transparent
+        opacity={0.8}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -176,6 +182,38 @@ export function SiteScene() {
 
   const fogColor = time === "day" ? "#d4be98" : "#0a1024";
 
+  // The post chain is assembled as a keyed array because EffectComposer's
+  // children type rejects conditional (`false`) and comment children.
+  const effects: ReactElement[] = [];
+  // Ground-truth contact shadows in corners and under structures
+  if (quality === "high") {
+    effects.push(<N8AO key="ao" aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />);
+  }
+  // HDR highlights: lit windows, beacons, sun glints
+  effects.push(
+    <Bloom
+      key="bloom"
+      mipmapBlur
+      intensity={0.55}
+      luminanceThreshold={1.0}
+      luminanceSmoothing={0.25}
+    />,
+  );
+  // Shallow focus only for the automated cinematic pass
+  if (mode === "cinematic" && quality === "high") {
+    effects.push(
+      <DepthOfField key="dof" focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />,
+    );
+  }
+  effects.push(
+    <ToneMapping key="tone" mode={ToneMappingMode.ACES_FILMIC} />,
+    // Commercial-imagery grade: a touch more saturation + contrast
+    <HueSaturation key="sat" saturation={0.12} />,
+    <BrightnessContrast key="contrast" contrast={0.07} />,
+    <SMAA key="smaa" />,
+    <Vignette key="vignette" eskil={false} offset={0.22} darkness={0.5} />,
+  );
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
       <HUD
@@ -248,22 +286,7 @@ export function SiteScene() {
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
 
-        <EffectComposer multisampling={0}>
-          {/* Ground-truth contact shadows in corners and under structures */}
-          {quality === "high" && <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />}
-          {/* HDR highlights: lit windows, beacons, sun glints */}
-          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-          {/* Shallow focus only for the automated cinematic pass */}
-          {mode === "cinematic" && quality === "high" && (
-            <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />
-          )}
-          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-          {/* Commercial-imagery grade: a touch more saturation + contrast */}
-          <HueSaturation saturation={0.12} />
-          <BrightnessContrast contrast={0.07} />
-          <SMAA />
-          <Vignette eskil={false} offset={0.22} darkness={0.5} />
-        </EffectComposer>
+        <EffectComposer multisampling={0}>{effects}</EffectComposer>
 
         <CameraTracker markerRef={markerRef} telemetryRef={telemetryRef} />
         <Controls mode={mode} focus={focus} />

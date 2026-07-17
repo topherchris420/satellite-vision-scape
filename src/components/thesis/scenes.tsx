@@ -57,8 +57,18 @@ function Corner({ pos, accent }: { pos: "tl" | "tr" | "bl" | "br"; accent: strin
   const map = {
     tl: { left: o, top: o, borderTop: `2px solid ${accent}`, borderLeft: `2px solid ${accent}` },
     tr: { right: o, top: o, borderTop: `2px solid ${accent}`, borderRight: `2px solid ${accent}` },
-    bl: { left: o, bottom: o, borderBottom: `2px solid ${accent}`, borderLeft: `2px solid ${accent}` },
-    br: { right: o, bottom: o, borderBottom: `2px solid ${accent}`, borderRight: `2px solid ${accent}` },
+    bl: {
+      left: o,
+      bottom: o,
+      borderBottom: `2px solid ${accent}`,
+      borderLeft: `2px solid ${accent}`,
+    },
+    br: {
+      right: o,
+      bottom: o,
+      borderBottom: `2px solid ${accent}`,
+      borderRight: `2px solid ${accent}`,
+    },
   } as const;
   return <div style={{ position: "absolute", width: s, height: s, opacity: 0.9, ...map[pos] }} />;
 }
@@ -198,7 +208,15 @@ export function Thesis({ localTime, index, count }: SceneProps) {
   const bigRevealed = reveal(bigText, 2.3, 4.3, localTime);
   const subOpacity = clamp01((localTime - 4.5) / 0.5);
   return (
-    <div style={{ position: "absolute", inset: 0, background: BG, overflow: "hidden", fontFamily: MONO }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: BG,
+        overflow: "hidden",
+        fontFamily: MONO,
+      }}
+    >
       <HUDChrome
         accent={accent}
         label="THESIS // 01"
@@ -247,9 +265,18 @@ export function Thesis({ localTime, index, count }: SceneProps) {
           }}
         >
           {bigRevealed}
-          <span style={{ opacity: bigRevealed.length < bigText.length ? 1 : 0, color: accent }}>_</span>
+          <span style={{ opacity: bigRevealed.length < bigText.length ? 1 : 0, color: accent }}>
+            _
+          </span>
         </div>
-        <div style={{ fontSize: 28, color: "rgba(234,246,248,0.72)", opacity: subOpacity, letterSpacing: "0.02em" }}>
+        <div
+          style={{
+            fontSize: 28,
+            color: "rgba(234,246,248,0.72)",
+            opacity: subOpacity,
+            letterSpacing: "0.02em",
+          }}
+        >
           of complex infrastructure.
         </div>
       </div>
@@ -300,7 +327,15 @@ export function Sources({ localTime, progress, index, count }: SceneProps) {
   const rx = startX + gridW * reticleT,
     ry = startY + gridH * reticleT;
   return (
-    <div style={{ position: "absolute", inset: 0, background: BG, overflow: "hidden", fontFamily: MONO }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: BG,
+        overflow: "hidden",
+        fontFamily: MONO,
+      }}
+    >
       <HUDChrome
         accent={accent}
         label="INPUT // 02"
@@ -310,7 +345,15 @@ export function Sources({ localTime, progress, index, count }: SceneProps) {
         showDisclaimer={showDisclaimer}
         showTelemetry={showTelemetry}
       />
-      <div style={{ position: "absolute", left: "50%", top: 150, transform: "translateX(-50%)", textAlign: "center" }}>
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: 150,
+          transform: "translateX(-50%)",
+          textAlign: "center",
+        }}
+      >
         <div style={{ fontSize: 32, color: "#eaf6f8", fontWeight: 700, letterSpacing: "0.01em" }}>
           SOURCE: PUBLICLY AVAILABLE IMAGERY
         </div>
@@ -371,10 +414,46 @@ export function Sources({ localTime, progress, index, count }: SceneProps) {
           borderRadius: "50%",
         }}
       >
-        <div style={{ position: "absolute", left: "50%", top: -8, width: 1, height: 8, background: accent }} />
-        <div style={{ position: "absolute", left: "50%", bottom: -8, width: 1, height: 8, background: accent }} />
-        <div style={{ position: "absolute", top: "50%", left: -8, height: 1, width: 8, background: accent }} />
-        <div style={{ position: "absolute", top: "50%", right: -8, height: 1, width: 8, background: accent }} />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: -8,
+            width: 1,
+            height: 8,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: -8,
+            width: 1,
+            height: 8,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: -8,
+            height: 1,
+            width: 8,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: -8,
+            height: 1,
+            width: 8,
+            background: accent,
+          }}
+        />
       </div>
     </div>
   );
@@ -401,7 +480,15 @@ export function Pipeline({ localTime, progress, index, count }: SceneProps) {
     [150, -10],
   ];
   return (
-    <div style={{ position: "absolute", inset: 0, background: BG, overflow: "hidden", fontFamily: MONO }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: BG,
+        overflow: "hidden",
+        fontFamily: MONO,
+      }}
+    >
       <HUDChrome
         accent={accent}
         label="PIPELINE // 03"
@@ -468,10 +555,26 @@ export function Pipeline({ localTime, progress, index, count }: SceneProps) {
                 transition: "background 0.2s",
               }}
             />
-            <div style={{ marginTop: 14, fontSize: 16, color: "#eaf6f8", letterSpacing: "0.04em", fontWeight: 600 }}>
+            <div
+              style={{
+                marginTop: 14,
+                fontSize: 16,
+                color: "#eaf6f8",
+                letterSpacing: "0.04em",
+                fontWeight: 600,
+              }}
+            >
               {node.label}
             </div>
-            <div style={{ marginTop: 6, fontSize: 14, color: accent, opacity: activeFrac, letterSpacing: "0.04em" }}>
+            <div
+              style={{
+                marginTop: 6,
+                fontSize: 14,
+                color: accent,
+                opacity: activeFrac,
+                letterSpacing: "0.04em",
+              }}
+            >
               {node.sub}
             </div>
           </div>
@@ -489,7 +592,16 @@ export function Pipeline({ localTime, progress, index, count }: SceneProps) {
           background: "rgba(255,255,255,0.02)",
         }}
       >
-        <div style={{ position: "absolute", left: 14, top: 10, fontSize: 12, color: accent, letterSpacing: "0.08em" }}>
+        <div
+          style={{
+            position: "absolute",
+            left: 14,
+            top: 10,
+            fontSize: 12,
+            color: accent,
+            letterSpacing: "0.08em",
+          }}
+        >
           POINT CLOUD PREVIEW
         </div>
         {Array.from({ length: pcount }).map((_, i) => {
@@ -538,7 +650,16 @@ function Box({
   label?: string;
 }) {
   return (
-    <div style={{ position: "absolute", left: x, top: y, width: w, height: d, transformStyle: "preserve-3d" }}>
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: w,
+        height: d,
+        transformStyle: "preserve-3d",
+      }}
+    >
       <div
         style={{
           position: "absolute",
@@ -612,10 +733,20 @@ export function Twin({ localTime, progress, index, count }: SceneProps) {
     { t: [0.34, 0.68], label: "TWR-01", x: 1150, y: 340 },
     { t: [0.68, 1.0], label: "DEPOT", x: 1080, y: 620 },
   ];
-  const wp = waypoints.find((w) => progress >= w.t[0] && progress < w.t[1]) || waypoints[waypoints.length - 1];
+  const wp =
+    waypoints.find((w) => progress >= w.t[0] && progress < w.t[1]) ||
+    waypoints[waypoints.length - 1];
   const navReady = clamp01((localTime - 8.6) / 0.8);
   return (
-    <div style={{ position: "absolute", inset: 0, background: BG, overflow: "hidden", fontFamily: MONO }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: BG,
+        overflow: "hidden",
+        fontFamily: MONO,
+      }}
+    >
       <HUDChrome
         accent={accent}
         label="DIGITAL TWIN // 04"
@@ -654,7 +785,16 @@ export function Twin({ localTime, progress, index, count }: SceneProps) {
               backgroundSize: "32px 32px",
             }}
           />
-          <div style={{ position: "absolute", left: 10, top: 10, width: 620, height: 400, border: `2px dashed ${accent}66` }} />
+          <div
+            style={{
+              position: "absolute",
+              left: 10,
+              top: 10,
+              width: 620,
+              height: 400,
+              border: `2px dashed ${accent}66`,
+            }}
+          />
           <div
             style={{
               position: "absolute",
@@ -666,7 +806,15 @@ export function Twin({ localTime, progress, index, count }: SceneProps) {
               border: `1px solid ${accent}55`,
             }}
           >
-            <div style={{ position: "absolute", left: 0, right: 0, top: "50%", borderTop: `2px dashed ${accent}aa` }} />
+            <div
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: "50%",
+                borderTop: `2px dashed ${accent}aa`,
+              }}
+            />
           </div>
           <Box x={60} y={110} w={170} d={100} h={65} accent={accent} label="HANGAR-A" />
           <Box x={260} y={110} w={170} d={100} h={65} accent={accent} label="HANGAR-B" />
@@ -686,10 +834,46 @@ export function Twin({ localTime, progress, index, count }: SceneProps) {
           opacity: 0.85,
         }}
       >
-        <div style={{ position: "absolute", left: "50%", top: -10, width: 1, height: 10, background: accent }} />
-        <div style={{ position: "absolute", left: "50%", bottom: -10, width: 1, height: 10, background: accent }} />
-        <div style={{ position: "absolute", top: "50%", left: -10, height: 1, width: 10, background: accent }} />
-        <div style={{ position: "absolute", top: "50%", right: -10, height: 1, width: 10, background: accent }} />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            top: -10,
+            width: 1,
+            height: 10,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: -10,
+            width: 1,
+            height: 10,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: -10,
+            height: 1,
+            width: 10,
+            background: accent,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: -10,
+            height: 1,
+            width: 10,
+            background: accent,
+          }}
+        />
         <div
           style={{
             position: "absolute",
@@ -739,7 +923,12 @@ export function Twin({ localTime, progress, index, count }: SceneProps) {
 }
 
 // ── Scene 5: Closing ────────────────────────────────────────────────────
-const CHECKS = ["CONVINCING", "NAVIGABLE", "BUILT FROM COMMODITY PIPELINES", "SOURCED FROM PUBLIC IMAGERY ONLY"];
+const CHECKS = [
+  "CONVINCING",
+  "NAVIGABLE",
+  "BUILT FROM COMMODITY PIPELINES",
+  "SOURCED FROM PUBLIC IMAGERY ONLY",
+];
 export function Closing({ localTime, index, count }: SceneProps) {
   const { accentColor, showDisclaimer, showTelemetry } = useTweakCtx();
   const accent = accentColor || "#4fe3ff";
@@ -748,7 +937,15 @@ export function Closing({ localTime, index, count }: SceneProps) {
   const statementRevealed = reveal(statement, 3.0, 4.5, localTime);
   const subOpacity = clamp01((localTime - 4.7) / 0.5);
   return (
-    <div style={{ position: "absolute", inset: 0, background: BG, overflow: "hidden", fontFamily: MONO }}>
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        background: BG,
+        overflow: "hidden",
+        fontFamily: MONO,
+      }}
+    >
       <HUDChrome
         accent={accent}
         label="IMPLICATION // 05"
@@ -774,7 +971,9 @@ export function Closing({ localTime, index, count }: SceneProps) {
         <div style={{ fontSize: 20, color: accent, letterSpacing: "0.16em", opacity: headerOp }}>
           CAPABILITY CONFIRMED
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+        <div
+          style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}
+        >
           {CHECKS.map((c, i) => {
             const at = 1.1 + i * 0.45;
             const t = clamp01((localTime - at) / 0.4);
@@ -807,9 +1006,20 @@ export function Closing({ localTime, index, count }: SceneProps) {
           }}
         >
           {statementRevealed}
-          <span style={{ opacity: statementRevealed.length < statement.length ? 1 : 0, color: accent }}>_</span>
+          <span
+            style={{ opacity: statementRevealed.length < statement.length ? 1 : 0, color: accent }}
+          >
+            _
+          </span>
         </div>
-        <div style={{ fontSize: 18, color: "rgba(234,246,248,0.6)", opacity: subOpacity, letterSpacing: "0.04em" }}>
+        <div
+          style={{
+            fontSize: 18,
+            color: "rgba(234,246,248,0.6)",
+            opacity: subOpacity,
+            letterSpacing: "0.04em",
+          }}
+        >
           Digital twins of sensitive infrastructure — no privileged access required.
         </div>
       </div>

@@ -116,7 +116,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
       pos: new THREE.Vector3(
         focus.x + dir.x * dist,
         Math.max(16, focus.r * 3.2),
-        focus.z + dir.z * dist
+        focus.z + dir.z * dist,
       ),
       target: new THREE.Vector3(focus.x, Math.max(4, focus.r * 1.2), focus.z),
     };
@@ -177,7 +177,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
       persp.fov = THREE.MathUtils.clamp(
         persp.fov + (keys.current["BracketRight"] ? 1 : -1) * 30 * dt,
         28,
-        85
+        85,
       );
       persp.updateProjectionMatrix();
     }
@@ -219,7 +219,7 @@ const CINE_PATH = new THREE.CatmullRomCurve3(
   ].map(([x, y, z]) => new THREE.Vector3(x, y, z)),
   true,
   "catmullrom",
-  0.5
+  0.5,
 );
 const CINE_LOOK = new THREE.CatmullRomCurve3(
   [
@@ -237,7 +237,7 @@ const CINE_LOOK = new THREE.CatmullRomCurve3(
   ].map(([x, y, z]) => new THREE.Vector3(x, y, z)),
   true,
   "catmullrom",
-  0.5
+  0.5,
 );
 
 function CinematicMover() {

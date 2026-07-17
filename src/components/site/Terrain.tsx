@@ -14,7 +14,7 @@ function rng(seed: number) {
 function fillInstances(
   inst: THREE.InstancedMesh | null,
   matrices: THREE.Matrix4[],
-  colors?: THREE.Color[]
+  colors?: THREE.Color[],
 ) {
   if (!inst) return;
   matrices.forEach((m, i) => inst.setMatrixAt(i, m));
@@ -72,15 +72,15 @@ export function Terrain() {
       shader.vertexShader = shader.vertexShader
         .replace(
           "#include <common>",
-          "#include <common>\nvarying vec3 vWPos;\nvarying vec3 vWNormal;"
+          "#include <common>\nvarying vec3 vWPos;\nvarying vec3 vWNormal;",
         )
         .replace(
           "#include <beginnormal_vertex>",
-          "#include <beginnormal_vertex>\nvWNormal = normalize(mat3(modelMatrix) * objectNormal);"
+          "#include <beginnormal_vertex>\nvWNormal = normalize(mat3(modelMatrix) * objectNormal);",
         )
         .replace(
           "#include <begin_vertex>",
-          "#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;"
+          "#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;",
         );
       shader.fragmentShader = shader.fragmentShader
         .replace(
@@ -92,7 +92,7 @@ export function Terrain() {
             "uniform sampler2D uGrassMap;",
             "uniform sampler2D uRockMap;",
             "uniform sampler2D uNoiseMask;",
-          ].join("\n")
+          ].join("\n"),
         )
         .replace(
           "#include <map_fragment>",
@@ -110,7 +110,7 @@ export function Terrain() {
             "float macro = texture2D( uNoiseMask, vWPos.xz * 0.0016 + 0.61 ).r;",
             "blended.rgb *= 0.84 + macro * 0.32;",
             "diffuseColor *= blended;",
-          ].join("\n")
+          ].join("\n"),
         );
     };
     return mat;
@@ -136,7 +136,7 @@ export function Terrain() {
       m.compose(
         new THREE.Vector3(x, y + s * hgt * 1.5, z),
         new THREE.Quaternion().setFromEuler(new THREE.Euler(lean, 0, lean * 0.7)),
-        new THREE.Vector3(s * 0.5, s * hgt, s * 0.5)
+        new THREE.Vector3(s * 0.5, s * hgt, s * 0.5),
       );
       return m;
     });
@@ -148,7 +148,7 @@ export function Terrain() {
       m.compose(
         new THREE.Vector3(x, y + s * hgt * 3 + 1, z),
         new THREE.Quaternion(),
-        new THREE.Vector3(s * 1.6, s * (1.3 + hgt * 0.45), s * 1.6)
+        new THREE.Vector3(s * 1.6, s * (1.3 + hgt * 0.45), s * 1.6),
       );
       return m;
     });
@@ -161,7 +161,7 @@ export function Terrain() {
       m.compose(
         new THREE.Vector3(x + (r() - 0.5) * s, y + s * hgt * 3 + 1 + s * 1.1, z + (r() - 0.5) * s),
         new THREE.Quaternion(),
-        new THREE.Vector3(s * 1.0, s * 0.9, s * 1.0)
+        new THREE.Vector3(s * 1.0, s * 0.9, s * 1.0),
       );
       return m;
     });
@@ -170,9 +170,9 @@ export function Terrain() {
   const canopyColors = useMemo(
     () =>
       treeData.map(({ hue }) =>
-        new THREE.Color().setHSL(0.23 + hue * 0.06, 0.32 + hue * 0.18, 0.2 + hue * 0.09)
+        new THREE.Color().setHSL(0.23 + hue * 0.06, 0.32 + hue * 0.18, 0.2 + hue * 0.09),
       ),
-    [treeData]
+    [treeData],
   );
 
   // Rocks scattered over the eastern hills — irregular scale + rotation.
@@ -186,8 +186,10 @@ export function Terrain() {
       const m = new THREE.Matrix4();
       m.compose(
         new THREE.Vector3(x, terrainHeight(x, z) + s * 0.15, z),
-        new THREE.Quaternion().setFromEuler(new THREE.Euler(r() * 0.6, r() * Math.PI * 2, r() * 0.6)),
-        new THREE.Vector3(s * (0.7 + r() * 0.7), s * (0.45 + r() * 0.5), s * (0.7 + r() * 0.7))
+        new THREE.Quaternion().setFromEuler(
+          new THREE.Euler(r() * 0.6, r() * Math.PI * 2, r() * 0.6),
+        ),
+        new THREE.Vector3(s * (0.7 + r() * 0.7), s * (0.45 + r() * 0.5), s * (0.7 + r() * 0.7)),
       );
       out.push(m);
     }
@@ -205,7 +207,7 @@ export function Terrain() {
       m.compose(
         new THREE.Vector3(x, terrainHeight(x, z) + s * 0.3, z),
         new THREE.Quaternion().setFromEuler(new THREE.Euler(0, r() * Math.PI * 2, 0)),
-        new THREE.Vector3(s * (0.9 + r() * 0.5), s * 0.55, s * (0.9 + r() * 0.5))
+        new THREE.Vector3(s * (0.9 + r() * 0.5), s * 0.55, s * (0.9 + r() * 0.5)),
       );
       mats.push(m);
       cols.push(new THREE.Color().setHSL(0.16 + r() * 0.08, 0.28 + r() * 0.2, 0.2 + r() * 0.1));
@@ -229,14 +231,27 @@ export function Terrain() {
       {/* Western dry scrub overlay */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-190, 0.05, 0]} receiveShadow>
         <planeGeometry args={[240, 520]} />
-        <meshStandardMaterial map={vegColor} roughness={1} color="#9a7a48" transparent opacity={0.85} />
+        <meshStandardMaterial
+          map={vegColor}
+          roughness={1}
+          color="#9a7a48"
+          transparent
+          opacity={0.85}
+        />
       </mesh>
 
       {/* Green landscaped patch in the lower yard (inside the fence).
           y sits below the parking aprons (0.06) to avoid z-fighting. */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-40, 0.045, 132]} receiveShadow>
         <planeGeometry args={[80, 60]} />
-        <meshStandardMaterial map={grassColor} roughnessMap={grassRough} roughness={0.9} color="#5a7d3a" transparent opacity={0.9} />
+        <meshStandardMaterial
+          map={grassColor}
+          roughnessMap={grassRough}
+          roughness={0.9}
+          color="#5a7d3a"
+          transparent
+          opacity={0.9}
+        />
       </mesh>
 
       {/* Tree trunks */}
