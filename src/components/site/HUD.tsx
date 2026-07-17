@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { RefObject } from "react";
 import type { ControlMode } from "./Controls";
 import type { TimeOfDay } from "./Lighting";
-import type { Selection } from "@/lib/selection";
+import { siteIndex, type Selection } from "@/lib/selection";
 import { objectSummary } from "@/lib/site-layout";
 import { Minimap } from "./Minimap";
 
@@ -19,6 +19,7 @@ const SHORTCUTS: [string, string][] = [
   ["[ / ]", "Lens FOV (free-fly)"],
   ["Shift", "Boost / run"],
   ["N", "Toggle day / night"],
+  ["I", "Toggle site index"],
   ["Click", "Inspect a structure"],
   ["Esc", "Close inspector / release mouse"],
   ["H", "Toggle this help"],
@@ -64,9 +65,14 @@ export function HUD({
   selected,
   onClearSelected,
   onFlyTo,
+  onInspect,
+  onNavigate,
   showHelp,
   onToggleHelp,
+  showIndex,
+  onToggleIndex,
   markerRef,
+  telemetryRef,
   isMobile,
 }: {
   mode: ControlMode;
@@ -76,9 +82,14 @@ export function HUD({
   selected: Selection | null;
   onClearSelected: () => void;
   onFlyTo: () => void;
+  onInspect: (s: Selection) => void;
+  onNavigate: (x: number, z: number) => void;
   showHelp: boolean;
   onToggleHelp: () => void;
+  showIndex: boolean;
+  onToggleIndex: () => void;
   markerRef: RefObject<SVGGElement | null>;
+  telemetryRef: RefObject<HTMLDivElement | null>;
   isMobile: boolean;
 }) {
   const [infoOpen, setInfoOpen] = useState(true);
@@ -164,6 +175,21 @@ export function HUD({
             >
               ☾ Night
             </button>
+            <button
+              onClick={onToggleIndex}
+              className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition ${
+                showIndex ? "bg-white text-black" : "bg-black/60 text-white hover:bg-black/80"
+              }`}
+            >
+              Index
+              {!isMobile && (
+                <kbd
+                  className={`rounded px-1 text-[10px] ${showIndex ? "bg-black/10 text-black/60" : "bg-white/10 text-white/50"}`}
+                >
+                  I
+                </kbd>
+              )}
+            </button>
             {!isMobile && (
               <button
                 onClick={onToggleHelp}
@@ -176,6 +202,34 @@ export function HUD({
               </button>
             )}
           </div>
+
+          {/* ---------- site index panel ---------- */}
+          {showIndex && (
+            <div className="max-h-[46vh] w-60 overflow-y-auto rounded-lg bg-black/70 py-2 text-white backdrop-blur-sm">
+              {siteIndex.map((group) => (
+                <div key={group.label}>
+                  <div className="px-3 pb-1 pt-2 text-[10px] font-medium uppercase tracking-wider text-white/40">
+                    {group.label}
+                  </div>
+                  {group.items.map((item) => {
+                    const active = selected?.name === item.name;
+                    return (
+                      <button
+                        key={item.name}
+                        onClick={() => onInspect(item)}
+                        className={`flex w-full items-baseline justify-between gap-2 px-3 py-1 text-left text-xs transition ${
+                          active ? "bg-amber-300/20 text-amber-200" : "text-white/80 hover:bg-white/10"
+                        }`}
+                      >
+                        <span className="font-medium">{item.name}</span>
+                        <span className="truncate text-[10px] text-white/40">{item.kind}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -212,6 +266,14 @@ export function HUD({
         <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
           <div className="h-1.5 w-1.5 rounded-full bg-white/80 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
         </div>
+      )}
+
+      {/* ---------- telemetry strip (text driven imperatively by CameraTracker) ---------- */}
+      {!isMobile && (
+        <div
+          ref={telemetryRef}
+          className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/60 px-3 py-1.5 font-mono text-[11px] tabular-nums text-amber-200/90 backdrop-blur-sm"
+        />
       )}
 
       {/* ---------- bottom row ---------- */}
@@ -278,7 +340,7 @@ export function HUD({
               </button>
             </div>
           )}
-          {!isMobile && <Minimap markerRef={markerRef} />}
+          {!isMobile && <Minimap markerRef={markerRef} onNavigate={onNavigate} />}
         </div>
       </div>
     </div>

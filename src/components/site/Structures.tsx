@@ -4,16 +4,14 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
 import { domes, tanks, buildings, spheres, type BuildingKind } from "@/lib/site-layout";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
-import type { Selection } from "@/lib/selection";
+import {
+  type Selection,
+  sphereSelection,
+  domeSelection,
+  tankSelection,
+  buildingSelection,
+} from "@/lib/selection";
 import type { TimeOfDay } from "./Lighting";
-
-const KIND_LABEL: Record<BuildingKind, string> = {
-  hall: "Process hall",
-  warehouse: "Warehouse",
-  shed: "Service shed",
-  barracks: "Barracks block",
-  office: "Office / admin",
-};
 
 // Kinds that read as occupied buildings get glazed facades (and lit windows
 // at night); pure industrial shells keep concrete panel walls.
@@ -179,19 +177,7 @@ export function Structures({
               key={`sphere-${i}`}
               name={`sphere-${i}`}
               position={[s.pos[0], 0, s.pos[1]]}
-              onClick={(e) =>
-                pick(e, {
-                  kind: "Spherical storage tank",
-                  name: `Sphere S-${i + 1}`,
-                  pos: s.pos,
-                  radius: s.radius * 1.2,
-                  details: [
-                    `Diameter ${(s.radius * 2).toFixed(0)} m`,
-                    `Capacity ≈ ${Math.round((4 / 3) * Math.PI * s.radius ** 3).toLocaleString()} m³`,
-                    `${s.legs ?? 10} support legs, equatorial platform`,
-                  ],
-                })
-              }
+              onClick={(e) => pick(e, sphereSelection(s, i))}
               onPointerOver={over}
               onPointerOut={out}
             >
@@ -269,18 +255,7 @@ export function Structures({
             key={`dome-${i}`}
             name={`dome-${i}`}
             position={[d.pos[0], 0, d.pos[1]]}
-            onClick={(e) =>
-              pick(e, {
-                kind: "Radome",
-                name: `Radome R-${i + 1}`,
-                pos: d.pos,
-                radius: d.radius * 1.25,
-                details: [
-                  `Diameter ${(d.radius * 2).toFixed(0)} m`,
-                  "Protective enclosure for antenna equipment",
-                ],
-              })
-            }
+            onClick={(e) => pick(e, domeSelection(d, i))}
             onPointerOver={over}
             onPointerOut={out}
           >
@@ -316,18 +291,7 @@ export function Structures({
             key={`tank-${i}`}
             name={`tank-${i}`}
             position={[t.pos[0], 0, t.pos[1]]}
-            onClick={(e) =>
-              pick(e, {
-                kind: "Cylindrical storage tank",
-                name: `Tank T-${i + 1}`,
-                pos: t.pos,
-                radius: t.radius * 1.4,
-                details: [
-                  `Diameter ${(t.radius * 2).toFixed(0)} m · height ${t.height} m`,
-                  `Capacity ≈ ${Math.round(Math.PI * t.radius ** 2 * t.height).toLocaleString()} m³`,
-                ],
-              })
-            }
+            onClick={(e) => pick(e, tankSelection(t, i))}
             onPointerOver={over}
             onPointerOut={out}
           >
@@ -389,19 +353,7 @@ export function Structures({
               name={`building-${i}`}
               position={[b.pos[0], 0, b.pos[1]]}
               rotation={[0, b.rotY ?? 0, 0]}
-              onClick={(e) =>
-                pick(e, {
-                  kind: KIND_LABEL[b.kind ?? "warehouse"],
-                  name: `Building B-${i + 1}`,
-                  pos: b.pos,
-                  radius: Math.hypot(b.size[0], b.size[1]) / 2 + 1,
-                  details: [
-                    `Footprint ${b.size[0]} × ${b.size[1]} m`,
-                    `Height ${b.height} m`,
-                    b.roof === "gable" ? "Gable roof" : "Flat roof",
-                  ],
-                })
-              }
+              onClick={(e) => pick(e, buildingSelection(b, i))}
               onPointerOver={over}
               onPointerOut={out}
             >
