@@ -38,21 +38,42 @@ function ReadyProbe({ onReady }: { onReady: () => void }) {
   return null;
 }
 
-// Streams the camera position/heading into the minimap marker every frame,
-// bypassing React state so the HUD never re-renders for camera motion.
-function CameraTracker({ markerRef }: { markerRef: React.RefObject<SVGGElement | null> }) {
+// Streams the camera position/heading into the minimap marker and the HUD
+// telemetry strip, bypassing React state so the HUD never re-renders for
+// camera motion.
+function CameraTracker({
+  markerRef,
+  telemetryRef,
+}: {
+  markerRef: React.RefObject<SVGGElement | null>;
+  telemetryRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const dir = useRef(new THREE.Vector3());
+  const frame = useRef(0);
   useFrame(({ camera }) => {
-    const el = markerRef.current;
-    if (!el) return;
     camera.getWorldDirection(dir.current);
     // Minimap is world metres: x right, z down. The marker arrow points "up"
     // (−z), so rotate it clockwise by the camera's heading.
     const deg = (Math.atan2(dir.current.x, -dir.current.z) * 180) / Math.PI;
-    el.setAttribute(
-      "transform",
-      `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`
-    );
+    const el = markerRef.current;
+    if (el) {
+      el.setAttribute(
+        "transform",
+        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`
+      );
+    }
+    // The readout only needs a few updates a second; fixed-width formatting
+    // keeps the strip from jittering as digits change.
+    const tel = telemetryRef.current;
+    if (tel && frame.current++ % 6 === 0) {
+      const grid = (v: number) =>
+        `${v < 0 ? "-" : "+"}${Math.abs(Math.round(v)).toString().padStart(3, "0")}`;
+      const hdg = ((Math.round(deg) % 360) + 360) % 360;
+      const alt = Math.max(0, Math.round(camera.position.y));
+      tel.textContent = `E ${grid(camera.position.x)} · N ${grid(-camera.position.z)} · ALT ${alt
+        .toString()
+        .padStart(3, "0")} M · HDG ${hdg.toString().padStart(3, "0")}°`;
+    }
   });
   return null;
 }
@@ -78,19 +99,41 @@ export function SiteScene() {
   const [selected, setSelected] = useState<Selection | null>(null);
   const [focus, setFocus] = useState<FocusRequest | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [showIndex, setShowIndex] = useState(false);
   const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
   // "high" runs the full post chain (AO, DoF); a sustained frame-rate drop
   // sheds the expensive passes first, then render resolution.
   const [quality, setQuality] = useState<"high" | "low">("high");
   const declineStage = useRef(0);
   const markerRef = useRef<SVGGElement>(null);
+  const telemetryRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  // Stage 0 = full post chain at native dpr; 1 sheds the expensive passes;
+  // 2 also drops render resolution.
+  const applyQuality = useCallback((stage: number) => {
+    setQuality(stage >= 1 ? "low" : "high");
+    setDpr(stage >= 2 ? 1 : [1, 2]);
+  }, []);
 
   const flyToSelection = useCallback(() => {
     if (!selected) return;
     setMode("fly");
     setFocus({ x: selected.pos[0], z: selected.pos[1], r: selected.radius, ts: Date.now() });
   }, [selected]);
+
+  // Site index click: inspect the structure and glide the camera to it.
+  const inspectFromIndex = useCallback((s: Selection) => {
+    setSelected(s);
+    setMode("fly");
+    setFocus({ x: s.pos[0], z: s.pos[1], r: s.radius, ts: Date.now() });
+  }, []);
+
+  // Minimap click: glide to an arbitrary map point at a survey standoff.
+  const navigateTo = useCallback((x: number, z: number) => {
+    setMode("fly");
+    setFocus({ x, z, r: 10, ts: Date.now() });
+  }, []);
 
   // A stale focus request would replay its glide when FlyMover remounts.
   useEffect(() => {
@@ -117,9 +160,13 @@ export function SiteScene() {
         case "KeyH":
           setShowHelp((v) => !v);
           break;
+        case "KeyI":
+          setShowIndex((v) => !v);
+          break;
         case "Escape":
           setSelected(null);
           setShowHelp(false);
+          setShowIndex(false);
           break;
       }
     };
@@ -139,9 +186,14 @@ export function SiteScene() {
         selected={selected}
         onClearSelected={() => setSelected(null)}
         onFlyTo={flyToSelection}
+        onInspect={inspectFromIndex}
+        onNavigate={navigateTo}
         showHelp={showHelp}
         onToggleHelp={() => setShowHelp((v) => !v)}
+        showIndex={showIndex}
+        onToggleIndex={() => setShowIndex((v) => !v)}
         markerRef={markerRef}
+        telemetryRef={telemetryRef}
         isMobile={isMobile}
       />
 
@@ -166,12 +218,22 @@ export function SiteScene() {
         }}
         onPointerMissed={() => setSelected(null)}
       >
-        {/* Shed the expensive post passes first, then render resolution */}
+        {/* Shed the expensive post passes first, then render resolution — and
+            walk back up when the frame rate holds. After too many flip-flops,
+            lock to the low tier rather than oscillate. */}
         <PerformanceMonitor
+          flipflops={4}
           onDecline={() => {
-            declineStage.current += 1;
-            if (declineStage.current === 1) setQuality("low");
-            else setDpr(1);
+            declineStage.current = Math.min(2, declineStage.current + 1);
+            applyQuality(declineStage.current);
+          }}
+          onIncline={() => {
+            declineStage.current = Math.max(0, declineStage.current - 1);
+            applyQuality(declineStage.current);
+          }}
+          onFallback={() => {
+            declineStage.current = 2;
+            applyQuality(2);
           }}
         />
         <Suspense fallback={null}>
@@ -203,7 +265,7 @@ export function SiteScene() {
           <Vignette eskil={false} offset={0.22} darkness={0.5} />
         </EffectComposer>
 
-        <CameraTracker markerRef={markerRef} />
+        <CameraTracker markerRef={markerRef} telemetryRef={telemetryRef} />
         <Controls mode={mode} focus={focus} />
       </Canvas>
     </div>

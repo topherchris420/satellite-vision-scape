@@ -39,6 +39,24 @@ composite — illustrative, not actual imagery.
 | `/` | Interactive 3D site reconstruction (free-fly and first-person cameras) |
 | `/thesis` | The Digital Twin Thesis motion piece (`?chrome=0` hides the playback bar and tweaks panel) |
 
+## Site viewer
+
+- **Three cameras** — free-fly orbit, first-person walk with collision, and an
+  automated cinematic pass (`1` / `2` / `3`).
+- **Click-to-inspect** — every structure opens a dossier card with dimensions
+  and capacity; **Fly to structure** glides the camera in.
+- **Site index** (`I`) — a grouped outliner of every radome, sphere, tank and
+  building; click an entry to inspect and fly to it.
+- **Clickable minimap** — a schematic generated straight from the layout data,
+  with a north arrow and 100 m scale bar; click anywhere on it to fly the
+  camera there.
+- **Live telemetry** — grid easting/northing, altitude and heading in the HUD,
+  streamed imperatively so camera motion never re-renders React.
+- **Day / night** (`N`) and adaptive quality that sheds post-processing and
+  render resolution under load, then recovers when the frame rate holds.
+
+Press `H` in the viewer for the full shortcut list.
+
 ## Getting started
 
 Requires [Bun](https://bun.sh).

@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import type { MouseEvent, RefObject } from "react";
 import {
   roadPath,
   topEnclosurePath,
@@ -15,14 +15,34 @@ import {
 // it always matches the 3D scene. The SVG viewBox is in world metres (x right,
 // z down), which means the camera marker can be positioned with a plain
 // translate(x z) — the CameraTracker inside the Canvas updates `markerRef`
-// every frame without triggering React re-renders.
-export function Minimap({ markerRef }: { markerRef: RefObject<SVGGElement | null> }) {
+// every frame without triggering React re-renders. Clicking the map converts
+// back through the same mapping, so `onNavigate` receives world XZ metres.
+export function Minimap({
+  markerRef,
+  onNavigate,
+}: {
+  markerRef: RefObject<SVGGElement | null>;
+  onNavigate?: (x: number, z: number) => void;
+}) {
+  const handleClick = (e: MouseEvent<SVGSVGElement>) => {
+    if (!onNavigate) return;
+    const ctm = e.currentTarget.getScreenCTM();
+    if (!ctm) return;
+    const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+    onNavigate(p.x, p.y);
+  };
+
   return (
     <svg
       viewBox="-155 -185 405 385"
-      className="w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm"
-      aria-label="Site minimap"
+      className={`w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
+        onNavigate ? "cursor-crosshair" : ""
+      }`}
+      role={onNavigate ? "button" : "img"}
+      aria-label={onNavigate ? "Site minimap — click to fly the camera there" : "Site minimap"}
+      onClick={handleClick}
     >
+      {onNavigate && <title>Click to fly the camera there</title>}
       {/* northern antenna enclosure */}
       <polygon
         points={topEnclosurePath.map((p) => p.join(",")).join(" ")}
@@ -93,6 +113,30 @@ export function Minimap({ markerRef }: { markerRef: RefObject<SVGGElement | null
       {domes.map((d, i) => (
         <circle key={`d-${i}`} cx={d.pos[0]} cy={d.pos[1]} r={Math.max(5, d.radius)} fill="#f5f2ea" />
       ))}
+      {/* north arrow (map "up" is −z = grid north) */}
+      <g fill="#ffffff" fillOpacity={0.55}>
+        <path d="M228,-146 l9,20 -9,-6 -9,6 Z" />
+        <text x={228} y={-100} fontSize={26} textAnchor="middle" fontFamily="monospace">
+          N
+        </text>
+      </g>
+      {/* 100 m scale bar */}
+      <g stroke="#ffffff" strokeOpacity={0.55} strokeWidth={3}>
+        <line x1={-140} y1={186} x2={-40} y2={186} />
+        <line x1={-140} y1={179} x2={-140} y2={193} />
+        <line x1={-40} y1={179} x2={-40} y2={193} />
+      </g>
+      <text
+        x={-90}
+        y={176}
+        fontSize={24}
+        textAnchor="middle"
+        fontFamily="monospace"
+        fill="#ffffff"
+        fillOpacity={0.55}
+      >
+        100 m
+      </text>
       {/* camera marker — transform driven imperatively by CameraTracker */}
       <g ref={markerRef}>
         <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />
