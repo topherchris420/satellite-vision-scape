@@ -2,7 +2,17 @@ import { useMemo } from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
-import { domes, tanks, buildings, spheres, type BuildingKind } from "@/lib/site-layout";
+import {
+  domes,
+  tanks,
+  buildings,
+  spheres,
+  RADOME,
+  RADOME_SHELL_SIN,
+  RADOME_SHELL_LIFT,
+  type BuildingKind,
+} from "@/lib/site-layout";
+import { RadomeAntenna } from "./RadomeAntenna";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 import {
   type Selection,
@@ -248,40 +258,91 @@ export function Structures({
         })}
       </group>
 
-      {/* -------- Radomes (hemispheres on gravel pads) -------- */}
+      {/* -------- Radomes: translucent FRP shells over dish antennas -------- */}
       <group name="radomes">
-        {domes.map((d, i) => (
-          <group
-            key={`dome-${i}`}
-            name={`dome-${i}`}
-            position={[d.pos[0], 0, d.pos[1]]}
-            onClick={(e) => pick(e, domeSelection(d, i))}
-            onPointerOver={over}
-            onPointerOut={out}
-          >
-            <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-              <circleGeometry args={[d.radius * 1.2, 32]} />
-              <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
-            </mesh>
-            {/* low concrete plinth under the dome */}
-            <mesh position={[0, 0.35, 0]} receiveShadow castShadow>
-              <cylinderGeometry args={[d.radius * 1.02, d.radius * 1.06, 0.5, 32]} />
-              <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
-            </mesh>
-            <mesh position={[0, 0.5, 0]} castShadow receiveShadow>
-              <sphereGeometry args={[d.radius, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2]} />
-              <meshPhysicalMaterial
-                map={domeMap}
-                color="#f5f2ec"
-                roughness={0.3}
-                metalness={0.05}
-                sheen={0.4}
-                sheenColor="#ffffff"
-                envMapIntensity={1.0}
-              />
-            </mesh>
-          </group>
-        ))}
+        {domes.map((d, i) => {
+          const baseR = d.radius * RADOME_SHELL_SIN; // truncated-sphere base ring
+          const wall = RADOME.plinthHeight;
+          const shellY = wall + d.radius * RADOME_SHELL_LIFT;
+          return (
+            <group
+              key={`dome-${i}`}
+              name={`dome-${i}`}
+              position={[d.pos[0], 0, d.pos[1]]}
+              onClick={(e) => pick(e, domeSelection(d, i))}
+              onPointerOver={over}
+              onPointerOut={out}
+            >
+              <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                <circleGeometry args={[d.radius * 1.25, 40]} />
+                <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
+              </mesh>
+              {/* concrete foundation wall — its top cap is the antenna floor slab */}
+              <mesh position={[0, wall / 2, 0]} receiveShadow castShadow>
+                <cylinderGeometry args={[baseR + 0.3, baseR + 0.55, wall, 48]} />
+                <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+              </mesh>
+              {/* ventilation grilles half-recessed into the foundation wall */}
+              {[0.9, 2.6, 4.4].map((a) => (
+                <mesh
+                  key={`vent-${a}`}
+                  position={[Math.cos(a) * (baseR + 0.4), wall * 0.55, Math.sin(a) * (baseR + 0.4)]}
+                  rotation={[0, -a, 0]}
+                  castShadow
+                >
+                  <boxGeometry args={[0.3, 0.5, 0.9]} />
+                  <meshStandardMaterial color="#565b60" metalness={0.6} roughness={0.5} />
+                </mesh>
+              ))}
+              {/* access vestibule down to the sub-structure */}
+              <group rotation={[0, -0.6 - i * 0.9, 0]}>
+                <mesh position={[baseR + 0.7, 1.05, 0]} castShadow receiveShadow>
+                  <boxGeometry args={[1.6, 2.1, 1.5]} />
+                  <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+                </mesh>
+                <mesh position={[baseR + 1.53, 0.9, 0]}>
+                  <boxGeometry args={[0.06, 1.6, 0.9]} />
+                  <meshStandardMaterial color="#3f444a" metalness={0.5} roughness={0.6} />
+                </mesh>
+              </group>
+              {/* dish antenna + shell framework inside */}
+              <group position={[0, wall, 0]}>
+                <RadomeAntenna radius={d.radius} index={i} />
+              </group>
+              {/* translucent FRP shell — far (inner) faces first, then near */}
+              <mesh position={[0, shellY, 0]} renderOrder={1}>
+                <sphereGeometry args={[d.radius, 48, 26, 0, Math.PI * 2, 0, RADOME.shellTheta]} />
+                <meshPhysicalMaterial
+                  map={domeMap}
+                  color="#f5f2ec"
+                  transparent
+                  opacity={0.3}
+                  depthWrite={false}
+                  side={THREE.BackSide}
+                  roughness={0.35}
+                  metalness={0.05}
+                />
+              </mesh>
+              <mesh position={[0, shellY, 0]} renderOrder={2} castShadow>
+                <sphereGeometry args={[d.radius, 48, 26, 0, Math.PI * 2, 0, RADOME.shellTheta]} />
+                <meshPhysicalMaterial
+                  map={domeMap}
+                  color="#f5f2ec"
+                  transparent
+                  opacity={0.48}
+                  depthWrite={false}
+                  roughness={0.3}
+                  metalness={0.05}
+                  sheen={0.4}
+                  sheenColor="#ffffff"
+                  envMapIntensity={1.0}
+                  emissive="#ffc07a"
+                  emissiveIntensity={night ? 0.12 : 0}
+                />
+              </mesh>
+            </group>
+          );
+        })}
       </group>
 
       {/* -------- Cylindrical storage tanks (domed tops) -------- */}

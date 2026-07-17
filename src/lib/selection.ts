@@ -6,6 +6,7 @@ import {
   domes,
   tanks,
   buildings,
+  RADOME,
   type Sphere,
   type Dome,
   type Tank,
@@ -52,8 +53,9 @@ export function domeSelection(d: Dome, i: number): Selection {
     pos: d.pos,
     radius: d.radius * 1.25,
     details: [
-      `Diameter ${(d.radius * 2).toFixed(0)} m`,
-      "Protective enclosure for antenna equipment",
+      `FRP shell Ø ${(d.radius * 2).toFixed(0)} m on concrete foundation ring`,
+      `Parabolic reflector Ø ${(d.radius * 2 * RADOME.dishRatio).toFixed(1)} m, feed horn assembly`,
+      "Dish travel AZ 360° · EL 0–90° — pedestal az/el drives",
     ],
   };
 }

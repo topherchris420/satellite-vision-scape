@@ -28,7 +28,9 @@ export const colliders: Collider[] = [
     })
   ),
   ...tanks.map((t): CircleCollider => ({ type: "circle", cx: t.pos[0], cz: t.pos[1], r: t.radius + 0.4 })),
-  ...domes.map((d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius })),
+  // radome radius + margin so the walker also clears the foundation ring and
+  // the access vestibule that pokes out past the shell's base circle
+  ...domes.map((d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius + 0.8 })),
   ...spheres.map((s): CircleCollider => ({ type: "circle", cx: s.pos[0], cz: s.pos[1], r: s.radius * 0.9 })),
 ];
 
