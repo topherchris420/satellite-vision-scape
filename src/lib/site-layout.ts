@@ -56,7 +56,8 @@ export const spheres: Sphere[] = [
 
 // ---------------------------------------------------------------------------
 // Radomes — three across the top enclosure + the upper-left cluster.
-// Modelled as hemispheres on circular pads.
+// Modelled as truncated-sphere FRP shells on concrete foundation rings, each
+// housing a pedestal-mounted parabolic dish antenna (see RADOME below).
 // ---------------------------------------------------------------------------
 export const domes: Dome[] = [
   // Three across the very top (separate northern enclosure)
@@ -69,6 +70,20 @@ export const domes: Dome[] = [
   { pos: [-64, -81], radius: 6.5 },
   { pos: [-50, -79], radius: 7.5 },
 ];
+
+// Radome anatomy — proportions from the reference station cross-section
+// (drawing SS-RAD-07-74, "SIGINT Radome Station"): an 18 m aerodynamic FRP
+// shell over a 12.2 m parabolic reflector with feed horn assembly, pedestal,
+// azimuth rotation mechanism and elevation drive (dish travel AZ 360°,
+// EL 0–90°), all sitting on a 1.2 m concrete foundation wall. Every radome on
+// site is built from these ratios at its own shell radius.
+export const RADOME = {
+  dishRatio: 12.2 / 18, // reflector Ø : shell Ø
+  shellTheta: Math.PI * 0.7, // shell sphere truncation angle (≈ 3/4 sphere)
+  plinthHeight: 1.2, // concrete foundation wall above grade (m)
+} as const;
+export const RADOME_SHELL_SIN = Math.sin(RADOME.shellTheta); // base ring radius / shell radius
+export const RADOME_SHELL_LIFT = -Math.cos(RADOME.shellTheta); // shell centre height above base ring / shell radius
 
 // ---------------------------------------------------------------------------
 // Cylindrical storage / process tanks scattered around the process area.
