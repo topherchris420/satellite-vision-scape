@@ -21,12 +21,32 @@ const dishMat = new THREE.MeshStandardMaterial({
   side: THREE.DoubleSide,
   envMapIntensity: 1.1,
 });
-const steelMat = new THREE.MeshStandardMaterial({ color: "#b4bac1", metalness: 0.75, roughness: 0.38 });
-const mechMat = new THREE.MeshStandardMaterial({ color: "#4d5359", metalness: 0.65, roughness: 0.45 });
-const driveMat = new THREE.MeshStandardMaterial({ color: "#8a7a3f", metalness: 0.5, roughness: 0.5 });
+const steelMat = new THREE.MeshStandardMaterial({
+  color: "#b4bac1",
+  metalness: 0.75,
+  roughness: 0.38,
+});
+const mechMat = new THREE.MeshStandardMaterial({
+  color: "#4d5359",
+  metalness: 0.65,
+  roughness: 0.45,
+});
+const driveMat = new THREE.MeshStandardMaterial({
+  color: "#8a7a3f",
+  metalness: 0.5,
+  roughness: 0.5,
+});
 const pedestalMat = new THREE.MeshStandardMaterial({ color: "#a5a094", roughness: 0.95 });
-const cableMat = new THREE.MeshStandardMaterial({ color: "#33383c", metalness: 0.3, roughness: 0.7 });
-const cabinetMat = new THREE.MeshStandardMaterial({ color: "#5c636a", metalness: 0.45, roughness: 0.55 });
+const cableMat = new THREE.MeshStandardMaterial({
+  color: "#33383c",
+  metalness: 0.3,
+  roughness: 0.7,
+});
+const cabinetMat = new THREE.MeshStandardMaterial({
+  color: "#5c636a",
+  metalness: 0.45,
+  roughness: 0.55,
+});
 const beaconMat = new THREE.MeshStandardMaterial({
   color: "#35d16d",
   emissive: "#35d16d",
@@ -101,7 +121,8 @@ export function RadomeAntenna({ radius: R, index }: { radius: number; index: num
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     if (azRef.current)
-      azRef.current.rotation.y = index * 2.1 + t * (0.05 + (index % 3) * 0.02) * (index % 2 ? -1 : 1);
+      azRef.current.rotation.y =
+        index * 2.1 + t * (0.05 + (index % 3) * 0.02) * (index % 2 ? -1 : 1);
     if (elRef.current) elRef.current.rotation.x = 0.7 + Math.sin(t * 0.07 + index * 1.9) * 0.42;
   });
 
@@ -128,7 +149,11 @@ export function RadomeAntenna({ radius: R, index }: { radius: number; index: num
       <mesh position={[-0.16 * R, 0.18 * R, 0.05 * R]} material={cableMat}>
         <cylinderGeometry args={[0.02 * R, 0.02 * R, 0.36 * R, 8]} />
       </mesh>
-      <mesh position={[-0.34 * R, 0.015 * R, 0.09 * R]} rotation={[0, -0.15, 0]} material={cableMat}>
+      <mesh
+        position={[-0.34 * R, 0.015 * R, 0.09 * R]}
+        rotation={[0, -0.15, 0]}
+        material={cableMat}
+      >
         <boxGeometry args={[0.44 * R, 0.03 * R, 0.1 * R]} />
       </mesh>
       {/* signal-processing rack with status beacon */}
