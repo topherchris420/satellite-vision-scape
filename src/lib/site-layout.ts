@@ -39,20 +39,10 @@ export type Channel = { path: [number, number][]; width: number };
 // Large spherical storage tanks — the signature central row of bright circles.
 // These sit on a ring of support legs like pressurised gas / LNG spheres.
 // ---------------------------------------------------------------------------
-export const spheres: Sphere[] = [
-  // Main row — kept north of the process hall (z ≥ 38) so the shells and
-  // their pads never intersect it.
-  { pos: [-21, 28], radius: 5, legs: 8 },
-  { pos: [-8, 30], radius: 6.5, legs: 10 },
-  { pos: [13, 29], radius: 8, legs: 10 },
-  { pos: [40, 36], radius: 7, legs: 10 },
-  { pos: [55, 38], radius: 6.5, legs: 10 },
-  { pos: [72, 39], radius: 8.5, legs: 12 },
-  { pos: [108, 36], radius: 7.5, legs: 10 },
-  // large lower pair tucked against the band's south fence (z = 73)
-  { pos: [86, 62], radius: 9, legs: 12 },
-  { pos: [120, 65], radius: 4.5, legs: 8 },
-];
+// The central "bright circles" row is now modelled as radomes (see `domes`
+// above) — in the reference photographs it is an antenna field, not a tank
+// farm — so no free-standing storage spheres remain on site.
+export const spheres: Sphere[] = [];
 
 // ---------------------------------------------------------------------------
 // Radomes — three across the top enclosure + the upper-left cluster.
@@ -69,6 +59,19 @@ export const domes: Dome[] = [
   { pos: [-80, -81], radius: 6.5 },
   { pos: [-64, -81], radius: 6.5 },
   { pos: [-50, -79], radius: 7.5 },
+  // Central radome field — the signature row of large domes tracing the
+  // overhead image. Previously modelled as storage spheres, but in the
+  // reference photographs every one of these is a radome housing a dish, so
+  // they carry the same FRP shell + pedestal antenna as the rest of the site.
+  { pos: [-21, 28], radius: 5 },
+  { pos: [-8, 30], radius: 6.5 },
+  { pos: [13, 29], radius: 8 },
+  { pos: [40, 36], radius: 7 },
+  { pos: [55, 38], radius: 6.5 },
+  { pos: [72, 39], radius: 8.5 },
+  { pos: [108, 36], radius: 7.5 },
+  { pos: [86, 62], radius: 9 },
+  { pos: [120, 65], radius: 4.5 },
 ];
 
 // Radome anatomy — proportions from the reference station cross-section

@@ -126,7 +126,7 @@ export function HUD({
                 {isMobile ? "tap any structure to crack open its file." : "click any structure to crack open its file."}
               </p>
               <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-white/60">
-                <span>{objectSummary.spheres} spheres</span>
+                {objectSummary.spheres > 0 && <span>{objectSummary.spheres} spheres</span>}
                 <span>{objectSummary.tanks} tanks</span>
                 <span>{objectSummary.domes} radomes</span>
                 <span>{objectSummary.buildings} buildings</span>
