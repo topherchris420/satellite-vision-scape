@@ -95,4 +95,4 @@ export const siteIndex: SiteIndexGroup[] = [
   { label: "Storage spheres", items: spheres.map(sphereSelection) },
   { label: "Process tanks", items: tanks.map(tankSelection) },
   { label: "Buildings", items: buildings.map(buildingSelection) },
-];
+].filter((g) => g.items.length > 0);
