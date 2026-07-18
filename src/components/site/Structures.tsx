@@ -340,6 +340,35 @@ export function Structures({
                   <meshStandardMaterial color="#3f444a" metalness={0.5} roughness={0.6} />
                 </mesh>
               </group>
+              {/* Perimeter sodium floodlights raking the shell — dark fixtures
+                  by day, blooming amber lamp heads by night, the ground-level
+                  flood ring that gives the photographed station its golden glow. */}
+              {[0.7, 2.3, 3.9, 5.5].map((a, k) => {
+                const fr = baseR + 2.4;
+                return (
+                  <group
+                    key={`flood-${k}`}
+                    position={[Math.cos(a) * fr, 0, Math.sin(a) * fr]}
+                    rotation={[0, -a, 0]}
+                  >
+                    <mesh position={[0, 1.5, 0]} castShadow>
+                      <cylinderGeometry args={[0.08, 0.1, 3, 8]} />
+                      <meshStandardMaterial color="#3b3f44" metalness={0.6} roughness={0.5} />
+                    </mesh>
+                    {/* lamp head tilted up toward the shell */}
+                    <mesh position={[-0.28, 2.9, 0]} rotation={[0, 0, 0.7]}>
+                      <boxGeometry args={[0.5, 0.2, 0.34]} />
+                      <meshStandardMaterial
+                        color="#2b2f33"
+                        emissive="#ffb257"
+                        emissiveIntensity={night ? 6 : 0}
+                        metalness={0.5}
+                        roughness={0.5}
+                      />
+                    </mesh>
+                  </group>
+                );
+              })}
               {/* dish antenna + shell framework inside */}
               <group position={[0, wall, 0]}>
                 <RadomeAntenna radius={d.radius} index={i} />
@@ -374,8 +403,8 @@ export function Structures({
                   sheen={0.35}
                   sheenColor="#ffffff"
                   envMapIntensity={1.0}
-                  emissive="#ffc07a"
-                  emissiveIntensity={night ? 0.14 : 0}
+                  emissive="#ff9a38"
+                  emissiveIntensity={night ? 0.32 : 0}
                 />
               </mesh>
               {/* panel-seam lattice tracing every facet edge, sitting just

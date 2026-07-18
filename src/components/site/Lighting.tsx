@@ -150,15 +150,30 @@ export function Lighting({ time }: { time: TimeOfDay }) {
               color="#ffb35a"
             />
           ))}
-          {/* Tank-farm accent lights */}
-          {[...domes.slice(0, 4), ...spheres.slice(0, 4).map((s) => ({ pos: s.pos, radius: s.radius }))].map((d, i) => (
+          {/* Sodium-vapour floodlights wash every radome from its base — the
+              station's signature golden night glow. Set low and close so the
+              shells brighten to amber at the foot and fall to dark up top,
+              exactly as the perimeter lamps light them in the reference
+              photographs. */}
+          {domes.map((d, i) => (
+            <pointLight
+              key={`radome-flood-${i}`}
+              position={[d.pos[0], 1.8, d.pos[1]]}
+              intensity={10}
+              distance={d.radius * 5}
+              decay={2}
+              color="#ff8a24"
+            />
+          ))}
+          {/* Cooler accents picking out the sphere-tank row */}
+          {spheres.slice(0, 4).map((s, i) => (
             <pointLight
               key={`accent-${i}`}
-              position={[d.pos[0], d.radius + 2, d.pos[1]]}
-              intensity={6}
+              position={[s.pos[0], s.radius + 2, s.pos[1]]}
+              intensity={5}
               distance={30}
               decay={2}
-              color="#7fb8ff"
+              color="#8fbfff"
             />
           ))}
         </>
