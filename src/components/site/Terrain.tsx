@@ -226,10 +226,10 @@ export function Terrain() {
         receiveShadow
       />
 
-      {/* Western dry scrub overlay */}
+      {/* Western dry scrub overlay — warm red-dust wash over the open plain */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-190, 0.05, 0]} receiveShadow>
         <planeGeometry args={[240, 520]} />
-        <meshStandardMaterial map={vegColor} roughness={1} color="#9a7a48" transparent opacity={0.85} />
+        <meshStandardMaterial map={vegColor} roughness={1} color="#a86844" transparent opacity={0.85} />
       </mesh>
 
       {/* Green landscaped patch in the lower yard (inside the fence).

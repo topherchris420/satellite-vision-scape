@@ -79,7 +79,9 @@ export const domes: Dome[] = [
 // site is built from these ratios at its own shell radius.
 export const RADOME = {
   dishRatio: 12.2 / 18, // reflector Ø : shell Ø
-  shellTheta: Math.PI * 0.7, // shell sphere truncation angle (≈ 3/4 sphere)
+  shellTheta: Math.PI * 0.76, // shell truncation angle — a near-full sphere on
+  // a short base ring, matching the photographed radomes that bulge past their
+  // equator and taper back to a narrow foundation (base Ø ≈ dish Ø).
   plinthHeight: 1.2, // concrete foundation wall above grade (m)
 } as const;
 export const RADOME_SHELL_SIN = Math.sin(RADOME.shellTheta); // base ring radius / shell radius
@@ -101,34 +103,37 @@ export const tanks: Tank[] = [
 // ---------------------------------------------------------------------------
 // Buildings.
 // ---------------------------------------------------------------------------
+// Palette traced from the photo: the occupied buildings are painted bright,
+// slightly cool white (they glare against the red earth), industrial shells
+// stay a touch warmer/greyer for contrast.
 export const buildings: Building[] = [
   // Big bright process hall — z 38..64, clear of the sphere row to its north
-  { pos: [-6, 51], size: [58, 26], height: 12, color: "#e2ddd2", kind: "hall", roof: "flat" },
+  { pos: [-6, 51], size: [58, 26], height: 12, color: "#eef1ef", kind: "hall", roof: "flat" },
   // small warehouse against the notch fence, north of the sphere pads
-  { pos: [-2, 10], size: [26, 12], height: 9, color: "#cfc9bd", kind: "warehouse" },
+  { pos: [-2, 10], size: [26, 12], height: 9, color: "#dcdbd4", kind: "warehouse" },
   // Long dark striped building (upper-left — reads like a solar / louvered roof)
   { pos: [-74, -26], size: [22, 30], height: 5, color: "#3a3f34", kind: "shed", rotY: 0 },
   // Upper-left support buildings around the radome cluster
-  { pos: [-100, -60], size: [16, 10], height: 5, color: "#c4bdae", kind: "office" },
-  { pos: [-88, -50], size: [12, 8], height: 4, color: "#b8b1a2", kind: "office" },
-  { pos: [-70, -55], size: [10, 14], height: 5, color: "#cfc9bd", kind: "office" },
+  { pos: [-100, -60], size: [16, 10], height: 5, color: "#e2e2dc", kind: "office" },
+  { pos: [-88, -50], size: [12, 8], height: 4, color: "#d8d7cf", kind: "office" },
+  { pos: [-70, -55], size: [10, 14], height: 5, color: "#e6e6e0", kind: "office" },
   // Lower-left barracks: rows of long parallel buildings
   ...Array.from({ length: 5 }, (_, i) => ({
     pos: [-88 + i * 15, 92] as [number, number],
     size: [8, 44] as [number, number],
     height: 6,
-    color: i % 2 ? "#d0cabc" : "#c6c0b2",
+    color: i % 2 ? "#e0ded6" : "#d4d2ca",
     kind: "barracks" as BuildingKind,
     roof: "gable" as const,
   })),
-  // Lower-central smaller service buildings
-  { pos: [6, 96], size: [28, 10], height: 5, color: "#bdb7a9", kind: "shed" },
-  { pos: [8, 112], size: [30, 8], height: 5, color: "#c9c3b5", kind: "shed" },
-  { pos: [18, 128], size: [20, 8], height: 4, color: "#b8b1a2", kind: "shed" },
+  // Lower-central smaller service buildings — white demountable sheds
+  { pos: [6, 96], size: [28, 10], height: 5, color: "#e4e4de", kind: "shed" },
+  { pos: [8, 112], size: [30, 8], height: 5, color: "#ededea", kind: "shed" },
+  { pos: [18, 128], size: [20, 8], height: 4, color: "#deddd6", kind: "shed" },
   // Lower landscaped compound buildings (inside the lower yard, clear of the
   // service sheds and the parking apron)
-  { pos: [-16, 140], size: [12, 14], height: 6, color: "#e0dccf", kind: "office" },
-  { pos: [20, 154], size: [10, 12], height: 6, color: "#e0dccf", kind: "office" },
+  { pos: [-16, 140], size: [12, 14], height: 6, color: "#f0f2ef", kind: "office" },
+  { pos: [20, 154], size: [10, 12], height: 6, color: "#f0f2ef", kind: "office" },
 ];
 
 // ---------------------------------------------------------------------------
