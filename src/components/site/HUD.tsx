@@ -278,14 +278,20 @@ export function HUD({
 
       {/* ---------- bottom row ---------- */}
       <div className="flex items-end justify-between gap-4">
-        {/* controls hint */}
-        <div className="pointer-events-auto rounded-lg bg-black/60 px-4 py-3 text-xs text-white backdrop-blur-sm">
+        {/* controls hint — hidden on mobile, where the on-screen joystick and
+            the info panel already explain movement (and it would sit under the
+            touch controls cluster) */}
+        <div
+          className={`pointer-events-auto rounded-lg bg-black/60 px-4 py-3 text-xs text-white backdrop-blur-sm ${
+            isMobile ? "hidden" : ""
+          }`}
+        >
           {mode === "fly" && (
             <>
               <div className="font-semibold">Free-fly controls</div>
               <div className="mt-1 text-white/80">
                 {isMobile
-                  ? "Drag to orbit · pinch to zoom · two-finger drag to pan"
+                  ? "Joystick to move · ▲▼ up/down · ⚡ boost · drag to orbit · pinch to zoom"
                   : "Drag to orbit · Scroll to zoom · WASD to pan · Q/E up/down · Shift to boost"}
               </div>
             </>
