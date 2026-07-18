@@ -20,8 +20,8 @@ function makeGradientEquirect(isDay: boolean) {
     g.addColorStop(0.0, "#4a7ab8"); // zenith
     g.addColorStop(0.45, "#c4b89e");
     g.addColorStop(0.5, "#e8d5b0"); // horizon haze
-    g.addColorStop(0.55, "#d4a86e");
-    g.addColorStop(1.0, "#8a6842"); // ground bounce
+    g.addColorStop(0.55, "#d49a62");
+    g.addColorStop(1.0, "#9c5636"); // red-earth ground bounce
   } else {
     g.addColorStop(0.0, "#0a1226");
     g.addColorStop(0.48, "#141d33");

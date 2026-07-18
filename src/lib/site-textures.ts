@@ -496,7 +496,9 @@ export function getSiteTextures() {
   if (cache) return cache;
 
   const dirtColor = makeTexture({
-    base: [185, 120, 72], variation: [40, 30, 18], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
+    // Vivid iron-red outback earth (the site's "red centre" ground). Kept
+    // strongly red/orange with just enough green+blue to read as sunlit soil.
+    base: [192, 98, 58], variation: [40, 26, 16], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
   });
   const grassColor = makeTexture({
     base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
@@ -517,7 +519,9 @@ export function getSiteTextures() {
     base: [238, 236, 230], variation: [6, 6, 6], scale: 3, octaves: 3, seed: 7,
   });
   const gravelColor = makeTexture({
-    base: [155, 125, 95], variation: [35, 30, 20], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
+    // Graded red-dirt pads around the radomes — dustier/lighter than open
+    // ground but the same red family.
+    base: [172, 112, 80], variation: [34, 28, 20], scale: 24, octaves: 4, seed: 8, speckle: 0.06,
   });
   const rockColor = makeTexture({
     base: [138, 118, 96], variation: [42, 38, 32], scale: 7, octaves: 6, seed: 9, contrast: 1.5, speckle: 0.02, size: 512,

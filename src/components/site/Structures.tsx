@@ -97,6 +97,40 @@ function facadeBoxGeometry(w: number, h: number, d: number) {
   return geom;
 }
 
+// Truncated geodesic shell for the radomes: an icosphere cut at the radome's
+// base-ring plane. Non-indexed so `flatShading` gives every triangle its own
+// normal — the white FRP skin then reads as discrete faceted panels (like the
+// photographed geodesic domes) instead of a smooth balloon. The same geometry
+// drives the seam lattice, so the wireframe traces exactly the panel edges.
+// Cached per shell radius.
+const radomeShellCache = new Map<string, THREE.BufferGeometry>();
+function radomeShellGeometry(R: number) {
+  const key = R.toFixed(2);
+  const hit = radomeShellCache.get(key);
+  if (hit) return hit;
+  const ico = new THREE.IcosahedronGeometry(R, 3);
+  const pos = ico.attributes.position as THREE.BufferAttribute;
+  const uv = ico.attributes.uv as THREE.BufferAttribute;
+  const cutY = -RADOME_SHELL_LIFT * R; // base-ring plane, relative to centre
+  const kept: number[] = [];
+  const keptUv: number[] = [];
+  for (let i = 0; i < pos.count; i += 3) {
+    const cy = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
+    if (cy < cutY) continue;
+    for (let j = i; j < i + 3; j++) {
+      kept.push(pos.getX(j), pos.getY(j), pos.getZ(j));
+      keptUv.push(uv.getX(j), uv.getY(j));
+    }
+  }
+  const geom = new THREE.BufferGeometry();
+  geom.setAttribute("position", new THREE.Float32BufferAttribute(kept, 3));
+  geom.setAttribute("uv", new THREE.Float32BufferAttribute(keptUv, 2));
+  geom.computeVertexNormals();
+  radomeShellCache.set(key, geom);
+  ico.dispose();
+  return geom;
+}
+
 // Deterministic rooftop equipment (HVAC packs + exhaust vents) for every
 // flat-roofed building, folded into two InstancedMeshes for the whole site.
 function useRooftopEquipment() {
@@ -264,6 +298,7 @@ export function Structures({
           const baseR = d.radius * RADOME_SHELL_SIN; // truncated-sphere base ring
           const wall = RADOME.plinthHeight;
           const shellY = wall + d.radius * RADOME_SHELL_LIFT;
+          const shell = radomeShellGeometry(d.radius);
           return (
             <group
               key={`dome-${i}`}
@@ -309,35 +344,49 @@ export function Structures({
               <group position={[0, wall, 0]}>
                 <RadomeAntenna radius={d.radius} index={i} />
               </group>
-              {/* translucent FRP shell — far (inner) faces first, then near */}
-              <mesh position={[0, shellY, 0]} renderOrder={1}>
-                <sphereGeometry args={[d.radius, 48, 26, 0, Math.PI * 2, 0, RADOME.shellTheta]} />
+              {/* Geodesic FRP shell: flat-shaded white panels. Two translucent
+                  passes (inner back-faces first, then outer) keep the shell
+                  reading as a solid bright-white dome while still letting the
+                  digital-twin antenna show through faintly. */}
+              <mesh geometry={shell} position={[0, shellY, 0]} renderOrder={1}>
                 <meshPhysicalMaterial
                   map={domeMap}
-                  color="#f5f2ec"
+                  color="#f2f4f6"
+                  flatShading
                   transparent
-                  opacity={0.3}
+                  opacity={0.5}
                   depthWrite={false}
                   side={THREE.BackSide}
-                  roughness={0.35}
-                  metalness={0.05}
+                  roughness={0.42}
+                  metalness={0.04}
                 />
               </mesh>
-              <mesh position={[0, shellY, 0]} renderOrder={2} castShadow>
-                <sphereGeometry args={[d.radius, 48, 26, 0, Math.PI * 2, 0, RADOME.shellTheta]} />
+              <mesh geometry={shell} position={[0, shellY, 0]} renderOrder={2} castShadow>
                 <meshPhysicalMaterial
                   map={domeMap}
-                  color="#f5f2ec"
+                  color="#f4f6f8"
+                  flatShading
                   transparent
-                  opacity={0.48}
+                  opacity={0.66}
                   depthWrite={false}
-                  roughness={0.3}
-                  metalness={0.05}
-                  sheen={0.4}
+                  roughness={0.36}
+                  metalness={0.04}
+                  sheen={0.35}
                   sheenColor="#ffffff"
                   envMapIntensity={1.0}
                   emissive="#ffc07a"
-                  emissiveIntensity={night ? 0.12 : 0}
+                  emissiveIntensity={night ? 0.14 : 0}
+                />
+              </mesh>
+              {/* panel-seam lattice tracing every facet edge, sitting just
+                  proud of the skin so the geodesic pattern always reads */}
+              <mesh geometry={shell} position={[0, shellY, 0]} renderOrder={3} scale={1.004}>
+                <meshBasicMaterial
+                  color="#a9afb6"
+                  wireframe
+                  transparent
+                  opacity={0.5}
+                  depthWrite={false}
                 />
               </mesh>
             </group>
