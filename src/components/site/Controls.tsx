@@ -4,6 +4,7 @@ import { MapControls, PointerLockControls } from "@react-three/drei";
 import * as THREE from "three";
 import { resolveCollision } from "@/lib/site-colliders";
 import { terrainHeight } from "@/lib/terrain";
+import { mobileInput, mobileInputActive } from "@/lib/mobile-input";
 
 export type ControlMode = "fly" | "fps" | "cinematic";
 
@@ -54,7 +55,7 @@ function FpsMover() {
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    const max = keys.current["ShiftLeft"] ? 20 : 8;
+    const max = keys.current["ShiftLeft"] || mobileInput.boost ? 20 : 8;
     const dir = new THREE.Vector3();
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
@@ -62,11 +63,17 @@ function FpsMover() {
     forward.normalize();
     const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
 
+    // Keyboard is binary, so normalize to full speed; the touch joystick is
+    // analog, so it contributes proportionally to its deflection.
     if (keys.current["KeyW"]) dir.add(forward);
     if (keys.current["KeyS"]) dir.sub(forward);
     if (keys.current["KeyD"]) dir.add(right);
     if (keys.current["KeyA"]) dir.sub(right);
-    if (dir.lengthSq() > 0) dir.normalize().multiplyScalar(max);
+    if (dir.lengthSq() > 0) dir.normalize();
+    dir.addScaledVector(forward, mobileInput.y);
+    dir.addScaledVector(right, mobileInput.x);
+    if (dir.lengthSq() > 1) dir.normalize();
+    dir.multiplyScalar(max);
 
     // Exponential approach toward the desired velocity: quick to accelerate,
     // a touch of glide when the keys release — reads as body inertia.
@@ -137,7 +144,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    const max = keys.current["ShiftLeft"] ? 90 : 35;
+    const max = keys.current["ShiftLeft"] || mobileInput.boost ? 90 : 35;
     const forward = new THREE.Vector3();
     camera.getWorldDirection(forward);
     const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
@@ -149,11 +156,14 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
       keys.current["KeyD"] ||
       keys.current["KeyQ"] ||
       keys.current["KeyE"] ||
-      keys.current["Space"];
+      keys.current["Space"] ||
+      mobileInputActive();
     if (moving) anim.current = null;
 
     // Desired velocity from input, then an exponential approach toward it —
     // the camera banks into motion and glides to a stop instead of snapping.
+    // Keyboard input is binary (normalized to full speed); the touch joystick
+    // and rocker are analog and add proportionally to their deflection.
     const want = new THREE.Vector3();
     if (keys.current["KeyW"]) want.add(forward);
     if (keys.current["KeyS"]) want.sub(forward);
@@ -161,7 +171,12 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
     if (keys.current["KeyA"]) want.sub(right);
     if (keys.current["KeyE"] || keys.current["Space"]) want.y += 1;
     if (keys.current["KeyQ"]) want.y -= 1;
-    if (want.lengthSq() > 0) want.normalize().multiplyScalar(max);
+    if (want.lengthSq() > 0) want.normalize();
+    want.addScaledVector(forward, mobileInput.y);
+    want.addScaledVector(right, mobileInput.x);
+    want.y += mobileInput.up;
+    if (want.lengthSq() > 1) want.normalize();
+    want.multiplyScalar(max);
 
     const k = want.lengthSq() > 0 ? 8 : 5;
     vel.current.lerp(want, 1 - Math.exp(-k * dt));

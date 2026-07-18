@@ -23,6 +23,7 @@ import { Atmosphere } from "./Atmosphere";
 import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
 import { Lighting, type TimeOfDay } from "./Lighting";
 import { HUD } from "./HUD";
+import { MobileControls } from "./MobileControls";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Selection } from "@/lib/selection";
 
@@ -196,6 +197,10 @@ export function SiteScene() {
         telemetryRef={telemetryRef}
         isMobile={isMobile}
       />
+
+      {/* Touch movement controls — free-fly/first-person only, not the
+          automated cinematic pass */}
+      {isMobile && ready && mode !== "cinematic" && <MobileControls mode={mode} />}
 
       {/* Loading overlay — fades out once the first frames are on screen */}
       <div
