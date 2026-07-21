@@ -45,8 +45,8 @@ composite — illustrative, not actual imagery.
   automated cinematic pass (`1` / `2` / `3`).
 - **Click-to-inspect** — every structure opens a dossier card with dimensions
   and capacity; **Fly to structure** glides the camera in.
-- **Site index** (`I`) — a grouped outliner of every radome, sphere, tank and
-  building; click an entry to inspect and fly to it.
+- **Site index** (`I`) — a grouped outliner of every radome, uncovered dish
+  antenna, tank and building; click an entry to inspect and fly to it.
 - **Clickable minimap** — a schematic generated straight from the layout data,
   with a north arrow and 100 m scale bar; click anywhere on it to fly the
   camera there.

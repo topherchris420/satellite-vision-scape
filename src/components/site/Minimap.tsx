@@ -7,6 +7,7 @@ import {
   buildings,
   spheres,
   domes,
+  dishes,
   tanks,
   parkingLots,
 } from "@/lib/site-layout";
@@ -112,6 +113,18 @@ export function Minimap({
       ))}
       {domes.map((d, i) => (
         <circle key={`d-${i}`} cx={d.pos[0]} cy={d.pos[1]} r={Math.max(5, d.radius)} fill="#f5f2ea" />
+      ))}
+      {/* uncovered dishes — open rings to read apart from the filled radomes */}
+      {dishes.map((a, i) => (
+        <circle
+          key={`dish-${i}`}
+          cx={a.pos[0]}
+          cy={a.pos[1]}
+          r={Math.max(4, a.dishRadius)}
+          fill="none"
+          stroke="#f5f2ea"
+          strokeWidth={2.5}
+        />
       ))}
       {/* north arrow (map "up" is −z = grid north) */}
       <g fill="#ffffff" fillOpacity={0.55}>

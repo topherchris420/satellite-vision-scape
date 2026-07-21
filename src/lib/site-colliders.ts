@@ -3,7 +3,7 @@
 // first-person walker resolves against. Cheap and robust versus a full mesh
 // collider, and easy to export for an engine bake.
 
-import { buildings, tanks, domes, spheres } from "./site-layout";
+import { buildings, tanks, domes, dishes, spheres } from "./site-layout";
 
 export type BoxCollider = {
   type: "box";
@@ -31,6 +31,8 @@ export const colliders: Collider[] = [
   // radome radius + margin so the walker also clears the foundation ring and
   // the access vestibule that pokes out past the shell's base circle
   ...domes.map((d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius + 0.8 })),
+  // uncovered dishes: block the concrete pad + pedestal footprint
+  ...dishes.map((a): CircleCollider => ({ type: "circle", cx: a.pos[0], cz: a.pos[1], r: a.dishRadius * 0.7 + 0.6 })),
   ...spheres.map((s): CircleCollider => ({ type: "circle", cx: s.pos[0], cz: s.pos[1], r: s.radius * 0.9 })),
 ];
 

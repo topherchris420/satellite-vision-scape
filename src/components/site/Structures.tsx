@@ -4,6 +4,7 @@ import type { ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
 import {
   domes,
+  dishes,
   tanks,
   buildings,
   spheres,
@@ -18,6 +19,7 @@ import {
   type Selection,
   sphereSelection,
   domeSelection,
+  dishSelection,
   tankSelection,
   buildingSelection,
 } from "@/lib/selection";
@@ -418,6 +420,40 @@ export function Structures({
                   depthWrite={false}
                 />
               </mesh>
+            </group>
+          );
+        })}
+      </group>
+
+      {/* -------- Uncovered parabolic dish antennas -------- */}
+      <group name="dish-antennas">
+        {dishes.map((a, i) => {
+          // RadomeAntenna sizes its reflector as R × dishRatio, so recover the
+          // shell-equivalent radius that yields this dish's reflector radius.
+          const R = a.dishRadius / RADOME.dishRatio;
+          return (
+            <group
+              key={`dish-${i}`}
+              name={`dish-${i}`}
+              position={[a.pos[0], 0, a.pos[1]]}
+              onClick={(e) => pick(e, dishSelection(a, i))}
+              onPointerOver={over}
+              onPointerOut={out}
+            >
+              {/* gravel hardstand + concrete foundation pad */}
+              <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                <circleGeometry args={[R * 0.62, 40]} />
+                <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
+              </mesh>
+              <mesh position={[0, 0.2, 0]} receiveShadow castShadow>
+                <cylinderGeometry args={[R * 0.42, R * 0.46, 0.4, 40]} />
+                <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+              </mesh>
+              {/* the antenna assembly, no shell — indexed past the radomes so
+                  its slew phase differs from every enclosed dish */}
+              <group position={[0, 0.4, 0]}>
+                <RadomeAntenna radius={R} index={domes.length + i} enclosed={false} />
+              </group>
             </group>
           );
         })}

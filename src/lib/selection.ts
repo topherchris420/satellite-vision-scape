@@ -4,11 +4,13 @@
 import {
   spheres,
   domes,
+  dishes,
   tanks,
   buildings,
   RADOME,
   type Sphere,
   type Dome,
+  type DishAntenna,
   type Tank,
   type Building,
   type BuildingKind,
@@ -53,9 +55,23 @@ export function domeSelection(d: Dome, i: number): Selection {
     pos: d.pos,
     radius: d.radius * 1.25,
     details: [
-      `FRP shell Ø ${(d.radius * 2).toFixed(0)} m on concrete foundation ring`,
-      `Parabolic reflector Ø ${(d.radius * 2 * RADOME.dishRatio).toFixed(1)} m, feed horn assembly`,
-      "Dish travel AZ 360° · EL 0–90° — pedestal az/el drives",
+      `DSF shell Ø ${(d.radius * 2).toFixed(0)} m — quasi-random FRP panels on concrete foundation ring`,
+      `Prime-focus reflector Ø ${(d.radius * 2 * RADOME.dishRatio).toFixed(1)} m (f/D ≈ 0.40), feed horn assembly`,
+      "Dish travel AZ 360° · EL 5–88° — pedestal az/el drives",
+    ],
+  };
+}
+
+export function dishSelection(a: DishAntenna, i: number): Selection {
+  return {
+    kind: "Parabolic dish antenna",
+    name: `Dish A-${i + 1}`,
+    pos: a.pos,
+    radius: a.dishRadius * 1.35,
+    details: [
+      `Uncovered prime-focus reflector Ø ${(a.dishRadius * 2).toFixed(0)} m (f/D ≈ 0.40)`,
+      "Az/el pedestal mount, feed horn on quadripod struts",
+      "Dish travel AZ 360° · EL 5–88° — no radome",
     ],
   };
 }
@@ -92,6 +108,7 @@ export type SiteIndexGroup = { label: string; items: Selection[] };
 
 export const siteIndex: SiteIndexGroup[] = [
   { label: "Radomes", items: domes.map(domeSelection) },
+  { label: "Dish antennas", items: dishes.map(dishSelection) },
   { label: "Storage spheres", items: spheres.map(sphereSelection) },
   { label: "Process tanks", items: tanks.map(tankSelection) },
   { label: "Buildings", items: buildings.map(buildingSelection) },
