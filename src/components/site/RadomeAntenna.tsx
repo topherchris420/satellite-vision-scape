@@ -3,15 +3,17 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { RADOME, RADOME_SHELL_LIFT } from "@/lib/site-layout";
 
-// The antenna assembly housed inside every radome, replicating the reference
-// station cross-section (SS-RAD-07-74): a parabolic reflector — Ø 0.678× the
-// shell, i.e. the 12.2 m dish of an 18 m radome — carried on a concrete
-// pedestal through an azimuth rotation mechanism and elevation drive, with a
-// feed horn assembly on quadripod struts, radial backing framework behind the
-// dish, cable tray, floor access hatch and the geodesic lattice lining the
-// shell. Everything scales off the shell radius so all radomes share the same
-// anatomy at their own size, and each dish slowly slews through its
-// AZ 360° / EL 0–90° tracking travel.
+// The antenna assembly housed inside every radome — and reused, shell-less, for
+// the site's uncovered dishes — replicating the reference station cross-section
+// (SS-RAD-07-74): a prime-focus parabolic reflector (Ø 0.667× the shell, i.e.
+// the 12.0 m dish of an 18 m radome; f/D ≈ 0.40, the usual ground-station
+// value) carried on a concrete pedestal through an azimuth rotation mechanism
+// and elevation drive, with a feed horn assembly on quadripod struts, radial
+// backing framework behind the dish, cable tray, floor access hatch and — when
+// enclosed — the geodesic lattice lining the shell. Everything scales off the
+// shell radius so all antennas share the same anatomy at their own size, and
+// each dish slowly slews through its AZ 360° / EL 5–88° tracking travel (the
+// elevation cap clears the zenith keyhole, where az rate would run away).
 
 // Shared materials — single instances reused by every antenna on site.
 const dishMat = new THREE.MeshStandardMaterial({
@@ -100,9 +102,17 @@ function shellFrameGeometry(R: number) {
   return geom;
 }
 
-export function RadomeAntenna({ radius: R, index }: { radius: number; index: number }) {
+export function RadomeAntenna({
+  radius: R,
+  index,
+  enclosed = true,
+}: {
+  radius: number;
+  index: number;
+  enclosed?: boolean;
+}) {
   const rd = R * RADOME.dishRatio; // reflector radius (diameters share the same ratio)
-  const f = rd * 0.7; // focal length — f/D ≈ 0.35
+  const f = rd * 0.8; // focal length — f/D ≈ 0.40 (standard prime-focus dish)
   const depth = (rd * rd) / (4 * f); // bowl depth at the rim
   const vtx = 0.09 * R; // dish vertex sits ahead of the elevation axis
   const foc = vtx + f; // feed horn focus on the dish axis
@@ -131,8 +141,10 @@ export function RadomeAntenna({ radius: R, index }: { radius: number; index: num
 
   return (
     <group name="radome-antenna">
-      {/* geodesic framework lining the shell */}
-      <mesh geometry={frame} material={frameMat} position={[0, RADOME_SHELL_LIFT * R, 0]} />
+      {/* geodesic framework lining the shell (only when a shell is present) */}
+      {enclosed && (
+        <mesh geometry={frame} material={frameMat} position={[0, RADOME_SHELL_LIFT * R, 0]} />
+      )}
 
       {/* reinforced concrete base pad + pedestal */}
       <mesh position={[0, 0.03 * R, 0]} material={pedestalMat} castShadow receiveShadow>

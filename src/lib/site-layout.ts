@@ -10,6 +10,10 @@ export type Sphere = {
   legs?: number; // support legs (spherical gas/LNG tanks stand on a skirt of legs)
 };
 export type Dome = { pos: [number, number]; radius: number };
+// An uncovered (open-air) steerable parabolic dish. `dishRadius` is the
+// reflector radius itself — there is no shell, so the antenna is sized directly
+// rather than as a fraction of a radome.
+export type DishAntenna = { pos: [number, number]; dishRadius: number };
 export type Tank = { pos: [number, number]; radius: number; height: number };
 export type BuildingKind = "warehouse" | "shed" | "barracks" | "office" | "hall";
 export type Building = {
@@ -74,14 +78,42 @@ export const domes: Dome[] = [
   { pos: [120, 65], radius: 4.5 },
 ];
 
+// ---------------------------------------------------------------------------
+// Uncovered parabolic dish antennas — the open-air steerable dishes that stand
+// alongside the radomes. Real satellite / SIGINT ground stations run a roughly
+// even split of radome-enclosed and uncovered antennas (published surveys of
+// comparable deep-desert stations put it near 55/45), so a field that is 100 %
+// radomes reads as unrealistically uniform. These sit on low concrete pads,
+// interspersed through the antenna enclosures where the overhead footprint
+// shows bare dishes rather than domes. Each carries the same pedestal / az-el
+// drive / feed assembly as the radome dishes, just without the FRP shell.
+export const dishes: DishAntenna[] = [
+  // Northern antenna enclosure — bare dishes just south of the three radomes
+  { pos: [-116, -128], dishRadius: 5 },
+  { pos: [-55, -128], dishRadius: 4.5 },
+  { pos: [-2, -128], dishRadius: 4.5 },
+  // North of the upper-left radome cluster
+  { pos: [-95, -104], dishRadius: 5 },
+  { pos: [-60, -104], dishRadius: 4.5 },
+  // Along the eastern edge of the central antenna field
+  { pos: [96, 26], dishRadius: 5 },
+  { pos: [132, 44], dishRadius: 4 },
+];
+
 // Radome anatomy — proportions from the reference station cross-section
-// (drawing SS-RAD-07-74, "SIGINT Radome Station"): an 18 m aerodynamic FRP
-// shell over a 12.2 m parabolic reflector with feed horn assembly, pedestal,
-// azimuth rotation mechanism and elevation drive (dish travel AZ 360°,
-// EL 0–90°), all sitting on a 1.2 m concrete foundation wall. Every radome on
-// site is built from these ratios at its own shell radius.
+// (drawing SS-RAD-07-74, "SIGINT Radome Station"), dimensioned to standard
+// ground-station practice: an 18 m dielectric space-frame (DSF) shell over a
+// 12.0 m prime-focus parabolic reflector. The shell follows the 1.5×
+// reflector-diameter sizing rule for prime-focus dishes (radome Ø ≈ 1.5 × dish
+// Ø), which buys the reflector swing clearance to look through the wall
+// uniformly. The reflector rides a concrete pedestal through an azimuth
+// rotation bearing and an elevation drive (dish travel AZ 360°, EL 5–88°; the
+// upper limit backs off the zenith "keyhole," where the azimuth rate needed to
+// track straight overhead runs away to infinity), all on a 1.2 m concrete
+// foundation wall. Every radome on site is built from these ratios at its own
+// shell radius.
 export const RADOME = {
-  dishRatio: 12.2 / 18, // reflector Ø : shell Ø
+  dishRatio: 12.0 / 18, // reflector Ø : shell Ø — 1.5× prime-focus sizing rule
   shellTheta: Math.PI * 0.76, // shell truncation angle — a near-full sphere on
   // a short base ring, matching the photographed radomes that bulge past their
   // equator and taper back to a narrow foundation (base Ø ≈ dish Ø).
@@ -312,6 +344,7 @@ export const trees: [number, number][] = (() => {
 export const objectSummary = {
   spheres: spheres.length,
   domes: domes.length,
+  dishes: dishes.length,
   tanks: tanks.length,
   buildings: buildings.length,
   pipeRacks: pipeRacks.length,
