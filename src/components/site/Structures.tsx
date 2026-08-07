@@ -207,7 +207,6 @@ export function Structures({
   const concreteRough = useMemo(() => setRepeat(tex.concreteRough, 3, 3), [tex]);
   const concreteNormal = useMemo(() => setRepeat(tex.concreteNormal, 3, 3), [tex]);
   const gravelMap = useMemo(() => setRepeat(tex.gravelColor, 4, 4), [tex]);
-  const gravelRough = useMemo(() => setRepeat(tex.gravelRough, 4, 4), [tex]);
 
   const rooftop = useRooftopEquipment();
 
@@ -312,7 +311,7 @@ export function Structures({
             >
               <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <circleGeometry args={[d.radius * 1.25, 40]} />
-                <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
+                <meshStandardMaterial map={gravelMap} roughness={0.9} />
               </mesh>
               {/* concrete foundation wall — its top cap is the antenna floor slab */}
               <mesh position={[0, wall / 2, 0]} receiveShadow castShadow>
@@ -443,7 +442,7 @@ export function Structures({
               {/* gravel hardstand + concrete foundation pad */}
               <mesh position={[0, 0.1, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <circleGeometry args={[R * 0.62, 40]} />
-                <meshStandardMaterial map={gravelMap} roughnessMap={gravelRough} roughness={1} />
+                <meshStandardMaterial map={gravelMap} roughness={0.9} />
               </mesh>
               <mesh position={[0, 0.2, 0]} receiveShadow castShadow>
                 <cylinderGeometry args={[R * 0.42, R * 0.46, 0.4, 40]} />

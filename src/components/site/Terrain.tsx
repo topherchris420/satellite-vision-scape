@@ -39,7 +39,7 @@ export function Terrain() {
   // rise up while the fenced pad stays flat.
   const groundGeom = useMemo(() => {
     const size = 900;
-    const segs = 300;
+    const segs = 200;
     const geom = new THREE.PlaneGeometry(size, size, segs, segs);
     const pos = geom.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {

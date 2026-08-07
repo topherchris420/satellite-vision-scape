@@ -46,7 +46,7 @@ type MakeOpts = {
 };
 
 function makeTexture(opts: MakeOpts) {
-  const size = opts.size ?? 1024;
+  const size = opts.size ?? 512;
   const scale = opts.scale ?? 8;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
@@ -77,7 +77,7 @@ function makeTexture(opts: MakeOpts) {
   ctx.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 16;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -117,7 +117,7 @@ function makeNormal(color: THREE.CanvasTexture, strength = 3) {
   octx.putImageData(img, 0, 0);
   const tex = new THREE.CanvasTexture(out);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 16;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -163,7 +163,7 @@ function makePaintedSteel() {
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 16;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -306,7 +306,7 @@ function makeFacade(): { color: THREE.CanvasTexture; emissive: THREE.CanvasTextu
 
   const color = new THREE.CanvasTexture(wall);
   color.wrapS = color.wrapT = THREE.RepeatWrapping;
-  color.anisotropy = 16;
+  color.anisotropy = 8;
   const emissive = new THREE.CanvasTexture(glow);
   emissive.wrapS = emissive.wrapT = THREE.RepeatWrapping;
   emissive.anisotropy = 8;
@@ -372,7 +372,7 @@ function makeRoadSurface() {
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.anisotropy = 16;
+  tex.anisotropy = 8;
   return tex;
 }
 
@@ -462,8 +462,6 @@ let cache: {
   grassRough: THREE.Texture;
   vegColor: THREE.Texture;
   asphaltColor: THREE.Texture;
-  asphaltRough: THREE.Texture;
-  asphaltNormal: THREE.Texture;
   concreteColor: THREE.Texture;
   concreteRough: THREE.Texture;
   concreteNormal: THREE.Texture;
@@ -473,11 +471,7 @@ let cache: {
   steelColor: THREE.Texture;
   steelNormal: THREE.Texture;
   gravelColor: THREE.Texture;
-  gravelRough: THREE.Texture;
-  gravelNormal: THREE.Texture;
   rockColor: THREE.Texture;
-  rockRough: THREE.Texture;
-  rockNormal: THREE.Texture;
   noiseMask: THREE.Texture;
   roadColor: THREE.Texture;
   roadRough: THREE.Texture;
@@ -542,8 +536,6 @@ export function getSiteTextures() {
     grassRough: makeRoughness(grassColor as THREE.CanvasTexture, false, 0.75),
     vegColor,
     asphaltColor,
-    asphaltRough: makeRoughness(asphaltColor as THREE.CanvasTexture, true, 0.7),
-    asphaltNormal: makeNormal(asphaltColor as THREE.CanvasTexture, 1.5),
     concreteColor,
     concreteRough: makeRoughness(concreteColor as THREE.CanvasTexture, true, 0.65),
     concreteNormal: makeNormal(concreteColor as THREE.CanvasTexture, 1.2),
@@ -553,11 +545,7 @@ export function getSiteTextures() {
     steelColor,
     steelNormal: makeNormal(steelColor as THREE.CanvasTexture, 1.0),
     gravelColor,
-    gravelRough: makeRoughness(gravelColor as THREE.CanvasTexture, true, 0.85),
-    gravelNormal: makeNormal(gravelColor as THREE.CanvasTexture, 4),
     rockColor,
-    rockRough: makeRoughness(rockColor as THREE.CanvasTexture, true, 0.75),
-    rockNormal: makeNormal(rockColor as THREE.CanvasTexture, 5),
     noiseMask,
     roadColor,
     roadRough: makeRoughness(roadColor as THREE.CanvasTexture, true, 0.72),

@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState, startTransition } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import {
@@ -104,11 +104,25 @@ export function SiteScene() {
   const [dpr, setDpr] = useState<number | [number, number]>([1, 2]);
   // "high" runs the full post chain (AO, DoF); a sustained frame-rate drop
   // sheds the expensive passes first, then render resolution.
-  const [quality, setQuality] = useState<"high" | "low">("high");
-  const declineStage = useRef(0);
+  const [quality, setQuality] = useState<"high" | "low">("low");
+  const declineStage = useRef(1);
   const markerRef = useRef<SVGGElement>(null);
   const telemetryRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+
+  // Progressive scene loading: mount secondary components after the core
+  // scene (terrain + lighting) has rendered its first frames. This avoids
+  // blocking the initial paint with geometry generation for atmosphere,
+  // features, etc.
+  const [sceneStage, setSceneStage] = useState(0);
+  useEffect(() => {
+    if (!ready) return;
+    // Stage 1: mount structures + roads (needed for interaction)
+    const t1 = setTimeout(() => startTransition(() => setSceneStage(1)), 50);
+    // Stage 2: mount atmosphere + site features (visual polish)
+    const t2 = setTimeout(() => startTransition(() => setSceneStage(2)), 300);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [ready]);
 
   // Stage 0 = full post chain at native dpr; 1 sheds the expensive passes;
   // 2 also drops render resolution.
@@ -244,31 +258,36 @@ export function SiteScene() {
         <Suspense fallback={null}>
           <Lighting time={time} />
           <Terrain />
-          <Roads />
-          <Structures onSelect={setSelected} time={time} />
-          <SiteFeatures />
-          <Atmosphere time={time} />
+          {sceneStage >= 1 && <Roads />}
+          {sceneStage >= 1 && <Structures onSelect={setSelected} time={time} />}
+          {sceneStage >= 2 && <SiteFeatures />}
+          {sceneStage >= 2 && <Atmosphere time={time} />}
           {selected && <SelectionRing sel={selected} />}
           <fog attach="fog" args={[fogColor, 450, 1500]} />
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
 
-        <EffectComposer multisampling={0}>
-          {/* Ground-truth contact shadows in corners and under structures */}
-          {quality === "high" && <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />}
-          {/* HDR highlights: lit windows, beacons, sun glints */}
-          <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-          {/* Shallow focus only for the automated cinematic pass */}
-          {mode === "cinematic" && quality === "high" && (
-            <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />
-          )}
-          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-          {/* Commercial-imagery grade: a touch more saturation + contrast */}
-          <HueSaturation saturation={0.12} />
-          <BrightnessContrast contrast={0.07} />
-          <SMAA />
-          <Vignette eskil={false} offset={0.22} darkness={0.5} />
-        </EffectComposer>
+        {/* Post-processing is deferred until after the first frames render,
+            so the base scene appears immediately without waiting for all
+            shader programs to compile. */}
+        {ready && (
+          <EffectComposer multisampling={0}>
+            {/* Ground-truth contact shadows in corners and under structures */}
+            {quality === "high" && <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />}
+            {/* HDR highlights: lit windows, beacons, sun glints */}
+            <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
+            {/* Shallow focus only for the automated cinematic pass */}
+            {mode === "cinematic" && quality === "high" && (
+              <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />
+            )}
+            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+            {/* Commercial-imagery grade: a touch more saturation + contrast */}
+            <HueSaturation saturation={0.12} />
+            <BrightnessContrast contrast={0.07} />
+            <SMAA />
+            <Vignette eskil={false} offset={0.22} darkness={0.5} />
+          </EffectComposer>
+        )}
 
         <CameraTracker markerRef={markerRef} telemetryRef={telemetryRef} />
         <Controls mode={mode} focus={focus} />

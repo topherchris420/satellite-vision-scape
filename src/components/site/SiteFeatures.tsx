@@ -98,8 +98,6 @@ function PipeRacks() {
 function ParkingLots() {
   const tex = getSiteTextures();
   const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 3, 3), [tex]);
-  const asphaltRough = useMemo(() => setRepeat(tex.asphaltRough, 3, 3), [tex]);
-  const asphaltNormal = useMemo(() => setRepeat(tex.asphaltNormal, 3, 3), [tex]);
 
   return (
     <group name="parking-lots">
@@ -112,8 +110,6 @@ function ParkingLots() {
               <planeGeometry args={[p.size[0], p.size[1]]} />
               <meshStandardMaterial
                 map={asphaltMap}
-                roughnessMap={asphaltRough}
-                normalMap={asphaltNormal}
                 color="#3c3c3e"
                 roughness={0.95}
               />
