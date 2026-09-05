@@ -10,14 +10,10 @@ import {
   dishes,
   tanks,
   parkingLots,
+  ponds,
+  swimmingPool,
 } from "@/lib/site-layout";
 
-// Top-down schematic of the site, generated straight from the layout data so
-// it always matches the 3D scene. The SVG viewBox is in world metres (x right,
-// z down), which means the camera marker can be positioned with a plain
-// translate(x z) — the CameraTracker inside the Canvas updates `markerRef`
-// every frame without triggering React re-renders. Clicking the map converts
-// back through the same mapping, so `onNavigate` receives world XZ metres.
 export function Minimap({
   markerRef,
   onNavigate,
@@ -35,7 +31,7 @@ export function Minimap({
 
   return (
     <svg
-      viewBox="-155 -185 405 385"
+      viewBox="-155 -185 405 415"
       className={`w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
         onNavigate ? "cursor-crosshair" : ""
       }`}
@@ -81,6 +77,29 @@ export function Minimap({
           strokeDasharray="8 6"
         />
       ))}
+      {/* evaporation ponds */}
+      {ponds.map((pd, i) => (
+        <rect
+          key={`pond-${i}`}
+          x={pd.pos[0] - pd.size[0] / 2}
+          y={pd.pos[1] - pd.size[1] / 2}
+          width={pd.size[0]}
+          height={pd.size[1]}
+          fill="#1a3d32"
+          stroke="#a85232"
+          strokeWidth={2}
+        />
+      ))}
+      {/* swimming pool */}
+      <rect
+        x={swimmingPool.pos[0] - swimmingPool.size[0] / 2}
+        y={swimmingPool.pos[1] - swimmingPool.size[1] / 2}
+        width={swimmingPool.size[0]}
+        height={swimmingPool.size[1]}
+        fill="#00a8e8"
+        stroke="#ffffff"
+        strokeWidth={1.5}
+      />
       {/* parking aprons */}
       {parkingLots.map((p, i) => (
         <rect
@@ -114,7 +133,7 @@ export function Minimap({
       {domes.map((d, i) => (
         <circle key={`d-${i}`} cx={d.pos[0]} cy={d.pos[1]} r={Math.max(5, d.radius)} fill="#f5f2ea" />
       ))}
-      {/* uncovered dishes — open rings to read apart from the filled radomes */}
+      {/* uncovered dishes */}
       {dishes.map((a, i) => (
         <circle
           key={`dish-${i}`}
@@ -126,7 +145,7 @@ export function Minimap({
           strokeWidth={2.5}
         />
       ))}
-      {/* north arrow (map "up" is −z = grid north) */}
+      {/* north arrow */}
       <g fill="#ffffff" fillOpacity={0.55}>
         <path d="M228,-146 l9,20 -9,-6 -9,6 Z" />
         <text x={228} y={-100} fontSize={26} textAnchor="middle" fontFamily="monospace">
@@ -135,13 +154,13 @@ export function Minimap({
       </g>
       {/* 100 m scale bar */}
       <g stroke="#ffffff" strokeOpacity={0.55} strokeWidth={3}>
-        <line x1={-140} y1={186} x2={-40} y2={186} />
-        <line x1={-140} y1={179} x2={-140} y2={193} />
-        <line x1={-40} y1={179} x2={-40} y2={193} />
+        <line x1={-140} y1={212} x2={-40} y2={212} />
+        <line x1={-140} y1={205} x2={-140} y2={219} />
+        <line x1={-40} y1={205} x2={-40} y2={219} />
       </g>
       <text
         x={-90}
-        y={176}
+        y={202}
         fontSize={24}
         textAnchor="middle"
         fontFamily="monospace"
@@ -150,7 +169,7 @@ export function Minimap({
       >
         100 m
       </text>
-      {/* camera marker — transform driven imperatively by CameraTracker */}
+      {/* camera marker */}
       <g ref={markerRef}>
         <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />
       </g>

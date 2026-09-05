@@ -1,15 +1,10 @@
-// Collision geometry derived from the site layout. Simple analytic colliders
-// (axis-aligned boxes for buildings, circles for tanks/domes/spheres) that the
-// first-person walker resolves against. Cheap and robust versus a full mesh
-// collider, and easy to export for an engine bake.
-
-import { buildings, tanks, domes, dishes, spheres } from "./site-layout";
+import { buildings, tanks, domes, dishes, spheres, ponds, swimmingPool } from "./site-layout";
 
 export type BoxCollider = {
   type: "box";
   cx: number;
   cz: number;
-  hx: number; // half extents in X/Z (world aligned; rotation folded into radius)
+  hx: number;
   hz: number;
   rotY: number;
 };
@@ -27,17 +22,30 @@ export const colliders: Collider[] = [
       rotY: b.rotY ?? 0,
     })
   ),
+  ...ponds.map(
+    (p): BoxCollider => ({
+      type: "box",
+      cx: p.pos[0],
+      cz: p.pos[1],
+      hx: p.size[0] / 2 + 1,
+      hz: p.size[1] / 2 + 1,
+      rotY: 0,
+    })
+  ),
+  {
+    type: "box",
+    cx: swimmingPool.pos[0],
+    cz: swimmingPool.pos[1],
+    hx: swimmingPool.size[0] / 2 + 0.5,
+    hz: swimmingPool.size[1] / 2 + 0.5,
+    rotY: 0,
+  },
   ...tanks.map((t): CircleCollider => ({ type: "circle", cx: t.pos[0], cz: t.pos[1], r: t.radius + 0.4 })),
-  // radome radius + margin so the walker also clears the foundation ring and
-  // the access vestibule that pokes out past the shell's base circle
   ...domes.map((d): CircleCollider => ({ type: "circle", cx: d.pos[0], cz: d.pos[1], r: d.radius + 0.8 })),
-  // uncovered dishes: block the concrete pad + pedestal footprint
   ...dishes.map((a): CircleCollider => ({ type: "circle", cx: a.pos[0], cz: a.pos[1], r: a.dishRadius * 0.7 + 0.6 })),
   ...spheres.map((s): CircleCollider => ({ type: "circle", cx: s.pos[0], cz: s.pos[1], r: s.radius * 0.9 })),
 ];
 
-// Resolve a desired position against all colliders, pushing the point out to
-// the nearest free spot. `radius` is the walker's body radius.
 export function resolveCollision(x: number, z: number, radius: number): [number, number] {
   let px = x;
   let pz = z;
@@ -53,7 +61,6 @@ export function resolveCollision(x: number, z: number, radius: number): [number,
         pz += dz * push;
       }
     } else {
-      // transform into box-local space
       const s = Math.sin(-c.rotY);
       const co = Math.cos(-c.rotY);
       const lx = (px - c.cx) * co - (pz - c.cz) * s;
@@ -61,14 +68,12 @@ export function resolveCollision(x: number, z: number, radius: number): [number,
       const ex = c.hx + radius;
       const ez = c.hz + radius;
       if (Math.abs(lx) < ex && Math.abs(lz) < ez) {
-        // push along the shallowest axis
         const ox = ex - Math.abs(lx);
         const oz = ez - Math.abs(lz);
         let nlx = lx;
         let nlz = lz;
         if (ox < oz) nlx = lx < 0 ? -ex : ex;
         else nlz = lz < 0 ? -ez : ez;
-        // back to world
         const s2 = Math.sin(c.rotY);
         const c2 = Math.cos(c.rotY);
         px = c.cx + nlx * c2 - nlz * s2;
