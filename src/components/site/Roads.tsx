@@ -1,28 +1,46 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { roadPath, interiorRoads, dirtTracks } from "@/lib/site-layout";
+import { sampleRoadGradeProfile } from "@/lib/terrain";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
-function buildRibbon(points: [number, number][], width: number, y: number, closed: boolean) {
+function buildTerrainRibbon(
+  points: [number, number][],
+  width: number,
+  yOffset: number,
+  closed: boolean
+) {
   const geom = new THREE.BufferGeometry();
   const verts: number[] = [];
   const uvs: number[] = [];
   const idx: number[] = [];
 
-  const n = points.length;
+  // Sample terrain-aware smoothed road grade profile along centerline
+  const profile = sampleRoadGradeProfile(points, 2);
+  const n = profile.length;
+  if (n < 2) return geom;
+
   let dist = 0;
   for (let i = 0; i < n; i++) {
-    const prev = points[closed ? (i - 1 + n) % n : Math.max(0, i - 1)];
-    const curr = points[i];
-    const next = points[closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
-    const t = new THREE.Vector2(next[0] - prev[0], next[1] - prev[1]).normalize();
+    const prev = profile[closed ? (i - 1 + n) % n : Math.max(0, i - 1)];
+    const curr = profile[i];
+    const next = profile[closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
+
+    const t = new THREE.Vector2(next.x - prev.x, next.z - prev.z).normalize();
     const normal = new THREE.Vector2(-t.y, t.x).multiplyScalar(width / 2);
-    verts.push(curr[0] + normal.x, y, curr[1] + normal.y);
-    verts.push(curr[0] - normal.x, y, curr[1] - normal.y);
-    if (i > 0) dist += Math.hypot(curr[0] - points[i - 1][0], curr[1] - points[i - 1][1]);
+
+    const py = curr.y + yOffset;
+
+    verts.push(curr.x + normal.x, py, curr.z + normal.y);
+    verts.push(curr.x - normal.x, py, curr.z - normal.y);
+
+    if (i > 0) {
+      dist += Math.hypot(curr.x - profile[i - 1].x, curr.z - profile[i - 1].z);
+    }
     const v = dist / width;
     uvs.push(0, v, 1, v);
   }
+
   const segs = closed ? n : n - 1;
   for (let i = 0; i < segs; i++) {
     const a = i * 2;
@@ -31,6 +49,7 @@ function buildRibbon(points: [number, number][], width: number, y: number, close
     const d = ((i + 1) % n) * 2 + 1;
     idx.push(a, c, b, b, c, d);
   }
+
   geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
   geom.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geom.setIndex(idx);
@@ -40,21 +59,20 @@ function buildRibbon(points: [number, number][], width: number, y: number, close
 
 export function Roads() {
   const tex = getSiteTextures();
-  // Marked road surface: u spans the carriageway (edge lines + dashed
-  // centreline are baked in), v tiles along it — one repeat every ~14 m.
+
   const roadMap = useMemo(() => setRepeat(tex.roadColor, 1, 0.5), [tex]);
   const roadRough = useMemo(() => setRepeat(tex.roadRough, 1, 0.5), [tex]);
   const roadNormal = useMemo(() => setRepeat(tex.roadNormal, 1, 0.5), [tex]);
   const dirtMap = useMemo(() => setRepeat(tex.dirtColor, 2, 24), [tex]);
   const dirtRough = useMemo(() => setRepeat(tex.dirtRough, 2, 24), [tex]);
 
-  const roadGeom = useMemo(() => buildRibbon(roadPath, 7, 0.09, true), []);
+  const roadGeom = useMemo(() => buildTerrainRibbon(roadPath, 7, 0.09, true), []);
   const interiorGeoms = useMemo(
-    () => interiorRoads.map((p) => buildRibbon(p, 5, 0.085, false)),
+    () => interiorRoads.map((p) => buildTerrainRibbon(p, 5, 0.085, false)),
     []
   );
   const dirtGeoms = useMemo(
-    () => dirtTracks.map((p) => buildRibbon(p, 4, 0.07, false)),
+    () => dirtTracks.map((p) => buildTerrainRibbon(p, 4, 0.07, false)),
     []
   );
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { RefObject } from "react";
 import type { ControlMode } from "./Controls";
 import type { TimeOfDay } from "./Lighting";
+import type { QualityTier } from "./SiteScene";
 import { siteIndex, type Selection } from "@/lib/selection";
 import { objectSummary } from "@/lib/site-layout";
 import { Minimap } from "./Minimap";
@@ -12,6 +13,8 @@ const MODES: { id: ControlMode; label: string; key: string; mobileHidden?: boole
   { id: "cinematic", label: "Cinematic", key: "3" },
 ];
 
+const QUALITIES: QualityTier[] = ["low", "medium", "high", "ultra"];
+
 const SHORTCUTS: [string, string][] = [
   ["1 / 2 / 3", "Free-fly · First-person · Cinematic"],
   ["W A S D", "Move"],
@@ -20,6 +23,7 @@ const SHORTCUTS: [string, string][] = [
   ["Shift", "Boost / run"],
   ["N", "Toggle day / night"],
   ["I", "Toggle site index"],
+  ["G", "Toggle terrain debug"],
   ["Click", "Inspect a structure"],
   ["Esc", "Close inspector / release mouse"],
   ["H", "Toggle this help"],
@@ -62,6 +66,10 @@ export function HUD({
   onModeChange,
   time,
   onTimeChange,
+  qualityTier,
+  onQualityChange,
+  showDebug,
+  onToggleDebug,
   selected,
   onClearSelected,
   onFlyTo,
@@ -79,6 +87,10 @@ export function HUD({
   onModeChange: (m: ControlMode) => void;
   time: TimeOfDay;
   onTimeChange: (t: TimeOfDay) => void;
+  qualityTier: QualityTier;
+  onQualityChange: (q: QualityTier) => void;
+  showDebug: boolean;
+  onToggleDebug: () => void;
   selected: Selection | null;
   onClearSelected: () => void;
   onFlyTo: () => void;
@@ -94,7 +106,6 @@ export function HUD({
 }) {
   const [infoOpen, setInfoOpen] = useState(true);
 
-  // Phone screens are too small for an always-open info card.
   useEffect(() => {
     if (isMobile) setInfoOpen(false);
   }, [isMobile]);
@@ -103,7 +114,7 @@ export function HUD({
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-4 text-sm">
       {/* ---------- top row ---------- */}
       <div className="flex items-start justify-between gap-4">
-        {/* title card (collapsible) */}
+        {/* title card */}
         <div className="pointer-events-auto">
           {infoOpen ? (
             <div className="max-w-xs rounded-lg bg-black/60 px-4 py-3 text-white backdrop-blur-sm">
@@ -144,7 +155,7 @@ export function HUD({
           )}
         </div>
 
-        {/* mode + environment buttons */}
+        {/* mode + environment + quality + debug controls */}
         <div className="pointer-events-auto flex flex-col items-end gap-2">
           <div className="flex gap-2">
             {MODES.filter((m) => !(isMobile && m.mobileHidden)).map((m) => (
@@ -158,6 +169,7 @@ export function HUD({
               />
             ))}
           </div>
+
           <div className="flex gap-2">
             <button
               onClick={() => onTimeChange("day")}
@@ -175,6 +187,32 @@ export function HUD({
             >
               ☾ Night
             </button>
+
+            {/* Quality selector dropdown */}
+            <div className="flex items-center rounded-md bg-black/60 p-0.5 text-xs text-white">
+              {QUALITIES.map((q) => (
+                <button
+                  key={q}
+                  onClick={() => onQualityChange(q)}
+                  className={`rounded px-2 py-1 uppercase text-[10px] font-bold transition ${
+                    qualityTier === q ? "bg-white text-black" : "text-white/60 hover:text-white"
+                  }`}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={onToggleDebug}
+              className={`rounded-md px-2.5 py-2 text-xs font-medium transition ${
+                showDebug ? "bg-emerald-400 text-black font-bold" : "bg-black/60 text-white/80 hover:bg-black/80"
+              }`}
+              title="Toggle Terrain Grounding Debug"
+            >
+              Debug
+            </button>
+
             <button
               onClick={onToggleIndex}
               className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-xs font-medium transition ${
@@ -268,7 +306,7 @@ export function HUD({
         </div>
       )}
 
-      {/* ---------- telemetry strip (text driven imperatively by CameraTracker) ---------- */}
+      {/* ---------- telemetry strip ---------- */}
       {!isMobile && (
         <div
           ref={telemetryRef}
@@ -278,9 +316,6 @@ export function HUD({
 
       {/* ---------- bottom row ---------- */}
       <div className="flex items-end justify-between gap-4">
-        {/* controls hint — hidden on mobile, where the on-screen joystick and
-            the info panel already explain movement (and it would sit under the
-            touch controls cluster) */}
         <div
           className={`pointer-events-auto rounded-lg bg-black/60 px-4 py-3 text-xs text-white backdrop-blur-sm ${
             isMobile ? "hidden" : ""
