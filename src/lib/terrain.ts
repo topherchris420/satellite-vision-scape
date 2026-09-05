@@ -75,3 +75,5 @@ export function terrainHeight(x: number, z: number): number {
     return proceduralTerrainHeight(x, z);
   }
 }
+
+export * from "./terrain/surface";
