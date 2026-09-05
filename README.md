@@ -1,4 +1,4 @@
-# GeoTwn 
+# GeoTwn
 
 An interactive geospatial-intelligence demo: a navigable 3D reconstruction of a
 remote desert site, an animated **Digital Twin Thesis** motion piece, and a paper — all making one argument:
@@ -24,19 +24,19 @@ rewinds, and the **TWEAKS** panel switches the accent color and toggles the
 disclaimer/telemetry overlays. Everything on screen is a synthetic
 composite — illustrative, not actual imagery.
 
-| Scene | What it shows |
-| --- | --- |
-| 01 · Thesis | Commodity graphics pipelines + publicly available imagery ⇒ navigable digital twins |
-| 02 · Sources | Satellite tiles, street-level, drone/UGC, open aerial, map vectors, crowd photos being indexed |
-| 03 · Pipeline | Ingest → structure-from-motion → point cloud → mesh + texture → navigable twin |
-| 04 · Twin | Free navigation through the reconstructed site with waypoints (HANGAR-A, TWR-01, DEPOT) |
-| 05 · Implication | Capability confirmed — treat it as a baseline adversary capability |
+| Scene            | What it shows                                                                                  |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| 01 · Thesis      | Commodity graphics pipelines + publicly available imagery ⇒ navigable digital twins            |
+| 02 · Sources     | Satellite tiles, street-level, drone/UGC, open aerial, map vectors, crowd photos being indexed |
+| 03 · Pipeline    | Ingest → structure-from-motion → point cloud → mesh + texture → navigable twin                 |
+| 04 · Twin        | Free navigation through the reconstructed site with waypoints (HANGAR-A, TWR-01, DEPOT)        |
+| 05 · Implication | Capability confirmed — treat it as a baseline adversary capability                             |
 
 ## Routes
 
-| Route | Description |
-| --- | --- |
-| `/` | Interactive 3D site reconstruction (free-fly and first-person cameras) |
+| Route     | Description                                                                                |
+| --------- | ------------------------------------------------------------------------------------------ |
+| `/`       | Interactive 3D site reconstruction (free-fly and first-person cameras)                     |
 | `/thesis` | The Digital Twin Thesis motion piece (`?chrome=0` hides the playback bar and tweaks panel) |
 
 ## Site viewer
@@ -57,6 +57,22 @@ composite — illustrative, not actual imagery.
 
 Press `H` in the viewer for the full shortcut list.
 
+## Spatial intelligence architecture
+
+GeoTwn separates three coordinate-compatible but epistemically distinct worlds:
+
+```text
+PHYSICAL (datum-aware terrain / EGM2008)
+    -> RECONSTRUCTED (fictional site geometry)
+        -> DYNAMIC (public USGS earthquake context)
+```
+
+The default scene now uses a versioned, georeferenced local terrain artifact; it is deliberately labeled **illustrative**, not an authoritative DEM or evidence of a facility. A typed Re:Earth-compatible provider can supply orthometric or WGS84 ellipsoidal heights, while the original deterministic terrain remains an explicit offline fallback. The viewer's provenance panel keeps terrain, reconstruction, and reported public context visibly distinct.
+
+The platform also includes centralized reversible WGS84/local transforms, terrain profiles and slope/aspect analytics, canonical temporal/provenance-bearing entities, a provider registry, serializable annotations, deterministic camera/spatial commands, and share-state serialization. Natural-language control is intentionally deferred: a future model may call only the typed command layer and must never invent scene state.
+
+See [terrain architecture](docs/TERRAIN_ARCHITECTURE.md), [vertical datums](docs/VERTICAL_DATUMS.md), [provenance](docs/PROVENANCE.md), [layer providers](docs/LAYER_PROVIDERS.md), and the [offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md).
+
 ## Getting started
 
 Requires [Bun](https://bun.sh).
@@ -65,6 +81,8 @@ Requires [Bun](https://bun.sh).
 bun install
 bun run dev        # start the dev server
 bun run build      # production build
+bun run test       # deterministic terrain/spatial tests
+bun run typecheck  # TypeScript validation
 bun run preview    # preview the production build
 bun run lint       # eslint
 bun run format     # prettier
@@ -94,8 +112,8 @@ postprocessing · Tailwind CSS 4 · shadcn/ui · Vite 8 · Bun
 
 ## Disclaimer
 
-This repository is a defensive-security research demo. Every visual is a
-synthetic composite rendered from procedural geometry — no actual imagery of
-any real facility is used or distributed. The point is the argument itself:
+This repository is a defensive-security research demo. The reconstructed site
+is an illustrative synthetic composite — no actual imagery of any real
+facility is used or distributed. The point is the argument itself:
 if a hobby-grade stack can produce a convincing, navigable twin from public
 sources, defenders should assume adversaries already have one.

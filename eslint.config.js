@@ -37,4 +37,9 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Formatting is an explicit `bun run format` concern. Keeping it separate
+    // lets lint report semantic defects without rewriting legacy scene files.
+    rules: { "prettier/prettier": "off" },
+  },
 );
