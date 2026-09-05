@@ -1,3 +1,7 @@
+import { GEOTWN_FRAME, GeospatialTransform } from "./spatial/geospatial-transform";
+import { TERRAIN_FIXTURE } from "./terrain/fixture";
+import { sampleGrid } from "./terrain/grid";
+
 // Shared terrain height field. Keeps the ground mesh, tree placement and the
 // walking camera all agreeing on the elevation at any (x, z).
 //
@@ -42,7 +46,7 @@ function ss(edge0: number, edge1: number, x: number) {
 
 const FENCE_EAST = 135; // compound edge; hills start beyond this
 
-export function terrainHeight(x: number, z: number): number {
+export function proceduralTerrainHeight(x: number, z: number): number {
   // Flat pad across the fenced compound.
   const eastFactor = ss(FENCE_EAST, FENCE_EAST + 90, x);
   const hills = fbm(x * 0.012 + 10, z * 0.012 + 4) * 38 * eastFactor;
@@ -53,4 +57,21 @@ export function terrainHeight(x: number, z: number): number {
   // micro-undulation everywhere for realism (eliminates perfectly flat patches)
   const micro = fbm(x * 0.04 + 3, z * 0.04 + 7) * 0.4;
   return hills + ridge + westRoll + micro;
+}
+
+// Synchronous renderer-facing sampler. The versioned local artifact is the
+// default geospatial foundation; deterministic procedural terrain remains the
+// offline fallback outside its AOI. The scene uses relative heights so the
+// fixture's orthometric origin (545 m EGM2008) maps to local y=0.
+const transform = new GeospatialTransform(GEOTWN_FRAME);
+
+export function terrainHeight(x: number, z: number): number {
+  const geographic = transform.toGeographic({ x, y: 0, z });
+  try {
+    return (
+      sampleGrid(TERRAIN_FIXTURE, geographic.point).height.value - GEOTWN_FRAME.originHeight.value
+    );
+  } catch {
+    return proceduralTerrainHeight(x, z);
+  }
 }

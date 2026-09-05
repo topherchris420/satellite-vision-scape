@@ -26,6 +26,8 @@ import { HUD } from "./HUD";
 import { MobileControls } from "./MobileControls";
 import { useIsMobile } from "@/hooks/use-mobile";
 import type { Selection } from "@/lib/selection";
+import { SpatialContextLayer, type ContextStatus } from "./SpatialContextLayer";
+import { FIXTURE_MANIFEST } from "@/lib/terrain/fixture";
 
 // Fires once after the first few frames have actually been drawn, so the
 // loading overlay stays up through shader compilation instead of revealing a
@@ -60,7 +62,7 @@ function CameraTracker({
     if (el) {
       el.setAttribute(
         "transform",
-        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`
+        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`,
       );
     }
     // The readout only needs a few updates a second; fixed-width formatting
@@ -88,7 +90,13 @@ function SelectionRing({ sel }: { sel: Selection }) {
   return (
     <mesh ref={ref} position={[sel.pos[0], 0.25, sel.pos[1]]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[sel.radius + 1, sel.radius + 1.9, 48]} />
-      <meshBasicMaterial color="#fbbf24" transparent opacity={0.8} depthWrite={false} side={THREE.DoubleSide} />
+      <meshBasicMaterial
+        color="#fbbf24"
+        transparent
+        opacity={0.8}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+      />
     </mesh>
   );
 }
@@ -109,6 +117,11 @@ export function SiteScene() {
   const markerRef = useRef<SVGGElement>(null);
   const telemetryRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const [contextStatus, setContextStatus] = useState<ContextStatus>({
+    state: "loading",
+    entities: 0,
+  });
+  const onContextStatus = useCallback((status: ContextStatus) => setContextStatus(status), []);
 
   // Progressive scene loading: mount secondary components after the core
   // scene (terrain + lighting) has rendered its first frames. This avoids
@@ -121,7 +134,10 @@ export function SiteScene() {
     const t1 = setTimeout(() => startTransition(() => setSceneStage(1)), 50);
     // Stage 2: mount atmosphere + site features (visual polish)
     const t2 = setTimeout(() => startTransition(() => setSceneStage(2)), 300);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [ready]);
 
   // Stage 0 = full post chain at native dpr; 1 sheds the expensive passes;
@@ -212,6 +228,35 @@ export function SiteScene() {
         isMobile={isMobile}
       />
 
+      <aside
+        className="pointer-events-auto absolute bottom-4 left-4 z-20 w-72 rounded-lg bg-slate-950/80 p-3 font-mono text-[10px] text-white/70 backdrop-blur-sm"
+        aria-label="Spatial provenance"
+      >
+        <div className="mb-2 text-xs font-semibold text-white">Spatial provenance</div>
+        <div className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1">
+          <span className="text-emerald-300">PHYSICAL</span>
+          <span>Local artifact · EGM2008 orthometric · ILLUSTRATIVE</span>
+          <span className="text-amber-300">TWIN</span>
+          <span>Procedural geometry · RECONSTRUCTED / ILLUSTRATIVE</span>
+          <span className="text-rose-300">DYNAMIC</span>
+          <span>
+            USGS earthquakes · REPORTED · {contextStatus.state.toUpperCase()} (
+            {contextStatus.entities})
+          </span>
+        </div>
+        <details className="mt-2 border-t border-white/10 pt-2">
+          <summary className="cursor-pointer text-white/80">Terrain manifest & limitations</summary>
+          <p className="mt-1">
+            {FIXTURE_MANIFEST.tileset} · {FIXTURE_MANIFEST.resolutionM} m ·{" "}
+            {FIXTURE_MANIFEST.artifactHash.slice(0, 24)}…
+          </p>
+          <p className="mt-1 text-white/50">
+            Development fixture, not survey-grade. Network context is optional and falls back
+            cleanly.
+          </p>
+        </details>
+      </aside>
+
       {/* Touch movement controls — free-fly/first-person only, not the
           automated cinematic pass */}
       {isMobile && ready && mode !== "cinematic" && <MobileControls mode={mode} />}
@@ -262,6 +307,7 @@ export function SiteScene() {
           {sceneStage >= 1 && <Structures onSelect={setSelected} time={time} />}
           {sceneStage >= 2 && <SiteFeatures />}
           {sceneStage >= 2 && <Atmosphere time={time} />}
+          {sceneStage >= 2 && <SpatialContextLayer onStatus={onContextStatus} />}
           {selected && <SelectionRing sel={selected} />}
           <fog attach="fog" args={[fogColor, 450, 1500]} />
           <ReadyProbe onReady={() => setReady(true)} />
@@ -273,7 +319,9 @@ export function SiteScene() {
         {ready && (
           <EffectComposer multisampling={0}>
             {/* Ground-truth contact shadows in corners and under structures */}
-            {quality === "high" && <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />}
+            {quality === "high" && (
+              <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes />
+            )}
             {/* HDR highlights: lit windows, beacons, sun glints */}
             <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
             {/* Shallow focus only for the automated cinematic pass */}
