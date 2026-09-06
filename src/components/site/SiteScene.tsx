@@ -64,7 +64,7 @@ function CameraTracker({
     if (el) {
       el.setAttribute(
         "transform",
-        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`
+        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`,
       );
     }
     const tel = telemetryRef.current;
@@ -98,11 +98,7 @@ function SelectionRing({ sel }: { sel: Selection }) {
   });
 
   return (
-    <mesh
-      ref={ref}
-      position={[sel.pos[0], frame.height + 0.25, sel.pos[1]]}
-      quaternion={quat}
-    >
+    <mesh ref={ref} position={[sel.pos[0], frame.height + 0.25, sel.pos[1]]} quaternion={quat}>
       <ringGeometry args={[sel.radius + 1, sel.radius + 1.9, 48]} />
       <meshBasicMaterial
         color="#fbbf24"
@@ -204,7 +200,8 @@ export function SiteScene() {
   const fogColor = time === "day" ? "#d4be98" : "#0a1024";
 
   // Derive DPR and post features from QualityTier
-  const dpr: number | [number, number] = qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
+  const dpr: number | [number, number] =
+    qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
   const enableAO = qualityTier === "high" || qualityTier === "ultra";
   const enableDoF = qualityTier === "ultra" && mode === "cinematic";
 
@@ -236,30 +233,42 @@ export function SiteScene() {
       {showDebug && <TerrainDebugHUD onClose={() => setShowDebug(false)} />}
 
       <aside
-        className="pointer-events-auto absolute bottom-4 left-4 z-20 w-72 rounded-lg bg-slate-950/80 p-3 font-mono text-[10px] text-white/70 backdrop-blur-sm"
+        className="pointer-events-auto absolute bottom-[5.25rem] left-5 z-20 hidden w-[21rem] overflow-hidden rounded-xl border border-white/10 bg-[#071014]/80 font-mono text-[9px] text-white/55 shadow-[0_16px_50px_rgba(0,0,0,.25)] backdrop-blur-xl lg:block"
         aria-label="Spatial provenance"
       >
-        <div className="mb-2 text-xs font-semibold text-white">Spatial provenance</div>
-        <div className="grid grid-cols-[72px_1fr] gap-x-2 gap-y-1">
-          <span className="text-emerald-300">PHYSICAL</span>
-          <span>Local artifact · EGM2008 orthometric · ILLUSTRATIVE</span>
-          <span className="text-amber-300">TWIN</span>
-          <span>Procedural geometry · RECONSTRUCTED / ILLUSTRATIVE</span>
-          <span className="text-rose-300">DYNAMIC</span>
-          <span>
-            USGS earthquakes · REPORTED · {contextStatus.state.toUpperCase()} (
-            {contextStatus.entities})
+        <div className="flex items-center justify-between border-b border-white/[.07] px-3 py-2">
+          <span className="uppercase tracking-[.18em] text-white/70">Data confidence</span>
+          <span className="flex items-center gap-1.5 text-[8px] uppercase tracking-wider text-emerald-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Systems nominal
           </span>
         </div>
-        <details className="mt-2 border-t border-white/10 pt-2">
-          <summary className="cursor-pointer text-white/80">Terrain manifest & limitations</summary>
-          <p className="mt-1">
+        <div className="grid grid-cols-3 gap-px bg-white/[.07]">
+          <div className="bg-[#071014]/95 px-3 py-2.5">
+            <span className="text-emerald-300">PHYSICAL</span>
+            <div className="mt-1 text-[8px] leading-relaxed text-white/35">
+              EGM2008 / illustrative
+            </div>
+          </div>
+          <div className="bg-[#071014]/95 px-3 py-2.5">
+            <span className="text-amber-300">TWIN</span>
+            <div className="mt-1 text-[8px] leading-relaxed text-white/35">
+              Procedural / synthetic
+            </div>
+          </div>
+          <div className="bg-[#071014]/95 px-3 py-2.5">
+            <span className="text-rose-300">DYNAMIC</span>
+            <div className="mt-1 text-[8px] leading-relaxed text-white/35">
+              USGS / {contextStatus.state} · {contextStatus.entities}
+            </div>
+          </div>
+        </div>
+        <details className="px-3 py-2">
+          <summary className="cursor-pointer uppercase tracking-wider text-white/40 hover:text-white/70">
+            Manifest & limitations
+          </summary>
+          <p className="mt-2 leading-relaxed text-white/35">
             {FIXTURE_MANIFEST.tileset} · {FIXTURE_MANIFEST.resolutionM} m ·{" "}
-            {FIXTURE_MANIFEST.artifactHash.slice(0, 24)}…
-          </p>
-          <p className="mt-1 text-white/50">
-            Development fixture, not survey-grade. Network context is optional and falls back
-            cleanly.
+            {FIXTURE_MANIFEST.artifactHash.slice(0, 18)}… · Not survey-grade.
           </p>
         </details>
       </aside>
@@ -267,12 +276,23 @@ export function SiteScene() {
       {isMobile && ready && mode !== "cinematic" && <MobileControls mode={mode} />}
 
       <div
-        className={`absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-slate-950 transition-opacity duration-700 ${
+        className={`absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-[#05090b] transition-opacity duration-1000 ${
           ready ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-amber-300" />
-        <div className="text-sm text-white/70 font-mono">Acquiring satellite downlink…</div>
+        <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] [background-size:48px_48px]" />
+        <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-amber-300/20 before:absolute before:inset-2 before:animate-spin before:rounded-full before:border before:border-transparent before:border-t-amber-300/70">
+          <div className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_24px_rgba(252,211,77,.8)]" />
+        </div>
+        <div className="relative mt-6 font-mono text-[9px] uppercase tracking-[.38em] text-amber-200/70">
+          Establishing spatial link
+        </div>
+        <div className="relative mt-2 h-px w-48 overflow-hidden bg-white/10">
+          <div className="h-full w-2/3 animate-pulse bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+        </div>
+        <div className="relative mt-2 font-mono text-[8px] uppercase tracking-[.18em] text-white/25">
+          Pine Veil · AU / 24°S 133°E
+        </div>
       </div>
 
       <Canvas
@@ -317,12 +337,15 @@ export function SiteScene() {
         {ready && (
           <EffectComposer multisampling={0}>
             {enableAO && (
-              <N8AO aoRadius={10} intensity={2.5} distanceFalloff={2} halfRes={qualityTier !== "ultra"} />
+              <N8AO
+                aoRadius={10}
+                intensity={2.5}
+                distanceFalloff={2}
+                halfRes={qualityTier !== "ultra"}
+              />
             )}
             <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-            {enableDoF && (
-              <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />
-            )}
+            {enableDoF && <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />}
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
             <HueSaturation saturation={0.12} />
             <BrightnessContrast contrast={0.07} />
