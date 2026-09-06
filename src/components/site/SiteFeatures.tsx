@@ -7,8 +7,6 @@ import {
   fencePath,
   topEnclosurePath,
   interiorRoads,
-  ponds,
-  swimmingPool,
 } from "@/lib/site-layout";
 import { terrainHeightAt, sampleFootprintGrade } from "@/lib/terrain";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
@@ -31,85 +29,6 @@ function fillInstances(
     colors.forEach((c, i) => inst.setColorAt(i, c));
     if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
   }
-}
-
-// ---------------------------------------------------------------------------
-// Evaporation Ponds — 3 south wastewater basins with dark green/teal reflective water.
-// ---------------------------------------------------------------------------
-function EvaporationPonds() {
-  const pondsWithGrade = useMemo(() => {
-    return ponds.map((p) => {
-      const grade = sampleFootprintGrade(p.pos, p.size);
-      return { p, grade };
-    });
-  }, []);
-
-  return (
-    <group name="evaporation-ponds">
-      {pondsWithGrade.map(({ p, grade }, i) => (
-        <group key={`pond-${i}`} position={[p.pos[0], grade.elevation, p.pos[1]]}>
-          {/* Earth embankment berm */}
-          <mesh position={[0, -0.2, 0]} receiveShadow>
-            <boxGeometry args={[p.size[0] + 3, 0.8, p.size[1] + 3]} />
-            <meshStandardMaterial color="#a85232" roughness={0.95} />
-          </mesh>
-          {/* Inner pit lining */}
-          <mesh position={[0, -0.1, 0]} receiveShadow>
-            <boxGeometry args={[p.size[0], 0.6, p.size[1]]} />
-            <meshStandardMaterial color="#1a2d26" roughness={0.8} />
-          </mesh>
-          {/* Dark green / teal water surface */}
-          <mesh position={[0, 0.12, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[p.size[0] - 0.4, p.size[1] - 0.4]} />
-            <meshPhysicalMaterial
-              color="#1a3d32"
-              roughness={0.08}
-              metalness={0.1}
-              clearcoat={1.0}
-              clearcoatRoughness={0.1}
-              reflectivity={0.9}
-              envMapIntensity={1.5}
-            />
-          </mesh>
-        </group>
-      ))}
-    </group>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Swimming Pool — bright blue pool in lower-left landscaped compound.
-// ---------------------------------------------------------------------------
-function SwimmingPool() {
-  const grade = useMemo(() => sampleFootprintGrade(swimmingPool.pos, swimmingPool.size), []);
-
-  return (
-    <group name="swimming-pool" position={[swimmingPool.pos[0], grade.elevation, swimmingPool.pos[1]]}>
-      {/* Concrete deck apron */}
-      <mesh position={[0, -0.1, 0]} receiveShadow>
-        <boxGeometry args={[swimmingPool.size[0] + 2, 0.4, swimmingPool.size[1] + 2]} />
-        <meshStandardMaterial color="#f0ede6" roughness={0.6} />
-      </mesh>
-      {/* Pool Basin */}
-      <mesh position={[0, -0.2, 0]} receiveShadow>
-        <boxGeometry args={[swimmingPool.size[0], 0.5, swimmingPool.size[1]]} />
-        <meshStandardMaterial color="#188ba8" roughness={0.4} />
-      </mesh>
-      {/* Water surface */}
-      <mesh position={[0, 0.08, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <planeGeometry args={[swimmingPool.size[0] - 0.2, swimmingPool.size[1] - 0.2]} />
-        <meshPhysicalMaterial
-          color="#00a8e8"
-          roughness={0.05}
-          metalness={0.1}
-          clearcoat={1.0}
-          clearcoatRoughness={0.05}
-          transparent
-          opacity={0.88}
-        />
-      </mesh>
-    </group>
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -241,6 +160,7 @@ function ParkingLots() {
 // Perimeter fence — terrain-conforming chain-link ribbon with alphaTest.
 // ---------------------------------------------------------------------------
 function Fence({ path = fencePath, name = "perimeter-fence" }: { path?: [number, number][]; name?: string }) {
+  // Dense resampling along fence polyline (~3 m spacing)
   const resampledPath = useMemo(() => {
     const pts: [number, number, number][] = [];
     const n = path.length;
@@ -295,7 +215,7 @@ function Fence({ path = fencePath, name = "perimeter-fence" }: { path?: [number,
         totalDist += Math.hypot(x - prev[0], z - prev[2]);
       }
       verts.push(x, y0, z, x, y0 + h, z);
-      const u = totalDist / 3;
+      const u = totalDist / 3; // texture repeat along fence line
       uvs.push(u, 0, u, 1);
     }
 
@@ -621,6 +541,7 @@ function ContainerYard() {
         <planeGeometry args={[24, 30]} />
         <meshStandardMaterial map={gravelMap} color="#9c8e7a" roughness={1} />
       </mesh>
+      {/* Base pad extension */}
       <mesh position={[-80, padGrade.elevation - skirtDepth / 2, 46]} receiveShadow>
         <boxGeometry args={[24.4, skirtDepth, 30.4]} />
         <meshStandardMaterial map={gravelMap} color="#8c7e6a" roughness={1} />
@@ -654,8 +575,6 @@ export function SiteFeatures() {
       <ChannelWater />
       <UtilityLines />
       <ContainerYard />
-      <EvaporationPonds />
-      <SwimmingPool />
     </group>
   );
 }

@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import {
@@ -137,17 +137,6 @@ export function SiteScene() {
     entities: 0,
   });
   const onContextStatus = useCallback((status: ContextStatus) => setContextStatus(status), []);
-
-  const [sceneStage, setSceneStage] = useState(0);
-  useEffect(() => {
-    if (!ready) return;
-    const t1 = setTimeout(() => startTransition(() => setSceneStage(1)), 50);
-    const t2 = setTimeout(() => startTransition(() => setSceneStage(2)), 300);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [ready]);
 
   const handleQualityChange = useCallback((q: QualityTier) => {
     setQualityTier(q);
@@ -314,11 +303,11 @@ export function SiteScene() {
         <Suspense fallback={null}>
           <Lighting time={time} />
           <Terrain />
-          {sceneStage >= 1 && <Roads />}
-          {sceneStage >= 1 && <Structures onSelect={setSelected} time={time} />}
-          {sceneStage >= 2 && <SiteFeatures />}
-          {sceneStage >= 2 && <Atmosphere time={time} />}
-          {sceneStage >= 2 && <SpatialContextLayer onStatus={onContextStatus} />}
+          <Roads />
+          <Structures onSelect={setSelected} time={time} />
+          <SiteFeatures />
+          <Atmosphere time={time} />
+          <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
           <fog attach="fog" args={[fogColor, 450, 1500]} />
