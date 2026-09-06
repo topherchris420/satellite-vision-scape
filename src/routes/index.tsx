@@ -4,17 +4,16 @@ import { SiteScene } from "@/components/site/SiteScene";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "GeoTwn" },
+      { title: "Pine Veil — Interactive Digital Twin" },
       {
         name: "description",
         content:
-          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+          "Explore Pine Veil, an interactive synthetic 3D reconstruction in Australia's Red Centre.",
       },
-      { property: "og:title", content: "GeoTwn" },
+      { property: "og:title", content: "Pine Veil — Interactive Digital Twin" },
       {
         property: "og:description",
-        content:
-          "An interactive geospatial intelligence platform",
+        content: "An interactive geospatial intelligence platform",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
