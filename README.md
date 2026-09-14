@@ -36,7 +36,7 @@ This project provides a **fully interactive, browser-based 3D digital twin** of 
 | Feature | Description |
 | :--- | :--- |
 | 🎥 **Triple-Mode Camera Engine** | Seamlessly swap between **Orbit** view (`1`), **First-Person Walk** with terrain collision (`2`), and an **Automated Cinematic Pass** (`3`). |
-| 🔍 **Click-to-Inspect Dossier** | Click any radome, dish antenna, building, or security boundary feature to view its source ID, published diameter, evidence classification, and automatically fly the camera to its coordinates. |
+| 🔍 **Click-to-Inspect Dossier** | Click any radome, dish antenna, building, or security boundary feature to view its source ID, published diameter, and evidence classification in the asset dossier, with an option to fly the camera to its coordinates. |
 | 🗺️ **Interactive Site Index & Minimap** | Press `I` for a structured outliner of all 2016 antenna references. Navigate the site with an in-engine, dynamic minimap featuring a cardinal compass arrow and scale reference bar. |
 | 🧭 **Live HUD Telemetry** | Tactical heads-up display supplying live local easting/northing coordinates, altitude, compass heading, and camera status. |
 | 🌅 **Dynamic Lighting & Atmosphere** | Cycle through physically-based daylight, warm outback dusk, and night lighting with active perimeter security beacons and starfields by pressing `N`. |
@@ -51,12 +51,12 @@ Press `H` inside the viewer at any time to toggle the full shortcut menu.
 | Shortcut | Action |
 | :---: | :--- |
 | `1` | Switch to **Orbit Camera** mode |
-| `2` | Switch to **First-Person Walk** mode (Use `W` `A` `S` `D` / Arrow Keys to move, `Shift` to sprint) |
+| `2` | Switch to **First-Person Walk** mode (Use `W` `A` `S` `D` to move, `Shift` to sprint) |
 | `3` | Start **Automated Cinematic Pass** |
 | `I` | Toggle **Site Index Outliner** |
 | `N` | Toggle **Day / Dusk / Night** atmospheric lighting cycle |
 | `H` | Toggle **HUD & Keyboard Shortcut Overlay** |
-| `Left Click` | Select dish, radome, building, or site asset to inspect metadata and auto-fly |
+| `Left Click` | Select dish, radome, building, or site asset to open dossier |
 
 ---
 
