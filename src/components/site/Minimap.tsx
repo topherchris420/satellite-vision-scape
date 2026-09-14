@@ -35,7 +35,7 @@ export function Minimap({
 
   return (
     <svg
-      viewBox="-155 -185 405 385"
+      viewBox="-530 -440 830 910"
       className={`w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
         onNavigate ? "cursor-crosshair" : ""
       }`}
@@ -128,20 +128,20 @@ export function Minimap({
       ))}
       {/* north arrow (map "up" is −z = grid north) */}
       <g fill="#ffffff" fillOpacity={0.55}>
-        <path d="M228,-146 l9,20 -9,-6 -9,6 Z" />
-        <text x={228} y={-100} fontSize={26} textAnchor="middle" fontFamily="monospace">
+        <path d="M245,-370 l9,20 -9,-6 -9,6 Z" />
+        <text x={245} y={-320} fontSize={26} textAnchor="middle" fontFamily="monospace">
           N
         </text>
       </g>
       {/* 100 m scale bar */}
       <g stroke="#ffffff" strokeOpacity={0.55} strokeWidth={3}>
-        <line x1={-140} y1={186} x2={-40} y2={186} />
-        <line x1={-140} y1={179} x2={-140} y2={193} />
-        <line x1={-40} y1={179} x2={-40} y2={193} />
+        <line x1={-140} y1={440} x2={-40} y2={440} />
+        <line x1={-140} y1={433} x2={-140} y2={447} />
+        <line x1={-40} y1={433} x2={-40} y2={447} />
       </g>
       <text
         x={-90}
-        y={176}
+        y={425}
         fontSize={24}
         textAnchor="middle"
         fontFamily="monospace"

@@ -9,13 +9,13 @@ export const Route = createFileRoute("/thesis")({
   }),
   head: () => ({
     meta: [
-      { title: "Digital Twin Thesis — GeoTwn" },
+      { title: "Digital Twin Thesis — Pine Gap" },
       {
         name: "description",
         content:
           "Animated thesis: commodity graphics pipelines plus publicly available imagery yield convincing, navigable digital twins of complex infrastructure.",
       },
-      { property: "og:title", content: "Digital Twin Thesis — GeoTwn" },
+      { property: "og:title", content: "Digital Twin Thesis — Pine Gap" },
       { property: "og:type", content: "website" },
     ],
     // Self-hosted JetBrains Mono (public/fonts) so the piece renders

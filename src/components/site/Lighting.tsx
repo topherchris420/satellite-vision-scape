@@ -1,183 +1,45 @@
-import { useEffect, useMemo } from "react";
-import { useThree } from "@react-three/fiber";
-import { Sky, Stars } from "@react-three/drei";
-import * as THREE from "three";
-import { buildings, domes, spheres } from "@/lib/site-layout";
+import { useEffect } from 'react';
+import { useThree } from '@react-three/fiber';
+import { Sky, Stars } from '@react-three/drei';
+import * as THREE from 'three';
+import { buildings, domes } from '@/lib/site-layout';
+import { sampleFootprintGrade } from '@/lib/terrain';
 
-export type TimeOfDay = "day" | "night";
-
-// Procedural equirectangular gradient environment, baked to an IBL map through
-// PMREM. Fully offline (no CDN HDR fetch) so it works in a sandboxed runtime.
-function makeGradientEquirect(isDay: boolean) {
-  const w = 1024;
-  const h = 512;
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d")!;
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  if (isDay) {
-    g.addColorStop(0.0, "#4a7ab8"); // zenith
-    g.addColorStop(0.45, "#c4b89e");
-    g.addColorStop(0.5, "#e8d5b0"); // horizon haze
-    g.addColorStop(0.55, "#d49a62");
-    g.addColorStop(1.0, "#9c5636"); // red-earth ground bounce
-  } else {
-    g.addColorStop(0.0, "#0a1226");
-    g.addColorStop(0.48, "#141d33");
-    g.addColorStop(0.5, "#26304a");
-    g.addColorStop(0.55, "#161c2c");
-    g.addColorStop(1.0, "#05070d");
-  }
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, w, h);
-  // warm sun disc smear near the horizon for day
-  if (isDay) {
-    const sun = ctx.createRadialGradient(w * 0.72, h * 0.42, 2, w * 0.72, h * 0.42, 90);
-    sun.addColorStop(0, "rgba(255,244,214,0.9)");
-    sun.addColorStop(1, "rgba(255,244,214,0)");
-    ctx.fillStyle = sun;
-    ctx.fillRect(0, 0, w, h);
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.mapping = THREE.EquirectangularReflectionMapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-}
-
-function ProceduralEnvironment({ isDay }: { isDay: boolean }) {
-  const gl = useThree((s) => s.gl);
-  const scene = useThree((s) => s.scene);
-  const envTex = useMemo(() => makeGradientEquirect(isDay), [isDay]);
-
+export type TimeOfDay = 'day' | 'dusk' | 'night';
+export const LIGHTING = {
+  day: { sun: [180, 300, -160] as [number,number,number], color: '#fff5e5', intensity: 3, sky: '#88b3d4', ground: '#aa7855', ambient: .45, fog: '#c3ced0', exposure: 1 },
+  dusk: { sun: [-300, 95, -180] as [number,number,number], color: '#ffd19a', intensity: 2.8, sky: '#8dacca', ground: '#996949', ambient: .35, fog: '#c7b4a1', exposure: 1.05 },
+  night: { sun: [100, 260, -150] as [number,number,number], color: '#a4bde3', intensity: .32, sky: '#203957', ground: '#161922', ambient: .2, fog: '#101c2a', exposure: 1.1 },
+} as const;
+function Environment({ time }: { time: TimeOfDay }) {
+  const { gl, scene } = useThree();
   useEffect(() => {
-    const pmrem = new THREE.PMREMGenerator(gl);
-    pmrem.compileEquirectangularShader();
-    const rt = pmrem.fromEquirectangular(envTex);
-    scene.environment = rt.texture;
-    return () => {
-      scene.environment = null;
-      rt.dispose();
-      pmrem.dispose();
-      envTex.dispose();
-    };
-  }, [gl, scene, envTex]);
-
+    const p = LIGHTING[time];
+    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+    const ctx = canvas.getContext('2d')!; const gradient = ctx.createLinearGradient(0, 0, 0, 128);
+    gradient.addColorStop(0, p.sky); gradient.addColorStop(.48, p.fog); gradient.addColorStop(.53, p.ground); gradient.addColorStop(1, p.ground);
+    ctx.fillStyle = gradient; ctx.fillRect(0, 0, 256, 128);
+    const texture = new THREE.CanvasTexture(canvas); texture.mapping = THREE.EquirectangularReflectionMapping; texture.colorSpace = THREE.SRGBColorSpace;
+    const pmrem = new THREE.PMREMGenerator(gl); const renderTarget = pmrem.fromEquirectangular(texture);
+    const previous = scene.environment; scene.environment = renderTarget.texture; scene.environmentIntensity = time === 'night' ? .12 : .45; gl.toneMappingExposure = p.exposure;
+    return () => { scene.environment = previous; renderTarget.dispose(); texture.dispose(); pmrem.dispose(); };
+  }, [gl, scene, time]);
   return null;
 }
-
-export function Lighting({ time }: { time: TimeOfDay }) {
-  const isDay = time === "day";
-
-  return (
-    <>
-      {isDay ? (
-        <Sky
-          sunPosition={[100, 80, 50]}
-          turbidity={3}
-          rayleigh={1.2}
-          mieCoefficient={0.005}
-          mieDirectionalG={0.85}
-        />
-      ) : (
-        <Sky
-          sunPosition={[-5, -0.6, -20]}
-          turbidity={12}
-          rayleigh={0.4}
-          mieCoefficient={0.02}
-          mieDirectionalG={0.7}
-        />
-      )}
-
-      <ProceduralEnvironment isDay={isDay} />
-
-      {isDay ? (
-        <>
-          <ambientLight intensity={0.35} color="#ffe8c4" />
-          <hemisphereLight args={["#cfe0ff", "#c9a26e", 0.65]} />
-          {/* Sun */}
-          <directionalLight
-            position={[140, 220, 90]}
-            intensity={2.8}
-            color="#fff2d6"
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-            shadow-bias={-0.0004}
-            shadow-normalBias={0.02}
-            shadow-radius={4}
-            shadow-camera-left={-250}
-            shadow-camera-right={250}
-            shadow-camera-top={250}
-            shadow-camera-bottom={-250}
-            shadow-camera-near={1}
-            shadow-camera-far={700}
-          />
-          {/* Cool sky-bounce fill from the shadow side, keeps shade readable */}
-          <directionalLight position={[-120, 90, -80]} intensity={0.35} color="#bcd0f0" />
-        </>
-      ) : (
-        <>
-          <Stars radius={800} depth={120} count={4000} factor={6} saturation={0.1} fade speed={0.4} />
-          <ambientLight intensity={0.08} color="#1b2540" />
-          <hemisphereLight args={["#1e2a4a", "#050810", 0.35]} />
-          {/* Moonlight */}
-          <directionalLight
-            position={[-80, 180, -60]}
-            intensity={0.55}
-            color="#9db8ff"
-            castShadow
-            shadow-mapSize-width={2048}
-            shadow-mapSize-height={2048}
-            shadow-bias={-0.0004}
-            shadow-normalBias={0.02}
-            shadow-radius={4}
-            shadow-camera-left={-250}
-            shadow-camera-right={250}
-            shadow-camera-top={250}
-            shadow-camera-bottom={-250}
-            shadow-camera-near={1}
-            shadow-camera-far={700}
-          />
-          {/* Site sodium lamps on each building */}
-          {buildings.map((b, i) => (
-            <pointLight
-              key={`lamp-${i}`}
-              position={[b.pos[0], b.height + 3, b.pos[1]]}
-              intensity={12}
-              distance={45}
-              decay={2}
-              color="#ffb35a"
-            />
-          ))}
-          {/* Sodium-vapour floodlights wash every radome from its base — the
-              station's signature golden night glow. Set low and close so the
-              shells brighten to amber at the foot and fall to dark up top,
-              exactly as the perimeter lamps light them in the reference
-              photographs. */}
-          {domes.map((d, i) => (
-            <pointLight
-              key={`radome-flood-${i}`}
-              position={[d.pos[0], 1.8, d.pos[1]]}
-              intensity={10}
-              distance={d.radius * 5}
-              decay={2}
-              color="#ff8a24"
-            />
-          ))}
-          {/* Cooler accents picking out the sphere-tank row */}
-          {spheres.slice(0, 4).map((s, i) => (
-            <pointLight
-              key={`accent-${i}`}
-              position={[s.pos[0], s.radius + 2, s.pos[1]]}
-              intensity={5}
-              distance={30}
-              decay={2}
-              color="#8fbfff"
-            />
-          ))}
-        </>
-      )}
-    </>
-  );
+export function Lighting({ time, highQuality = true }: { time: TimeOfDay; highQuality?: boolean }) {
+  const p = LIGHTING[time]; const night = time === 'night';
+  return <>
+    {night ? <color attach="background" args={[p.fog]} /> : <Sky distance={12000} sunPosition={p.sun} turbidity={2.8} rayleigh={1.8} mieCoefficient={.003} mieDirectionalG={.82} />}
+    {night && <Stars radius={4500} depth={400} count={1800} factor={3} saturation={0} fade speed={0} />}
+    <Environment time={time} />
+    <hemisphereLight args={[p.sky, p.ground, p.ambient]} />
+    <directionalLight position={p.sun} intensity={p.intensity} color={p.color} castShadow
+      shadow-mapSize-width={highQuality ? 4096 : 2048} shadow-mapSize-height={highQuality ? 4096 : 2048}
+      shadow-camera-left={-700} shadow-camera-right={700} shadow-camera-top={700} shadow-camera-bottom={-700}
+      shadow-camera-near={1} shadow-camera-far={1800} shadow-normalBias={.18} shadow-bias={-.00008} />
+    {night && <>
+      {buildings.slice(0, 3).map((b, i) => <pointLight key={`building-${i}`} position={[b.pos[0] + b.size[0] / 2 + 2, sampleFootprintGrade(b.pos, b.size).elevation + 5, b.pos[1]]} intensity={120} distance={45} decay={2} color="#ffd397" />)}
+      {domes.filter(d => d.radius >= 15).map(d => <pointLight key={d.sourceId} position={[d.pos[0] + d.radius * .8, sampleFootprintGrade(d.pos, d.radius).elevation + 2, d.pos[1] + d.radius * .8]} intensity={110} distance={60} decay={2} color="#ffd5a2" />)}
+    </>}
+  </>;
 }

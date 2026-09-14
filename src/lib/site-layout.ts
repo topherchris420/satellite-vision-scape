@@ -1,352 +1,54 @@
-// Layout traced from the reference overhead image of the industrial site.
-// Coordinate system: XZ plane, Y = up. Units are meters (approx).
-// Origin ~ center of the site. Image pixels were mapped with:
-//   world_x = (px - 605) * 0.28,  world_z = (py - 628) * 0.28
-// so the whole compound spans roughly ±170 m.
-
-export type Sphere = {
-  pos: [number, number];
-  radius: number;
-  legs?: number; // support legs (spherical gas/LNG tanks stand on a skirt of legs)
-};
-export type Dome = { pos: [number, number]; radius: number };
-// An uncovered (open-air) steerable parabolic dish. `dishRadius` is the
-// reflector radius itself — there is no shell, so the antenna is sized directly
-// rather than as a fraction of a radome.
-export type DishAntenna = { pos: [number, number]; dishRadius: number };
+import { ANTENNA_REFERENCE, localPosition } from './pine-gap';
+// Metres, X east / Z south. Antennas use the historical public survey;
+// buildings, roads, landscaping and boundaries are approximate visual context.
+export type Sphere = { pos: [number, number]; radius: number; legs?: number };
+export type Dome = { pos: [number, number]; radius: number; sourceId?: string; roofMounted?: boolean };
+export type DishAntenna = { pos: [number, number]; dishRadius: number; sourceId?: string };
 export type Tank = { pos: [number, number]; radius: number; height: number };
-export type BuildingKind = "warehouse" | "shed" | "barracks" | "office" | "hall";
-export type Building = {
-  pos: [number, number];
-  size: [number, number]; // width (X), depth (Z)
-  height: number;
-  rotY?: number;
-  color?: string;
-  kind?: BuildingKind;
-  roof?: "flat" | "gable";
-};
-export type PipeRack = {
-  from: [number, number];
-  to: [number, number];
-  lines?: number; // number of parallel pipes
-  height?: number;
-};
-export type Parking = {
-  pos: [number, number];
-  size: [number, number];
-  rotY?: number;
-  rows?: number;
-};
+export type BuildingKind = 'warehouse' | 'shed' | 'barracks' | 'office' | 'hall';
+export type Building = { pos: [number, number]; size: [number, number]; height: number; rotY?: number; color?: string; kind?: BuildingKind; roof?: 'flat' | 'gable' };
+export type PipeRack = { from: [number, number]; to: [number, number]; lines?: number; height?: number };
+export type Parking = { pos: [number, number]; size: [number, number]; rotY?: number; rows?: number };
 export type Channel = { path: [number, number][]; width: number };
-
-// ---------------------------------------------------------------------------
-// Large spherical storage tanks — the signature central row of bright circles.
-// These sit on a ring of support legs like pressurised gas / LNG spheres.
-// ---------------------------------------------------------------------------
-// The central "bright circles" row is now modelled as radomes (see `domes`
-// above) — in the reference photographs it is an antenna field, not a tank
-// farm — so no free-standing storage spheres remain on site.
 export const spheres: Sphere[] = [];
-
-// ---------------------------------------------------------------------------
-// Radomes — three across the top enclosure + the upper-left cluster.
-// Modelled as truncated-sphere FRP shells on concrete foundation rings, each
-// housing a pedestal-mounted parabolic dish antenna (see RADOME below).
-// ---------------------------------------------------------------------------
-export const domes: Dome[] = [
-  // Three across the very top (separate northern enclosure)
-  { pos: [-116, -152], radius: 7 },
-  { pos: [-55, -152], radius: 7 },
-  { pos: [-2, -152], radius: 7 },
-  // Upper-left cluster of four
-  { pos: [-113, -82], radius: 8 },
-  { pos: [-80, -81], radius: 6.5 },
-  { pos: [-64, -81], radius: 6.5 },
-  { pos: [-50, -79], radius: 7.5 },
-  // Central radome field — the signature row of large domes tracing the
-  // overhead image. Previously modelled as storage spheres, but in the
-  // reference photographs every one of these is a radome housing a dish, so
-  // they carry the same FRP shell + pedestal antenna as the rest of the site.
-  { pos: [-21, 28], radius: 5 },
-  { pos: [-8, 30], radius: 6.5 },
-  { pos: [13, 29], radius: 8 },
-  { pos: [40, 36], radius: 7 },
-  { pos: [55, 38], radius: 6.5 },
-  { pos: [72, 39], radius: 8.5 },
-  { pos: [108, 36], radius: 7.5 },
-  { pos: [86, 62], radius: 9 },
-  { pos: [120, 65], radius: 4.5 },
-];
-
-// ---------------------------------------------------------------------------
-// Uncovered parabolic dish antennas — the open-air steerable dishes that stand
-// alongside the radomes. Real satellite / SIGINT ground stations run a roughly
-// even split of radome-enclosed and uncovered antennas (published surveys of
-// comparable deep-desert stations put it near 55/45), so a field that is 100 %
-// radomes reads as unrealistically uniform. These sit on low concrete pads,
-// interspersed through the antenna enclosures where the overhead footprint
-// shows bare dishes rather than domes. Each carries the same pedestal / az-el
-// drive / feed assembly as the radome dishes, just without the FRP shell.
-export const dishes: DishAntenna[] = [
-  // Northern antenna enclosure — bare dishes just south of the three radomes
-  { pos: [-116, -128], dishRadius: 5 },
-  { pos: [-55, -128], dishRadius: 4.5 },
-  { pos: [-2, -128], dishRadius: 4.5 },
-  // North of the upper-left radome cluster
-  { pos: [-95, -104], dishRadius: 5 },
-  { pos: [-60, -104], dishRadius: 4.5 },
-  // Along the eastern edge of the central antenna field
-  { pos: [96, 26], dishRadius: 5 },
-  { pos: [132, 44], dishRadius: 4 },
-];
-
-// Radome anatomy — proportions from the reference station cross-section
-// (drawing SS-RAD-07-74, "SIGINT Radome Station"), dimensioned to standard
-// ground-station practice: an 18 m dielectric space-frame (DSF) shell over a
-// 12.0 m prime-focus parabolic reflector. The shell follows the 1.5×
-// reflector-diameter sizing rule for prime-focus dishes (radome Ø ≈ 1.5 × dish
-// Ø), which buys the reflector swing clearance to look through the wall
-// uniformly. The reflector rides a concrete pedestal through an azimuth
-// rotation bearing and an elevation drive (dish travel AZ 360°, EL 5–88°; the
-// upper limit backs off the zenith "keyhole," where the azimuth rate needed to
-// track straight overhead runs away to infinity), all on a 1.2 m concrete
-// foundation wall. Every radome on site is built from these ratios at its own
-// shell radius.
-export const RADOME = {
-  dishRatio: 12.0 / 18, // reflector Ø : shell Ø — 1.5× prime-focus sizing rule
-  shellTheta: Math.PI * 0.76, // shell truncation angle — a near-full sphere on
-  // a short base ring, matching the photographed radomes that bulge past their
-  // equator and taper back to a narrow foundation (base Ø ≈ dish Ø).
-  plinthHeight: 1.2, // concrete foundation wall above grade (m)
-} as const;
-export const RADOME_SHELL_SIN = Math.sin(RADOME.shellTheta); // base ring radius / shell radius
-export const RADOME_SHELL_LIFT = -Math.cos(RADOME.shellTheta); // shell centre height above base ring / shell radius
-
-// ---------------------------------------------------------------------------
-// Cylindrical storage / process tanks scattered around the process area.
-// ---------------------------------------------------------------------------
-export const tanks: Tank[] = [
-  { pos: [-30, 20], radius: 3.5, height: 9 },
-  { pos: [-38, 26], radius: 3, height: 7 },
-  // twin tanks east of the process hall (1 m clear of its wall)
-  { pos: [28, 55], radius: 4, height: 11 },
-  { pos: [36, 60], radius: 4, height: 11 },
-  { pos: [-95, -70], radius: 3, height: 6 },
-  { pos: [120, 55], radius: 3.5, height: 8 },
-];
-
-// ---------------------------------------------------------------------------
-// Buildings.
-// ---------------------------------------------------------------------------
-// Palette traced from the photo: the occupied buildings are painted bright,
-// slightly cool white (they glare against the red earth), industrial shells
-// stay a touch warmer/greyer for contrast.
+export const tanks: Tank[] = [];
+export const pipeRacks: PipeRack[] = [];
+export const domes: Dome[] = ANTENNA_REFERENCE.filter(a => a[4] !== 'dish').map(a => ({ sourceId: a[0], pos: localPosition(a[1], a[2]), radius: a[3] / 2, roofMounted: a[4] === 'roof-radome' }));
+export const dishes: DishAntenna[] = ANTENNA_REFERENCE.filter(a => a[4] === 'dish').map(a => ({ sourceId: a[0], pos: localPosition(a[1], a[2]), dishRadius: a[3] / 2 }));
+// Generic shell construction; internal hardware is not inferred.
+export const RADOME = { dishRatio: 2 / 3, shellTheta: Math.PI * 0.76, plinthHeight: 1.2 } as const;
+export const RADOME_SHELL_SIN = Math.sin(RADOME.shellTheta);
+export const RADOME_SHELL_LIFT = -Math.cos(RADOME.shellTheta);
 export const buildings: Building[] = [
-  // Big bright process hall — z 38..64, clear of the sphere row to its north
-  { pos: [-6, 51], size: [58, 26], height: 12, color: "#eef1ef", kind: "hall", roof: "flat" },
-  // small warehouse against the notch fence, north of the sphere pads
-  { pos: [-2, 10], size: [26, 12], height: 9, color: "#dcdbd4", kind: "warehouse" },
-  // Long dark striped building (upper-left — reads like a solar / louvered roof)
-  { pos: [-74, -26], size: [22, 30], height: 5, color: "#3a3f34", kind: "shed", rotY: 0 },
-  // Upper-left support buildings around the radome cluster
-  { pos: [-100, -60], size: [16, 10], height: 5, color: "#e2e2dc", kind: "office" },
-  { pos: [-88, -50], size: [12, 8], height: 4, color: "#d8d7cf", kind: "office" },
-  { pos: [-70, -55], size: [10, 14], height: 5, color: "#e6e6e0", kind: "office" },
-  // Lower-left barracks: rows of long parallel buildings
-  ...Array.from({ length: 5 }, (_, i) => ({
-    pos: [-88 + i * 15, 92] as [number, number],
-    size: [8, 44] as [number, number],
-    height: 6,
-    color: i % 2 ? "#e0ded6" : "#d4d2ca",
-    kind: "barracks" as BuildingKind,
-    roof: "gable" as const,
-  })),
-  // Lower-central smaller service buildings — white demountable sheds
-  { pos: [6, 96], size: [28, 10], height: 5, color: "#e4e4de", kind: "shed" },
-  { pos: [8, 112], size: [30, 8], height: 5, color: "#ededea", kind: "shed" },
-  { pos: [18, 128], size: [20, 8], height: 4, color: "#deddd6", kind: "shed" },
-  // Lower landscaped compound buildings (inside the lower yard, clear of the
-  // service sheds and the parking apron)
-  { pos: [-16, 140], size: [12, 14], height: 6, color: "#f0f2ef", kind: "office" },
-  { pos: [20, 154], size: [10, 12], height: 6, color: "#f0f2ef", kind: "office" },
+  { pos: [10, 12], size: [104, 95], height: 8, color: '#d8d8ce', kind: 'hall', roof: 'flat' },
+  { pos: [77, 10], size: [28, 62], height: 6, color: '#d7d5cc', kind: 'office' },
+  { pos: [30, 87], size: [65, 26], height: 5, color: '#cccac0', kind: 'office' },
+  { pos: [114, 76], size: [35, 18], height: 4, color: '#d4d1c4', kind: 'office', roof: 'gable' },
+  { pos: [112, 115], size: [42, 16], height: 4, color: '#d8d5c7', kind: 'shed', roof: 'gable' },
+  { pos: [108, -74], size: [32, 21], height: 4, color: '#cec8bb', kind: 'warehouse' },
+  { pos: [12, -146], size: [24, 17], height: 4, color: '#d0cec2', kind: 'shed' },
+  { pos: [12, -340], size: [22, 13], height: 4, color: '#d2d0c4', kind: 'shed' },
+  { pos: [-379, 240], size: [44, 35], height: 5, color: '#d4d4c9', kind: 'hall' },
+  { pos: [-367, 181], size: [30, 16], height: 4, color: '#ccc7bb', kind: 'shed' },
 ];
-
-// ---------------------------------------------------------------------------
-// Pipe racks connecting the tank farm and process halls.
-// ---------------------------------------------------------------------------
-export const pipeRacks: PipeRack[] = [
-  // sphere row → twin tanks, threading the gap between the sphere pads
-  { from: [30, 30], to: [30, 51], lines: 2, height: 2.0 },
-  // west tank pair header
-  { from: [-30, 24], to: [-30, 34], lines: 2, height: 2.0 },
-  // sphere row → large lower sphere
-  { from: [72, 46], to: [88, 60], lines: 3, height: 2.2 },
-];
-
-// ---------------------------------------------------------------------------
-// Parking lots / paved aprons.
-// ---------------------------------------------------------------------------
 export const parkingLots: Parking[] = [
-  { pos: [-34, 118], size: [26, 20], rows: 4 },
-  { pos: [8, 138], size: [22, 16], rows: 3 },
-  // apron between the hall and the barracks yard
-  { pos: [-6, 70], size: [40, 10], rows: 2 },
+  { pos: [155, 12], size: [54, 85], rows: 5 }, { pos: [27, 131], size: [65, 26], rows: 2 },
 ];
-
-// ---------------------------------------------------------------------------
-// Perimeter boundary — the thick fence line from the reference image. Traced
-// clockwise from the top-left of the upper-left lobe and converted from image
-// pixels with world_x = (px-605)*0.28, world_z = (py-628)*0.28, so it lines up
-// with the structures. This is the site's dominant silhouette: a wide upper
-// lobe, a stepped notch on the left, a right-reaching middle band around the
-// tank farm, and a lower extension over the barracks.
-export const perimeterPath: [number, number][] = [
-  [-136, -114], // TL of upper-left lobe
-  [-32, -114], //  top edge → TR of lobe
-  [-32, 3], //     down the lobe's right edge to the throat
-  [14, 3], //      notch steps right
-  [14, 9],
-  [144, 13], //    right along the middle band (tank farm)
-  [144, 73], //    down the far-right edge
-  [29, 75], //     step left
-  [29, 165], //    down the lower area's right edge
-  [-98, 165], //   bottom edge (barracks yard)
-  [-98, 3], //     up the lower area's left edge
-  [-120, -33], //  stepped notch on the left
-  [-139, -43],
-];
-
-// The main perimeter road runs on the boundary line.
-export const roadPath: [number, number][] = perimeterPath;
-
-// Separate northern enclosure (the thin-fenced antenna field carrying the
-// three radomes across the top of the image).
-export const topEnclosurePath: [number, number][] = [
-  [-136, -166],
-  [7, -166],
-  [7, -116],
-  [-136, -116],
-];
-
-// Interior spine road along the tank farm / process area
+// Visual envelopes, not an asserted security perimeter.
+export const perimeterPath: [number, number][] = [[-112,-288],[68,-288],[68,-170],[193,-135],[233,-55],[233,152],[-127,152],[-127,40],[-112,-30]];
+export const topEnclosurePath: [number, number][] = [[-472,126],[-325,126],[-325,397],[-472,397]];
+export const fencePath = perimeterPath;
+export const roadPath: [number, number][] = [[-100,-278],[56,-278],[56,-157],[183,-124],[220,-49],[220,141],[-115,141],[-115,44],[-100,-27]];
 export const interiorRoads: [number, number][][] = [
-  // E-W spine: hugs the band's north fence, staying north of the sphere pads
-  [
-    [-92, 22],
-    [-40, 20],
-    [-10, 19],
-    [20, 17],
-    [60, 17],
-    [110, 20],
-    [136, 42],
-  ],
-  // N-S connector, running down the gap between barracks rows 2 and 3
-  [
-    [-50.5, 20],
-    [-50.5, 132],
-  ],
-  // short lane down the gap between barracks rows 1 and 2
-  [
-    [-65.5, 66],
-    [-65.5, 124],
-  ],
+  [[-112,-67],[75,-67],[185,-67],[220,-49]], [[75,-67],[75,65],[75,141]],
+  [[-100,-278],[-16,-278],[-16,-408],[58,-408],[58,-278]],
+  [[-115,141],[-310,141],[-448,141],[-448,385]], [[220,141],[294,163],[380,244],[560,325]],
 ];
-
-// Winding dirt tracks over the eastern hills (right side of the image)
 export const dirtTracks: [number, number][][] = [
-  [
-    [146, 40],
-    [160, 20],
-    [185, -20],
-    [200, -70],
-    [210, -130],
-  ],
-  [
-    [150, 30],
-    [175, 40],
-    [205, 30],
-    [235, 55],
-  ],
-  [
-    [140, 0],
-    [170, -30],
-    [190, -90],
-  ],
+  [[235,-120],[290,-160],[380,-140],[450,-240],[600,-280]], [[-472,400],[-520,430],[-560,550],[-660,640]],
 ];
-
-// The fence sits on the perimeter boundary line.
-export const fencePath: [number, number][] = perimeterPath;
-
-// ---------------------------------------------------------------------------
-// Drainage channels crossing the terrain.
-// ---------------------------------------------------------------------------
-export const channels: Channel[] = [
-  // western wash, running outside the fence line
-  {
-    path: [
-      [-160, 150],
-      [-130, 110],
-      [-118, 60],
-      [-112, 10],
-    ],
-    width: 3,
-  },
-  {
-    path: [
-      [130, 150],
-      [150, 90],
-      [175, 20],
-    ],
-    width: 2.5,
-  },
-];
-
-// ---------------------------------------------------------------------------
-// Trees — eastern hills (dense) + landscaped compound (clustered).
-// Deterministic pseudo-random so the layout is stable between reloads.
-// ---------------------------------------------------------------------------
-function rng(seed: number) {
-  let s = seed % 2147483647;
-  if (s <= 0) s += 2147483646;
-  return () => (s = (s * 16807) % 2147483647) / 2147483647;
-}
-
-export const trees: [number, number][] = (() => {
-  const r = rng(1337);
-  const pts: [number, number][] = [];
-  // Eastern hills — scattered along the slopes to the right of the fence
-  for (let i = 0; i < 120; i++) {
-    const x = 150 + r() * 160;
-    const z = -180 + r() * 360;
-    // thin out near the fence edge
-    if (x < 165 && r() < 0.6) continue;
-    pts.push([x, z]);
-  }
-  // Landscaped tree cluster in the lower yard: south of the barracks,
-  // keeping clear of the parking apron and the N-S connector road.
-  let planted = 0;
-  while (planted < 40) {
-    const x = -58 + r() * 34; // [-58, -24]
-    const z = 116 + r() * 40; // [116, 156]
-    if (x > -56 && x < -45) continue; // N-S road corridor
-    if (x > -47 && z < 128) continue; // parking apron
-    pts.push([x, z]);
-    planted++;
-  }
-  // Sparse northern scrub, clear of the antenna enclosure (z ≥ -166)
-  for (let i = 0; i < 25; i++) {
-    pts.push([-40 + r() * 160, -210 + r() * 35]);
-  }
-  return pts;
-})();
-
-// Named export list of major structures (used for the object outliner / HUD).
-export const objectSummary = {
-  spheres: spheres.length,
-  domes: domes.length,
-  dishes: dishes.length,
-  tanks: tanks.length,
-  buildings: buildings.length,
-  pipeRacks: pipeRacks.length,
-  parkingLots: parkingLots.length,
-};
+export const channels: Channel[] = [{ path: [[280,-460],[275,-270],[305,-50],[345,150],[460,375],[600,580]], width: 4 }];
+let seed = 1337;
+const random = () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+export const trees: [number, number][] = Array.from({ length: 110 }, () => [340 + random()*340, -600+random()*1250]);
+export const objectSummary = { spheres: 0, domes: domes.length, dishes: dishes.length, tanks: 0, buildings: buildings.length, pipeRacks: 0, parkingLots: parkingLots.length };

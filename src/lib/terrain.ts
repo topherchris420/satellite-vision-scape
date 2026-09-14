@@ -1,79 +1,19 @@
-import { GEOTWN_FRAME, GeospatialTransform } from "./spatial/geospatial-transform";
-import { TERRAIN_FIXTURE } from "./terrain/fixture";
-import { sampleGrid } from "./terrain/grid";
-
-// Shared terrain height field. Keeps the ground mesh, tree placement and the
-// walking camera all agreeing on the elevation at any (x, z).
-//
-// The developed compound is kept flat (grade ~0). The land rises into hills to
-// the east (positive X, right of the image) and dips gently to drainage in the
-// far south, matching the reference imagery.
-
+// Visual terrain, metres relative to a synthetic zero; NOT a surveyed DEM.
+// The unrelated Alice Springs development grid remains a provider test fixture.
 function hash(x: number, y: number) {
-  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-  return s - Math.floor(s);
+  const s = Math.sin(x*127.1+y*311.7)*43758.5453; return s-Math.floor(s);
 }
-function smooth(x: number, y: number) {
-  const ix = Math.floor(x),
-    iy = Math.floor(y);
-  const fx = x - ix,
-    fy = y - iy;
-  const a = hash(ix, iy);
-  const b = hash(ix + 1, iy);
-  const c = hash(ix, iy + 1);
-  const d = hash(ix + 1, iy + 1);
-  const ux = fx * fx * (3 - 2 * fx);
-  const uy = fy * fy * (3 - 2 * fy);
-  return a * (1 - ux) * (1 - uy) + b * ux * (1 - uy) + c * (1 - ux) * uy + d * ux * uy;
+function noise(x: number, y: number) {
+  const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy;
+  const u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy);
+  return (hash(ix,iy)*(1-u)+hash(ix+1,iy)*u)*(1-v)+(hash(ix,iy+1)*(1-u)+hash(ix+1,iy+1)*u)*v;
 }
-function fbm(x: number, y: number) {
-  let v = 0,
-    amp = 0.5,
-    freq = 1;
-  for (let i = 0; i < 6; i++) {
-    v += amp * smooth(x * freq, y * freq);
-    freq *= 2;
-    amp *= 0.5;
-  }
-  return v;
-}
-
-// Smoothstep helper
-function ss(edge0: number, edge1: number, x: number) {
-  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
-  return t * t * (3 - 2 * t);
-}
-
-const FENCE_EAST = 135; // compound edge; hills start beyond this
-
 export function proceduralTerrainHeight(x: number, z: number): number {
-  // Flat pad across the fenced compound.
-  const eastFactor = ss(FENCE_EAST, FENCE_EAST + 90, x);
-  const hills = fbm(x * 0.012 + 10, z * 0.012 + 4) * 38 * eastFactor;
-  // gentle ridge line
-  const ridge = Math.max(0, Math.sin((z + 200) * 0.004)) * 10 * eastFactor;
-  // very slight roll on the western scrub so it is not perfectly flat
-  const westRoll = fbm(x * 0.01, z * 0.01) * 2.8 * ss(-90, -160, x);
-  // micro-undulation everywhere for realism (eliminates perfectly flat patches)
-  const micro = fbm(x * 0.04 + 3, z * 0.04 + 7) * 0.4;
-  return hills + ridge + westRoll + micro;
+  const rough=noise(x*.006,z*.006)*.65+noise(x*.02,z*.02)*.25+noise(x*.07,z*.07)*.1;
+  const east=Math.exp(-(((x-680-Math.sin(z*.0018)*140)/235)**2));
+  const west=Math.exp(-(((x+1090+Math.sin(z*.002)*110)/280)**2));
+  const north=Math.exp(-(((z+1100+Math.sin(x*.002)*85)/220)**2));
+  return .0015*x+.001*z+rough*.75+(east*145+west*115+north*95)*(.65+rough*.5);
 }
-
-// Synchronous renderer-facing sampler. The versioned local artifact is the
-// default geospatial foundation; deterministic procedural terrain remains the
-// offline fallback outside its AOI. The scene uses relative heights so the
-// fixture's orthometric origin (545 m EGM2008) maps to local y=0.
-const transform = new GeospatialTransform(GEOTWN_FRAME);
-
-export function terrainHeight(x: number, z: number): number {
-  const geographic = transform.toGeographic({ x, y: 0, z });
-  try {
-    return (
-      sampleGrid(TERRAIN_FIXTURE, geographic.point).height.value - GEOTWN_FRAME.originHeight.value
-    );
-  } catch {
-    return proceduralTerrainHeight(x, z);
-  }
-}
-
-export * from "./terrain/surface";
+export const terrainHeight=proceduralTerrainHeight;
+export * from './terrain/surface';

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { GeospatialTransform, GEOTWN_FRAME } from "@/lib/spatial/geospatial-transform";
+import { GeospatialTransform } from "@/lib/spatial/geospatial-transform";
+import { PINE_GAP_FRAME as GEOTWN_FRAME } from "@/lib/pine-gap";
 import { UsgsEarthquakeProvider } from "@/lib/layers/usgs-earthquakes";
 import type { SpatialEntity } from "@/lib/layers/types";
 

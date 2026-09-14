@@ -1,61 +1,8 @@
 import { useMemo } from "react";
 import * as THREE from "three";
 import { roadPath, interiorRoads, dirtTracks } from "@/lib/site-layout";
-import { sampleRoadGradeProfile } from "@/lib/terrain";
+import { createGroundRibbon as buildTerrainRibbon } from "@/lib/site-geometry";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
-
-function buildTerrainRibbon(
-  points: [number, number][],
-  width: number,
-  yOffset: number,
-  closed: boolean
-) {
-  const geom = new THREE.BufferGeometry();
-  const verts: number[] = [];
-  const uvs: number[] = [];
-  const idx: number[] = [];
-
-  // Sample terrain-aware smoothed road grade profile along centerline
-  const profile = sampleRoadGradeProfile(points, 2);
-  const n = profile.length;
-  if (n < 2) return geom;
-
-  let dist = 0;
-  for (let i = 0; i < n; i++) {
-    const prev = profile[closed ? (i - 1 + n) % n : Math.max(0, i - 1)];
-    const curr = profile[i];
-    const next = profile[closed ? (i + 1) % n : Math.min(n - 1, i + 1)];
-
-    const t = new THREE.Vector2(next.x - prev.x, next.z - prev.z).normalize();
-    const normal = new THREE.Vector2(-t.y, t.x).multiplyScalar(width / 2);
-
-    const py = curr.y + yOffset;
-
-    verts.push(curr.x + normal.x, py, curr.z + normal.y);
-    verts.push(curr.x - normal.x, py, curr.z - normal.y);
-
-    if (i > 0) {
-      dist += Math.hypot(curr.x - profile[i - 1].x, curr.z - profile[i - 1].z);
-    }
-    const v = dist / width;
-    uvs.push(0, v, 1, v);
-  }
-
-  const segs = closed ? n : n - 1;
-  for (let i = 0; i < segs; i++) {
-    const a = i * 2;
-    const b = i * 2 + 1;
-    const c = ((i + 1) % n) * 2;
-    const d = ((i + 1) % n) * 2 + 1;
-    idx.push(a, c, b, b, c, d);
-  }
-
-  geom.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-  geom.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
-  geom.setIndex(idx);
-  geom.computeVertexNormals();
-  return geom;
-}
 
 export function Roads() {
   const tex = getSiteTextures();
@@ -71,6 +18,7 @@ export function Roads() {
     () => interiorRoads.map((p) => buildTerrainRibbon(p, 5, 0.085, false)),
     []
   );
+  const shoulderGeom = useMemo(() => buildTerrainRibbon(roadPath, 10, 0.035, true), []);
   const dirtGeoms = useMemo(
     () => dirtTracks.map((p) => buildTerrainRibbon(p, 4, 0.07, false)),
     []
@@ -78,6 +26,7 @@ export function Roads() {
 
   return (
     <group name="roads">
+      <mesh geometry={shoulderGeom} receiveShadow><meshStandardMaterial map={tex.gravelColor} roughness={1} /></mesh>
       {/* Main perimeter access loop */}
       <mesh geometry={roadGeom} receiveShadow>
         <meshStandardMaterial

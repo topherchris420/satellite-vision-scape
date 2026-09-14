@@ -77,25 +77,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Australia" },
+      { title: "Pine Gap — Public Reference Reconstruction" },
       {
         name: "description",
         content:
-          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+          "Explore a historically anchored Pine Gap exterior reconstruction with free-fly and first-person camera modes.",
       },
-      { property: "og:title", content: "Australia" },
+      { property: "og:title", content: "Pine Gap — Public Reference Reconstruction" },
       {
         property: "og:description",
         content:
-          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+          "Explore a historically anchored Pine Gap exterior reconstruction with free-fly and first-person camera modes.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Australia" },
+      { name: "twitter:title", content: "Pine Gap — Public Reference Reconstruction" },
       {
         name: "twitter:description",
         content:
-          "Explore an interactive 3D reconstruction of a site with free-fly and first-person camera modes.",
+          "Explore a historically anchored Pine Gap exterior reconstruction with free-fly and first-person camera modes.",
       },
       {
         property: "og:image",

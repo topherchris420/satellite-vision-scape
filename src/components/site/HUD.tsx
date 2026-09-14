@@ -14,6 +14,7 @@ import {
   Route,
   Sparkles,
   Sun,
+  Sunset,
   X,
 } from "lucide-react";
 import type { ControlMode } from "./Controls";
@@ -35,7 +36,7 @@ const SHORTCUTS: [string, string][] = [
   ["Q / E", "Descend / ascend"],
   ["[ / ]", "Change lens FOV"],
   ["Shift", "Boost / run"],
-  ["N", "Day / night"],
+  ["N", "Day / dusk / night"],
   ["I", "Site index"],
   ["G", "Terrain debug"],
   ["Click", "Inspect structure"],
@@ -122,7 +123,7 @@ export function HUD({
                       Interactive reconstruction
                     </div>
                     <h1 className="font-sans text-2xl font-light tracking-[-.04em] text-white sm:text-[1.75rem]">
-                      Pine Veil <span className="text-white/35">/ AU</span>
+                      Pine Gap <span className="text-white/35">/ AU</span>
                     </h1>
                   </div>
                   <button
@@ -134,15 +135,15 @@ export function HUD({
                   </button>
                 </div>
                 <p className="mt-3 max-w-sm font-sans text-[12px] leading-relaxed text-white/55">
-                  Explore a synthetic Red Centre intelligence site, reconstructed as a navigable
-                  digital twin. Select any asset to inspect its geometry and context.
+                  Explore Pine Gap at real-world scale. Antennas follow a public 2016 survey;
+                  buildings and terrain are approximate. Select a structure to inspect its source.
                 </p>
                 <div className="mt-4 grid grid-cols-4 gap-px overflow-hidden rounded-lg border border-white/[.08] bg-white/[.08]">
                   {[
                     [objectSummary.domes, "Radomes"],
-                    [objectSummary.tanks, "Tanks"],
+                    [objectSummary.dishes, "Dishes"],
                     [objectSummary.buildings, "Structures"],
-                    [objectSummary.pipeRacks, "Pipe racks"],
+                    ["2016", "Reference"],
                   ].map(([value, label]) => (
                     <div key={label} className="bg-[#071014]/90 px-2 py-2.5">
                       <div className="text-sm text-white/90">{value}</div>
@@ -159,7 +160,7 @@ export function HUD({
               onClick={() => setInfoOpen(true)}
               className={`${glass} flex items-center gap-2 rounded-xl px-3 py-2.5 text-[10px] uppercase tracking-[.18em] transition hover:bg-white/10`}
             >
-              <Aperture size={14} className="text-amber-300" /> Pine Veil{" "}
+              <Aperture size={14} className="text-amber-300" /> Pine Gap{" "}
               <ChevronRight size={13} className="text-white/35" />
             </button>
           )}
@@ -196,6 +197,8 @@ export function HUD({
                 >
                   <Sun size={15} />
                 </button>
+                <button onClick={() => onTimeChange("dusk")} aria-label="Dusk lighting"
+                  className={`rounded-lg p-2 transition ${time === "dusk" ? "bg-white/12 text-amber-300" : "text-white/35 hover:text-white"}`}><Sunset size={15}/></button>
                 <button
                   onClick={() => onTimeChange("night")}
                   aria-label="Night lighting"

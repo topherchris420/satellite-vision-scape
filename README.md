@@ -1,77 +1,69 @@
-# GeoTwn
+# Pine Gap Public-Reference Reconstruction
 
-An interactive geospatial-intelligence demo: a navigable 3D reconstruction of a
-remote desert site, an animated **Digital Twin Thesis** motion piece, and a paper — all making one argument:
+An interactive Three.js reconstruction of the Pine Gap satellite ground
+station in central Australia. The antenna field is laid out from the public
+February 2016 survey by Ball, Robinson and Tanter; the surrounding buildings,
+roads, terrain, vegetation and lighting are carefully modelled visual context
+so the facility reads as one believable place.
 
-> Commodity graphics pipelines + publicly available imagery ⇒ convincing,
-> navigable digital twins of complex infrastructure. Treat this as a baseline
-> adversary capability.
+The scene is intended to feel like a direct exterior simulation while keeping
+the evidence boundary visible: published antenna IDs, positions and diameters
+are historical references, while contextual geometry is approximate and the
+terrain is deterministic synthetic relief. It contains no current inventory,
+security layout, imagery tiles, private data or operational pointing data.
 
-## Digital Twin Thesis
+## Viewer
 
-<p align="center">
-  <img src="docs/media/digital-twin-thesis.gif" alt="Digital Twin Thesis — animated motion piece: public imagery flows through a commodity reconstruction pipeline into a navigable digital twin" width="800" />
-</p>
-
-A 35-second looping motion piece in five scenes — **Thesis → Sources →
-Pipeline → Twin → Implication** — implemented from the
-[claude.ai/design project](https://claude.ai/design/p/d60031e6-8363-475f-ace5-414cc0310065?file=Digital+Twin+Thesis.dc.html)
-(`Digital Twin Thesis.dc.html`) as a native React route. A higher-quality MP4
-render lives at [`docs/media/digital-twin-thesis.mp4`](docs/media/digital-twin-thesis.mp4).
-
-Watch it live at **`/thesis`**: space plays/pauses, arrow keys step, `0`
-rewinds, and the **TWEAKS** panel switches the accent color and toggles the
-disclaimer/telemetry overlays. Everything on screen is a synthetic
-composite — illustrative, not actual imagery.
-
-| Scene            | What it shows                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| 01 · Thesis      | Commodity graphics pipelines + publicly available imagery ⇒ navigable digital twins            |
-| 02 · Sources     | Satellite tiles, street-level, drone/UGC, open aerial, map vectors, crowd photos being indexed |
-| 03 · Pipeline    | Ingest → structure-from-motion → point cloud → mesh + texture → navigable twin                 |
-| 04 · Twin        | Free navigation through the reconstructed site with waypoints (HANGAR-A, TWR-01, DEPOT)        |
-| 05 · Implication | Capability confirmed — treat it as a baseline adversary capability                             |
-
-## Routes
-
-| Route     | Description                                                                                |
-| --------- | ------------------------------------------------------------------------------------------ |
-| `/`       | Interactive 3D site reconstruction (free-fly and first-person cameras)                     |
-| `/thesis` | The Digital Twin Thesis motion piece (`?chrome=0` hides the playback bar and tweaks panel) |
-
-## Site viewer
-
-- **Three cameras** — free-fly orbit, first-person walk with collision, and an
-  automated cinematic pass (`1` / `2` / `3`).
-- **Click-to-inspect** — every structure opens a dossier card with dimensions
-  and capacity; **Fly to structure** glides the camera in.
-- **Site index** (`I`) — a grouped outliner of every radome, uncovered dish
-  antenna, tank and building; click an entry to inspect and fly to it.
-- **Clickable minimap** — a schematic generated straight from the layout data,
-  with a north arrow and 100 m scale bar; click anywhere on it to fly the
-  camera there.
-- **Live telemetry** — grid easting/northing, altitude and heading in the HUD,
-  streamed imperatively so camera motion never re-renders React.
-- **Day / night** (`N`) and adaptive quality that sheds post-processing and
-  render resolution under load, then recovers when the frame rate holds.
+- **Three cameras** — orbit, first-person walk with collision, and an
+automated cinematic pass (`1` / `2` / `3`).
+- **Click-to-inspect** — select a radome, dish, building or site feature to
+see its source ID, published diameter and evidence class, then fly to it.
+- **Site index** (`I`) — grouped outliner of the 2016 antenna references and
+the approximate contextual structures.
+- **Clickable minimap** — generated from the same layout data with a north
+arrow and scale bar.
+- **Live telemetry** — local easting/northing, altitude and heading in the HUD.
+- **Day / dusk / night** (`N`) — physically softer sun, warm dusk, and a
+low-light security-campus look with practical lights and stars.
+- **Adaptive quality** — reduces post-processing and shadow cost under load.
 
 Press `H` in the viewer for the full shortcut list.
 
-## Spatial intelligence architecture
-
-GeoTwn separates three coordinate-compatible but epistemically distinct worlds:
+## Reference boundary
 
 ```text
-PHYSICAL (datum-aware terrain / EGM2008)
-    -> RECONSTRUCTED (fictional site geometry)
-        -> DYNAMIC (public USGS earthquake context)
+PUBLIC HISTORICAL REFERENCE (2016 antenna coordinates / diameters)
+    -> CONTEXT RECONSTRUCTION (approximate buildings / roads / terrain)
+        -> DYNAMIC PUBLIC CONTEXT (optional USGS earthquake markers)
 ```
 
-The default scene now uses a versioned, georeferenced local terrain artifact; it is deliberately labeled **illustrative**, not an authoritative DEM or evidence of a facility. A typed Re:Earth-compatible provider can supply orthometric or WGS84 ellipsoidal heights, while the original deterministic terrain remains an explicit offline fallback. The viewer's provenance panel keeps terrain, reconstruction, and reported public context visibly distinct.
+The historical antenna survey is the factual anchor. The model keeps the
+survey's coordinate frame and scale, including the 38 m, 30.5 m, 20 m, 16 m,
+15 m, 12 m, 9 m, 8 m, 6 m, 5 m and 4 m classes. Radome shells are generic
+exterior envelopes; internal hardware and dish pointing are intentionally not
+inferred. One longitude in the source table (`98-A`, printed as `33.732769`)
+is disclosed and corrected to `133.732769` so the referenced cluster remains
+in Australia.
 
-The platform also includes centralized reversible WGS84/local transforms, terrain profiles and slope/aspect analytics, canonical temporal/provenance-bearing entities, a provider registry, serializable annotations, deterministic camera/spatial commands, and share-state serialization. Natural-language control is intentionally deferred: a future model may call only the typed command layer and must never invent scene state.
+See [the Pine Gap reference note](docs/PINE_GAP_REFERENCE.md),
+[terrain architecture](docs/TERRAIN_ARCHITECTURE.md),
+[vertical datums](docs/VERTICAL_DATUMS.md), [provenance](docs/PROVENANCE.md),
+[layer providers](docs/LAYER_PROVIDERS.md), and the [offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md).
 
-See [terrain architecture](docs/TERRAIN_ARCHITECTURE.md), [vertical datums](docs/VERTICAL_DATUMS.md), [provenance](docs/PROVENANCE.md), [layer providers](docs/LAYER_PROVIDERS.md), and the [offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md).
+## Digital Twin Thesis
+
+The original project's 35-second looping motion piece remains available at
+`/thesis`. It presents the broader defensive-security argument that commodity
+graphics pipelines and public sources can produce convincing, navigable twins.
+The route is independent of the Pine Gap viewer and remains a synthetic
+illustration.
+
+## Routes
+
+| Route     | Description                                                      |
+| --------- | ---------------------------------------------------------------- |
+| `/`       | Interactive Pine Gap exterior reconstruction                    |
+| `/thesis` | Digital Twin Thesis motion piece (`?chrome=0` hides the controls) |
 
 ## Getting started
 
@@ -93,27 +85,23 @@ bun run format     # prettier
 ```
 src/
   routes/               file-based routes (TanStack Start)
-    index.tsx           3D site viewer
+    index.tsx           Pine Gap 3D viewer
     thesis.tsx          Digital Twin Thesis motion piece
-  components/
-    site/               React Three Fiber scene (terrain, structures, HUD, minimap…)
-    thesis/             scene engine + the five thesis scenes + tweaks panel
-    ui/                 shadcn/ui primitives
-paper/
-  geotwn_redteam.tex    IEEE-style red-team paper on multiview reconstruction
-scripts/
-  record-thesis.mjs     headless recorder for the README video
+  components/site/      React Three Fiber scene (terrain, structures, HUD…)
+  lib/pine-gap.ts       historical reference frame and antenna manifest
+  lib/site-layout.ts    scene layout derived from the manifest
+  lib/terrain.ts        deterministic outback relief
+paper/                  defensive-security research paper
+scripts/                thesis recorder
 ```
 
 ## Tech stack
 
-React 19 · TanStack Start / Router · React Three Fiber + drei +
-postprocessing · Tailwind CSS 4 · shadcn/ui · Vite 8 · Bun
+React 19 · TanStack Start / Router · React Three Fiber + drei · postprocessing ·
+Tailwind CSS 4 · shadcn/ui · Vite 8 · Bun
 
 ## Disclaimer
 
-This repository is a defensive-security research demo. The reconstructed site
-is an illustrative synthetic composite — no actual imagery of any real
-facility is used or distributed. The point is the argument itself:
-if a hobby-grade stack can produce a convincing, navigable twin from public
-sources, defenders should assume adversaries already have one.
+This is a defensive public-source awareness demo. It is a historical,
+illustrative exterior reconstruction, not a current operational model or a
+survey-grade map. No private or restricted sources are used or distributed.

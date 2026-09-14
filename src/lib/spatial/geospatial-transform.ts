@@ -66,8 +66,8 @@ export class GeospatialTransform {
 }
 
 export const GEOTWN_FRAME: LocalTangentPlane = {
-  // A public, approximate Alice Springs demonstration origin. It is not a claim
-  // about the fictional reconstructed compound's real-world location.
+  // Legacy provider-test frame retained for backwards-compatible spatial
+  // fixtures. The Pine Gap viewer uses PINE_GAP_FRAME from pine-gap.ts.
   origin: { longitude: 133.8807, latitude: -23.698 },
   originHeight: {
     value: 545,

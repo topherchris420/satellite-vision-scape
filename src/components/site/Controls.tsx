@@ -49,8 +49,8 @@ function FpsMover() {
   const vel = useRef(new THREE.Vector3());
 
   useEffect(() => {
-    camera.position.set(-6, terrainHeight(-6, 78) + EYE, 78);
-    camera.lookAt(30, EYE, 40); // face the tank farm
+    camera.position.set(-110, terrainHeight(-110, 40) + EYE, 40);
+    camera.lookAt(-65, EYE + 10, -20);
   }, [camera]);
 
   useFrame((_, delta) => {
@@ -97,8 +97,8 @@ function FpsMover() {
 // the opening frame is identical on every load: the camera starts exactly
 // here and MapControls' target matches the lookAt, leaving damping nothing
 // to settle.
-export const HOME_POSITION: [number, number, number] = [-40, 150, 220];
-export const HOME_TARGET: [number, number, number] = [0, 0, 20];
+export const HOME_POSITION: [number, number, number] = [-640, 360, 620];
+export const HOME_TARGET: [number, number, number] = [-115, 8, -35];
 
 function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   const { camera } = useThree();
@@ -212,7 +212,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
       enableDamping
       dampingFactor={0.1}
       maxPolarAngle={Math.PI / 2 - 0.03}
-      maxDistance={900}
+      maxDistance={2500}
     />
   );
 }
@@ -220,17 +220,8 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
 // Cinematic fly-through: a looping Catmull-Rom spline over the whole site.
 const CINE_PATH = new THREE.CatmullRomCurve3(
   [
-    [-60, 90, 230],
-    [80, 70, 170],
-    [150, 55, 70],
-    [130, 45, -60],
-    [40, 40, -110],
-    [-90, 55, -120],
-    [-150, 70, 0],
-    [-120, 60, 120],
-    [-10, 40, 90],
-    [90, 45, 90],
-    [60, 80, 200],
+    [-320,100,90], [-190,75,-80], [-180,85,-290], [0,100,-445],
+    [200,120,-180], [290,135,160], [-160,160,250], [-510,90,340], [-540,115,170],
   ].map(([x, y, z]) => new THREE.Vector3(x, y, z)),
   true,
   "catmullrom",
@@ -238,17 +229,8 @@ const CINE_PATH = new THREE.CatmullRomCurve3(
 );
 const CINE_LOOK = new THREE.CatmullRomCurve3(
   [
-    [-10, 10, 40],
-    [30, 8, 40],
-    [60, 6, 30],
-    [30, 6, 20],
-    [0, 6, 20],
-    [-30, 8, 20],
-    [-20, 10, 30],
-    [-10, 8, 60],
-    [10, 6, 60],
-    [30, 6, 60],
-    [10, 8, 60],
+    [-75,15,-15], [-55,15,-130], [-55,20,-250], [28,10,-345],
+    [25,12,-160], [0,15,10], [-150,10,110], [-420,12,255], [-400,10,170],
   ].map(([x, y, z]) => new THREE.Vector3(x, y, z)),
   true,
   "catmullrom",

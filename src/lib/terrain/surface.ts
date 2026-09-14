@@ -139,8 +139,8 @@ export function sampleFootprintGrade(
     ];
 
     for (const [lx, lz] of localPoints) {
-      const wx = cx + lx * cos - lz * sin;
-      const wz = cz + lx * sin + lz * cos;
+      const wx = cx + lx * cos + lz * sin;
+      const wz = cz - lx * sin + lz * cos;
       samplePts.push([wx, wz]);
     }
   }
@@ -163,7 +163,8 @@ export function sampleFootprintGrade(
 
   const meanTerrain = sum / samples.length;
 
-  // Use meanTerrain as level foundation grade
+  // Foundation grade remains the mean terrain elevation; visible skirts and
+  // terrain-following ribbons absorb the cut/fill at each footprint edge.
   const elevation = meanTerrain;
   const cutDepth = Math.max(0, maxTerrain - elevation);
   const fillDepth = Math.max(0, elevation - minTerrain);

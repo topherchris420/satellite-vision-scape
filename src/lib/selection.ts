@@ -7,7 +7,6 @@ import {
   dishes,
   tanks,
   buildings,
-  RADOME,
   type Sphere,
   type Dome,
   type DishAntenna,
@@ -25,10 +24,10 @@ export type Selection = {
 };
 
 export const KIND_LABEL: Record<BuildingKind, string> = {
-  hall: "Process hall",
+  hall: "Main building (approximate)",
   warehouse: "Warehouse",
   shed: "Service shed",
-  barracks: "Barracks block",
+  barracks: "Support building",
   office: "Office / admin",
 };
 
@@ -51,13 +50,14 @@ export function sphereSelection(s: Sphere, i: number): Selection {
 export function domeSelection(d: Dome, i: number): Selection {
   return {
     kind: "Radome",
-    name: `Radome R-${i + 1}`,
+    name: d.sourceId ? `Radome ${d.sourceId}` : `Radome R-${i + 1}`,
     pos: d.pos,
     radius: d.radius * 1.25,
     details: [
-      `DSF shell Ø ${(d.radius * 2).toFixed(0)} m — quasi-random FRP panels on concrete foundation ring`,
-      `Prime-focus reflector Ø ${(d.radius * 2 * RADOME.dishRatio).toFixed(1)} m (f/D ≈ 0.40), feed horn assembly`,
-      "Dish travel AZ 360° · EL 5–88° — pedestal az/el drives",
+      `Published shell diameter ${(d.radius * 2).toFixed(1)} m`,
+      "Public antenna survey · February 2016",
+      d.roofMounted ? "Roof mounted; supporting building height approximated" : "Published position; terrain illustrative",
+      d.sourceId === "98-A" ? "Source longitude typo corrected by inference; see references" : "Shell construction approximated; interior not modelled",
     ],
   };
 }
@@ -65,13 +65,13 @@ export function domeSelection(d: Dome, i: number): Selection {
 export function dishSelection(a: DishAntenna, i: number): Selection {
   return {
     kind: "Parabolic dish antenna",
-    name: `Dish A-${i + 1}`,
+    name: a.sourceId ? `Dish ${a.sourceId}` : `Dish A-${i + 1}`,
     pos: a.pos,
     radius: a.dishRadius * 1.35,
     details: [
       `Uncovered prime-focus reflector Ø ${(a.dishRadius * 2).toFixed(0)} m (f/D ≈ 0.40)`,
       "Az/el pedestal mount, feed horn on quadripod struts",
-      "Dish travel AZ 360° · EL 5–88° — no radome",
+      "Published position / diameter · 2016; pose illustrative",
     ],
   };
 }
@@ -96,8 +96,8 @@ export function buildingSelection(b: Building, i: number): Selection {
     pos: b.pos,
     radius: Math.hypot(b.size[0], b.size[1]) / 2 + 1,
     details: [
-      `Footprint ${b.size[0]} × ${b.size[1]} m`,
-      `Height ${b.height} m`,
+      `Approximate footprint ${b.size[0]} × ${b.size[1]} m`,
+      `Illustrative height ${b.height} m`,
       b.roof === "gable" ? "Gable roof" : "Flat roof",
     ],
   };

@@ -492,7 +492,7 @@ export function getSiteTextures() {
   const dirtColor = makeTexture({
     // Vivid iron-red outback earth (the site's "red centre" ground). Kept
     // strongly red/orange with just enough green+blue to read as sunlit soil.
-    base: [192, 98, 58], variation: [40, 26, 16], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
+    base: [176, 124, 91], variation: [24, 20, 17], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
   });
   const grassColor = makeTexture({
     base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,

@@ -1,6 +1,6 @@
 # Vertical datums
 
-GeoTwn stores every elevation as `ReferencedHeight`: value, metre unit, vertical datum, source, transform method, geoid model, and optional uncertainty. Supported datums are EGM2008 orthometric, WGS84 ellipsoid, local synthetic, and unknown.
+The viewer stores every elevation as `ReferencedHeight`: value, metre unit, vertical datum, source, transform method, geoid model, and optional uncertainty. Supported datums are EGM2008 orthometric, WGS84 ellipsoid, local synthetic, and unknown.
 
 The conversion is explicit:
 

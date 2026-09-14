@@ -1,19 +1,8 @@
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
 import { RADOME, RADOME_SHELL_LIFT } from "@/lib/site-layout";
 
-// The antenna assembly housed inside every radome — and reused, shell-less, for
-// the site's uncovered dishes — replicating the reference station cross-section
-// (SS-RAD-07-74): a prime-focus parabolic reflector (Ø 0.667× the shell, i.e.
-// the 12.0 m dish of an 18 m radome; f/D ≈ 0.40, the usual ground-station
-// value) carried on a concrete pedestal through an azimuth rotation mechanism
-// and elevation drive, with a feed horn assembly on quadripod struts, radial
-// backing framework behind the dish, cable tray, floor access hatch and — when
-// enclosed — the geodesic lattice lining the shell. Everything scales off the
-// shell radius so all antennas share the same anatomy at their own size, and
-// each dish slowly slews through its AZ 360° / EL 5–88° tracking travel (the
-// elevation cap clears the zenith keyhole, where az rate would run away).
+// Generic exterior reflector geometry. Pose is illustrative and stationary.
 
 // Shared materials — single instances reused by every antenna on site.
 const dishMat = new THREE.MeshStandardMaterial({
@@ -126,16 +115,6 @@ export function RadomeAntenna({
 
   const azRef = useRef<THREE.Group>(null);
   const elRef = useRef<THREE.Group>(null);
-  // Station-keeping slew: continuous azimuth rotation (direction alternates
-  // per radome) plus a gentle elevation sweep inside the 0–90° travel.
-  useFrame(({ clock }) => {
-    const t = clock.elapsedTime;
-    if (azRef.current)
-      azRef.current.rotation.y =
-        index * 2.1 + t * (0.05 + (index % 3) * 0.02) * (index % 2 ? -1 : 1);
-    if (elRef.current) elRef.current.rotation.x = 0.7 + Math.sin(t * 0.07 + index * 1.9) * 0.42;
-  });
-
   const dish = useMemo(() => dishGeometry(rd, f), [rd, f]);
   const frame = useMemo(() => shellFrameGeometry(R), [R]);
 
@@ -183,7 +162,7 @@ export function RadomeAntenna({
       </mesh>
 
       {/* ---- azimuth rotation mechanism: everything above the bearing slews ---- */}
-      <group ref={azRef} position={[0, 0.36 * R, 0]}>
+      <group ref={azRef} position={[0, 0.36 * R, 0]} rotation={[0, index * 1.3, 0]}>
         {/* slew bearing ring + turntable */}
         <mesh position={[0, 0.005 * R, 0]} rotation={[Math.PI / 2, 0, 0]} material={mechMat}>
           <torusGeometry args={[0.165 * R, 0.018 * R, 8, 28]} />
@@ -212,7 +191,7 @@ export function RadomeAntenna({
         </mesh>
 
         {/* ---- elevation group: dish + feed tip about the axle ---- */}
-        <group ref={elRef} position={[0, 0.32 * R, 0]}>
+        <group rotation={[0.55 + (index % 3) * 0.15, 0, 0]} ref={elRef} position={[0, 0.32 * R, 0]}>
           <mesh rotation={[0, 0, Math.PI / 2]} material={steelMat}>
             <cylinderGeometry args={[0.045 * R, 0.045 * R, 0.4 * R, 14]} />
           </mesh>

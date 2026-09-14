@@ -14,6 +14,7 @@ import {
   type BuildingKind,
 } from "@/lib/site-layout";
 import { sampleFootprintGrade } from "@/lib/terrain";
+import { createRadomeShell } from "@/lib/site-geometry";
 import { RadomeAntenna } from "./RadomeAntenna";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 import {
@@ -103,26 +104,8 @@ function radomeShellGeometry(R: number, detail = 3) {
   const key = `${R.toFixed(2)}_${detail}`;
   const hit = radomeShellCache.get(key);
   if (hit) return hit;
-  const ico = new THREE.IcosahedronGeometry(R, detail);
-  const pos = ico.attributes.position as THREE.BufferAttribute;
-  const uv = ico.attributes.uv as THREE.BufferAttribute;
-  const cutY = -RADOME_SHELL_LIFT * R;
-  const kept: number[] = [];
-  const keptUv: number[] = [];
-  for (let i = 0; i < pos.count; i += 3) {
-    const cy = (pos.getY(i) + pos.getY(i + 1) + pos.getY(i + 2)) / 3;
-    if (cy < cutY) continue;
-    for (let j = i; j < i + 3; j++) {
-      kept.push(pos.getX(j), pos.getY(j), pos.getZ(j));
-      keptUv.push(uv.getX(j), uv.getY(j));
-    }
-  }
-  const geom = new THREE.BufferGeometry();
-  geom.setAttribute("position", new THREE.Float32BufferAttribute(kept, 3));
-  geom.setAttribute("uv", new THREE.Float32BufferAttribute(keptUv, 2));
-  geom.computeVertexNormals();
+  const geom = createRadomeShell(R, detail);
   radomeShellCache.set(key, geom);
-  ico.dispose();
   return geom;
 }
 
@@ -286,7 +269,7 @@ export function Structures({
       {/* Radomes */}
       <group name="radomes">
         {domes.map((d, i) => {
-          const grade = domeGrades[i];
+          const grade = d.roofMounted ? { ...domeGrades[i], elevation: buildingGrades[0].elevation + buildings[0].height + 0.25, minTerrain: buildingGrades[0].elevation + buildings[0].height } : domeGrades[i];
           const baseR = d.radius * RADOME_SHELL_SIN;
           const wall = RADOME.plinthHeight;
           const skirtDepth = Math.max(0.5, grade.elevation - grade.minTerrain + 0.4);
@@ -294,9 +277,9 @@ export function Structures({
           const plinthCenterY = wall / 2 - skirtDepth / 2;
 
           const shellY = wall + d.radius * RADOME_SHELL_LIFT;
-          const shellNear = radomeShellGeometry(d.radius, 3);
-          const shellMid = radomeShellGeometry(d.radius, 2);
-          const shellFar = radomeShellGeometry(d.radius, 1);
+          const shellNear = radomeShellGeometry(d.radius, 7);
+          const shellMid = radomeShellGeometry(d.radius, 5);
+          const shellFar = radomeShellGeometry(d.radius, 3);
 
           return (
             <group
@@ -308,7 +291,7 @@ export function Structures({
               onPointerOut={out}
             >
               {/* Gravel apron */}
-              <mesh position={[0, -skirtDepth + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <circleGeometry args={[d.radius * 1.35, 40]} />
                 <meshStandardMaterial map={gravelMap} roughness={0.9} />
               </mesh>
@@ -371,28 +354,23 @@ export function Structures({
                 );
               })}
 
-              {/* Internal Dish Antenna */}
-              <group position={[0, wall, 0]}>
-                <RadomeAntenna radius={d.radius} index={i} />
-              </group>
 
               {/* Geodesic FRP shell LODs: high quality PBR material */}
-              <Detailed distances={[0, 120, 280]}>
+              <Detailed distances={[0, 280, 700]}>
                 <group>
                   <mesh geometry={shellNear} position={[0, shellY, 0]} castShadow receiveShadow>
                     <meshPhysicalMaterial
                       map={domeMap}
                       color="#f4f6f8"
-                      flatShading
-                      roughness={0.38}
+                      roughness={0.78}
                       metalness={0.03}
-                      sheen={0.4}
+                      sheen={0.08}
                       sheenColor="#ffffff"
-                      clearcoat={0.3}
+                      clearcoat={0.04}
                       clearcoatRoughness={0.3}
                       envMapIntensity={1.2}
                       emissive="#ff9a38"
-                      emissiveIntensity={night ? 0.35 : 0}
+                      emissiveIntensity={0}
                     />
                   </mesh>
                   {/* Seams lattice */}
@@ -401,7 +379,7 @@ export function Structures({
                       color="#8c9298"
                       wireframe
                       transparent
-                      opacity={0.45}
+                      opacity={0.13}
                       depthWrite={false}
                     />
                   </mesh>
@@ -413,11 +391,11 @@ export function Structures({
                     roughness={0.42}
                     metalness={0.03}
                     emissive="#ff9a38"
-                    emissiveIntensity={night ? 0.35 : 0}
+                    emissiveIntensity={0}
                   />
                 </mesh>
-                <mesh geometry={shellFar} position={[0, shellY, 0]}>
-                  <meshStandardMaterial color="#ededeb" roughness={0.5} />
+                <mesh geometry={shellFar} position={[0, shellY, 0]} castShadow receiveShadow>
+                  <meshStandardMaterial color="#ededeb" roughness={0.78} />
                 </mesh>
               </Detailed>
             </group>
@@ -441,7 +419,7 @@ export function Structures({
               onPointerOver={over}
               onPointerOut={out}
             >
-              <mesh position={[0, -skirtDepth + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
                 <circleGeometry args={[R * 0.7, 40]} />
                 <meshStandardMaterial map={gravelMap} roughness={0.9} />
               </mesh>

@@ -4,16 +4,17 @@ import { SiteScene } from "@/components/site/SiteScene";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pine Veil — Interactive Digital Twin" },
+      { title: "Pine Gap — Public Reference Reconstruction" },
       {
         name: "description",
         content:
-          "Explore Pine Veil, an interactive synthetic 3D reconstruction in Australia's Red Centre.",
+          "Explore Pine Gap in 3D: historical public antenna coordinates at real-world scale, with approximate terrain and architecture.",
       },
-      { property: "og:title", content: "Pine Veil — Interactive Digital Twin" },
+      { property: "og:title", content: "Pine Gap — Public Reference Reconstruction" },
       {
         property: "og:description",
-        content: "An interactive geospatial intelligence platform",
+        content:
+          "A historically anchored Pine Gap exterior reconstruction with approximate contextual terrain and buildings.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

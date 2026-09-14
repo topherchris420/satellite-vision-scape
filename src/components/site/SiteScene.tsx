@@ -8,9 +8,6 @@ import {
   SMAA,
   Vignette,
   ToneMapping,
-  DepthOfField,
-  BrightnessContrast,
-  HueSaturation,
 } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 
@@ -21,7 +18,7 @@ import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
 import { Atmosphere } from "./Atmosphere";
 import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
-import { Lighting, type TimeOfDay } from "./Lighting";
+import { Lighting, LIGHTING, type TimeOfDay } from "./Lighting";
 import { HUD } from "./HUD";
 import { MobileControls } from "./MobileControls";
 import { TerrainDebug, TerrainDebugHUD } from "./TerrainDebug";
@@ -29,7 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import type { Selection } from "@/lib/selection";
 import { sampleTerrainFrame } from "@/lib/terrain";
 import { SpatialContextLayer, type ContextStatus } from "./SpatialContextLayer";
-import { FIXTURE_MANIFEST } from "@/lib/terrain/fixture";
+import { PINE_GAP_SOURCE } from "@/lib/pine-gap";
 
 export type QualityTier = "low" | "medium" | "high" | "ultra";
 
@@ -174,7 +171,7 @@ export function SiteScene() {
           setMode("cinematic");
           break;
         case "KeyN":
-          setTime((t) => (t === "day" ? "night" : "day"));
+          setTime((t) => (t === "day" ? "dusk" : t === "dusk" ? "night" : "day"));
           break;
         case "KeyH":
           setShowHelp((v) => !v);
@@ -197,13 +194,12 @@ export function SiteScene() {
     return () => window.removeEventListener("keydown", onKey);
   }, [isMobile]);
 
-  const fogColor = time === "day" ? "#d4be98" : "#0a1024";
+  const fogColor = LIGHTING[time].fog;
 
   // Derive DPR and post features from QualityTier
   const dpr: number | [number, number] =
     qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
   const enableAO = qualityTier === "high" || qualityTier === "ultra";
-  const enableDoF = qualityTier === "ultra" && mode === "cinematic";
 
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
@@ -239,20 +235,20 @@ export function SiteScene() {
         <div className="flex items-center justify-between border-b border-white/[.07] px-3 py-2">
           <span className="uppercase tracking-[.18em] text-white/70">Data confidence</span>
           <span className="flex items-center gap-1.5 text-[8px] uppercase tracking-wider text-emerald-300">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Systems nominal
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Historical baseline
           </span>
         </div>
         <div className="grid grid-cols-3 gap-px bg-white/[.07]">
           <div className="bg-[#071014]/95 px-3 py-2.5">
             <span className="text-emerald-300">PHYSICAL</span>
             <div className="mt-1 text-[8px] leading-relaxed text-white/35">
-              EGM2008 / illustrative
+              Relative / illustrative
             </div>
           </div>
           <div className="bg-[#071014]/95 px-3 py-2.5">
             <span className="text-amber-300">TWIN</span>
             <div className="mt-1 text-[8px] leading-relaxed text-white/35">
-              Procedural / synthetic
+              Antennas / 2016 survey
             </div>
           </div>
           <div className="bg-[#071014]/95 px-3 py-2.5">
@@ -267,8 +263,9 @@ export function SiteScene() {
             Manifest & limitations
           </summary>
           <p className="mt-2 leading-relaxed text-white/35">
-            {FIXTURE_MANIFEST.tileset} · {FIXTURE_MANIFEST.resolutionM} m ·{" "}
-            {FIXTURE_MANIFEST.artifactHash.slice(0, 18)}… · Not survey-grade.
+            Antenna positions and diameters: {PINE_GAP_SOURCE.epoch}. Buildings, terrain,
+            roads and lighting are approximate. This is not a current operational model.
+            <a className="mt-2 block text-amber-200 underline" href={PINE_GAP_SOURCE.url} target="_blank" rel="noreferrer">Open public survey ↗</a>
           </p>
         </details>
       </aside>
@@ -291,17 +288,17 @@ export function SiteScene() {
           <div className="h-full w-2/3 animate-pulse bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
         </div>
         <div className="relative mt-2 font-mono text-[8px] uppercase tracking-[.18em] text-white/25">
-          Pine Veil · AU / 24°S 133°E
+          Pine Gap · 23.7985°S / 133.7370°E
         </div>
       </div>
 
       <Canvas
         shadows
         dpr={dpr}
-        camera={{ fov: 55, near: 0.1, far: 2000, position: HOME_POSITION }}
+        camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
           antialias: false,
-          toneMapping: THREE.ACESFilmicToneMapping,
+          toneMapping: THREE.NoToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
         }}
         onPointerMissed={() => setSelected(null)}
@@ -321,7 +318,7 @@ export function SiteScene() {
           />
         )}
         <Suspense fallback={null}>
-          <Lighting time={time} />
+          <Lighting time={time} highQuality={enableAO} />
           <Terrain />
           <Roads />
           <Structures onSelect={setSelected} time={time} />
@@ -330,7 +327,7 @@ export function SiteScene() {
           <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
-          <fog attach="fog" args={[fogColor, 450, 1500]} />
+          <fog attach="fog" args={[fogColor, 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
 
@@ -338,19 +335,16 @@ export function SiteScene() {
           <EffectComposer multisampling={0}>
             {enableAO && (
               <N8AO
-                aoRadius={10}
-                intensity={2.5}
+                aoRadius={2}
+                intensity={1.1}
                 distanceFalloff={2}
                 halfRes={qualityTier !== "ultra"}
               />
             )}
-            <Bloom mipmapBlur intensity={0.55} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-            {enableDoF && <DepthOfField focusDistance={0.03} focalLength={0.06} bokehScale={2.5} />}
+            <Bloom mipmapBlur intensity={0.12} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            <HueSaturation saturation={0.12} />
-            <BrightnessContrast contrast={0.07} />
             <SMAA />
-            <Vignette eskil={false} offset={0.22} darkness={0.5} />
+            <Vignette eskil={false} offset={0.22} darkness={0.18} />
           </EffectComposer>
         )}
 
