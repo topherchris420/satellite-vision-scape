@@ -92,11 +92,11 @@ export function tankSelection(t: Tank, i: number): Selection {
 export function buildingSelection(b: Building, i: number): Selection {
   return {
     kind: KIND_LABEL[b.kind ?? "warehouse"],
-    name: `Building B-${i + 1}`,
+    name: b.id ? b.id.replaceAll('-', ' ') : `Building B-${i + 1}`,
     pos: b.pos,
     radius: Math.hypot(b.size[0], b.size[1]) / 2 + 1,
     details: [
-      `Approximate footprint ${b.size[0]} × ${b.size[1]} m`,
+      `Image-traced footprint ${b.size[0].toFixed(1)} × ${b.size[1].toFixed(1)} m`,
       `Illustrative height ${b.height} m`,
       b.roof === "gable" ? "Gable roof" : "Flat roof",
     ],

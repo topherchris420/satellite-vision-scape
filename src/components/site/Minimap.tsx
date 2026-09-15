@@ -1,6 +1,7 @@
 import type { MouseEvent, RefObject } from "react";
 import {
   roadPath,
+  perimeterPath,
   topEnclosurePath,
   interiorRoads,
   dirtTracks,
@@ -35,7 +36,7 @@ export function Minimap({
 
   return (
     <svg
-      viewBox="-530 -440 830 910"
+      viewBox="-560 -500 1060 1180"
       className={`w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
         onNavigate ? "cursor-crosshair" : ""
       }`}
@@ -44,7 +45,7 @@ export function Minimap({
       onClick={handleClick}
     >
       {onNavigate && <title>Click to fly the camera there</title>}
-      {/* northern antenna enclosure */}
+      {/* southwestern antenna enclosure */}
       <polygon
         points={topEnclosurePath.map((p) => p.join(",")).join(" ")}
         fill="#1c2333"
@@ -54,12 +55,13 @@ export function Minimap({
       />
       {/* main perimeter boundary */}
       <polygon
-        points={roadPath.map((p) => p.join(",")).join(" ")}
+        points={perimeterPath.map((p) => p.join(",")).join(" ")}
         fill="#1c2333"
         fillOpacity={0.55}
         stroke="#6b675e"
         strokeWidth={5}
       />
+      <polyline points={roadPath.map(p=>p.join(',')).join(' ')} fill="none" stroke="#6b675e" strokeWidth={5}/>
       {/* interior roads */}
       {interiorRoads.map((path, i) => (
         <polyline
@@ -89,6 +91,7 @@ export function Minimap({
           y={p.pos[1] - p.size[1] / 2}
           width={p.size[0]}
           height={p.size[1]}
+          transform={`rotate(${-(p.rotY ?? 0)*180/Math.PI} ${p.pos[0]} ${p.pos[1]})`}
           fill="#3f3f46"
         />
       ))}
@@ -100,6 +103,7 @@ export function Minimap({
           y={b.pos[1] - b.size[1] / 2}
           width={b.size[0]}
           height={b.size[1]}
+          transform={`rotate(${-(b.rotY ?? 0)*180/Math.PI} ${b.pos[0]} ${b.pos[1]})`}
           fill="#b9b2a3"
         />
       ))}

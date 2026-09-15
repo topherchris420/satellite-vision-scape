@@ -28,15 +28,16 @@ function Environment({ time }: { time: TimeOfDay }) {
 }
 export function Lighting({ time, highQuality = true }: { time: TimeOfDay; highQuality?: boolean }) {
   const p = LIGHTING[time]; const night = time === 'night';
+  const sunPosition = new THREE.Vector3(...p.sun).normalize().multiplyScalar(1800);
   return <>
     {night ? <color attach="background" args={[p.fog]} /> : <Sky distance={12000} sunPosition={p.sun} turbidity={2.8} rayleigh={1.8} mieCoefficient={.003} mieDirectionalG={.82} />}
     {night && <Stars radius={4500} depth={400} count={1800} factor={3} saturation={0} fade speed={0} />}
     <Environment time={time} />
     <hemisphereLight args={[p.sky, p.ground, p.ambient]} />
-    <directionalLight position={p.sun} intensity={p.intensity} color={p.color} castShadow
+    <directionalLight position={sunPosition} intensity={p.intensity} color={p.color} castShadow
       shadow-mapSize-width={highQuality ? 4096 : 2048} shadow-mapSize-height={highQuality ? 4096 : 2048}
       shadow-camera-left={-700} shadow-camera-right={700} shadow-camera-top={700} shadow-camera-bottom={-700}
-      shadow-camera-near={1} shadow-camera-far={1800} shadow-normalBias={.18} shadow-bias={-.00008} />
+      shadow-camera-near={1} shadow-camera-far={3200} shadow-normalBias={.18} shadow-bias={-.00008} />
     {night && <>
       {buildings.slice(0, 3).map((b, i) => <pointLight key={`building-${i}`} position={[b.pos[0] + b.size[0] / 2 + 2, sampleFootprintGrade(b.pos, b.size).elevation + 5, b.pos[1]]} intensity={120} distance={45} decay={2} color="#ffd397" />)}
       {domes.filter(d => d.radius >= 15).map(d => <pointLight key={d.sourceId} position={[d.pos[0] + d.radius * .8, sampleFootprintGrade(d.pos, d.radius).elevation + 2, d.pos[1] + d.radius * .8]} intensity={110} distance={60} decay={2} color="#ffd5a2" />)}

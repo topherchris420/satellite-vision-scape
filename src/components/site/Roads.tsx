@@ -1,24 +1,25 @@
 import { useMemo } from "react";
 import * as THREE from "three";
-import { roadPath, interiorRoads, dirtTracks } from "@/lib/site-layout";
+import { roadPath, interiorRoads, dirtTracks, dryWatercourse } from "@/lib/site-layout";
 import { createGroundRibbon as buildTerrainRibbon } from "@/lib/site-geometry";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
 export function Roads() {
   const tex = getSiteTextures();
 
-  const roadMap = useMemo(() => setRepeat(tex.roadColor, 1, 0.5), [tex]);
+  const roadMap = useMemo(() => setRepeat(tex.asphaltColor, 1, 0.5), [tex]);
   const roadRough = useMemo(() => setRepeat(tex.roadRough, 1, 0.5), [tex]);
   const roadNormal = useMemo(() => setRepeat(tex.roadNormal, 1, 0.5), [tex]);
   const dirtMap = useMemo(() => setRepeat(tex.dirtColor, 2, 24), [tex]);
   const dirtRough = useMemo(() => setRepeat(tex.dirtRough, 2, 24), [tex]);
 
-  const roadGeom = useMemo(() => buildTerrainRibbon(roadPath, 7, 0.09, true), []);
+  const roadGeom = useMemo(() => buildTerrainRibbon(roadPath, 6, 0.09, false), []);
   const interiorGeoms = useMemo(
     () => interiorRoads.map((p) => buildTerrainRibbon(p, 5, 0.085, false)),
     []
   );
-  const shoulderGeom = useMemo(() => buildTerrainRibbon(roadPath, 10, 0.035, true), []);
+  const shoulderGeom = useMemo(() => buildTerrainRibbon(roadPath, 9, 0.035, false), []);
+  const creekGeom = useMemo(() => buildTerrainRibbon(dryWatercourse, 20, 0.035, false), []);
   const dirtGeoms = useMemo(
     () => dirtTracks.map((p) => buildTerrainRibbon(p, 4, 0.07, false)),
     []
@@ -26,6 +27,7 @@ export function Roads() {
 
   return (
     <group name="roads">
+      <mesh geometry={creekGeom} receiveShadow><meshStandardMaterial map={tex.gravelColor} color="#bcb19a" roughness={1} /></mesh>
       <mesh geometry={shoulderGeom} receiveShadow><meshStandardMaterial map={tex.gravelColor} roughness={1} /></mesh>
       {/* Main perimeter access loop */}
       <mesh geometry={roadGeom} receiveShadow>

@@ -495,7 +495,7 @@ export function getSiteTextures() {
     base: [176, 124, 91], variation: [24, 20, 17], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
   });
   const grassColor = makeTexture({
-    base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
+    base: [135, 143, 87], variation: [28, 26, 15], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
   });
   const vegColor = makeTexture({
     base: [78, 88, 48], variation: [35, 34, 24], scale: 8, octaves: 5, seed: 3,
@@ -559,6 +559,14 @@ export function getSiteTextures() {
     cloudSprite: makePuffSprite(1201, 7),
     smokeSprite: makePuffSprite(5309, 4),
   };
+  // Canvas RGB values are display-referred; roughness, normals and masks are
+  // linear data. Annotate only color maps, before the GPU uploads them.
+  for (const texture of [
+    cache.dirtColor, cache.grassColor, cache.vegColor, cache.asphaltColor,
+    cache.concreteColor, cache.metalColor, cache.domeColor, cache.steelColor,
+    cache.gravelColor, cache.rockColor, cache.roadColor, cache.facadeColor,
+    cache.facadeEmissive, cache.tankColor, cache.containerColor,
+  ]) texture.colorSpace = THREE.SRGBColorSpace;
   return cache;
 }
 

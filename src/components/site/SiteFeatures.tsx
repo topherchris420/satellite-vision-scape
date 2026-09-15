@@ -5,7 +5,9 @@ import {
   channels,
   fencePath,
   topEnclosurePath,
+  campusBoundaryPath,
 } from "@/lib/site-layout";
+import { ReferenceLandscape } from './ReferenceLandscape';
 import { terrainHeightAt, sampleFootprintGrade } from "@/lib/terrain";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 
@@ -46,7 +48,7 @@ function ParkingLots() {
             {/* Asphalt surface */}
             <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[p.size[0], p.size[1]]} />
-              <meshStandardMaterial map={asphaltMap} color="#3c3c3e" roughness={0.95} />
+              <meshStandardMaterial map={asphaltMap} color="#d2ccc0" roughness={0.95} />
             </mesh>
 
             {/* Stall lines */}
@@ -293,6 +295,8 @@ export function SiteFeatures() {
       <ParkingLots />
       <Fence />
       <Fence path={topEnclosurePath} name="top-enclosure-fence" />
+      <Fence path={campusBoundaryPath} name="campus-boundary" />
+      <ReferenceLandscape />
       <DrainageChannels />
     </group>
   );
