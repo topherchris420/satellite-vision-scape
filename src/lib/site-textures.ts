@@ -559,6 +559,14 @@ export function getSiteTextures() {
     cloudSprite: makePuffSprite(1201, 7),
     smokeSprite: makePuffSprite(5309, 4),
   };
+  // Canvas RGB values are display-referred; roughness, normals and masks are
+  // linear data. Annotate only color maps, before the GPU uploads them.
+  for (const texture of [
+    cache.dirtColor, cache.grassColor, cache.vegColor, cache.asphaltColor,
+    cache.concreteColor, cache.metalColor, cache.domeColor, cache.steelColor,
+    cache.gravelColor, cache.rockColor, cache.roadColor, cache.facadeColor,
+    cache.facadeEmissive, cache.tankColor, cache.containerColor,
+  ]) texture.colorSpace = THREE.SRGBColorSpace;
   return cache;
 }
 

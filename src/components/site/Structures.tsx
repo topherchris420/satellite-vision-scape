@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import type { ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
@@ -14,7 +14,7 @@ import {
   type BuildingKind,
 } from "@/lib/site-layout";
 import { sampleFootprintGrade } from "@/lib/terrain";
-import { createRadomeShell } from "@/lib/site-geometry";
+import { createGroundApron, createRadomePanelLines, createRadomeShell } from "@/lib/site-geometry";
 import { RadomeAntenna } from "./RadomeAntenna";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 import {
@@ -59,10 +59,17 @@ function gableGeometry(w: number, d: number, rise: number) {
     [2, 1, 4],
     [2, 4, 5],
   ];
-  const pos: number[] = [];
-  for (const t of tris) for (const i of t) pos.push(...v[i]);
+  const pos: number[] = [], uvs: number[] = [];
+  // Separate roof and gable UV projections, in metres, avoiding stretched
+  // or missing material detail on the custom roof geometry.
+  for (const [face, t] of tris.entries()) for (const i of t) {
+    const [x, y, z] = v[i];
+    pos.push(x, y, z);
+    uvs.push(face < 2 ? x / 4 : z / 4, face < 2 ? y / 4 : (y / rise) * Math.hypot(hw, rise) / 4);
+  }
   const geom = new THREE.BufferGeometry();
   geom.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  geom.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
   geom.computeVertexNormals();
   gableCache.set(key, geom);
   return geom;
@@ -109,6 +116,16 @@ function radomeShellGeometry(R: number, detail = 3) {
   return geom;
 }
 
+const panelLineCache = new Map<number, THREE.BufferGeometry>();
+function panelLines(radius: number) {
+  let geometry = panelLineCache.get(radius);
+  if (!geometry) {
+    geometry = createRadomePanelLines(radius);
+    panelLineCache.set(radius, geometry);
+  }
+  return geometry;
+}
+
 // Rooftop equipment (HVAC + Vents) accurately placed on level building roofs
 function useRooftopEquipment() {
   return useMemo(() => {
@@ -152,6 +169,16 @@ function fillInstances(inst: THREE.InstancedMesh | null, matrices: THREE.Matrix4
   inst.instanceMatrix.needsUpdate = true;
 }
 
+function GroundApron({ center, radius, elevation }: {
+  center: [number, number]; radius: number; elevation: number;
+}) {
+  const geometry = useMemo(() => createGroundApron(center, radius, elevation), [center, radius, elevation]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh geometry={geometry} receiveShadow>
+    <meshStandardMaterial map={getSiteTextures().gravelColor} roughness={1} />
+  </mesh>;
+}
+
 export function Structures({
   onSelect,
   time = "day",
@@ -185,7 +212,6 @@ export function Structures({
   const concreteMap = useMemo(() => setRepeat(tex.concreteColor, 3, 3), [tex]);
   const concreteRough = useMemo(() => setRepeat(tex.concreteRough, 3, 3), [tex]);
   const concreteNormal = useMemo(() => setRepeat(tex.concreteNormal, 3, 3), [tex]);
-  const gravelMap = useMemo(() => setRepeat(tex.gravelColor, 4, 4), [tex]);
 
   const rooftop = useRooftopEquipment();
 
@@ -277,9 +303,9 @@ export function Structures({
           const plinthCenterY = wall / 2 - skirtDepth / 2;
 
           const shellY = wall + d.radius * RADOME_SHELL_LIFT;
-          const shellNear = radomeShellGeometry(d.radius, 7);
-          const shellMid = radomeShellGeometry(d.radius, 5);
-          const shellFar = radomeShellGeometry(d.radius, 3);
+          const shellNear = radomeShellGeometry(d.radius, 15);
+          const shellMid = radomeShellGeometry(d.radius, 11);
+          const shellFar = radomeShellGeometry(d.radius, 7);
 
           return (
             <group
@@ -291,10 +317,7 @@ export function Structures({
               onPointerOut={out}
             >
               {/* Gravel apron */}
-              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                <circleGeometry args={[d.radius * 1.35, 40]} />
-                <meshStandardMaterial map={gravelMap} roughness={0.9} />
-              </mesh>
+              {!d.roofMounted && <GroundApron center={d.pos} radius={d.radius * 1.35} elevation={grade.elevation} />}
 
               {/* Engineered concrete plinth wall extending below grade */}
               <mesh position={[0, plinthCenterY, 0]} receiveShadow castShadow>
@@ -374,28 +397,27 @@ export function Structures({
                     />
                   </mesh>
                   {/* Seams lattice */}
-                  <mesh geometry={shellNear} position={[0, shellY, 0]} scale={1.003}>
-                    <meshBasicMaterial
+                  <lineSegments geometry={panelLines(d.radius)} position={[0, shellY, 0]}>
+                    <lineBasicMaterial
                       color="#8c9298"
-                      wireframe
                       transparent
                       opacity={0.13}
                       depthWrite={false}
                     />
-                  </mesh>
+                  </lineSegments>
                 </group>
                 <mesh geometry={shellMid} position={[0, shellY, 0]} castShadow receiveShadow>
                   <meshStandardMaterial
                     map={domeMap}
                     color="#f4f6f8"
-                    roughness={0.42}
+                    roughness={0.78}
                     metalness={0.03}
                     emissive="#ff9a38"
                     emissiveIntensity={0}
                   />
                 </mesh>
                 <mesh geometry={shellFar} position={[0, shellY, 0]} castShadow receiveShadow>
-                  <meshStandardMaterial color="#ededeb" roughness={0.78} />
+                  <meshStandardMaterial map={domeMap} color="#f4f6f8" roughness={0.78} metalness={0.03} />
                 </mesh>
               </Detailed>
             </group>
@@ -419,10 +441,7 @@ export function Structures({
               onPointerOver={over}
               onPointerOut={out}
             >
-              <mesh position={[0, 0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                <circleGeometry args={[R * 0.7, 40]} />
-                <meshStandardMaterial map={gravelMap} roughness={0.9} />
-              </mesh>
+              <GroundApron center={a.pos} radius={R * 0.7} elevation={grade.elevation} />
               <mesh position={[0, -skirtDepth / 2 + 0.2, 0]} receiveShadow castShadow>
                 <cylinderGeometry args={[R * 0.42, R * 0.48, skirtDepth + 0.4, 40]} />
                 <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />

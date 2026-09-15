@@ -12,9 +12,18 @@ export function createRadomeShell(radius:number,detail=5) {
       if(a.y>=cut)clipped.push(a);
       if((a.y>=cut)!==(b.y>=cut))clipped.push(a.clone().lerp(b,(cut-a.y)/(b.y-a.y)));
     }
-    for(let j=1;j<clipped.length-1;j++)for(const v of [clipped[0],clipped[j],clipped[j+1]]){
-      verts.push(v.x,v.y,v.z);const n=v.clone().normalize();normals.push(n.x,n.y,n.z);
-      uvs.push(.5+Math.atan2(v.z,v.x)/(2*Math.PI),.5+Math.asin(n.y)/Math.PI);
+    for(let j=1;j<clipped.length-1;j++) {
+      const triangle = [clipped[0],clipped[j],clipped[j+1]];
+      const us = triangle.map(v => .5+Math.atan2(v.z,v.x)/(2*Math.PI));
+      // Unwrap triangles crossing the longitude seam so their texture does not
+      // smear across the full atlas. RepeatWrapping joins the two sides.
+      if (Math.max(...us)-Math.min(...us) > .5) {
+        for (let k=0;k<us.length;k++) if(us[k]<.5) us[k]+=1;
+      }
+      triangle.forEach((v,k) => {
+        verts.push(v.x,v.y,v.z);const n=v.clone().normalize();normals.push(n.x,n.y,n.z);
+        uvs.push(us[k],.5+Math.asin(n.y)/Math.PI);
+      });
     }
   }
   source.dispose();const g=new THREE.BufferGeometry();
@@ -38,4 +47,58 @@ export function createGroundRibbon(points:[number,number][],width:number,offset=
     if(i<samples.length-1){const a=i*2;indices.push(a,a+2,a+1,a+1,a+2,a+3);}
   });
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));g.setIndex(indices);g.computeVertexNormals();return g;
+}
+
+/** An apron follows the terrain instead of hovering at the foundation height.
+ * Local coordinates allow reuse inside a translated structure group. UVs use
+ * metres, so large and small pads have the same aggregate size.
+ */
+export function createGroundApron(center: [number, number], radius: number, elevation: number) {
+  const segments = 64;
+  const rings = Math.max(2, Math.ceil(radius / 1.5));
+  const positions: number[] = [], uvs: number[] = [], indices: number[] = [];
+  for (let ring = 0; ring <= rings; ring++) {
+    for (let j = 0; j <= segments; j++) {
+      const angle = j / segments * Math.PI * 2;
+      const x = Math.cos(angle) * radius * ring / rings;
+      const z = Math.sin(angle) * radius * ring / rings;
+      positions.push(x, terrainHeight(center[0] + x, center[1] + z) - elevation + 0.045, z);
+      uvs.push(x / 6, z / 6);
+      if (ring < rings && j < segments) {
+        const a = ring * (segments + 1) + j, b = a + segments + 1;
+        if (ring > 0) indices.push(a, a + 1, b);
+        indices.push(a + 1, b + 1, b);
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+  geometry.setIndex(indices);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+/** Curved panel joints sit on the smooth shell, independent of render LOD. */
+export function createRadomePanelLines(radius: number) {
+  const source = new THREE.IcosahedronGeometry(radius, 5);
+  const wire = new THREE.WireframeGeometry(source);
+  const p = wire.getAttribute('position'), vertices: number[] = [];
+  const cut = -RADOME_SHELL_LIFT * radius;
+  for (let i = 0; i < p.count; i += 2) {
+    const a = new THREE.Vector3().fromBufferAttribute(p, i);
+    const b = new THREE.Vector3().fromBufferAttribute(p, i + 1);
+    for (let step = 0; step < 8; step++) {
+      const start = a.clone().lerp(b, step / 8).normalize().multiplyScalar(radius + .02);
+      const end = a.clone().lerp(b, (step + 1) / 8).normalize().multiplyScalar(radius + .02);
+      if (start.y < cut && end.y < cut) continue;
+      if (start.y < cut) start.lerp(end, (cut - start.y) / (end.y - start.y));
+      if (end.y < cut) end.lerp(start, (cut - end.y) / (start.y - end.y));
+      vertices.push(...start.toArray(), ...end.toArray());
+    }
+  }
+  source.dispose(); wire.dispose();
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  return geometry;
 }
