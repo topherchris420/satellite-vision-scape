@@ -28,10 +28,11 @@ const MODES: { id: ControlMode; label: string; key: string; mobileHidden?: boole
   { id: "fly", label: "Explore", key: "1" },
   { id: "fps", label: "Ground", key: "2", mobileHidden: true },
   { id: "cinematic", label: "Tour", key: "3" },
+  { id: "overhead", label: "Plan", key: "4" },
 ];
 const QUALITIES: QualityTier[] = ["low", "medium", "high", "ultra"];
 const SHORTCUTS: [string, string][] = [
-  ["1 / 2 / 3", "Explore · Ground · Tour"],
+  ["1 / 2 / 3 / 4", "Explore · Ground · Tour · Plan"],
   ["W A S D", "Move"],
   ["Q / E", "Descend / ascend"],
   ["[ / ]", "Change lens FOV"],
@@ -336,14 +337,14 @@ export function HUD({
             </div>
             <div>
               <div className="text-[9px] font-bold uppercase tracking-[.15em] text-white/70">
-                {mode === "fly" ? "Explore mode" : mode === "fps" ? "Ground mode" : "Guided tour"}
+                {mode === "fly" ? "Explore mode" : mode === "fps" ? "Ground mode" : mode === "overhead" ? "North-up plan" : "Guided tour"}
               </div>
               <div className="mt-0.5 font-sans text-[10px] text-white/35">
                 {mode === "fly"
                   ? "Drag to orbit · Scroll to zoom · WASD to move"
                   : mode === "fps"
                     ? "Click to lock · WASD to walk · Shift to run"
-                    : "Automated orbital survey in progress"}
+                    : mode === "overhead" ? "Drag to pan · Scroll to zoom · Compare with the overhead reference" : "Automated orbital survey in progress"}
               </div>
             </div>
             <button

@@ -170,6 +170,9 @@ export function SiteScene() {
         case "Digit3":
           setMode("cinematic");
           break;
+        case "Digit4":
+          setMode("overhead");
+          break;
         case "KeyN":
           setTime((t) => (t === "day" ? "dusk" : t === "dusk" ? "night" : "day"));
           break;
@@ -242,7 +245,7 @@ export function SiteScene() {
           <div className="bg-[#071014]/95 px-3 py-2.5">
             <span className="text-emerald-300">PHYSICAL</span>
             <div className="mt-1 text-[8px] leading-relaxed text-white/35">
-              Relative / illustrative
+              Image-traced layout
             </div>
           </div>
           <div className="bg-[#071014]/95 px-3 py-2.5">
@@ -263,14 +266,15 @@ export function SiteScene() {
             Manifest & limitations
           </summary>
           <p className="mt-2 leading-relaxed text-white/35">
-            Antenna positions and diameters: {PINE_GAP_SOURCE.epoch}. Buildings, terrain,
-            roads and lighting are approximate. This is not a current operational model.
+            Antenna positions and diameters: {PINE_GAP_SOURCE.epoch}. Building footprints,
+            roads and gardens traced from the supplied overhead photographs. Heights,
+            terrain and lighting are estimated. This is a historical reconstruction.
             <a className="mt-2 block text-amber-200 underline" href={PINE_GAP_SOURCE.url} target="_blank" rel="noreferrer">Open public survey ↗</a>
           </p>
         </details>
       </aside>
 
-      {isMobile && ready && mode !== "cinematic" && <MobileControls mode={mode} />}
+      {isMobile && ready && (mode === "fly" || mode === "fps") && <MobileControls mode={mode} />}
 
       <div
         className={`absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-[#05090b] transition-opacity duration-1000 ${
@@ -327,7 +331,7 @@ export function SiteScene() {
           <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
-          <fog attach="fog" args={[fogColor, 1100, 5500]} />
+          <fog attach="fog" args={[fogColor, mode === 'overhead' ? 2500 : 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
         </Suspense>
 

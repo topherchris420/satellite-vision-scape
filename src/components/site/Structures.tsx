@@ -135,7 +135,7 @@ function useRooftopEquipment() {
     const q = new THREE.Quaternion();
     const axisY = new THREE.Vector3(0, 1, 0);
     for (const b of buildings) {
-      if (b.roof === "gable") continue;
+      if (b.roof === "gable" || b.rooftopEquipment === false) continue;
       const grade = sampleFootprintGrade(b.pos, b.size, b.rotY ?? 0);
       const [w, d] = b.size;
       const rot = b.rotY ?? 0;
@@ -295,7 +295,13 @@ export function Structures({
       {/* Radomes */}
       <group name="radomes">
         {domes.map((d, i) => {
-          const grade = d.roofMounted ? { ...domeGrades[i], elevation: buildingGrades[0].elevation + buildings[0].height + 0.25, minTerrain: buildingGrades[0].elevation + buildings[0].height } : domeGrades[i];
+          const host = d.roofMounted ? buildings.findIndex(b => {
+            const dx = d.pos[0] - b.pos[0], dz = d.pos[1] - b.pos[1], a = b.rotY ?? 0;
+            return Math.abs(dx * Math.cos(a) - dz * Math.sin(a)) <= b.size[0] / 2 &&
+              Math.abs(dx * Math.sin(a) + dz * Math.cos(a)) <= b.size[1] / 2;
+          }) : -1;
+          const roofHeight = host >= 0 ? buildingGrades[host].elevation + buildings[host].height : 0;
+          const grade = host >= 0 ? { ...domeGrades[i], elevation: roofHeight + .25, minTerrain: roofHeight } : domeGrades[i];
           const baseR = d.radius * RADOME_SHELL_SIN;
           const wall = RADOME.plinthHeight;
           const skirtDepth = Math.max(0.5, grade.elevation - grade.minTerrain + 0.4);
@@ -555,14 +561,14 @@ export function Structures({
               {gable ? (
                 <mesh
                   position={[0, b.height, 0]}
-                  geometry={gableGeometry(b.size[0], b.size[1], b.size[0] * 0.28)}
+                  geometry={gableGeometry(b.size[0], b.size[1], b.roofRise ?? b.size[0] * 0.28)}
                   castShadow
                   receiveShadow
                 >
                   <meshStandardMaterial
                     map={metalMap}
                     roughnessMap={metalRough}
-                    color="#8f8878"
+                    color={b.roofColor ?? "#8f8878"}
                     metalness={0.3}
                     roughness={0.7}
                     side={THREE.DoubleSide}
@@ -575,7 +581,7 @@ export function Structures({
                     <meshStandardMaterial
                       map={metalMap}
                       roughnessMap={metalRough}
-                      color="#6f6a5e"
+                      color={b.roofColor ?? "#6f6a5e"}
                       metalness={0.3}
                       roughness={0.75}
                     />

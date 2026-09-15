@@ -495,7 +495,7 @@ export function getSiteTextures() {
     base: [176, 124, 91], variation: [24, 20, 17], scale: 6, octaves: 7, seed: 1, speckle: 0.02,
   });
   const grassColor = makeTexture({
-    base: [90, 110, 50], variation: [35, 35, 20], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
+    base: [135, 143, 87], variation: [28, 26, 15], scale: 10, octaves: 5, seed: 2, speckle: 0.01,
   });
   const vegColor = makeTexture({
     base: [78, 88, 48], variation: [35, 34, 24], scale: 8, octaves: 5, seed: 3,

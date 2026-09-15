@@ -3,9 +3,14 @@ import * as THREE from 'three';
 import { buildings, domes, dishes, roadPath, interiorRoads, topEnclosurePath, parkingLots } from '@/lib/site-layout';
 import { terrainHeight, sampleTerrainFrame } from '@/lib/terrain';
 import { getSiteTextures, setRepeat } from '@/lib/site-textures';
+import { siteToImage } from '@/lib/reference-layout';
 
 function random(seed: number) { let s = seed; return () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646; }
 function developed(x: number, z: number) {
+  const [u,v] = siteToImage(x,z);
+  // The source shows maintained clear ground across the facility, with planted
+  // trees restricted to the eastern garden campus (rendered separately).
+  if (u>255 && u<1070 && v>30 && v<827) return true;
   if (buildings.some(b => Math.abs(x - b.pos[0]) < b.size[0] / 2 + 5 && Math.abs(z - b.pos[1]) < b.size[1] / 2 + 5)) return true;
   if (parkingLots.some(b => Math.abs(x - b.pos[0]) < b.size[0] / 2 + 5 && Math.abs(z - b.pos[1]) < b.size[1] / 2 + 5)) return true;
   if (domes.some(d => Math.hypot(x - d.pos[0], z - d.pos[1]) < d.radius * 1.5 + 4)) return true;

@@ -1,12 +1,12 @@
 import { useRef, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
-import { MapControls, PointerLockControls } from "@react-three/drei";
+import { MapControls, PointerLockControls, OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
 import { resolveCollision } from "@/lib/site-colliders";
 import { terrainHeight } from "@/lib/terrain";
 import { mobileInput, mobileInputActive } from "@/lib/mobile-input";
 
-export type ControlMode = "fly" | "fps" | "cinematic";
+export type ControlMode = "fly" | "fps" | "cinematic" | "overhead";
 
 // A one-shot request to glide the fly camera to a structure. `ts` makes each
 // request unique so clicking the same structure twice re-triggers the flight.
@@ -269,7 +269,16 @@ function CinematicMover() {
 }
 
 export function Controls({ mode, focus }: { mode: ControlMode; focus?: FocusRequest | null }) {
+  if (mode === "overhead") return <OverheadView />;
   if (mode === "fly") return <FlyMover focus={focus} />;
   if (mode === "fps") return <FpsMover />;
   return <CinematicMover />;
+}
+
+function OverheadView() {
+  const { width, height } = useThree(s => s.size);
+  return <>
+    <OrthographicCamera makeDefault position={[-40,1600,75]} rotation={[-Math.PI/2,0,0]} up={[0,0,-1]} zoom={Math.min(width/1100,height/1200)} near={1} far={5000}/>
+    <MapControls makeDefault enableRotate={false} target={[-40,0,75]} minZoom={.2} maxZoom={12}/>
+  </>;
 }
