@@ -79,6 +79,44 @@ function CloudDeck({ time }: { time: TimeOfDay }) {
   );
 }
 
+function DustField({ time }: { time: TimeOfDay }) {
+  const points = useRef<THREE.Points>(null);
+  const { positions, sizes } = useMemo(() => {
+    const r = rng(44017);
+    const pos = new Float32Array(420 * 3);
+    const size = new Float32Array(420);
+    for (let i = 0; i < 420; i++) {
+      pos[i * 3] = (r() - 0.5) * 1800;
+      pos[i * 3 + 1] = 4 + r() * 150;
+      pos[i * 3 + 2] = (r() - 0.5) * 1600;
+      size[i] = 0.6 + r() * 1.8;
+    }
+    return { positions: pos, sizes: size };
+  }, []);
+
+  useFrame(({ clock }, delta) => {
+    const attr = points.current?.geometry.attributes.position;
+    if (!attr) return;
+    for (let i = 0; i < attr.count; i++) {
+      attr.setX(i, attr.getX(i) + WIND.x * delta * (0.25 + (i % 5) * 0.05));
+      attr.setY(i, attr.getY(i) + Math.sin(clock.elapsedTime * 0.35 + i) * delta * 0.08);
+      if (attr.getX(i) > 900) attr.setX(i, -900);
+    }
+    attr.needsUpdate = true;
+  });
+
+  const tint = time === "night" ? "#8da8c8" : time === "dusk" ? "#e6b27e" : "#f6d8ad";
+  return (
+    <points ref={points} name="suspended-dust">
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+        <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
+      </bufferGeometry>
+      <pointsMaterial color={tint} size={1.15} sizeAttenuation transparent opacity={time === "night" ? 0.08 : 0.16} depthWrite={false} fog />
+    </points>
+  );
+}
+
 export function Atmosphere({ time }: { time: TimeOfDay }) {
-  return <group name="atmosphere"><CloudDeck time={time} /></group>;
+  return <group name="atmosphere"><CloudDeck time={time} /><DustField time={time} /></group>;
 }
