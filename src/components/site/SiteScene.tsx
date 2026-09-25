@@ -397,6 +397,7 @@ export function SiteScene() {
           antialias: false,
           toneMapping: THREE.NoToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
+          preserveDrawingBuffer: true,
         }}
         onPointerMissed={() => setSelected(null)}
         onCreated={({ gl }) => setCanvas(gl.domElement)}
