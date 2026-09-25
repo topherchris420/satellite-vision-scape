@@ -6,6 +6,7 @@ import {
   CircleHelp,
   Crosshair,
   Eye,
+  Gamepad2,
   Gauge,
   Layers3,
   Map,
@@ -24,19 +25,21 @@ import { siteIndex, type Selection } from "@/lib/selection";
 import { objectSummary } from "@/lib/site-layout";
 import { Minimap } from "./Minimap";
 
-const MODES: { id: ControlMode; label: string; key: string; mobileHidden?: boolean }[] = [
-  { id: "fly", label: "Explore", key: "1" },
-  { id: "fps", label: "Ground", key: "2", mobileHidden: true },
+const MODES: { id: ControlMode; label: string; key: string }[] = [
+  { id: "play", label: "Play", key: "1" },
+  { id: "fly", label: "Explore", key: "2" },
   { id: "cinematic", label: "Tour", key: "3" },
   { id: "overhead", label: "Plan", key: "4" },
 ];
 const QUALITIES: QualityTier[] = ["low", "medium", "high", "ultra"];
 const SHORTCUTS: [string, string][] = [
-  ["1 / 2 / 3 / 4", "Explore · Ground · Tour · Plan"],
-  ["W A S D", "Move"],
-  ["Q / E", "Descend / ascend"],
-  ["[ / ]", "Change lens FOV"],
-  ["Shift", "Boost / run"],
+  ["1 / 2 / 3 / 4", "Play · Explore · Tour · Plan"],
+  ["W A S D", "Move · drive"],
+  ["E", "Play: vehicle · barrier"],
+  ["Space", "Play: jump · handbrake"],
+  ["Q / E", "Explore: descend / ascend"],
+  ["[ / ]", "Explore: lens FOV"],
+  ["Shift", "Sprint / boost"],
   ["N", "Day / dusk / night"],
   ["I", "Site index"],
   ["G", "Terrain debug"],
@@ -76,6 +79,7 @@ export function HUD({
   markerRef,
   telemetryRef,
   isMobile,
+  immersive = false,
 }: {
   mode: ControlMode;
   onModeChange: (m: ControlMode) => void;
@@ -97,11 +101,27 @@ export function HUD({
   markerRef: RefObject<SVGGElement | null>;
   telemetryRef: RefObject<HTMLDivElement | null>;
   isMobile: boolean;
+  /** Active gameplay: only the telemetry strip remains; the game HUD takes over. */
+  immersive?: boolean;
 }) {
   const [infoOpen, setInfoOpen] = useState(true);
+  // Play mode keeps the mission overview tucked away to leave the view clear.
   useEffect(() => {
-    if (isMobile) setInfoOpen(false);
-  }, [isMobile]);
+    if (isMobile || mode === "play") setInfoOpen(false);
+  }, [isMobile, mode]);
+
+  if (immersive) {
+    return (
+      <div className="pointer-events-none absolute inset-0 z-10 font-mono">
+        {!isMobile && (
+          <div
+            ref={telemetryRef}
+            className={`${glass} absolute bottom-5 left-1/2 -translate-x-1/2 rounded-lg px-3 py-2 text-[9px] tabular-nums tracking-[.1em] text-amber-200/80`}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3 font-mono text-sm sm:p-5">
@@ -169,16 +189,18 @@ export function HUD({
 
         <div className="pointer-events-auto flex flex-col items-end gap-2">
           <div className={`${glass} flex rounded-xl p-1`} role="group" aria-label="Camera mode">
-            {MODES.filter((m) => !(isMobile && m.mobileHidden)).map((m) => (
+            {MODES.map((m) => (
               <button
                 key={m.id}
                 onClick={() => onModeChange(m.id)}
                 aria-pressed={mode === m.id}
                 className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition ${mode === m.id ? "bg-amber-300 text-[#111] shadow-[0_0_20px_rgba(252,211,77,.2)]" : "text-white/50 hover:bg-white/[.07] hover:text-white"}`}
               >
-                {m.id === "fly" ? (
+                {m.id === "play" ? (
+                  <Gamepad2 size={13} />
+                ) : m.id === "fly" ? (
                   <Navigation size={13} />
-                ) : m.id === "fps" ? (
+                ) : m.id === "overhead" ? (
                   <Crosshair size={13} />
                 ) : (
                   <Route size={13} />
@@ -308,12 +330,6 @@ export function HUD({
         </div>
       )}
 
-      {mode === "fps" && (
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <div className="h-4 w-4 rounded-full border border-white/60 before:absolute before:left-1/2 before:top-[-5px] before:h-6 before:w-px before:-translate-x-1/2 before:bg-white/35 after:absolute after:left-[-5px] after:top-1/2 after:h-px after:w-6 after:-translate-y-1/2 after:bg-white/35" />
-        </div>
-      )}
-
       {!isMobile && (
         <div
           ref={telemetryRef}
@@ -329,22 +345,30 @@ export function HUD({
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-300/10 text-amber-300">
               {mode === "fly" ? (
                 <Navigation size={14} />
-              ) : mode === "fps" ? (
-                <Crosshair size={14} />
+              ) : mode === "play" ? (
+                <Gamepad2 size={14} />
               ) : (
                 <Sparkles size={14} />
               )}
             </div>
             <div>
               <div className="text-[9px] font-bold uppercase tracking-[.15em] text-white/70">
-                {mode === "fly" ? "Explore mode" : mode === "fps" ? "Ground mode" : mode === "overhead" ? "North-up plan" : "Guided tour"}
+                {mode === "fly"
+                  ? "Explore mode"
+                  : mode === "play"
+                    ? "Play mode"
+                    : mode === "overhead"
+                      ? "North-up plan"
+                      : "Guided tour"}
               </div>
               <div className="mt-0.5 font-sans text-[10px] text-white/35">
                 {mode === "fly"
                   ? "Drag to orbit · Scroll to zoom · WASD to move"
-                  : mode === "fps"
-                    ? "Click to lock · WASD to walk · Shift to run"
-                    : mode === "overhead" ? "Drag to pan · Scroll to zoom · Compare with the overhead reference" : "Automated orbital survey in progress"}
+                  : mode === "play"
+                    ? "Deploy or resume to take control · Esc pauses"
+                    : mode === "overhead"
+                      ? "Drag to pan · Scroll to zoom · Compare with the overhead reference"
+                      : "Automated orbital survey in progress"}
               </div>
             </div>
             <button

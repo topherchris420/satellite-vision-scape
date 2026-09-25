@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronUp, ChevronDown, Zap } from "lucide-react";
+import { ChevronUp, ChevronDown, Hand, Triangle, Zap } from "lucide-react";
 import { mobileInput, resetMobileInput } from "@/lib/mobile-input";
 import type { ControlMode } from "./Controls";
 
@@ -121,6 +121,42 @@ function VerticalRocker() {
   );
 }
 
+// Play-mode buttons: hold for jump (on foot) / handbrake (driving), tap to
+// interact with vehicles and barriers.
+function PlayButtons() {
+  const release = () => {
+    mobileInput.action = false;
+  };
+  useEffect(() => () => release(), []);
+  const btn =
+    "pointer-events-auto flex h-14 w-14 touch-none select-none items-center justify-center rounded-2xl border border-white/20 bg-black/40 text-white/90 backdrop-blur-sm active:bg-white/25";
+  return (
+    <div className="pointer-events-none absolute bottom-0 right-0 z-20 flex items-end gap-3 p-4 pb-6">
+      <button
+        className={btn}
+        aria-label="Interact"
+        onPointerDown={() => {
+          mobileInput.interact = true;
+        }}
+      >
+        <Hand className="h-6 w-6" />
+      </button>
+      <button
+        className={btn}
+        aria-label="Jump or handbrake"
+        onPointerDown={() => {
+          mobileInput.action = true;
+        }}
+        onPointerUp={release}
+        onPointerLeave={release}
+        onPointerCancel={release}
+      >
+        <Triangle className="h-6 w-6" />
+      </button>
+    </div>
+  );
+}
+
 // On-screen movement controls for touch devices. The parent gates this on
 // isMobile and hides it during the automated cinematic pass.
 export function MobileControls({ mode }: { mode: ControlMode }) {
@@ -136,26 +172,29 @@ export function MobileControls({ mode }: { mode: ControlMode }) {
 
   useEffect(() => () => resetMobileInput(), []);
 
-  // Whole cluster sits in the bottom-left corner so the selection card and
-  // other HUD chrome on the right stay clear.
+  // Movement cluster sits in the bottom-left corner so the selection card and
+  // other HUD chrome on the right stay clear; play buttons take the right.
   return (
-    <div className="pointer-events-none absolute bottom-0 left-0 z-20 flex items-end gap-3 p-4 pb-6">
-      <Joystick />
-      <div className="flex flex-col items-center gap-3">
-        <button
-          onClick={toggleBoost}
-          aria-pressed={boost}
-          aria-label="Boost"
-          className={`pointer-events-auto flex h-12 w-12 touch-none select-none items-center justify-center rounded-xl border backdrop-blur-sm transition ${
-            boost
-              ? "border-amber-300 bg-amber-300 text-black"
-              : "border-white/20 bg-black/35 text-white/90 active:bg-white/25"
-          }`}
-        >
-          <Zap className="h-6 w-6" />
-        </button>
-        {mode === "fly" && <VerticalRocker />}
+    <>
+      <div className="pointer-events-none absolute bottom-0 left-0 z-20 flex items-end gap-3 p-4 pb-6">
+        <Joystick />
+        <div className="flex flex-col items-center gap-3">
+          <button
+            onClick={toggleBoost}
+            aria-pressed={boost}
+            aria-label="Boost"
+            className={`pointer-events-auto flex h-12 w-12 touch-none select-none items-center justify-center rounded-xl border backdrop-blur-sm transition ${
+              boost
+                ? "border-amber-300 bg-amber-300 text-black"
+                : "border-white/20 bg-black/35 text-white/90 active:bg-white/25"
+            }`}
+          >
+            <Zap className="h-6 w-6" />
+          </button>
+          {mode === "fly" && <VerticalRocker />}
+        </div>
       </div>
-    </div>
+      {mode === "play" && <PlayButtons />}
+    </>
   );
 }

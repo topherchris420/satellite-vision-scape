@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
-import type { ThreeEvent } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Detailed } from "@react-three/drei";
 import {
   domes,
@@ -15,6 +15,12 @@ import {
 } from "@/lib/site-layout";
 import { sampleFootprintGrade } from "@/lib/terrain";
 import { createGroundApron, createRadomePanelLines, createRadomeShell } from "@/lib/site-geometry";
+import {
+  RADOME_FLOODLIGHT_ANGLES,
+  RADOME_FLOODLIGHT_OFFSET,
+  radomeHost,
+  radomeVestibuleYaw,
+} from "@/game/world/buildSiteWorld";
 import { RadomeAntenna } from "./RadomeAntenna";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 import {
@@ -163,10 +169,155 @@ function useRooftopEquipment() {
   }, []);
 }
 
-function fillInstances(inst: THREE.InstancedMesh | null, matrices: THREE.Matrix4[]) {
+function fillInstances(inst: THREE.InstancedMesh | null, matrices: THREE.Matrix4[], colors?: THREE.Color[]) {
   if (!inst) return;
-  matrices.forEach((m, i) => inst.setMatrixAt(i, m));
+  matrices.forEach((m, i) => {
+    inst.setMatrixAt(i, m);
+    if (colors) inst.setColorAt(i, colors[i]);
+  });
   inst.instanceMatrix.needsUpdate = true;
+  if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+  inst.computeBoundingSphere();
+}
+
+/** Composes parent · local transforms without per-call allocation. */
+class MatrixStack {
+  private readonly scratch = new THREE.Matrix4();
+  private readonly euler = new THREE.Euler();
+  private readonly quat = new THREE.Quaternion();
+  private readonly pos = new THREE.Vector3();
+  private readonly scl = new THREE.Vector3();
+  local(
+    position: [number, number, number],
+    rotation: [number, number, number] = [0, 0, 0],
+    scale: [number, number, number] = [1, 1, 1],
+  ): THREE.Matrix4 {
+    this.euler.set(...rotation);
+    return this.scratch.compose(this.pos.set(...position), this.quat.setFromEuler(this.euler), this.scl.set(...scale));
+  }
+}
+
+/**
+ * Repeated radome details — vents, vestibules, floodlights — and building
+ * parapets as instance lists. Each list renders as one InstancedMesh instead
+ * of one mesh per part (several hundred draw calls saved).
+ */
+function useRepeatedDetails(
+  domeElevations: number[],
+  buildingGrades: { elevation: number }[],
+) {
+  return useMemo(() => {
+    const stack = new MatrixStack();
+    const vents: THREE.Matrix4[] = [];
+    const vestibules: THREE.Matrix4[] = [];
+    const vestibuleDoors: THREE.Matrix4[] = [];
+    const poles: THREE.Matrix4[] = [];
+    const heads: THREE.Matrix4[] = [];
+    const beacons: THREE.Matrix4[] = [];
+    domes.forEach((d, i) => {
+      const baseR = d.radius * RADOME_SHELL_SIN;
+      const wall = RADOME.plinthHeight;
+      const dome = new THREE.Matrix4().makeTranslation(d.pos[0], domeElevations[i], d.pos[1]);
+      for (const a of [0.9, 2.6, 4.4]) {
+        vents.push(
+          dome.clone().multiply(
+            stack.local([Math.cos(a) * (baseR + 0.4), wall * 0.55, Math.sin(a) * (baseR + 0.4)], [0, -a, 0], [0.3, 0.5, 0.9]),
+          ),
+        );
+      }
+      const vestibule = dome.clone().multiply(stack.local([0, 0, 0], [0, radomeVestibuleYaw(i), 0]));
+      vestibules.push(vestibule.clone().multiply(stack.local([baseR + 0.7, 1.05, 0], [0, 0, 0], [1.6, 2.1, 1.5])));
+      vestibuleDoors.push(vestibule.clone().multiply(stack.local([baseR + 1.53, 0.9, 0], [0, 0, 0], [0.06, 1.6, 0.9])));
+      for (const a of RADOME_FLOODLIGHT_ANGLES) {
+        const fr = baseR + RADOME_FLOODLIGHT_OFFSET;
+        const mast = dome.clone().multiply(stack.local([Math.cos(a) * fr, 0, Math.sin(a) * fr], [0, -a, 0]));
+        poles.push(mast.clone().multiply(stack.local([0, 1.5, 0])));
+        heads.push(mast.clone().multiply(stack.local([-0.28, 2.9, 0], [0, 0, 0.7])));
+      }
+      // Red obstruction light on the crown of the tallest free-standing shells.
+      if (!d.roofMounted && d.radius >= 15) {
+        const crown = wall + d.radius * RADOME_SHELL_LIFT + d.radius;
+        beacons.push(dome.clone().multiply(stack.local([0, crown + 0.12, 0])));
+      }
+    });
+
+    const parapets: THREE.Matrix4[] = [];
+    const parapetColors: THREE.Color[] = [];
+    // Street-level detail: a personnel door and wall lamp on each building's
+    // long side, and a roller door on the short side of the large halls.
+    // Generic exterior furniture; placement follows each traced footprint.
+    const doors: THREE.Matrix4[] = [];
+    const lamps: THREE.Matrix4[] = [];
+    const rollerDoors: THREE.Matrix4[] = [];
+    buildings.forEach((b, i) => {
+      const frame = new THREE.Matrix4()
+        .makeRotationY(b.rotY ?? 0)
+        .setPosition(b.pos[0], buildingGrades[i].elevation, b.pos[1]);
+      const [w, d] = b.size;
+      const doorHeight = Math.min(2.1, b.height - 0.35);
+      const lampY = Math.min(doorHeight + 0.35, b.height - 0.15);
+      if (w >= d) {
+        doors.push(frame.clone().multiply(stack.local([w * 0.18, doorHeight / 2, d / 2 + 0.04], [0, 0, 0], [1, doorHeight, 0.08])));
+        lamps.push(frame.clone().multiply(stack.local([w * 0.18, lampY, d / 2 + 0.1], [0, 0, 0], [0.3, 0.12, 0.18])));
+      } else {
+        doors.push(frame.clone().multiply(stack.local([w / 2 + 0.04, doorHeight / 2, d * 0.18], [0, 0, 0], [0.08, doorHeight, 1])));
+        lamps.push(frame.clone().multiply(stack.local([w / 2 + 0.1, lampY, d * 0.18], [0, 0, 0], [0.18, 0.12, 0.3])));
+      }
+      if (w * d > 700) {
+        const rollerHeight = Math.min(3.8, b.height - 0.6);
+        rollerDoors.push(
+          w >= d
+            ? frame.clone().multiply(stack.local([-w / 2 - 0.05, rollerHeight / 2, 0], [0, 0, 0], [0.1, rollerHeight, 4.2]))
+            : frame.clone().multiply(stack.local([0, rollerHeight / 2, -d / 2 - 0.05], [0, 0, 0], [4.2, rollerHeight, 0.1])),
+        );
+      }
+      if (b.roof === "gable") return;
+      const color = new THREE.Color(b.color ?? "#cfc9bd");
+      for (const [px, pz, sx, sz] of [
+        [0, -b.size[1] / 2, b.size[0], 0.3],
+        [0, b.size[1] / 2, b.size[0], 0.3],
+        [-b.size[0] / 2, 0, 0.3, b.size[1]],
+        [b.size[0] / 2, 0, 0.3, b.size[1]],
+      ]) {
+        parapets.push(frame.clone().multiply(stack.local([px, b.height + 0.25, pz], [0, 0, 0], [sx, 0.5, sz])));
+        parapetColors.push(color);
+      }
+    });
+    return {
+      vents,
+      vestibules,
+      vestibuleDoors,
+      poles,
+      heads,
+      beacons,
+      parapets,
+      parapetColors,
+      doors,
+      lamps,
+      rollerDoors,
+    };
+  }, [domeElevations, buildingGrades]);
+}
+
+/** Aviation-style obstruction beacons: slow red blink, brighter after dark. */
+function ObstructionBeacons({ matrices, night }: { matrices: THREE.Matrix4[]; night: boolean }) {
+  const material = useMemo(() => new THREE.MeshBasicMaterial({ color: "#ff2a1a", toneMapped: false }), []);
+  const phase = useRef(0);
+  useFrame((_, delta) => {
+    phase.current = (phase.current + delta) % 2;
+    const on = phase.current < 1;
+    const level = on ? (night ? 4.5 : 1.6) : night ? 0.25 : 0.35;
+    material.color.setRGB(level, level * 0.1, level * 0.06);
+  });
+  useEffect(() => () => material.dispose(), [material]);
+  return (
+    <instancedMesh
+      args={[undefined, material, matrices.length]}
+      ref={(inst) => fillInstances(inst, matrices)}
+    >
+      <sphereGeometry args={[0.22, 10, 8]} />
+    </instancedMesh>
+  );
 }
 
 function GroundApron({ center, radius, elevation }: {
@@ -227,6 +378,16 @@ export function Structures({
     () => buildings.map((b) => sampleFootprintGrade(b.pos, b.size, b.rotY ?? 0)),
     []
   );
+  // Base elevation of every radome group (roof-mounted shells sit on their host).
+  const domeElevations = useMemo(
+    () =>
+      domes.map((d, i) => {
+        const host = d.roofMounted ? radomeHost(d.pos) : -1;
+        return host >= 0 ? buildingGrades[host].elevation + buildings[host].height + 0.25 : domeGrades[i].elevation;
+      }),
+    [buildingGrades, domeGrades]
+  );
+  const details = useRepeatedDetails(domeElevations, buildingGrades);
 
   return (
     <group name="structures">
@@ -295,13 +456,10 @@ export function Structures({
       {/* Radomes */}
       <group name="radomes">
         {domes.map((d, i) => {
-          const host = d.roofMounted ? buildings.findIndex(b => {
-            const dx = d.pos[0] - b.pos[0], dz = d.pos[1] - b.pos[1], a = b.rotY ?? 0;
-            return Math.abs(dx * Math.cos(a) - dz * Math.sin(a)) <= b.size[0] / 2 &&
-              Math.abs(dx * Math.sin(a) + dz * Math.cos(a)) <= b.size[1] / 2;
-          }) : -1;
-          const roofHeight = host >= 0 ? buildingGrades[host].elevation + buildings[host].height : 0;
-          const grade = host >= 0 ? { ...domeGrades[i], elevation: roofHeight + .25, minTerrain: roofHeight } : domeGrades[i];
+          const onRoof = domeElevations[i] !== domeGrades[i].elevation;
+          const grade = onRoof
+            ? { ...domeGrades[i], elevation: domeElevations[i], minTerrain: domeElevations[i] - 0.25 }
+            : domeGrades[i];
           const baseR = d.radius * RADOME_SHELL_SIN;
           const wall = RADOME.plinthHeight;
           const skirtDepth = Math.max(0.5, grade.elevation - grade.minTerrain + 0.4);
@@ -330,59 +488,6 @@ export function Structures({
                 <cylinderGeometry args={[baseR + 0.3, baseR + 0.55, totalPlinthH, 48]} />
                 <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
               </mesh>
-
-              {/* Vents */}
-              {[0.9, 2.6, 4.4].map((a) => (
-                <mesh
-                  key={`vent-${a}`}
-                  position={[Math.cos(a) * (baseR + 0.4), wall * 0.55, Math.sin(a) * (baseR + 0.4)]}
-                  rotation={[0, -a, 0]}
-                  castShadow
-                >
-                  <boxGeometry args={[0.3, 0.5, 0.9]} />
-                  <meshStandardMaterial color="#565b60" metalness={0.6} roughness={0.5} />
-                </mesh>
-              ))}
-
-              {/* Access vestibule */}
-              <group rotation={[0, -0.6 - i * 0.9, 0]}>
-                <mesh position={[baseR + 0.7, 1.05, 0]} castShadow receiveShadow>
-                  <boxGeometry args={[1.6, 2.1, 1.5]} />
-                  <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
-                </mesh>
-                <mesh position={[baseR + 1.53, 0.9, 0]}>
-                  <boxGeometry args={[0.06, 1.6, 0.9]} />
-                  <meshStandardMaterial color="#3f444a" metalness={0.5} roughness={0.6} />
-                </mesh>
-              </group>
-
-              {/* Sodium floodlight ring */}
-              {[0.7, 2.3, 3.9, 5.5].map((a, k) => {
-                const fr = baseR + 2.4;
-                return (
-                  <group
-                    key={`flood-${k}`}
-                    position={[Math.cos(a) * fr, 0, Math.sin(a) * fr]}
-                    rotation={[0, -a, 0]}
-                  >
-                    <mesh position={[0, 1.5, 0]} castShadow>
-                      <cylinderGeometry args={[0.08, 0.1, 3, 8]} />
-                      <meshStandardMaterial color="#3b3f44" metalness={0.6} roughness={0.5} />
-                    </mesh>
-                    <mesh position={[-0.28, 2.9, 0]} rotation={[0, 0, 0.7]}>
-                      <boxGeometry args={[0.5, 0.2, 0.34]} />
-                      <meshStandardMaterial
-                        color="#2b2f33"
-                        emissive="#ffb257"
-                        emissiveIntensity={night ? 6 : 0}
-                        metalness={0.5}
-                        roughness={0.5}
-                      />
-                    </mesh>
-                  </group>
-                );
-              })}
-
 
               {/* Geodesic FRP shell LODs: high quality PBR material */}
               <Detailed distances={[0, 280, 700]}>
@@ -575,33 +680,106 @@ export function Structures({
                   />
                 </mesh>
               ) : (
-                <>
-                  <mesh position={[0, b.height + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-                    <planeGeometry args={[b.size[0], b.size[1]]} />
-                    <meshStandardMaterial
-                      map={metalMap}
-                      roughnessMap={metalRough}
-                      color={b.roofColor ?? "#6f6a5e"}
-                      metalness={0.3}
-                      roughness={0.75}
-                    />
-                  </mesh>
-                  {[
-                    [0, -b.size[1] / 2, b.size[0], 0.3],
-                    [0, b.size[1] / 2, b.size[0], 0.3],
-                    [-b.size[0] / 2, 0, 0.3, b.size[1]],
-                    [b.size[0] / 2, 0, 0.3, b.size[1]],
-                  ].map(([px, pz, sx, sz], k) => (
-                    <mesh key={`para-${k}`} position={[px, b.height + 0.25, pz]} castShadow>
-                      <boxGeometry args={[sx, 0.5, sz]} />
-                      <meshStandardMaterial color={b.color ?? "#cfc9bd"} roughness={0.85} />
-                    </mesh>
-                  ))}
-                </>
+                <mesh position={[0, b.height + 0.05, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+                  <planeGeometry args={[b.size[0], b.size[1]]} />
+                  <meshStandardMaterial
+                    map={metalMap}
+                    roughnessMap={metalRough}
+                    color={b.roofColor ?? "#6f6a5e"}
+                    metalness={0.3}
+                    roughness={0.75}
+                  />
+                </mesh>
               )}
             </group>
           );
         })}
+      </group>
+
+      {/* Repeated radome details and parapets, instanced */}
+      <group name="instanced-details">
+        <instancedMesh
+          args={[undefined, undefined, details.vents.length]}
+          castShadow
+          ref={(inst) => fillInstances(inst, details.vents)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#565b60" metalness={0.6} roughness={0.5} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.vestibules.length]}
+          castShadow
+          receiveShadow
+          ref={(inst) => fillInstances(inst, details.vestibules)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial map={concreteMap} roughnessMap={concreteRough} roughness={0.9} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.vestibuleDoors.length]}
+          ref={(inst) => fillInstances(inst, details.vestibuleDoors)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#3f444a" metalness={0.5} roughness={0.6} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.poles.length]}
+          castShadow
+          ref={(inst) => fillInstances(inst, details.poles)}
+        >
+          <cylinderGeometry args={[0.08, 0.1, 3, 8]} />
+          <meshStandardMaterial color="#3b3f44" metalness={0.6} roughness={0.5} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.heads.length]}
+          ref={(inst) => fillInstances(inst, details.heads)}
+        >
+          <boxGeometry args={[0.5, 0.2, 0.34]} />
+          <meshStandardMaterial
+            color="#2b2f33"
+            emissive="#ffb257"
+            emissiveIntensity={night ? 6 : 0}
+            metalness={0.5}
+            roughness={0.5}
+          />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.parapets.length]}
+          castShadow
+          ref={(inst) => fillInstances(inst, details.parapets, details.parapetColors)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial roughness={0.85} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.doors.length]}
+          receiveShadow
+          ref={(inst) => fillInstances(inst, details.doors)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="#4b5048" metalness={0.4} roughness={0.6} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.rollerDoors.length]}
+          receiveShadow
+          ref={(inst) => fillInstances(inst, details.rollerDoors)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial map={metalMap} color="#8f928a" metalness={0.45} roughness={0.55} />
+        </instancedMesh>
+        <instancedMesh
+          args={[undefined, undefined, details.lamps.length]}
+          ref={(inst) => fillInstances(inst, details.lamps)}
+        >
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial
+            color="#2e3134"
+            emissive="#ffc27a"
+            emissiveIntensity={night ? 4 : time === "dusk" ? 1.2 : 0}
+            roughness={0.4}
+          />
+        </instancedMesh>
+        <ObstructionBeacons matrices={details.beacons} night={night} />
       </group>
 
       {/* Rooftop equipment */}

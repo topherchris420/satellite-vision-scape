@@ -1,8 +1,10 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { RADOME, RADOME_SHELL_LIFT } from "@/lib/site-layout";
+import { MeshBatcher } from "@/game/core/MeshBatcher";
 
-// Generic exterior reflector geometry. Pose is illustrative and stationary.
+// Generic exterior reflector geometry. Pose is illustrative and stationary,
+// which is what allows every part to be merged into a handful of meshes.
 
 // Shared materials — single instances reused by every antenna on site.
 const dishMat = new THREE.MeshStandardMaterial({
@@ -91,15 +93,17 @@ function shellFrameGeometry(R: number) {
   return geom;
 }
 
-export function RadomeAntenna({
-  radius: R,
-  index,
-  enclosed = true,
-}: {
-  radius: number;
-  index: number;
-  enclosed?: boolean;
-}) {
+type V3 = [number, number, number];
+
+/**
+ * Assemble the antenna as a transform hierarchy (pedestal → azimuth slew →
+ * elevation), then merge every static part per material. The hierarchy is
+ * the readable source of truth; the merged meshes are what renders.
+ */
+function buildAntenna(
+  R: number,
+  index: number,
+): { group: THREE.Group; geometries: THREE.BufferGeometry[] } {
   const rd = R * RADOME.dishRatio; // reflector radius (diameters share the same ratio)
   const f = rd * 0.8; // focal length — f/D ≈ 0.40 (standard prime-focus dish)
   const depth = (rd * rd) / (4 * f); // bowl depth at the rim
@@ -113,138 +117,150 @@ export function RadomeAntenna({
   const ribTilt = Math.atan2(depth, rd);
   const ribLen = Math.hypot(rd, depth) * 0.96;
 
-  const azRef = useRef<THREE.Group>(null);
-  const elRef = useRef<THREE.Group>(null);
-  const dish = useMemo(() => dishGeometry(rd, f), [rd, f]);
-  const frame = useMemo(() => shellFrameGeometry(R), [R]);
+  const temporary: THREE.BufferGeometry[] = [];
+  const root = new THREE.Group();
+  const node = (parent: THREE.Object3D, position: V3 = [0, 0, 0], rotation: V3 = [0, 0, 0]) => {
+    const g = new THREE.Group();
+    g.position.set(...position);
+    g.rotation.set(...rotation);
+    parent.add(g);
+    return g;
+  };
+  const part = (
+    parent: THREE.Object3D,
+    geometry: THREE.BufferGeometry,
+    material: THREE.Material,
+    position: V3,
+    rotation: V3 = [0, 0, 0],
+    shared = false,
+  ) => {
+    if (!shared) temporary.push(geometry);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.position.set(...position);
+    mesh.rotation.set(...rotation);
+    parent.add(mesh);
+  };
+  const cyl = (rt: number, rb: number, h: number, s: number) =>
+    new THREE.CylinderGeometry(rt, rb, h, s);
+  const box = (w: number, h: number, d: number) => new THREE.BoxGeometry(w, h, d);
+
+  // Reinforced concrete base pad + pedestal, drive pinion, feed conduit, tray.
+  part(root, cyl(0.3 * R, 0.34 * R, 0.06 * R, 24), pedestalMat, [0, 0.03 * R, 0]);
+  part(root, cyl(0.14 * R, 0.18 * R, 0.3 * R, 20), pedestalMat, [0, 0.21 * R, 0]);
+  part(root, cyl(0.035 * R, 0.035 * R, 0.1 * R, 10), driveMat, [0.185 * R, 0.33 * R, 0]);
+  part(root, cyl(0.02 * R, 0.02 * R, 0.36 * R, 8), cableMat, [-0.16 * R, 0.18 * R, 0.05 * R]);
+  part(
+    root,
+    box(0.44 * R, 0.03 * R, 0.1 * R),
+    cableMat,
+    [-0.34 * R, 0.015 * R, 0.09 * R],
+    [0, -0.15, 0],
+  );
+  // Signal-processing rack with status beacon; access hatch.
+  const rack = node(root, [-0.58 * R, 0, 0.14 * R], [0, 0.35, 0]);
+  part(rack, box(0.24 * R, 0.32 * R, 0.13 * R), cabinetMat, [0, 0.16 * R, 0]);
+  part(rack, box(0.03 * R, 0.015 * R, 0.008 * R), beaconMat, [0.05 * R, 0.26 * R, 0.068 * R]);
+  part(root, box(0.2 * R, 0.025 * R, 0.2 * R), mechMat, [0.42 * R, 0.012 * R, -0.38 * R]);
+
+  // Azimuth mechanism: slew bearing, turntable, yoke arms, elevation motor.
+  const az = node(root, [0, 0.36 * R, 0], [0, index * 1.3, 0]);
+  part(
+    az,
+    new THREE.TorusGeometry(0.165 * R, 0.018 * R, 8, 28),
+    mechMat,
+    [0, 0.005 * R, 0],
+    [Math.PI / 2, 0, 0],
+  );
+  part(az, cyl(0.16 * R, 0.17 * R, 0.06 * R, 24), steelMat, [0, 0.035 * R, 0]);
+  for (const s of [-1, 1]) {
+    part(az, box(0.075 * R, 0.3 * R, 0.13 * R), steelMat, [s * 0.155 * R, 0.2 * R, 0]);
+    part(
+      az,
+      cyl(0.06 * R, 0.06 * R, 0.08 * R, 12),
+      mechMat,
+      [s * 0.17 * R, 0.32 * R, 0],
+      [0, 0, Math.PI / 2],
+    );
+  }
+  part(az, box(0.07 * R, 0.09 * R, 0.12 * R), driveMat, [0.24 * R, 0.26 * R, 0.1 * R]);
+
+  // Elevation group: axle, gear sector, hub, counterweight, reflector, feed.
+  const el = node(az, [0, 0.32 * R, 0], [0.55 + (index % 3) * 0.15, 0, 0]);
+  part(el, cyl(0.045 * R, 0.045 * R, 0.4 * R, 14), steelMat, [0, 0, 0], [0, 0, Math.PI / 2]);
+  const sector = node(el, [0.21 * R, 0, 0], [0, Math.PI / 2, 0]);
+  part(
+    sector,
+    new THREE.TorusGeometry(0.15 * R, 0.016 * R, 6, 18, 1.9),
+    driveMat,
+    [0, 0, 0],
+    [0, 0, -2.4],
+  );
+  part(el, cyl(0.1 * R, 0.11 * R, 0.12 * R, 16), mechMat, [0, 0.03 * R, 0]);
+  part(el, box(0.2 * R, 0.13 * R, 0.16 * R), mechMat, [0, -0.16 * R, 0]);
+  part(el, dishGeometry(rd, f), dishMat, [0, vtx, 0], [0, 0, 0], true);
+  part(
+    el,
+    new THREE.TorusGeometry(rd, 0.018 * R, 6, 40),
+    steelMat,
+    [0, vtx + depth, 0],
+    [Math.PI / 2, 0, 0],
+  );
+  for (let k = 0; k < 8; k++) {
+    const rib = node(el, [0, 0, 0], [0, (k * Math.PI) / 4, 0]);
+    part(
+      rib,
+      box(ribLen, 0.04 * R, 0.03 * R),
+      steelMat,
+      [rd * 0.48, vtx + depth * 0.5 - 0.07 * R, 0],
+      [0, 0, ribTilt],
+    );
+  }
+  for (const k of [1, 3, 5, 7]) {
+    const strut = node(el, [0, 0, 0], [0, (k * Math.PI) / 4, 0]);
+    part(
+      strut,
+      cyl(0.012 * R, 0.012 * R, sLen, 6),
+      steelMat,
+      [ax / 2, (ay + foc) / 2, 0],
+      [0, 0, sRot],
+    );
+  }
+  part(el, new THREE.ConeGeometry(0.06 * R, 0.09 * R, 14), mechMat, [0, foc - 0.03 * R, 0]);
+  part(el, cyl(0.026 * R, 0.026 * R, 0.12 * R, 10), mechMat, [0, foc + 0.06 * R, 0]);
+
+  root.updateMatrixWorld(true);
+  const batch = new MeshBatcher();
+  root.traverse((o) => {
+    if (o instanceof THREE.Mesh)
+      batch.addMatrix(o.geometry, o.material as THREE.Material, o.matrixWorld);
+  });
+  for (const g of temporary) g.dispose();
+  const group = new THREE.Group();
+  group.name = "radome-antenna";
+  const geometries = batch.build(group);
+  return { group, geometries };
+}
+
+export function RadomeAntenna({
+  radius: R,
+  index,
+  enclosed = true,
+}: {
+  radius: number;
+  index: number;
+  enclosed?: boolean;
+}) {
+  const built = useMemo(() => buildAntenna(R, index), [R, index]);
+  const frame = useMemo(() => (enclosed ? shellFrameGeometry(R) : null), [R, enclosed]);
+  useEffect(() => () => built.geometries.forEach((g) => g.dispose()), [built]);
 
   return (
-    <group name="radome-antenna">
+    <group>
       {/* geodesic framework lining the shell (only when a shell is present) */}
-      {enclosed && (
+      {frame && (
         <mesh geometry={frame} material={frameMat} position={[0, RADOME_SHELL_LIFT * R, 0]} />
       )}
-
-      {/* reinforced concrete base pad + pedestal */}
-      <mesh position={[0, 0.03 * R, 0]} material={pedestalMat} castShadow receiveShadow>
-        <cylinderGeometry args={[0.3 * R, 0.34 * R, 0.06 * R, 24]} />
-      </mesh>
-      <mesh position={[0, 0.21 * R, 0]} material={pedestalMat} castShadow>
-        <cylinderGeometry args={[0.14 * R, 0.18 * R, 0.3 * R, 20]} />
-      </mesh>
-      {/* azimuth drive pinion on the fixed pedestal rim */}
-      <mesh position={[0.185 * R, 0.33 * R, 0]} material={driveMat} castShadow>
-        <cylinderGeometry args={[0.035 * R, 0.035 * R, 0.1 * R, 10]} />
-      </mesh>
-      {/* RF feed conduit down the pedestal + cable tray out to the rack */}
-      <mesh position={[-0.16 * R, 0.18 * R, 0.05 * R]} material={cableMat}>
-        <cylinderGeometry args={[0.02 * R, 0.02 * R, 0.36 * R, 8]} />
-      </mesh>
-      <mesh
-        position={[-0.34 * R, 0.015 * R, 0.09 * R]}
-        rotation={[0, -0.15, 0]}
-        material={cableMat}
-      >
-        <boxGeometry args={[0.44 * R, 0.03 * R, 0.1 * R]} />
-      </mesh>
-      {/* signal-processing rack with status beacon */}
-      <group position={[-0.58 * R, 0, 0.14 * R]} rotation={[0, 0.35, 0]}>
-        <mesh position={[0, 0.16 * R, 0]} material={cabinetMat} castShadow>
-          <boxGeometry args={[0.24 * R, 0.32 * R, 0.13 * R]} />
-        </mesh>
-        <mesh position={[0.05 * R, 0.26 * R, 0.068 * R]} material={beaconMat}>
-          <boxGeometry args={[0.03 * R, 0.015 * R, 0.008 * R]} />
-        </mesh>
-      </group>
-      {/* access hatch down to the sub-floor equipment rooms */}
-      <mesh position={[0.42 * R, 0.012 * R, -0.38 * R]} material={mechMat}>
-        <boxGeometry args={[0.2 * R, 0.025 * R, 0.2 * R]} />
-      </mesh>
-
-      {/* ---- azimuth rotation mechanism: everything above the bearing slews ---- */}
-      <group ref={azRef} position={[0, 0.36 * R, 0]} rotation={[0, index * 1.3, 0]}>
-        {/* slew bearing ring + turntable */}
-        <mesh position={[0, 0.005 * R, 0]} rotation={[Math.PI / 2, 0, 0]} material={mechMat}>
-          <torusGeometry args={[0.165 * R, 0.018 * R, 8, 28]} />
-        </mesh>
-        <mesh position={[0, 0.035 * R, 0]} material={steelMat} castShadow>
-          <cylinderGeometry args={[0.16 * R, 0.17 * R, 0.06 * R, 24]} />
-        </mesh>
-        {/* yoke arms carrying the elevation axle */}
-        {[-1, 1].map((s) => (
-          <group key={s}>
-            <mesh position={[s * 0.155 * R, 0.2 * R, 0]} material={steelMat} castShadow>
-              <boxGeometry args={[0.075 * R, 0.3 * R, 0.13 * R]} />
-            </mesh>
-            <mesh
-              position={[s * 0.17 * R, 0.32 * R, 0]}
-              rotation={[0, 0, Math.PI / 2]}
-              material={mechMat}
-            >
-              <cylinderGeometry args={[0.06 * R, 0.06 * R, 0.08 * R, 12]} />
-            </mesh>
-          </group>
-        ))}
-        {/* elevation drive motor on the right arm */}
-        <mesh position={[0.24 * R, 0.26 * R, 0.1 * R]} material={driveMat} castShadow>
-          <boxGeometry args={[0.07 * R, 0.09 * R, 0.12 * R]} />
-        </mesh>
-
-        {/* ---- elevation group: dish + feed tip about the axle ---- */}
-        <group rotation={[0.55 + (index % 3) * 0.15, 0, 0]} ref={elRef} position={[0, 0.32 * R, 0]}>
-          <mesh rotation={[0, 0, Math.PI / 2]} material={steelMat}>
-            <cylinderGeometry args={[0.045 * R, 0.045 * R, 0.4 * R, 14]} />
-          </mesh>
-          {/* elevation gear sector beside the right arm */}
-          <group position={[0.21 * R, 0, 0]} rotation={[0, Math.PI / 2, 0]}>
-            <mesh rotation={[0, 0, -2.4]} material={driveMat}>
-              <torusGeometry args={[0.15 * R, 0.016 * R, 6, 18, 1.9]} />
-            </mesh>
-          </group>
-          {/* hub joining dish to axle + counterweight below */}
-          <mesh position={[0, 0.03 * R, 0]} material={mechMat} castShadow>
-            <cylinderGeometry args={[0.1 * R, 0.11 * R, 0.12 * R, 16]} />
-          </mesh>
-          <mesh position={[0, -0.16 * R, 0]} material={mechMat} castShadow>
-            <boxGeometry args={[0.2 * R, 0.13 * R, 0.16 * R]} />
-          </mesh>
-          {/* parabolic reflector + rim stiffening ring */}
-          <mesh geometry={dish} material={dishMat} position={[0, vtx, 0]} castShadow />
-          <mesh position={[0, vtx + depth, 0]} rotation={[Math.PI / 2, 0, 0]} material={steelMat}>
-            <torusGeometry args={[rd, 0.018 * R, 6, 40]} />
-          </mesh>
-          {/* radial backing ribs (structural support framework) */}
-          {Array.from({ length: 8 }).map((_, k) => (
-            <group key={k} rotation={[0, (k * Math.PI) / 4, 0]}>
-              <mesh
-                position={[rd * 0.48, vtx + depth * 0.5 - 0.07 * R, 0]}
-                rotation={[0, 0, ribTilt]}
-                material={steelMat}
-              >
-                <boxGeometry args={[ribLen, 0.04 * R, 0.03 * R]} />
-              </mesh>
-            </group>
-          ))}
-          {/* quadripod struts + feed horn assembly at the focus */}
-          {[1, 3, 5, 7].map((k) => (
-            <group key={k} rotation={[0, (k * Math.PI) / 4, 0]}>
-              <mesh
-                position={[ax / 2, (ay + foc) / 2, 0]}
-                rotation={[0, 0, sRot]}
-                material={steelMat}
-              >
-                <cylinderGeometry args={[0.012 * R, 0.012 * R, sLen, 6]} />
-              </mesh>
-            </group>
-          ))}
-          <mesh position={[0, foc - 0.03 * R, 0]} material={mechMat} castShadow>
-            <coneGeometry args={[0.06 * R, 0.09 * R, 14]} />
-          </mesh>
-          <mesh position={[0, foc + 0.06 * R, 0]} material={mechMat}>
-            <cylinderGeometry args={[0.026 * R, 0.026 * R, 0.12 * R, 10]} />
-          </mesh>
-        </group>
-      </group>
+      <primitive object={built.group} />
     </group>
   );
 }

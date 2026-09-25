@@ -27,6 +27,11 @@ import type { Selection } from "@/lib/selection";
 import { sampleTerrainFrame } from "@/lib/terrain";
 import { SpatialContextLayer, type ContextStatus } from "./SpatialContextLayer";
 import { PINE_GAP_SOURCE } from "@/lib/pine-gap";
+import { getSiteTextures } from "@/lib/site-textures";
+import { Game } from "@/game/Game";
+import { usePlaySession } from "@/hooks/use-play-session";
+import { GameRuntime } from "@/components/game/GameRuntime";
+import { GameHUD } from "@/components/game/GameHUD";
 
 export type QualityTier = "low" | "medium" | "high" | "ultra";
 
@@ -45,32 +50,71 @@ function ReadyProbe({ onReady }: { onReady: () => void }) {
   return null;
 }
 
+/** Heading in degrees clockwise from grid north for a world XZ direction. */
+function bearing(dx: number, dz: number) {
+  return (Math.atan2(dx, -dz) * 180) / Math.PI;
+}
+
+// Minimap marker and telemetry strip. Follows the camera in the viewer modes
+// and the player (or the vehicle being driven) in play mode. DOM writes are
+// throttled: the marker at ~30 Hz, telemetry and vehicle markers at ~10 Hz.
 function CameraTracker({
   markerRef,
   telemetryRef,
+  vehicleMarkersRef,
+  game,
+  playing,
 }: {
   markerRef: React.RefObject<SVGGElement | null>;
   telemetryRef: React.RefObject<HTMLDivElement | null>;
+  vehicleMarkersRef: React.RefObject<SVGGElement | null>;
+  game: Game | null;
+  playing: boolean;
 }) {
   const dir = useRef(new THREE.Vector3());
   const frame = useRef(0);
   useFrame(({ camera }) => {
-    camera.getWorldDirection(dir.current);
-    const deg = (Math.atan2(dir.current.x, -dir.current.z) * 180) / Math.PI;
+    const n = frame.current++;
+    let x: number;
+    let y: number;
+    let z: number;
+    let deg: number;
+    if (playing && game) {
+      x = game.focusPoint.x;
+      y = game.focusPoint.y;
+      z = game.focusPoint.z;
+      deg = bearing(Math.sin(game.focusHeading), Math.cos(game.focusHeading));
+    } else {
+      camera.getWorldDirection(dir.current);
+      x = camera.position.x;
+      y = camera.position.y;
+      z = camera.position.z;
+      deg = bearing(dir.current.x, dir.current.z);
+    }
     const el = markerRef.current;
-    if (el) {
-      el.setAttribute(
-        "transform",
-        `translate(${camera.position.x.toFixed(1)} ${camera.position.z.toFixed(1)}) rotate(${deg.toFixed(1)})`,
-      );
+    if (el && n % 2 === 0) {
+      el.setAttribute("transform", `translate(${x.toFixed(1)} ${z.toFixed(1)}) rotate(${deg.toFixed(1)})`);
+    }
+    const markers = vehicleMarkersRef.current;
+    if (markers && game && n % 6 === 0) {
+      game.vehicles.vehicles.forEach((v, i) => {
+        const node = markers.children[i];
+        if (!node) return;
+        const heading = bearing(Math.sin(v.physics.yaw), Math.cos(v.physics.yaw));
+        node.setAttribute(
+          "transform",
+          `translate(${v.physics.x.toFixed(1)} ${v.physics.z.toFixed(1)}) rotate(${heading.toFixed(0)})`,
+        );
+        node.setAttribute("opacity", v.driven ? "0" : "0.85");
+      });
     }
     const tel = telemetryRef.current;
-    if (tel && frame.current++ % 6 === 0) {
+    if (tel && n % 6 === 0) {
       const grid = (v: number) =>
         `${v < 0 ? "-" : "+"}${Math.abs(Math.round(v)).toString().padStart(3, "0")}`;
       const hdg = ((Math.round(deg) % 360) + 360) % 360;
-      const alt = Math.max(0, Math.round(camera.position.y));
-      tel.textContent = `E ${grid(camera.position.x)} · N ${grid(-camera.position.z)} · ALT ${alt
+      const alt = Math.max(0, Math.round(y));
+      tel.textContent = `E ${grid(x)} · N ${grid(-z)} · ALT ${alt
         .toString()
         .padStart(3, "0")} M · HDG ${hdg.toString().padStart(3, "0")}°`;
     }
@@ -110,7 +154,7 @@ function SelectionRing({ sel }: { sel: Selection }) {
 
 export function SiteScene() {
   const isMobile = useIsMobile();
-  const [mode, setMode] = useState<ControlMode>("fly");
+  const [mode, setMode] = useState<ControlMode>("play");
   const [time, setTime] = useState<TimeOfDay>("day");
   const [ready, setReady] = useState(false);
   const [selected, setSelected] = useState<Selection | null>(null);
@@ -124,7 +168,36 @@ export function SiteScene() {
   const [manualQuality, setManualQuality] = useState(false);
 
   const markerRef = useRef<SVGGElement>(null);
+  const vehicleMarkersRef = useRef<SVGGElement>(null);
   const telemetryRef = useRef<HTMLDivElement>(null);
+
+  // The playable world is created on the client only (it builds collision
+  // and terrain data and touches WebGL/Audio resources) and lives for the
+  // whole visit, so switching camera modes never resets it.
+  const [game, setGame] = useState<Game | null>(null);
+  const [gameError, setGameError] = useState<string | null>(null);
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  useEffect(() => {
+    let instance: Game;
+    try {
+      instance = new Game({ visuals: true, dustSprite: getSiteTextures().smokeSprite });
+    } catch (error) {
+      // The viewer still works without gameplay; explain instead of crashing.
+      console.error("Play mode failed to initialise", error);
+      setGameError(error instanceof Error ? error.message : String(error));
+      setMode((m) => (m === "play" ? "fly" : m));
+      return;
+    }
+    setGame(instance);
+    // Development-only handle for debugging and automated browser checks.
+    if (import.meta.env.DEV) (window as unknown as { __pineGapGame?: Game }).__pineGapGame = instance;
+    return () => instance.dispose();
+  }, []);
+  const gameUnavailable = useRef(false);
+  gameUnavailable.current = gameError !== null;
+  const playing = mode === "play" && gameError === null;
+  const session = usePlaySession(game, canvas, playing);
+  const immersive = playing && session.status === "running";
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",
     entities: 0,
@@ -162,10 +235,10 @@ export function SiteScene() {
       if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
       switch (e.code) {
         case "Digit1":
-          setMode("fly");
+          setMode((m) => (gameUnavailable.current ? m : "play"));
           break;
         case "Digit2":
-          if (!isMobile) setMode("fps");
+          setMode("fly");
           break;
         case "Digit3":
           setMode("cinematic");
@@ -195,7 +268,7 @@ export function SiteScene() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isMobile]);
+  }, []);
 
   const fogColor = LIGHTING[time].fog;
 
@@ -208,7 +281,7 @@ export function SiteScene() {
     <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
       <HUD
         mode={mode}
-        onModeChange={setMode}
+        onModeChange={(m) => setMode(m === "play" && gameError ? "fly" : m)}
         time={time}
         onTimeChange={setTime}
         qualityTier={qualityTier}
@@ -227,11 +300,31 @@ export function SiteScene() {
         markerRef={markerRef}
         telemetryRef={telemetryRef}
         isMobile={isMobile}
+        immersive={immersive}
       />
+
+      {playing && game && ready && (
+        <GameHUD
+          game={game}
+          status={session.status}
+          onStart={session.start}
+          onPause={session.pause}
+          onExplore={() => setMode("fly")}
+          isMobile={isMobile}
+          markerRef={markerRef}
+          vehicleMarkersRef={vehicleMarkersRef}
+        />
+      )}
 
       {showDebug && <TerrainDebugHUD onClose={() => setShowDebug(false)} />}
 
-      <aside
+      {gameError && (
+        <div className="pointer-events-none absolute left-1/2 top-5 z-30 -translate-x-1/2 rounded-lg border border-rose-300/30 bg-[#140a0b]/85 px-4 py-2 font-mono text-[10px] uppercase tracking-[.14em] text-rose-200">
+          Play mode unavailable on this device — viewer modes remain active
+        </div>
+      )}
+
+      {!playing && <aside
         className="pointer-events-auto absolute bottom-[5.25rem] left-5 z-20 hidden w-[21rem] overflow-hidden rounded-xl border border-white/10 bg-[#071014]/80 font-mono text-[9px] text-white/55 shadow-[0_16px_50px_rgba(0,0,0,.25)] backdrop-blur-xl lg:block"
         aria-label="Spatial provenance"
       >
@@ -272,13 +365,13 @@ export function SiteScene() {
             <a className="mt-2 block text-amber-200 underline" href={PINE_GAP_SOURCE.url} target="_blank" rel="noreferrer">Open public survey ↗</a>
           </p>
         </details>
-      </aside>
+      </aside>}
 
-      {isMobile && ready && (mode === "fly" || mode === "fps") && <MobileControls mode={mode} />}
+      {isMobile && ready && (mode === "fly" || immersive) && <MobileControls mode={mode} />}
 
       <div
         className={`absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-[#05090b] transition-opacity duration-1000 ${
-          ready ? "pointer-events-none opacity-0" : "opacity-100"
+          ready && (game || gameError) ? "pointer-events-none opacity-0" : "opacity-100"
         }`}
       >
         <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] [background-size:48px_48px]" />
@@ -297,7 +390,7 @@ export function SiteScene() {
       </div>
 
       <Canvas
-        shadows
+        shadows="percentage"
         dpr={dpr}
         camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
@@ -306,6 +399,7 @@ export function SiteScene() {
           outputColorSpace: THREE.SRGBColorSpace,
         }}
         onPointerMissed={() => setSelected(null)}
+        onCreated={({ gl }) => setCanvas(gl.domElement)}
       >
         {!manualQuality && (
           <PerformanceMonitor
@@ -322,7 +416,11 @@ export function SiteScene() {
           />
         )}
         <Suspense fallback={null}>
-          <Lighting time={time} highQuality={enableAO} />
+          <Lighting
+            time={time}
+            highQuality={enableAO}
+            shadowFocus={playing && game ? game.focusPoint : null}
+          />
           <Terrain />
           <Roads />
           <Structures onSelect={setSelected} time={time} />
@@ -333,6 +431,7 @@ export function SiteScene() {
           {showDebug && <TerrainDebug />}
           <fog attach="fog" args={[fogColor, mode === 'overhead' ? 2500 : 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
+          {game && <GameRuntime game={game} playing={playing} status={session.status} time={time} />}
         </Suspense>
 
         {ready && (
@@ -352,7 +451,13 @@ export function SiteScene() {
           </EffectComposer>
         )}
 
-        <CameraTracker markerRef={markerRef} telemetryRef={telemetryRef} />
+        <CameraTracker
+          markerRef={markerRef}
+          telemetryRef={telemetryRef}
+          vehicleMarkersRef={vehicleMarkersRef}
+          game={game}
+          playing={playing}
+        />
         <Controls mode={mode} focus={focus} />
       </Canvas>
     </div>
