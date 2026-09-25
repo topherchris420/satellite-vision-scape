@@ -20,6 +20,29 @@
 
 ---
 
+<p align="center">
+  <img src="docs/media/gameplay-vehicle.png" alt="Pine Gap 4x4 Vehicle Driving Gameplay" width="100%" />
+</p>
+
+<table width="100%">
+  <tr>
+    <td width="33%" align="center">
+      <img src="docs/media/gameplay-onfoot.png" alt="Third-Person On-Foot Exploration" width="100%" /><br />
+      <sub><b>On-foot Exploration</b><br />Third-person soldier movement, compound traversal, and interactive barrier gates.</sub>
+    </td>
+    <td width="33%" align="center">
+      <img src="docs/media/gameplay-dusk.png" alt="Dusk & Night Atmospheric Lighting" width="100%" /><br />
+      <sub><b>Atmospheric Dynamic Lighting</b><br />Day / dusk / night cycles with automated vehicle headlights & beacons.</sub>
+    </td>
+    <td width="33%" align="center">
+      <img src="docs/media/gameplay-explore.png" alt="Orbital Site Reconstruction Viewer" width="100%" /><br />
+      <sub><b>3D Site Reconstruction</b><br />Free orbital camera & factual antenna source dossiers.</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
 ## 🛰️ Overview
 
 Deep in the ochre heart of Australia's Northern Territory, nestled against the MacDonnell Ranges, lies **Pine Gap** — one of the world's most prominent satellite ground stations.
