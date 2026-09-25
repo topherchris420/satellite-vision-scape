@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
+import { applyWindSway } from '@/lib/wind';
 import { SURFACE_TRACES, imageToSite, traceRect } from '@/lib/reference-layout';
 import { trees } from '@/lib/site-layout';
 import { terrainHeight, sampleFootprintGrade } from '@/lib/terrain';
@@ -49,6 +50,9 @@ export function ReferenceLandscape() {
     });
     return { trunks,crowns,colors };
   }, []);
+  // Crowns lean with the wind from their tops; trunks stay rigid.
+  const crownMaterial = useMemo(() => applyWindSway(new THREE.MeshStandardMaterial({ roughness: 1 }), { amplitude: 0.16, referenceHeight: 1, frequency: 1.3 }), []);
+  useEffect(() => () => crownMaterial.dispose(), [crownMaterial]);
   const fill = (m: THREE.InstancedMesh | null, matrices: THREE.Matrix4[], colors?: THREE.Color[]) => {
     if(!m)return;
     matrices.forEach((matrix,i) => {m.setMatrixAt(i,matrix);if(colors)m.setColorAt(i,colors[i]);});
@@ -62,6 +66,6 @@ export function ReferenceLandscape() {
         <mesh geometry={geometry} position={[0,.025,0]} receiveShadow><meshStandardMaterial color={trace.color} roughness={trace.kind==='water'?.24:.95} metalness={0} envMapIntensity={.6}/></mesh>
       </group>)}
     <instancedMesh args={[undefined,undefined,vegetation.trunks.length]} ref={m=>fill(m,vegetation.trunks)} castShadow><cylinderGeometry args={[.7,1,1,6]}/><meshStandardMaterial color="#766c55" roughness={1}/></instancedMesh>
-    <instancedMesh args={[undefined,undefined,vegetation.crowns.length]} ref={m=>fill(m,vegetation.crowns,vegetation.colors)} castShadow receiveShadow><icosahedronGeometry args={[1,2]}/><meshStandardMaterial roughness={1}/></instancedMesh>
+    <instancedMesh args={[undefined,crownMaterial,vegetation.crowns.length]} ref={m=>fill(m,vegetation.crowns,vegetation.colors)} castShadow receiveShadow><icosahedronGeometry args={[1,2]}/></instancedMesh>
   </group>;
 }

@@ -1,12 +1,14 @@
 import { useRef, useEffect } from "react";
 import { useThree, useFrame } from "@react-three/fiber";
-import { MapControls, PointerLockControls, OrthographicCamera } from "@react-three/drei";
+import { MapControls, OrthographicCamera } from "@react-three/drei";
 import * as THREE from "three";
-import { resolveCollision } from "@/lib/site-colliders";
-import { terrainHeight } from "@/lib/terrain";
 import { mobileInput, mobileInputActive } from "@/lib/mobile-input";
 
-export type ControlMode = "fly" | "fps" | "cinematic" | "overhead";
+/**
+ * Camera modes. `play` hands the camera to the game's third-person
+ * controller (see GameRuntime); the others are viewer modes.
+ */
+export type ControlMode = "play" | "fly" | "cinematic" | "overhead";
 
 // A one-shot request to glide the fly camera to a structure. `ts` makes each
 // request unique so clicking the same structure twice re-triggers the flight.
@@ -38,59 +40,6 @@ function useKeys() {
     };
   }, []);
   return keys;
-}
-
-const EYE = 1.7;
-const BODY = 0.6;
-
-function FpsMover() {
-  const { camera } = useThree();
-  const keys = useKeys();
-  const vel = useRef(new THREE.Vector3());
-
-  useEffect(() => {
-    camera.position.set(-110, terrainHeight(-110, 40) + EYE, 40);
-    camera.lookAt(-65, EYE + 10, -20);
-  }, [camera]);
-
-  useFrame((_, delta) => {
-    const dt = Math.min(delta, 0.05);
-    const max = keys.current["ShiftLeft"] || mobileInput.boost ? 20 : 8;
-    const dir = new THREE.Vector3();
-    const forward = new THREE.Vector3();
-    camera.getWorldDirection(forward);
-    forward.y = 0;
-    forward.normalize();
-    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
-
-    // Keyboard is binary, so normalize to full speed; the touch joystick is
-    // analog, so it contributes proportionally to its deflection.
-    if (keys.current["KeyW"]) dir.add(forward);
-    if (keys.current["KeyS"]) dir.sub(forward);
-    if (keys.current["KeyD"]) dir.add(right);
-    if (keys.current["KeyA"]) dir.sub(right);
-    if (dir.lengthSq() > 0) dir.normalize();
-    dir.addScaledVector(forward, mobileInput.y);
-    dir.addScaledVector(right, mobileInput.x);
-    if (dir.lengthSq() > 1) dir.normalize();
-    dir.multiplyScalar(max);
-
-    // Exponential approach toward the desired velocity: quick to accelerate,
-    // a touch of glide when the keys release — reads as body inertia.
-    const k = dir.lengthSq() > 0 ? 10 : 7;
-    vel.current.lerp(dir, 1 - Math.exp(-k * dt));
-
-    if (vel.current.lengthSq() > 1e-6) {
-      const nx = camera.position.x + vel.current.x * dt;
-      const nz = camera.position.z + vel.current.z * dt;
-      const [rx, rz] = resolveCollision(nx, nz, BODY);
-      camera.position.x = rx;
-      camera.position.z = rz;
-    }
-    camera.position.y = terrainHeight(camera.position.x, camera.position.z) + EYE;
-  });
-
-  return <PointerLockControls />;
 }
 
 // Home view shared by the Canvas default camera and the fly-mode reset, so
@@ -141,13 +90,20 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
   }, [controls]);
 
   const vel = useRef(new THREE.Vector3());
+  // Scratch vectors reused every frame (no per-frame allocation).
+  const scratch = useRef({
+    forward: new THREE.Vector3(),
+    right: new THREE.Vector3(),
+    want: new THREE.Vector3(),
+    up: new THREE.Vector3(0, 1, 0),
+  });
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const max = keys.current["ShiftLeft"] || mobileInput.boost ? 90 : 35;
-    const forward = new THREE.Vector3();
+    const { forward, right, want, up } = scratch.current;
     camera.getWorldDirection(forward);
-    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0));
+    right.crossVectors(forward, up);
 
     const moving =
       keys.current["KeyW"] ||
@@ -164,7 +120,7 @@ function FlyMover({ focus }: { focus?: FocusRequest | null }) {
     // the camera banks into motion and glides to a stop instead of snapping.
     // Keyboard input is binary (normalized to full speed); the touch joystick
     // and rocker are analog and add proportionally to their deflection.
-    const want = new THREE.Vector3();
+    want.set(0, 0, 0);
     if (keys.current["KeyW"]) want.add(forward);
     if (keys.current["KeyS"]) want.sub(forward);
     if (keys.current["KeyD"]) want.add(right);
@@ -269,9 +225,9 @@ function CinematicMover() {
 }
 
 export function Controls({ mode, focus }: { mode: ControlMode; focus?: FocusRequest | null }) {
+  if (mode === "play") return null;
   if (mode === "overhead") return <OverheadView />;
   if (mode === "fly") return <FlyMover focus={focus} />;
-  if (mode === "fps") return <FpsMover />;
   return <CinematicMover />;
 }
 

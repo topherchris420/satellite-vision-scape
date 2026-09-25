@@ -22,9 +22,16 @@ import {
 export function Minimap({
   markerRef,
   onNavigate,
+  vehicleMarkersRef,
+  vehicleCount = 0,
+  className = "w-40",
 }: {
   markerRef: RefObject<SVGGElement | null>;
   onNavigate?: (x: number, z: number) => void;
+  /** Group whose children are positioned imperatively, one per vehicle. */
+  vehicleMarkersRef?: RefObject<SVGGElement | null>;
+  vehicleCount?: number;
+  className?: string;
 }) {
   const handleClick = (e: MouseEvent<SVGSVGElement>) => {
     if (!onNavigate) return;
@@ -37,7 +44,7 @@ export function Minimap({
   return (
     <svg
       viewBox="-560 -500 1060 1180"
-      className={`w-40 rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
+      className={`${className} rounded-lg border border-white/10 bg-black/60 backdrop-blur-sm ${
         onNavigate ? "cursor-crosshair" : ""
       }`}
       role={onNavigate ? "button" : "img"}
@@ -154,6 +161,25 @@ export function Minimap({
       >
         100 m
       </text>
+      {/* vehicle markers — transforms driven imperatively by CameraTracker */}
+      {vehicleMarkersRef && (
+        <g ref={vehicleMarkersRef}>
+          {Array.from({ length: vehicleCount }, (_, i) => (
+            <rect
+              key={`vehicle-${i}`}
+              x={-7}
+              y={-12}
+              width={14}
+              height={24}
+              rx={3}
+              fill="#34d399"
+              stroke="#000"
+              strokeOpacity={0.45}
+              strokeWidth={2}
+            />
+          ))}
+        </g>
+      )}
       {/* camera marker — transform driven imperatively by CameraTracker */}
       <g ref={markerRef}>
         <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />

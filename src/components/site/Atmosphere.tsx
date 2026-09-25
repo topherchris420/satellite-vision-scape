@@ -2,11 +2,8 @@ import { useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { getSiteTextures } from "@/lib/site-textures";
+import { WIND, windUniforms } from "@/lib/wind";
 import type { TimeOfDay } from "./Lighting";
-
-// Shared prevailing wind (m/s-ish, world XZ). Smoke, steam and clouds all
-// drift with it so the weather reads as one coherent system.
-const WIND = { x: 1.7, z: 0.8 };
 
 function rng(seed: number) {
   let s = seed % 2147483647;
@@ -95,12 +92,16 @@ function DustField({ time }: { time: TimeOfDay }) {
   }, []);
 
   useFrame(({ clock }, delta) => {
-    const attr = points.current?.geometry.attributes.position;
+    const attr = points.current?.geometry.attributes.position as THREE.BufferAttribute | undefined;
     if (!attr) return;
-    for (let i = 0; i < attr.count; i++) {
-      attr.setX(i, attr.getX(i) + WIND.x * delta * (0.25 + (i % 5) * 0.05));
-      attr.setY(i, attr.getY(i) + Math.sin(clock.elapsedTime * 0.35 + i) * delta * 0.08);
-      if (attr.getX(i) > 900) attr.setX(i, -900);
+    // Direct typed-array access: no per-particle accessor calls.
+    const a = attr.array as Float32Array;
+    const t = clock.elapsedTime * 0.35;
+    for (let i = 0, k = 0; i < attr.count; i++, k += 3) {
+      let x = a[k] + WIND.x * delta * (0.25 + (i % 5) * 0.05);
+      if (x > 900) x = -900;
+      a[k] = x;
+      a[k + 1] += Math.sin(t + i) * delta * 0.08;
     }
     attr.needsUpdate = true;
   });
@@ -117,6 +118,20 @@ function DustField({ time }: { time: TimeOfDay }) {
   );
 }
 
+// Advances the shared vegetation-sway clock once per frame (GPU-side sway).
+function WindClock() {
+  useFrame(({ clock }) => {
+    windUniforms.uWindTime.value = clock.elapsedTime;
+  });
+  return null;
+}
+
 export function Atmosphere({ time }: { time: TimeOfDay }) {
-  return <group name="atmosphere"><CloudDeck time={time} /><DustField time={time} /></group>;
+  return (
+    <group name="atmosphere">
+      <WindClock />
+      <CloudDeck time={time} />
+      <DustField time={time} />
+    </group>
+  );
 }
