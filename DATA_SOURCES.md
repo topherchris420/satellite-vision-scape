@@ -12,3 +12,7 @@ The viewer does not distribute real facility imagery, OSM/Protomaps tiles,
 private-source data, third-party 3D models or current operational information.
 See [PINE_GAP_REFERENCE.md](docs/PINE_GAP_REFERENCE.md) for the transformation
 and uncertainty notes.
+
+The *Pine Gap: After Hours* expansion adds no data sources. Its props,
+radio stations, Frequency 420, tuning terminals, signal traces and concert
+are invented game fiction and are never shown in the factual viewer modes.

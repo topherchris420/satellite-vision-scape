@@ -1,3 +1,8 @@
 GeoTwn includes architectural adaptations informed by Re:Earth Terrain and God's Eye View, both MIT-licensed projects. No upstream source code or bundled third-party assets are copied in this release.
 
 Optional USGS earthquake data is public U.S. Government information. Data-provider terms and attribution remain the responsibility of deployers. See ATTRIBUTIONS.md and DATA_SOURCES.md.
+
+The music in public/music/indigo-people/ (Indigo People, "Green Machine",
+written by Christopher Woodyard) and its cover art are used with the
+songwriter's permission. They are not licensed under this project's software
+licence; see docs/SOUNDTRACK.md.

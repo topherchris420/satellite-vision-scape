@@ -16,6 +16,19 @@ import type { VehicleManager } from "../vehicles/VehicleManager";
 
 export type Prompt = { key: string; label: string };
 
+/** Something the player can use on foot (a mission prop, a terminal…). */
+export interface InteractionOffer {
+  label: string;
+  /** Horizontal distance to the player (the nearest offer wins). */
+  distance: number;
+  /** Offered even when a vehicle door is also in reach. */
+  priority?: boolean;
+  act: () => void;
+}
+
+/** Returns an offer when the player at (x, y, z) is in range, else null. */
+export type InteractableProvider = (x: number, y: number, z: number) => InteractionOffer | null;
+
 type Phase = "approach" | "open" | "climb" | "close" | "stopping";
 
 /** Body-frame keyframe for the climb in / out of a seat. */
@@ -44,6 +57,8 @@ export class InteractionManager {
   seatWeight = 0;
   /** When set, the on-foot controller is steered by the choreography. */
   overrideIntent: MoveIntent | null = null;
+  /** Additional on-foot interactables, consulted after vehicle doors. */
+  readonly providers: InteractableProvider[] = [];
   /** Scripted character transform (valid when `scripted` is true). */
   scripted = false;
   readonly scriptedPosition = new THREE.Vector3();
@@ -171,11 +186,15 @@ export class InteractionManager {
 
   // --- Frame update ------------------------------------------------------------
 
-  update(dt: number, input: InputState): void {
+  /**
+   * `locked` suspends on-foot interactions while another system holds the
+   * player (e.g. a tuning terminal); vehicle states are unaffected.
+   */
+  update(dt: number, input: InputState, locked = false): void {
     this.phaseTime += dt;
     switch (this.state) {
       case GameplayState.OnFoot:
-        this.updateOnFoot(input);
+        this.updateOnFoot(input, locked);
         break;
       case GameplayState.EnteringVehicle:
         this.updateEntering(dt);
@@ -191,16 +210,39 @@ export class InteractionManager {
     }
   }
 
-  private updateOnFoot(input: InputState): void {
+  private nearestOffer(priorityOnly: boolean): InteractionOffer | null {
+    const p = this.deps.player.position;
+    let best: InteractionOffer | null = null;
+    for (const provider of this.providers) {
+      const offer = provider(p.x, p.y, p.z);
+      if (!offer || (priorityOnly && !offer.priority)) continue;
+      if (!best || offer.distance < best.distance) best = offer;
+    }
+    return best;
+  }
+
+  private updateOnFoot(input: InputState, locked: boolean): void {
     const p = this.deps.player;
     this.pose = "physics";
     this.overrideIntent = null;
     this.prompt = null;
-    if (!p.grounded) return;
+    if (!p.grounded || locked) return;
+    const priority = this.nearestOffer(true);
+    if (priority) {
+      this.prompt = { key: "E", label: priority.label };
+      if (input.wasPressed("interact")) priority.act();
+      return;
+    }
     const vehicle = this.deps.vehicles.nearest(p.position.x, p.position.z, INTERACTION.enterRange);
     if (vehicle && Math.abs(vehicle.physics.y - p.position.y) < 1.6) {
       this.prompt = { key: "E", label: "Enter vehicle" };
       if (input.wasPressed("interact")) this.beginEnter(vehicle);
+      return;
+    }
+    const offer = this.nearestOffer(false);
+    if (offer) {
+      this.prompt = { key: "E", label: offer.label };
+      if (input.wasPressed("interact")) offer.act();
       return;
     }
     const gate = this.deps.world.nearestGateControl(

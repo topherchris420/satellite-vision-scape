@@ -154,3 +154,27 @@
     outline-offset: 2px;
   }
 }
+
+/* After Hours · Altered Signal fallback for the low quality tier: a slow,
+   soft-light colour wash instead of the post-processing grade. */
+.altered-grade {
+  mix-blend-mode: soft-light;
+  background: radial-gradient(120% 90% at 50% 40%, #0b5d63 0%, #3a2a66 60%, #5a3d14 100%);
+  animation: altered-drift 28s ease-in-out infinite alternate;
+}
+.altered-grade--still {
+  animation: none;
+}
+@keyframes altered-drift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(60deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .altered-grade {
+    animation: none;
+  }
+}
