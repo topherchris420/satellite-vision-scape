@@ -1,4 +1,12 @@
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import {
@@ -32,6 +40,21 @@ import { Game } from "@/game/Game";
 import { usePlaySession } from "@/hooks/use-play-session";
 import { GameRuntime } from "@/components/game/GameRuntime";
 import { GameHUD } from "@/components/game/GameHUD";
+import { SpectralGrade } from "@/components/game/SpectralGrade";
+import type { AfterHoursSnapshot } from "@/game/afterhours/AfterHoursHud";
+
+const noSubscribe = () => () => undefined;
+const noSnapshot = () => null;
+
+/** After Hours' discrete state, or null before the game exists. */
+function useAfterHoursSnapshot(game: Game | null): AfterHoursSnapshot | null {
+  const hud = game?.afterHours.hud;
+  return useSyncExternalStore(
+    hud ? hud.subscribe : noSubscribe,
+    hud ? hud.getSnapshot : noSnapshot,
+    hud ? hud.getSnapshot : noSnapshot,
+  );
+}
 
 export type QualityTier = "low" | "medium" | "high" | "ultra";
 
@@ -198,6 +221,30 @@ export function SiteScene() {
   const playing = mode === "play" && gameError === null;
   const session = usePlaySession(game, canvas, playing);
   const immersive = playing && session.status === "running";
+  const afterHours = useAfterHoursSnapshot(game);
+  // The concert borrows midnight; the player's own choice returns afterwards.
+  const effectiveTime: TimeOfDay = afterHours?.timeOverride ?? time;
+  const alteredVisible = playing && !!afterHours?.altered.on;
+
+  // Factual viewer modes never show After Hours fiction.
+  useEffect(() => {
+    game?.afterHours.setViewerActive(playing);
+  }, [game, playing]);
+  useEffect(() => {
+    game?.afterHours.visuals?.setQuality(qualityTier);
+  }, [game, qualityTier]);
+
+  const startAfterHours = useCallback(() => {
+    if (!game) return;
+    setTime("dusk");
+    session.start();
+    // Unpause now (not in the next effect) so the radio starts inside this click.
+    game.setPaused(false);
+    game.afterHours.start();
+    game.afterHours.kickAudio();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, session.start]);
+  const leaveAfterHours = useCallback(() => game?.afterHours.stop(), [game]);
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",
     entities: 0,
@@ -270,7 +317,7 @@ export function SiteScene() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const fogColor = LIGHTING[time].fog;
+  const fogColor = LIGHTING[effectiveTime].fog;
 
   // Derive DPR and post features from QualityTier
   const dpr: number | [number, number] =
@@ -308,6 +355,8 @@ export function SiteScene() {
           game={game}
           status={session.status}
           onStart={session.start}
+          onStartAfterHours={startAfterHours}
+          onLeaveAfterHours={leaveAfterHours}
           onPause={session.pause}
           onExplore={() => setMode("fly")}
           isMobile={isMobile}
@@ -369,6 +418,14 @@ export function SiteScene() {
 
       {isMobile && ready && (mode === "fly" || immersive) && <MobileControls mode={mode} />}
 
+      {alteredVisible && qualityTier === "low" && afterHours && (
+        <div
+          aria-hidden
+          className={`altered-grade pointer-events-none absolute inset-0 z-[5] ${afterHours.preferences.reducedMotion ? "altered-grade--still" : ""}`}
+          style={{ opacity: 0.28 * afterHours.preferences.effectIntensity }}
+        />
+      )}
+
       <div
         className={`absolute inset-0 z-30 flex flex-col items-center justify-center overflow-hidden bg-[#05090b] transition-opacity duration-1000 ${
           ready && (game || gameError) ? "pointer-events-none opacity-0" : "opacity-100"
@@ -418,21 +475,23 @@ export function SiteScene() {
         )}
         <Suspense fallback={null}>
           <Lighting
-            time={time}
+            time={effectiveTime}
             highQuality={enableAO}
             shadowFocus={playing && game ? game.focusPoint : null}
           />
           <Terrain />
           <Roads />
-          <Structures onSelect={setSelected} time={time} />
+          <Structures onSelect={setSelected} time={effectiveTime} />
           <SiteFeatures />
-          <Atmosphere time={time} />
+          <Atmosphere time={effectiveTime} />
           <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
           <fog attach="fog" args={[fogColor, mode === 'overhead' ? 2500 : 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
-          {game && <GameRuntime game={game} playing={playing} status={session.status} time={time} />}
+          {game && (
+            <GameRuntime game={game} playing={playing} status={session.status} time={effectiveTime} />
+          )}
         </Suspense>
 
         {ready && (
@@ -447,6 +506,12 @@ export function SiteScene() {
             )}
             <Bloom mipmapBlur intensity={0.12} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
             <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+            {/* Altered Signal grade (fiction, play mode only); low tier uses a CSS fallback. */}
+            {alteredVisible && game && qualityTier !== "low" ? (
+              <SpectralGrade presentation={game.afterHours.presentation} />
+            ) : (
+              <></>
+            )}
             <SMAA />
             <Vignette eskil={false} offset={0.22} darkness={0.18} />
           </EffectComposer>

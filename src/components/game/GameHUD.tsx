@@ -1,9 +1,10 @@
-import { useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import {
   CarFront,
   Footprints,
   Lightbulb,
   Map as MapIcon,
+  MoonStar,
   Pause,
   Play,
   Volume2,
@@ -13,6 +14,9 @@ import type { Game } from "@/game/Game";
 import { GameplayState } from "@/game/core/GameState";
 import type { PlayStatus } from "@/hooks/use-play-session";
 import { Minimap } from "@/components/site/Minimap";
+import { SOUNDTRACK_CREDIT } from "@/game/afterhours/soundtrack";
+import { useAfterHours } from "@/hooks/use-after-hours";
+import { AfterHoursMenu, AfterHoursOverlay, CharacterPicker } from "./AfterHoursHUD";
 
 const glass =
   "border border-white/10 bg-[#071014]/78 text-white shadow-[0_16px_50px_rgba(0,0,0,.28)] backdrop-blur-xl";
@@ -59,6 +63,29 @@ const DESKTOP_CONTROLS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const AFTER_HOURS_CONTROLS: { title: string; rows: [string, string][] }[] = [
+  {
+    title: "After Hours · radio",
+    rows: [
+      ["R", "Radio on / off"],
+      [", .", "Previous · next track"],
+      ["T", "Next station"],
+      ["[ ]", "Tune the receiver (hold)"],
+      ["- =", "Music volume"],
+    ],
+  },
+  {
+    title: "After Hours · signal",
+    rows: [
+      ["E", "Coffee · terminals · listening point"],
+      ["A D", "Turn a terminal dial"],
+      ["V · X", "Concert view · end"],
+      ["O", "Altered Signal on / off"],
+      ["Y", "Retry the delivery"],
+    ],
+  },
+];
+
 const MOBILE_CONTROLS: { title: string; rows: [string, string][] }[] = [
   {
     title: "Touch",
@@ -72,8 +99,18 @@ const MOBILE_CONTROLS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
-function ControlsGrid({ isMobile }: { isMobile: boolean }) {
-  const groups = isMobile ? MOBILE_CONTROLS : DESKTOP_CONTROLS;
+function ControlsGrid({
+  isMobile,
+  afterHours = false,
+}: {
+  isMobile: boolean;
+  afterHours?: boolean;
+}) {
+  const groups = isMobile
+    ? MOBILE_CONTROLS
+    : afterHours
+      ? [...DESKTOP_CONTROLS, ...AFTER_HOURS_CONTROLS]
+      : DESKTOP_CONTROLS;
   return (
     <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"}`}>
       {groups.map((group) => (
@@ -122,6 +159,8 @@ export function GameHUD({
   game,
   status,
   onStart,
+  onStartAfterHours,
+  onLeaveAfterHours,
   onPause,
   onExplore,
   isMobile,
@@ -131,6 +170,9 @@ export function GameHUD({
   game: Game;
   status: PlayStatus;
   onStart: () => void;
+  /** Begin After Hours at dusk (from a click, so audio may start). */
+  onStartAfterHours: () => void;
+  onLeaveAfterHours: () => void;
   onPause: () => void;
   onExplore: () => void;
   isMobile: boolean;
@@ -138,6 +180,12 @@ export function GameHUD({
   vehicleMarkersRef: RefObject<SVGGElement | null>;
 }) {
   const hud = useSyncExternalStore(game.hud.subscribe, game.hud.getSnapshot, game.hud.getSnapshot);
+  const after = useAfterHours(game);
+  const waypointRef = useCallback(
+    (el: SVGGElement | null) => game.afterHours.hud.bind("waypoint-map", el),
+    [game],
+  );
+  const returning = after.stage !== "coffee" || after.mission.state !== "available";
   const speedRef = useRef<HTMLSpanElement>(null);
   const gearRef = useRef<HTMLSpanElement>(null);
   const barRef = useRef<HTMLDivElement>(null);
@@ -181,7 +229,10 @@ export function GameHUD({
                 <span className="h-1.5 w-1.5 rounded-full bg-amber-300" /> {stateLabel}
               </div>
               <div className="mt-0.5 max-w-[16rem] truncate font-sans text-[10px] text-white/45">
-                {hud.vehicleLabel ?? "Pine Gap · exterior reconstruction"}
+                {hud.vehicleLabel ??
+                  (after.active
+                    ? "After Hours · fictional night shift"
+                    : "Pine Gap · exterior reconstruction")}
               </div>
             </div>
           </div>
@@ -210,6 +261,7 @@ export function GameHUD({
                   markerRef={markerRef}
                   vehicleMarkersRef={vehicleMarkersRef}
                   vehicleCount={game.vehicles.vehicles.length}
+                  waypointRef={waypointRef}
                   className="w-24"
                 />
               </div>
@@ -249,11 +301,14 @@ export function GameHUD({
                   markerRef={markerRef}
                   vehicleMarkersRef={vehicleMarkersRef}
                   vehicleCount={game.vehicles.vehicles.length}
+                  waypointRef={waypointRef}
                   className="w-36"
                 />
               </div>
             </div>
           )}
+
+          <AfterHoursOverlay game={game} isMobile={isMobile} />
 
           {/* Vehicle instruments */}
           {inVehicle && (
@@ -319,10 +374,36 @@ export function GameHUD({
               </p>
             </div>
           </div>
-          <div className="mt-6">
-            <ControlsGrid isMobile={isMobile} />
+          <div className="mt-5 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="max-w-md">
+                <div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7fd6d0]">
+                  <MoonStar size={12} /> Pine Gap: After Hours
+                  <span className="rounded-sm bg-[#0B5D63] px-1 text-[7px] tracking-[.18em] text-white/90">
+                    Fiction
+                  </span>
+                </div>
+                <p className="mt-1.5 font-sans text-[12px] leading-relaxed text-white/60">
+                  An invented night shift, beginning at dusk: a coffee to deliver, a vehicle radio,
+                  a numbers station and something broadcasting on 420. The reconstruction stays
+                  factual; everything After Hours adds is fiction.
+                </p>
+                <p className="mt-1.5 font-sans text-[11px] text-amber-200/80">
+                  {SOUNDTRACK_CREDIT.line} · {SOUNDTRACK_CREDIT.release}
+                </p>
+              </div>
+              <div className="flex flex-col items-start gap-2">
+                <button
+                  onClick={onStartAfterHours}
+                  className="flex items-center gap-2 rounded-xl bg-[#0B5D63] px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-white ring-1 ring-[#7fd6d0]/40 transition hover:bg-[#0e727a]"
+                >
+                  <MoonStar size={14} /> {returning ? "Continue After Hours" : "After Hours"}
+                </button>
+                <CharacterPicker game={game} />
+              </div>
+            </div>
           </div>
-          <div className="mt-7 flex flex-wrap items-center gap-3">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               onClick={onStart}
               className="flex items-center gap-2 rounded-xl bg-amber-300 px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-[#16120a] transition hover:bg-amber-200"
@@ -340,6 +421,9 @@ export function GameHUD({
                 ? "Drag anywhere to look around."
                 : "Deploying captures the mouse · Esc releases it."}
             </span>
+          </div>
+          <div className="mt-7">
+            <ControlsGrid isMobile={isMobile} />
           </div>
         </Card>
       )}
@@ -360,8 +444,26 @@ export function GameHUD({
               <Play size={14} /> Resume
             </button>
           </div>
+          {after.active ? (
+            <AfterHoursMenu game={game} onLeave={onLeaveAfterHours} />
+          ) : (
+            <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#0B5D63]/70 bg-[#041517]/60 p-3">
+              <button
+                onClick={onStartAfterHours}
+                className="flex items-center gap-2 rounded-lg bg-[#0B5D63] px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white transition hover:bg-[#0e727a]"
+              >
+                <MoonStar size={13} /> {returning ? "Continue After Hours" : "Start After Hours"}
+              </button>
+              <span className="font-sans text-[11px] text-white/50">
+                Fictional night shift · begins at dusk
+              </span>
+              <span className="ml-auto">
+                <CharacterPicker game={game} />
+              </span>
+            </div>
+          )}
           <div className="mt-6">
-            <ControlsGrid isMobile={isMobile} />
+            <ControlsGrid isMobile={isMobile} afterHours={after.active} />
           </div>
         </Card>
       )}

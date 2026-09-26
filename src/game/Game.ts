@@ -24,6 +24,9 @@ import { PLAYER_SPAWN, VEHICLE_SPAWNS } from "./world/spawns";
 import { DustSystem } from "./effects/DustSystem";
 import { GameAudio } from "./audio/GameAudio";
 import { HudModel } from "./hud/HudModel";
+import { AfterHours } from "./afterhours/AfterHours";
+import { AfterHoursVisuals } from "./afterhours/AfterHoursVisuals";
+import { browserStorage, type CharacterKind, type KeyValueStorage } from "./afterhours/progress";
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
@@ -32,6 +35,11 @@ export interface GameOptions {
   visuals: boolean;
   /** Dust sprite texture (browser only). */
   dustSprite?: THREE.Texture | null;
+  /**
+   * Where After Hours keeps progress. Defaults to localStorage in the
+   * browser and to none (in-memory only) headless.
+   */
+  storage?: KeyValueStorage | null;
 }
 
 export interface FrameOptions {
@@ -67,7 +75,6 @@ export class Game {
   readonly world: WorldManager;
   readonly player: PlayerController;
   readonly animator = new CharacterAnimator();
-  readonly character: CharacterVisual | null;
   readonly vehicles: VehicleManager;
   readonly vehicleController = new VehicleController();
   readonly camera: ThirdPersonCamera;
@@ -75,13 +82,22 @@ export class Game {
   readonly dust: DustSystem | null;
   readonly audio: GameAudio | null;
   readonly hud = new HudModel();
+  /** The fictional After Hours expansion (inactive until started). */
+  readonly afterHours: AfterHours;
   /** World point the gameplay is centred on (shadow frustum, telemetry). */
   readonly focusPoint = new THREE.Vector3();
   focusHeading = 0;
 
   private accumulator = 0;
   private alpha = 1;
-  private timeOfDay: TimeOfDay = "day";
+  private time: TimeOfDay = "day";
+  private characterVisual: CharacterVisual | null;
+  private kind: CharacterKind = "soldier";
+  private carrying = false;
+  private dustOverride: string | null = null;
+  private readonly movementLocks = new Set<string>();
+  private readonly listenerForward = new THREE.Vector3();
+  private readonly listenerUp = new THREE.Vector3();
   private readonly focus = createCameraFocus();
   private readonly axes = { x: 0, y: 0 };
   private readonly intent = createMoveIntent();
@@ -104,7 +120,7 @@ export class Game {
       options.visuals,
     );
     this.player = new PlayerController(this.collision, this.ground, this.events);
-    this.character = options.visuals ? new CharacterVisual() : null;
+    this.characterVisual = options.visuals ? new CharacterVisual() : null;
     this.vehicles = new VehicleManager({
       ground: this.ground,
       collision: this.collision,
@@ -136,9 +152,63 @@ export class Game {
     this.camera.snapBehind(this.focus);
 
     this.root.add(this.world.root, this.vehicles.root);
-    if (this.character) this.root.add(this.character.root);
+    if (this.characterVisual) this.root.add(this.characterVisual.root);
     if (this.dust) this.root.add(this.dust.points);
     this.wireEvents();
+    this.afterHours = new AfterHours(
+      this,
+      options.storage !== undefined ? options.storage : options.visuals ? browserStorage() : null,
+      options.visuals ? () => new AfterHoursVisuals((x, z) => this.ground.heightAt(x, z)) : null,
+    );
+  }
+
+  /** The player's character visual (null headless). */
+  get character(): CharacterVisual | null {
+    return this.characterVisual;
+  }
+
+  get characterKind(): CharacterKind {
+    return this.kind;
+  }
+
+  get timeOfDay(): TimeOfDay {
+    return this.time;
+  }
+
+  /** Swap the character's look; movement, seating and collision are unchanged. */
+  setCharacterKind(kind: CharacterKind): void {
+    if (kind === this.kind) return;
+    this.kind = kind;
+    if (!this.characterVisual) return;
+    const visible = this.characterVisual.visible;
+    this.characterVisual.dispose();
+    this.characterVisual = new CharacterVisual({ variant: kind });
+    this.characterVisual.visible = visible;
+    this.characterVisual.setCarrying(this.carrying);
+    this.root.add(this.characterVisual.root);
+  }
+
+  setCarrying(carrying: boolean): void {
+    if (carrying === this.carrying) return;
+    this.carrying = carrying;
+    this.characterVisual?.setCarrying(carrying);
+  }
+
+  /** Presentation-only dust colour (Altered Signal); null restores the time-of-day tint. */
+  setDustTint(color: string | null): void {
+    if (color === this.dustOverride) return;
+    this.dustOverride = color;
+    this.dust?.setTint(color ?? DUST_TINT[this.time]);
+  }
+
+  /** Hold the player still on foot while `owner` needs the movement keys. */
+  lockMovement(owner: string, locked: boolean): void {
+    if (locked) this.movementLocks.add(owner);
+    else this.movementLocks.delete(owner);
+  }
+
+  get movementLocked(): boolean {
+    return this.movementLocks.size > 0;
   }
 
   private wireEvents(): void {
@@ -148,7 +218,7 @@ export class Game {
     on("stateChange", (e) => {
       if (e.to === GameplayState.EnteringVehicle) {
         const v = this.interaction.vehicle;
-        if (v) v.headlights = this.timeOfDay !== "day";
+        if (v) v.headlights = this.time !== "day";
       }
       if (e.to === GameplayState.OnFoot && e.from === GameplayState.ExitingVehicle) {
         this.vehicleController.reset();
@@ -233,8 +303,8 @@ export class Game {
   }
 
   setTimeOfDay(time: TimeOfDay): void {
-    this.timeOfDay = time;
-    this.dust?.setTint(DUST_TINT[time]);
+    this.time = time;
+    this.dust?.setTint(this.dustOverride ?? DUST_TINT[time]);
   }
 
   /** Called from the user gesture that starts play (enables audio). */
@@ -249,6 +319,7 @@ export class Game {
     } else {
       this.audio?.resume();
     }
+    this.afterHours.setPaused(paused);
   }
 
   // --- Frame --------------------------------------------------------------------
@@ -279,7 +350,9 @@ export class Game {
     if (input.wasPressed("mute") && this.audio) {
       this.hud.update({ muted: this.audio.toggleMute() });
     }
-    this.interaction.update(dt, input);
+    const locked = this.movementLocks.size > 0;
+    this.interaction.update(dt, input, locked);
+    this.afterHours.update(dt, input);
 
     const driven = this.interaction.driven;
     if (driven && input.wasPressed("headlights")) {
@@ -288,7 +361,11 @@ export class Game {
     }
 
     input.moveAxes(this.axes);
-    if (this.interaction.state === GameplayState.OnFoot) {
+    if (this.interaction.state === GameplayState.OnFoot && this.movementLocks.size > 0) {
+      // Another system has the movement keys (e.g. turning a terminal dial).
+      this.intent.magnitude = 0;
+      this.intent.sprint = false;
+    } else if (this.interaction.state === GameplayState.OnFoot) {
       // Camera-relative intent: forward is where the camera looks.
       const yaw = this.camera.yaw;
       const fx = Math.sin(yaw);
@@ -331,6 +408,7 @@ export class Game {
       this.player.fixedStep(dt, this.interaction.overrideIntent ?? this.intent);
     }
     this.vehicles.fixedStep(dt);
+    this.afterHours.fixedStep(dt);
 
     const sensors = this.world.sensors;
     sensors.length = 0;
@@ -364,17 +442,30 @@ export class Game {
     if (options.camera) {
       if (options.establishing) {
         this.camera.updateEstablishing(cameraDt, this.focus, options.camera);
-      } else {
+      } else if (!this.afterHours.updateCinematic(cameraDt, options.camera)) {
         this.look.x = options.simulate ? this.input.lookX : 0;
         this.look.y = options.simulate ? this.input.lookY : 0;
         this.look.zoom = options.simulate ? this.input.zoom : 0;
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
-      if (this.character) this.character.visible = !this.camera.characterOccluded;
+      if (this.characterVisual)
+        this.characterVisual.visible = this.afterHours.cinematic || !this.camera.characterOccluded;
+      this.updateListener(options.camera);
     }
 
     this.updateAudio();
+    this.afterHours.present(dt, options.camera);
     this.updateHud(dt);
+  }
+
+  /** The Web Audio listener rides with the camera (spatial radio). */
+  private updateListener(camera: THREE.PerspectiveCamera): void {
+    const audio = this.audio;
+    if (!audio?.ready) return;
+    const f = camera.getWorldDirection(this.listenerForward);
+    const u = this.listenerUp.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    const p = camera.position;
+    audio.setListener(p.x, p.y, p.z, f.x, f.y, f.z, u.x, u.y, u.z);
   }
 
   private updateCharacter(dt: number): void {
@@ -388,8 +479,10 @@ export class Game {
       turnRate: scripted ? 0 : this.player.turnRate,
       seatWeight: this.interaction.seatWeight,
       steer: vehicle ? vehicle.controls.steer : 0,
+      carry: this.carrying ? 1 : 0,
+      style: this.kind,
     });
-    const c = this.character;
+    const c = this.characterVisual;
     if (!c) return;
     if (scripted) {
       c.root.position.copy(this.interaction.scriptedPosition);
@@ -513,12 +606,13 @@ export class Game {
   }
 
   dispose(): void {
+    this.afterHours.dispose();
     for (const off of this.unsubscribers) off();
     this.unsubscribers.length = 0;
     this.events.clear();
     this.vehicles.dispose();
     this.world.dispose();
-    this.character?.dispose();
+    this.characterVisual?.dispose();
     this.dust?.dispose();
     this.audio?.dispose();
     this.root.removeFromParent();

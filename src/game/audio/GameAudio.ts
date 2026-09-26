@@ -26,14 +26,27 @@ const FOOTSTEP_BAND: Record<SurfaceKind, [number, number, number]> = {
 /**
  * Procedural sound built entirely from Web Audio oscillators and filtered
  * noise: diesel engine, tyre scrub, wind, footsteps per surface, doors,
- * impacts and barrier motors. No audio files are loaded. The context is only
- * created from a user gesture (`unlock`), and every method is a no-op when
- * Web Audio is unavailable.
+ * impacts and barrier motors. The context is only created from a user
+ * gesture (`unlock`), and every method is a no-op when Web Audio is
+ * unavailable.
+ *
+ * It owns the one AudioContext the game uses. Everything is mixed through
+ * three buses into a master gain (mute) and a limiter, so music and effects
+ * can combine without clipping:
+ *
+ *   sfx bus   (these procedural effects)  ─┐
+ *   music bus (vehicle radio)              ├─▶ master (mute) ─▶ limiter ─▶ out
+ *   score bus (procedural puzzle music)   ─┘
  */
 export class GameAudio {
   private ctx: AudioContext | null = null;
   private master: GainNode | null = null;
+  private sfx: GainNode | null = null;
+  private music: GainNode | null = null;
+  private score: GainNode | null = null;
+  private limiter: DynamicsCompressorNode | null = null;
   private noise: AudioBuffer | null = null;
+  private readonly unlockListeners = new Set<() => void>();
   private engine: {
     low: OscillatorNode;
     high: OscillatorNode;
@@ -51,6 +64,76 @@ export class GameAudio {
     return this.ctx !== null;
   }
 
+  /** The shared context (null until unlocked). */
+  get context(): AudioContext | null {
+    return this.ctx;
+  }
+
+  /** Bus for the vehicle radio. */
+  get musicBus(): GainNode | null {
+    return this.music;
+  }
+
+  /** Bus for procedural gameplay music. */
+  get scoreBus(): GainNode | null {
+    return this.score;
+  }
+
+  /** Bus for short interface cues (chimes, squelch). */
+  get sfxBus(): GainNode | null {
+    return this.sfx;
+  }
+
+  /** Two seconds of shared white noise. */
+  get noiseBuffer(): AudioBuffer | null {
+    return this.noise;
+  }
+
+  get isMuted(): boolean {
+    return this.muted;
+  }
+
+  /** Run `fn` once the context exists (immediately if it already does). */
+  onUnlock(fn: () => void): () => void {
+    if (this.ctx) {
+      fn();
+      return () => undefined;
+    }
+    this.unlockListeners.add(fn);
+    return () => this.unlockListeners.delete(fn);
+  }
+
+  /** Place the listener at the camera (spatial radio). */
+  setListener(
+    x: number,
+    y: number,
+    z: number,
+    fx: number,
+    fy: number,
+    fz: number,
+    ux: number,
+    uy: number,
+    uz: number,
+  ): void {
+    const l = this.ctx?.listener;
+    if (!l) return;
+    if (l.positionX) {
+      l.positionX.value = x;
+      l.positionY.value = y;
+      l.positionZ.value = z;
+      l.forwardX.value = fx;
+      l.forwardY.value = fy;
+      l.forwardZ.value = fz;
+      l.upX.value = ux;
+      l.upY.value = uy;
+      l.upZ.value = uz;
+    } else {
+      // Older implementations only expose the deprecated setters.
+      l.setPosition(x, y, z);
+      l.setOrientation(fx, fy, fz, ux, uy, uz);
+    }
+  }
+
   /** Create (or resume) the audio graph. Must run inside a user gesture. */
   unlock(): void {
     if (this.ctx) {
@@ -65,9 +148,24 @@ export class GameAudio {
     if (!Ctor) return;
     const ctx = new Ctor();
     this.ctx = ctx;
+    // A fast, high-ratio compressor just under full scale acts as a limiter.
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -6;
+    limiter.knee.value = 4;
+    limiter.ratio.value = 12;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.25;
+    limiter.connect(ctx.destination);
+    this.limiter = limiter;
     this.master = ctx.createGain();
     this.master.gain.value = this.muted ? 0 : this.volume;
-    this.master.connect(ctx.destination);
+    this.master.connect(limiter);
+    this.sfx = ctx.createGain();
+    this.music = ctx.createGain();
+    this.score = ctx.createGain();
+    this.sfx.connect(this.master);
+    this.music.connect(this.master);
+    this.score.connect(this.master);
 
     // Two seconds of white noise feed every noise-based sound.
     const length = ctx.sampleRate * 2;
@@ -92,7 +190,7 @@ export class GameAudio {
     low.connect(filter);
     high.connect(filter);
     filter.connect(gain);
-    gain.connect(this.master);
+    gain.connect(this.sfx);
     const clatterFilter = ctx.createBiquadFilter();
     clatterFilter.type = "bandpass";
     clatterFilter.Q.value = 2.5;
@@ -100,7 +198,7 @@ export class GameAudio {
     clatterGain.gain.value = 0;
     this.loopNoise().connect(clatterFilter);
     clatterFilter.connect(clatterGain);
-    clatterGain.connect(this.master);
+    clatterGain.connect(this.sfx);
     low.start();
     high.start();
     this.engine = { low, high, filter, gain, clatterFilter, clatterGain };
@@ -113,7 +211,7 @@ export class GameAudio {
     skidGain.gain.value = 0;
     this.loopNoise().connect(skidFilter);
     skidFilter.connect(skidGain);
-    skidGain.connect(this.master);
+    skidGain.connect(this.sfx);
     this.skid = { filter: skidFilter, gain: skidGain };
 
     // Wind rush / outback ambience.
@@ -124,8 +222,11 @@ export class GameAudio {
     windGain.gain.value = 0.012;
     this.loopNoise().connect(windFilter);
     windFilter.connect(windGain);
-    windGain.connect(this.master);
+    windGain.connect(this.sfx);
     this.wind = { filter: windFilter, gain: windGain };
+
+    for (const fn of this.unlockListeners) fn();
+    this.unlockListeners.clear();
   }
 
   private loopNoise(): AudioBufferSourceNode {
@@ -194,7 +295,7 @@ export class GameAudio {
     delay = 0,
   ): void {
     const ctx = this.ctx;
-    if (!ctx || !this.master || !this.noise) return;
+    if (!ctx || !this.sfx || !this.noise) return;
     const t = ctx.currentTime + delay;
     const src = ctx.createBufferSource();
     src.buffer = this.noise;
@@ -208,14 +309,15 @@ export class GameAudio {
     gain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
     src.connect(filter);
     filter.connect(gain);
-    gain.connect(this.master);
+    gain.connect(this.sfx);
+    src.onended = () => gain.disconnect();
     src.start(t, Math.random() * 1.5, decay + 0.05);
   }
 
   /** Decaying sine thump. */
   private thump(frequency: number, peak: number, decay: number): void {
     const ctx = this.ctx;
-    if (!ctx || !this.master) return;
+    if (!ctx || !this.sfx) return;
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     osc.frequency.setValueAtTime(frequency, t);
@@ -224,7 +326,8 @@ export class GameAudio {
     gain.gain.setValueAtTime(peak, t);
     gain.gain.exponentialRampToValueAtTime(0.0001, t + decay);
     osc.connect(gain);
-    gain.connect(this.master);
+    gain.connect(this.sfx);
+    osc.onended = () => gain.disconnect();
     osc.start(t);
     osc.stop(t + decay + 0.05);
   }
@@ -257,7 +360,7 @@ export class GameAudio {
 
   gate(raising: boolean): void {
     const ctx = this.ctx;
-    if (!ctx || !this.master) return;
+    if (!ctx || !this.sfx) return;
     const t = ctx.currentTime;
     const osc = ctx.createOscillator();
     osc.type = "sawtooth";
@@ -272,7 +375,8 @@ export class GameAudio {
     gain.gain.linearRampToValueAtTime(0.0001, t + 1.1);
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.master);
+    gain.connect(this.sfx);
+    osc.onended = () => gain.disconnect();
     osc.start(t);
     osc.stop(t + 1.15);
   }
@@ -283,6 +387,9 @@ export class GameAudio {
     this.engine = null;
     this.skid = null;
     this.wind = null;
+    this.master = this.sfx = this.music = this.score = null;
+    this.limiter = null;
+    this.unlockListeners.clear();
     if (ctx) void ctx.close();
   }
 }

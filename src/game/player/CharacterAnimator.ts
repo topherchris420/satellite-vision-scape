@@ -76,6 +76,10 @@ export interface AnimationParams {
   seatWeight: number;
   /** Vehicle steering −1 … 1, for hands on the wheel. */
   steer: number;
+  /** 0 … 1: right hand holding a cup level in front of the body. */
+  carry?: number;
+  /** Idle style: the technician shifts weight and nods slightly. */
+  style?: "soldier" | "technician";
 }
 
 /** Stride length (one full two-step cycle, metres) as speed rises. */
@@ -106,6 +110,7 @@ export class CharacterAnimator {
   private readonly air = createPose();
   private readonly seated = createPose();
   private readonly mix = createPose();
+  private carry = 0;
 
   reset(): void {
     this.phase = 0;
@@ -139,7 +144,7 @@ export class CharacterAnimator {
     this.airWeight = damp(this.airWeight, !params.grounded && params.airTime > 0.1 ? 1 : 0, 9, dt);
     this.bank = damp(this.bank, clamp(-params.turnRate * s * 0.022, -0.2, 0.2), 6, dt);
 
-    this.buildIdle();
+    this.buildIdle(params.style === "technician");
     this.buildLocomotion(s);
     this.buildAir(params.verticalVelocity);
     this.buildSeated(params.steer);
@@ -148,14 +153,24 @@ export class CharacterAnimator {
     blendInto(this.mix, this.mix, this.air, this.airWeight);
     blendInto(this.pose, this.mix, this.seated, smoothstep(0, 1, params.seatWeight));
     this.pose.bank = this.bank * (1 - params.seatWeight);
+
+    // Carrying a cup: the right forearm stays level and the swing is damped.
+    this.carry = damp(this.carry, params.carry ?? 0, 8, dt);
+    const c = this.carry * (1 - params.seatWeight);
+    if (c > 1e-3) {
+      const p = this.pose;
+      p.rArm = p.rArm + (0.45 + p.rArm * 0.15 - p.rArm) * c;
+      p.rElbow = p.rElbow + (1.25 - p.rElbow) * c;
+      p.rArmOut = p.rArmOut + (-0.16 - p.rArmOut) * c;
+    }
     return this.pose;
   }
 
-  private buildIdle(): void {
+  private buildIdle(relaxed: boolean): void {
     const t = this.time;
     const p = this.idle;
     const breathe = Math.sin(t * 1.7);
-    const shift = Math.sin(t * 0.45);
+    const shift = Math.sin(t * (relaxed ? 0.32 : 0.45));
     p.hipsY = -0.01 + breathe * 0.004;
     p.pelvisYaw = 0;
     p.pelvisRoll = shift * 0.025;
@@ -176,6 +191,20 @@ export class CharacterAnimator {
     p.rArmOut = -0.13;
     p.lElbow = 0.22;
     p.rElbow = 0.22;
+    if (relaxed) {
+      // Someone who came for a soundcheck: a looser stance, weight shifting
+      // further onto one hip, and a small slow nod.
+      p.pelvisRoll = shift * 0.045;
+      p.spinePitch = 0.06 + breathe * 0.01;
+      p.headPitch = 0.06 + Math.sin(t * 0.9) * 0.035 + Math.sin(t * 0.23) * 0.03;
+      p.spineYaw = Math.sin(t * 0.19) * 0.06;
+      p.lKnee = 0.05 + Math.max(0, shift) * 0.12;
+      p.rKnee = 0.05 + Math.max(0, -shift) * 0.12;
+      p.lArmOut = 0.08;
+      p.rArmOut = -0.08;
+      p.lElbow = 0.32;
+      p.rElbow = 0.32;
+    }
   }
 
   private buildLocomotion(speed: number): void {

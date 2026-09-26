@@ -15,7 +15,20 @@ export type Action =
   | "handbrake"
   | "interact"
   | "headlights"
-  | "mute";
+  | "mute"
+  // After Hours
+  | "radioPower"
+  | "radioNext"
+  | "radioPrevious"
+  | "radioStation"
+  | "volumeUp"
+  | "volumeDown"
+  | "tuneUp"
+  | "tuneDown"
+  | "cinematic"
+  | "cancel"
+  | "retry"
+  | "alteredSignal";
 
 export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   forward: ["KeyW", "ArrowUp"],
@@ -29,6 +42,18 @@ export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   interact: ["KeyE"],
   headlights: ["KeyL"],
   mute: ["KeyM"],
+  radioPower: ["KeyR"],
+  radioNext: ["Period"],
+  radioPrevious: ["Comma"],
+  radioStation: ["KeyT"],
+  volumeUp: ["Equal"],
+  volumeDown: ["Minus"],
+  tuneUp: ["BracketRight"],
+  tuneDown: ["BracketLeft"],
+  cinematic: ["KeyV"],
+  cancel: ["KeyX"],
+  retry: ["KeyY"],
+  alteredSignal: ["KeyO"],
 };
 
 /** Every code the game consumes, so the DOM layer can prevent browser defaults. */
@@ -42,6 +67,10 @@ export interface VirtualInput {
   /** Held button: jump on foot, handbrake while driving. */
   action: boolean;
   interactRequested: boolean;
+  /** Held on-screen receiver tuning: −1, 0 or +1. */
+  tune: number;
+  /** Held on-screen terminal dial: −1, 0 or +1. */
+  dial: number;
 }
 
 export class InputState {
@@ -58,6 +87,8 @@ export class InputState {
     sprint: false,
     action: false,
     interactRequested: false,
+    tune: 0,
+    dial: 0,
   };
 
   keyDown(code: string): void {
@@ -89,6 +120,8 @@ export class InputState {
     this.virtual.moveY = 0;
     this.virtual.action = false;
     this.virtual.interactRequested = false;
+    this.virtual.tune = 0;
+    this.virtual.dial = 0;
     this.lookAccumX = 0;
     this.lookAccumY = 0;
     this.zoomAccum = 0;

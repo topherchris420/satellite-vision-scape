@@ -1,4 +1,4 @@
-import type { MouseEvent, RefObject } from "react";
+import type { MouseEvent, Ref, RefObject } from "react";
 import {
   roadPath,
   perimeterPath,
@@ -24,6 +24,7 @@ export function Minimap({
   onNavigate,
   vehicleMarkersRef,
   vehicleCount = 0,
+  waypointRef,
   className = "w-40",
 }: {
   markerRef: RefObject<SVGGElement | null>;
@@ -31,6 +32,8 @@ export function Minimap({
   /** Group whose children are positioned imperatively, one per vehicle. */
   vehicleMarkersRef?: RefObject<SVGGElement | null>;
   vehicleCount?: number;
+  /** Objective marker (After Hours), positioned imperatively. */
+  waypointRef?: Ref<SVGGElement>;
   className?: string;
 }) {
   const handleClick = (e: MouseEvent<SVGSVGElement>) => {
@@ -178,6 +181,12 @@ export function Minimap({
               strokeWidth={2}
             />
           ))}
+        </g>
+      )}
+      {/* objective marker — transform and opacity driven imperatively by After Hours */}
+      {waypointRef && (
+        <g ref={waypointRef} opacity={0}>
+          <path d="M0,-20 L13,0 L0,20 L-13,0 Z" fill="#7fd6d0" stroke="#000" strokeOpacity={0.5} strokeWidth={3} />
         </g>
       )}
       {/* camera marker — transform driven imperatively by CameraTracker */}
