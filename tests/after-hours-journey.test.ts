@@ -494,3 +494,35 @@ describe("mission failure, retry and vehicle changes", () => {
     game.dispose();
   });
 });
+
+describe("radio panel shortcuts", () => {
+  test("station chips tune directly and the track list plays the chosen track", () => {
+    const game = new Game({ visuals: false, storage: new MemoryStorage() });
+    const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 9000);
+    const ah = game.afterHours;
+    run(game, camera, 0.3);
+    ah.start();
+    run(game, camera, 0.5);
+    expect(ah.hud.getSnapshot().radio.inReach).toBe(true);
+
+    ah.tuneToStation("numbers");
+    run(game, camera, 0.2);
+    expect(ah.radio.station?.id).toBe("numbers");
+    expect(ah.hud.getSnapshot().radio.stationLabel).toBe("Numbers Station");
+
+    // 420 stays hidden until it has been found on the dial.
+    ah.tuneToStation("f420");
+    expect(ah.radio.station?.id).toBe("numbers");
+
+    // Picking a track from another station, with the radio off, tunes back to the album.
+    ah.radioCommand("power");
+    expect(ah.radio.power).toBe(false);
+    ah.playTrack(3);
+    run(game, camera, 0.2);
+    expect(ah.radio.power).toBe(true);
+    expect(ah.radio.station?.id).toBe("indigo");
+    expect(ah.radio.trackIndex).toBe(3);
+    expect(ah.hud.getSnapshot().radio.stationLabel).toBe("christopher woodyard (live)");
+    game.dispose();
+  });
+});

@@ -346,7 +346,7 @@ export function GameHUD({
               <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
                 <div
                   ref={barRef}
-                  className="h-full origin-left scale-x-0 bg-gradient-to-r from-amber-300/60 to-amber-300"
+                  className="h-full origin-left [transform:scaleX(0)] bg-gradient-to-r from-amber-300/60 to-amber-300"
                 />
               </div>
               <div className="mt-3 flex items-center justify-between text-[9px] uppercase tracking-[.16em] text-white/40">
