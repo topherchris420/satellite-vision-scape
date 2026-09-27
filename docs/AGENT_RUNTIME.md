@@ -56,7 +56,8 @@ Execution        src/agent/runtime.ts            state machine, modes, takeover,
 Control          src/agent/control.ts            ControlArbiter, SyntheticInput
 Trace            src/agent/trace.ts              svs-agent-trace/v1
 Evaluation       src/agent/evaluation.ts         generic metrics + task metrics + episode windows
-Server           src/server/agent/               Jev adapter: handler, question, rate limits
+Server           src/server/agent/               Jev adapter: handler, question, assists, rate limits
+Probes           src/agent/probes/afterHours.ts  capability probes: situations, grading, chance floor
 UI               src/components/game/AgentHUD.tsx, AgentLaunch.tsx, src/lib/agent-ui.ts
 ```
 
@@ -168,7 +169,7 @@ The task adapter does not import the station table or the terminal definitions, 
 
 Least privilege: tuning is a tap or a hold of the same keys a player uses — there is no way to name a frequency or a dial value. Navigation takes a target id from the observation's list — never coordinates. Every intent passes the schema, then must equal one of the observation's `legal` intents, then must still be legal in the **current** world when it is applied (otherwise it is recorded as stale). Validation happens on the server (for Jev), in the provider client, and in the runtime.
 
-Legal sets follow the world: interactions are offered only where the game's own prompt offers them (via a read-only `InteractionManager.promptTarget`), driving intents only while driving, terminal intents only while a terminal panel is open, and nothing but waiting during vehicle transitions and the concert.
+Legal sets follow the world: interactions are offered only where the game's own prompt offers them (via a read-only `InteractionManager.promptTarget`), driving intents only while driving, terminal intents only while a terminal panel is open, and nothing but waiting during vehicle transitions and while the task plays itself out (`TaskAdapter.passive()`: the concert, a locked panel closing). A wait-only legal set costs no provider call; before `passive()` existed, the concert alone cost 57 of the scripted baseline's 212 calls.
 
 ## 6. Runtime state machine
 
@@ -300,6 +301,7 @@ Human, Jev, random, baseline and replay runs are measured by the same code under
 ## 12. Security
 
 - `TYPESAFE_API_KEY` and `TYPESAFE_MODEL` are **server** environment variables, read only by `src/server/agent/jev.server.ts`. Never use a `VITE_` prefix.
+- `JEV_ASSISTS` (server, not secret) sets how much the question coaches: `full` (default; run B's question, byte for byte), `lean` (facts, not conclusions) or `none`. The status `GET` reports the profile in force. See [NEXT_MODEL.md](NEXT_MODEL.md).
 - The browser sends `{ session, observation }` only; unknown fields are refused. The server builds every word of the TypeSafe question; displayed game text is quoted as data and the context says it is not an instruction. The endpoint cannot be used as a prompt proxy: its only output is one of the offered intents.
 - Requests: same-origin only, JSON only, ≤ 16.9 KiB, strict schema, `controller.provider === "jev"`.
 - Answers: an offered option only, confidence and probabilities in [0, 1], probabilities over offered options summing to 1 within rounding, the choice the most probable; otherwise 502 — never a decision.
@@ -332,9 +334,12 @@ bun test                  # everything
 bun run typecheck && bun run lint
 bun run verify:secrets    # production build with a canary key, then scan
 AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts [--decisions N | --journey --minutes 30 --trace out.json]
+bun run probes:capture    # re-capture the capability probes (deterministic)
+bun run probes -- --provider random|baseline            # free reference points
+AGENT_LIVE_TEST=1 bun run probes -- --provider jev [--profiles full,lean,none | --ablate]
 ```
 
-The live script is billable, opt-in and never part of CI; it runs the real handler and runtime, headless, paced to wall-clock time.
+The live scripts are billable, opt-in and never part of CI; they run the real handler (and, for the journey, the real runtime), headless. `JEV_ASSISTS` applies to both.
 
 ## 15. Limitations
 
@@ -348,6 +353,8 @@ The live script is billable, opt-in and never part of CI; it runs the real handl
 ## 16. Future providers and environments
 
 Designed-for, not built: `OpenAIProvider`, `AnthropicProvider`, `LocalModelProvider` (each an `AgentProvider`, with remote credentials behind a server adapter like Jev's), a `ScriptedProvider` library, benchmark suites that run many seeded episodes headless and compare `EvaluationResult`s, human-vs-agent leaderboards built on traces, and new environments (Lop Nur, a fictional city) that implement the same environment and task interfaces.
+
+Which of these gets built next is decided by measurement, not by roadmap: [NEXT_MODEL.md](NEXT_MODEL.md) lists each bet with the probe or trace number that would trigger it.
 
 ---
 

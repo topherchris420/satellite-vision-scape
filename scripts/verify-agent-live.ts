@@ -6,6 +6,7 @@
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts            # 6 decisions
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts --decisions 40
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts --journey --minutes 20 --trace out.json
+ *   JEV_ASSISTS=lean AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts --journey   # next-model question
  *
  * Prints, per decision: provider, model, latency, the chosen intent and how
  * executing it ended. Never prints the credential.
@@ -15,6 +16,7 @@ import * as THREE from "three";
 import { Game } from "../src/game/Game";
 import { JevProvider } from "../src/agent/providers/jev";
 import { intentKey } from "../src/agent/contract";
+import { resolveAssists } from "../src/server/agent/assists";
 import { createJevDecisionHandler } from "../src/server/agent/handler";
 
 const args = process.argv.slice(2);
@@ -34,9 +36,11 @@ if (process.env.AGENT_LIVE_TEST !== "1" || !process.env.TYPESAFE_API_KEY) {
   process.exit(2);
 }
 
+const assists = resolveAssists(process.env.JEV_ASSISTS);
 const handler = createJevDecisionHandler({
   apiKey: process.env.TYPESAFE_API_KEY,
   model: process.env.TYPESAFE_MODEL,
+  assists,
   log: (e) => console.error(JSON.stringify(e)),
 });
 const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 3000);
@@ -100,6 +104,7 @@ console.log(
     {
       provider: "jev",
       model: game.agent.trace.header.model,
+      assists: assists.profile,
       runtimeState: game.agent.runtime.state,
       mode: game.agent.runtime.mode,
       lastFailure: game.agent.runtime.lastFailure,

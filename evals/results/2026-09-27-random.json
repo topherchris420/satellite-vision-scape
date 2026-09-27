@@ -1,0 +1,334 @@
+{
+ "schema": "svs-agent-probe-results/v1",
+ "date": "2026-09-27",
+ "provider": "random",
+ "model": "seeded-uniform",
+ "repeats": 1000,
+ "calls": 10000,
+ "probes": {
+  "path": "evals/after-hours-probes.json",
+  "capturedAt": "2026-09-27",
+  "sha256": "c4d7e5bb177fb7a1"
+ },
+ "results": [
+  {
+   "probe": "coffee-go-to-cart",
+   "profile": "n/a",
+   "passes": 51,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.059,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_previous_track": 62,
+    "tune_receiver:up:short": 68,
+    "tune_receiver:down:short": 66,
+    "tune_receiver:up:tap": 51,
+    "radio_next_station": 50,
+    "wait": 60,
+    "navigate_to:uv-1": 57,
+    "navigate_to:uv-2": 63,
+    "navigate_to:uv-3": 72,
+    "radio_next_track": 55,
+    "radio_power": 62,
+    "navigate_to:technician": 60,
+    "request_human": 58,
+    "navigate_to:coffee_cart": 51,
+    "tune_receiver:down:tap": 61,
+    "tune_receiver:down:long": 57,
+    "tune_receiver:up:long": 47
+   },
+   "rate": 0.051,
+   "wilson95": [
+    0.039,
+    0.066
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "n/a",
+   "passes": 61,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 0,
+   "answers": {
+    "tune_receiver:up:tap": 60,
+    "tune_receiver:up:short": 69,
+    "tune_receiver:down:short": 69,
+    "radio_next_track": 68,
+    "wait": 64,
+    "stop_vehicle": 66,
+    "exit_vehicle": 67,
+    "drive_to:coffee_cart": 68,
+    "radio_previous_track": 58,
+    "radio_next_station": 58,
+    "radio_power": 63,
+    "tune_receiver:up:long": 49,
+    "request_human": 57,
+    "drive_to:technician": 61,
+    "tune_receiver:down:tap": 62,
+    "tune_receiver:down:long": 61
+   },
+   "rate": 0.061,
+   "wilson95": [
+    0.048,
+    0.078
+   ]
+  },
+  {
+   "probe": "receiver-tune-toward-clue",
+   "profile": "n/a",
+   "passes": 151,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.167,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_previous_track": 55,
+    "tune_receiver:up:short": 62,
+    "tune_receiver:up:tap": 45,
+    "tune_receiver:down:short": 62,
+    "radio_next_station": 62,
+    "wait": 57,
+    "navigate_to:uv-1": 56,
+    "enter_vehicle:uv-1": 57,
+    "navigate_to:uv-3": 55,
+    "radio_next_track": 51,
+    "radio_power": 48,
+    "navigate_to:uv-2": 64,
+    "navigate_to:technician": 59,
+    "request_human": 52,
+    "tune_receiver:down:tap": 60,
+    "navigate_to:coffee_cart": 56,
+    "tune_receiver:down:long": 55,
+    "tune_receiver:up:long": 44
+   },
+   "rate": 0.151,
+   "wilson95": [
+    0.13,
+    0.175
+   ]
+  },
+  {
+   "probe": "receiver-hold-signal",
+   "profile": "n/a",
+   "passes": 57,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.056,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_previous_track": 55,
+    "tune_receiver:up:short": 62,
+    "tune_receiver:up:tap": 45,
+    "tune_receiver:down:short": 62,
+    "radio_next_station": 62,
+    "wait": 57,
+    "navigate_to:uv-1": 56,
+    "enter_vehicle:uv-1": 57,
+    "navigate_to:uv-3": 55,
+    "radio_next_track": 51,
+    "radio_power": 48,
+    "navigate_to:uv-2": 64,
+    "navigate_to:technician": 59,
+    "request_human": 52,
+    "tune_receiver:down:tap": 60,
+    "navigate_to:coffee_cart": 56,
+    "tune_receiver:down:long": 55,
+    "tune_receiver:up:long": 44
+   },
+   "rate": 0.057,
+   "wilson95": [
+    0.044,
+    0.073
+   ]
+  },
+  {
+   "probe": "terminal-go-to-terminal",
+   "profile": "n/a",
+   "passes": 186,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.19,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_next_track": 47,
+    "tune_receiver:up:tap": 59,
+    "tune_receiver:down:short": 57,
+    "radio_previous_track": 36,
+    "radio_power": 51,
+    "wait": 51,
+    "navigate_to:uv-2": 46,
+    "navigate_to:uv-3": 55,
+    "navigate_to:melody": 42,
+    "navigate_to:technician": 45,
+    "navigate_to:harmony": 49,
+    "navigate_to:bass": 49,
+    "request_human": 46,
+    "radio_next_station": 47,
+    "tune_receiver:down:tap": 48,
+    "tune_receiver:down:long": 43,
+    "tune_receiver:up:long": 45,
+    "navigate_to:rhythm": 46,
+    "navigate_to:coffee_cart": 53,
+    "navigate_to:uv-1": 45,
+    "tune_receiver:up:short": 40
+   },
+   "rate": 0.186,
+   "wilson95": [
+    0.163,
+    0.211
+   ]
+  },
+  {
+   "probe": "terminal-open-when-prompted",
+   "profile": "n/a",
+   "passes": 51,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.045,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_next_station": 53,
+    "tune_receiver:up:tap": 49,
+    "radio_previous_track": 40,
+    "tune_receiver:down:short": 54,
+    "interact:harmony": 51,
+    "wait": 50,
+    "navigate_to:uv-2": 47,
+    "navigate_to:uv-3": 47,
+    "navigate_to:technician": 49,
+    "radio_power": 35,
+    "navigate_to:harmony": 53,
+    "navigate_to:coffee_cart": 50,
+    "radio_next_track": 41,
+    "navigate_to:bass": 47,
+    "request_human": 42,
+    "navigate_to:uv-1": 43,
+    "navigate_to:rhythm": 42,
+    "tune_receiver:up:long": 46,
+    "tune_receiver:down:long": 43,
+    "navigate_to:melody": 34,
+    "tune_receiver:up:short": 39,
+    "tune_receiver:down:tap": 45
+   },
+   "rate": 0.051,
+   "wilson95": [
+    0.039,
+    0.066
+   ]
+  },
+  {
+   "probe": "terminal-hold-when-aligned",
+   "profile": "n/a",
+   "passes": 109,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.111,
+   "meanLatencyMs": 0,
+   "answers": {
+    "tune_terminal:down:tap": 106,
+    "tune_terminal:down:short": 107,
+    "leave_terminal": 117,
+    "tune_terminal:up:long": 110,
+    "wait": 109,
+    "request_human": 113,
+    "tune_terminal:up:tap": 119,
+    "tune_terminal:up:short": 115,
+    "tune_terminal:down:long": 104
+   },
+   "rate": 0.109,
+   "wilson95": [
+    0.091,
+    0.13
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "n/a",
+   "passes": 317,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 0,
+   "answers": {
+    "tune_terminal:down:tap": 106,
+    "tune_terminal:down:short": 107,
+    "leave_terminal": 117,
+    "tune_terminal:up:long": 110,
+    "wait": 109,
+    "request_human": 113,
+    "tune_terminal:up:tap": 119,
+    "tune_terminal:up:short": 115,
+    "tune_terminal:down:long": 104
+   },
+   "rate": 0.317,
+   "wilson95": [
+    0.289,
+    0.346
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "n/a",
+   "passes": 344,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 0,
+   "answers": {
+    "tune_terminal:down:tap": 106,
+    "tune_terminal:down:short": 107,
+    "leave_terminal": 117,
+    "tune_terminal:up:long": 110,
+    "wait": 109,
+    "request_human": 113,
+    "tune_terminal:up:tap": 119,
+    "tune_terminal:up:short": 115,
+    "tune_terminal:down:long": 104
+   },
+   "rate": 0.344,
+   "wilson95": [
+    0.315,
+    0.374
+   ]
+  },
+  {
+   "probe": "concert-start-when-prompted",
+   "profile": "n/a",
+   "passes": 54,
+   "trials": 1000,
+   "failures": 0,
+   "chance": 0.053,
+   "meanLatencyMs": 0,
+   "answers": {
+    "radio_next_track": 58,
+    "tune_receiver:up:tap": 53,
+    "tune_receiver:down:short": 63,
+    "radio_power": 47,
+    "wait": 53,
+    "navigate_to:uv-1": 55,
+    "navigate_to:uv-2": 47,
+    "navigate_to:coffee_cart": 63,
+    "radio_next_station": 53,
+    "start_concert": 54,
+    "navigate_to:uv-3": 55,
+    "radio_previous_track": 45,
+    "navigate_to:listening_point": 52,
+    "request_human": 53,
+    "tune_receiver:up:short": 48,
+    "navigate_to:technician": 51,
+    "tune_receiver:down:tap": 55,
+    "tune_receiver:down:long": 48,
+    "tune_receiver:up:long": 47
+   },
+   "rate": 0.054,
+   "wilson95": [
+    0.042,
+    0.07
+   ]
+  }
+ ],
+ "verdicts": []
+}

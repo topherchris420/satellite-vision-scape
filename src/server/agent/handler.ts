@@ -7,6 +7,7 @@ import {
 } from "../../agent/contract";
 import { OBSERVATION_SCHEMA, MAX_OBSERVATION_BYTES } from "../../agent/observation";
 import { validateObservation } from "../../agent/tasks/registry";
+import { FULL_ASSISTS, type Assists } from "./assists";
 import { buildQuestion } from "./question";
 import { DEFAULT_RATE_LIMITS, RateLimiter } from "./rateLimit";
 
@@ -58,6 +59,8 @@ export interface JevServerConfig {
   apiKey: string | undefined;
   /** The `TYPESAFE_MODEL` value; missing or malformed means `jev-latest`. */
   model?: string | undefined;
+  /** Which assists the question carries (`JEV_ASSISTS`, see assists.ts). Default: all. */
+  assists?: Assists;
   fetchImpl?: typeof fetch;
   limiter?: RateLimiter;
   now?: () => number;
@@ -237,6 +240,7 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
   const timeoutMs = config.timeoutMs ?? UPSTREAM_TIMEOUT_MS;
   const model = resolveModel(config.model);
   const apiKey = config.apiKey?.trim() || undefined;
+  const assists = config.assists ?? FULL_ASSISTS;
   const log =
     config.log ?? ((event: Record<string, unknown>) => console.warn(JSON.stringify(event)));
 
@@ -246,6 +250,7 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
       service: "svs-agent-jev",
       configured: apiKey !== undefined,
       model,
+      assists: assists.profile,
       actionContract: ACTION_CONTRACT,
       observationSchema: OBSERVATION_SCHEMA,
       limits: {
@@ -327,7 +332,7 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
         retryAfterMs: slot.retryAfterMs,
       });
 
-    const { request: question, options } = buildQuestion(observation, model);
+    const { request: question, options } = buildQuestion(observation, model, assists);
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const disconnect = () => controller.abort();

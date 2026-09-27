@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="#tests-and-verification"><img alt="201 tests" src="https://img.shields.io/badge/tests-201_passing-34d399?style=flat-square" /></a>
+  <a href="#tests-and-verification"><img alt="213 tests" src="https://img.shields.io/badge/tests-213_passing-34d399?style=flat-square" /></a>
   <a href="#engineering"><img alt="Gameplay update 0.05 ms per frame" src="https://img.shields.io/badge/gameplay_update-0.05_ms%2Fframe-5eead4?style=flat-square" /></a>
   <a href="docs/AGENT_RUNTIME.md#10-traces--svs-agent-tracev1"><img alt="Trace format svs-agent-trace/v1" src="https://img.shields.io/badge/trace-svs--agent--trace%2Fv1-a78bfa?style=flat-square" /></a>
   <br />
@@ -29,6 +29,7 @@
   <a href="#watch-an-agent-finish-the-whole-mission"><b>The live agent run</b></a> ·
   <a href="#pine-gap-after-hours"><b>After Hours</b></a> ·
   <a href="#how-the-agent-plays"><b>How the agent plays</b></a> ·
+  <a href="#built-for-the-next-model-measured-on-this-one"><b>Next model</b></a> ·
   <a href="#engineering"><b>Engineering</b></a> ·
   <a href="docs/AGENT_RUNTIME.md"><b>Agent architecture</b></a>
 </p>
@@ -372,13 +373,49 @@ Full detail: [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md) · Jev walkthrough: 
 
 ---
 
+## Built for the next model, measured on this one
+
+Agent products age with the model underneath them. Build around today's weaknesses and the product is stale by the next release. Build for a model nobody has yet and it is broken today. This repo does neither: **it ships the question today's model needs, keeps the question next quarter's model should need ready beside it, and lets measurements decide when to switch.**
+
+**We have already lived through one upgrade.** Run A gave Jev the terminal meters as bare facts, and it spent 473 decisions turning a dial back and forth. Run B spelled out the conclusions a player draws from those meters ("that turn raised the match: the reference lies further up", "keep still and it locks") and finished the mission. Those sentences are real help, and they are also a bet on today's model. So each one is now a **named, switchable assist**, stored with the failure that justified it and the probes that can retire it:
+
+| `JEV_ASSISTS`    | Jev is told                                                                          | Role                                                         | Question size |
+| :--------------- | :----------------------------------------------------------------------------------- | :----------------------------------------------------------- | ------------: |
+| `full` (default) | Run B's question, **byte for byte** (checked on 155 real observations)               | What today's model needs                                     |       4,917 B |
+| `lean`           | Facts, not conclusions: what's on screen, how the controls feel, directions in words | **The bet** on the next model                                |         −5.7% |
+| `none`           | Raw numbers only                                                                     | A ceiling probe to show where the frontier is; never shipped |         −9.9% |
+
+**Ten probes measure the gap instead of guessing it.** Each probe is one decision captured deterministically from the real game, with an answer any player would agree on: "ALIGNED, lock meter 16%: do you keep still?", "that long turn took the match from 86% to 25%: which way now?". Each has a chance floor (5–33%, confirmed over 1,000 seeded random trials), and the scripted baseline passes 9 of 10 cold. An assist is retired only when its probes clear a **Wilson 95% lower bound of 0.80** without it, over at least 10 trials, and lose no more than 5 points. 19/20 doesn't qualify; 20/20 does.
+
+```sh
+bun run probes -- --provider random --repeats 1000                         # chance floor, free
+AGENT_LIVE_TEST=1 bun run probes -- --provider jev --profiles full,lean,none # 300 billable calls, ~3 min
+AGENT_LIVE_TEST=1 bun run probes -- --provider jev --ablate                  # full vs full-minus-each assist
+```
+
+**The trace shows where the calls go, so we fixed what it showed.** In run B, 37% of Jev's calls were mid-route reviews (0 of 79 changed the plan) and 23% were Wait in the concert stage. On the current build the scripted baseline spent **57 of 212 calls choosing Wait while the transmission played**. A task can now declare that it is playing itself out, and the runtime waits without asking: **212 → 155 calls (−27%)**, with the same 411.9 s mission, 93% coffee and 0 collisions.
+
+**Bigger bets wait for their tripwire.** We have not built them, and each one names the number that would change that:
+
+| Not built yet                  | Build when                                                                                |
+| :----------------------------- | :---------------------------------------------------------------------------------------- |
+| `lean` as the default          | Every assist it drops gets `retire` on the live model, and a `lean` journey matches run B |
+| Reviews every 6 s, not 3 s     | Reviews change the plan < 1% over ≥ 5 live runs (run B: 0/79)                             |
+| Several intents per call       | Every probe ≥ 95% at `lean`                                                               |
+| Screenshots instead of text    | Text probes ≥ 95% at `none`, so the remaining gap is perception                           |
+| Coordinates, exact dial values | Never. It's a design boundary, not a capability gap                                       |
+
+The live Jev probe matrix **has not been run yet**; the ledger has a row waiting for it. Method, numbers and ledger: [docs/NEXT_MODEL.md](docs/NEXT_MODEL.md).
+
+---
+
 ## Engineering
 
 <table>
   <tr>
     <td align="center" width="25%"><h2>0.05&nbsp;ms</h2><sub>median gameplay update per frame<br />(input, 120 Hz physics, collision, animation, camera, HUD)</sub></td>
     <td align="center" width="25%"><h2>−53%</h2><sub>draw calls on the site overview<br />(1,783 → 846)</sub></td>
-    <td align="center" width="25%"><h2>201</h2><sub>tests across 19 suites<br />116,146 assertions in ~6 s</sub></td>
+    <td align="center" width="25%"><h2>213</h2><sub>tests across 20 suites<br />121,309 assertions in ~5 s</sub></td>
     <td align="center" width="25%"><h2>0</h2><sub>per-frame allocations<br />in gameplay loops</sub></td>
   </tr>
 </table>
@@ -536,7 +573,7 @@ Play uses **Pointer Lock**; where the browser refuses it (embedded frames, touch
 ## Tests and verification
 
 ```sh
-bun run test            # 201 tests · 19 suites · unit + headless gameplay integration
+bun run test            # 213 tests · 20 suites · unit + headless gameplay integration
 bun run test:agent      # just the agent suites
 bun run typecheck       # TypeScript
 bun run lint            # ESLint
@@ -550,21 +587,23 @@ The suites don't mock the game. They **play** it:
 - **`after-hours-journey`** plays the whole expansion through the real input path: collects the coffee, drives 620 m with an analog autopilot, delivers, tunes 420, locks four terminals, interrupts and replays the concert, reloads, fails and retries.
 - **`agent-journey`** runs the full mission end to end through the real agent runtime and real vehicle physics (≈ 412 s simulated, 93% of the coffee delivered, 0 collisions), and the **`agent-authority`** suite proves every milestone came from an E press.
 - **`agent-motor`** compares driving profiles on the same coffee run: smooth keeps **100%** of the coffee with 2 abrupt control changes; aggressive keeps **11%** with 16.
+- **`agent-assists`** proves the default question is run B's, byte for byte; that every assist changes the question on its own probes; that `none` drops the coaching but keeps every on-screen fact; that the captured probes still validate and match; and that the runtime makes **zero** model calls while the transmission plays.
 
-Beyond CI: `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls; `AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts` is the opt-in, billable live Jev check.
+Beyond CI: `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls; `AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts` is the opt-in, billable live Jev check, and `bun run probes` scores any provider on the capability probes ([docs/NEXT_MODEL.md](docs/NEXT_MODEL.md)).
 
 ---
 
 ## Project structure
 
 ```text
-├── docs/                   # Agent runtime, Jev run + trace, spatial reference, provenance, terrain
+├── docs/                   # Agent runtime, next-model method, Jev run + trace, spatial reference, provenance, terrain
+├── evals/                  # Capability probes (captured observations) and probe results
 ├── public/music/           # Indigo People, Green Machine (streamed; not under the software licence)
-├── scripts/                # Browser checks, perf, live agent check, thesis recorder, builders
+├── scripts/                # Browser checks, perf, live agent check, probe capture + runner, thesis recorder, builders
 ├── src/
 │   ├── game/               # Gameplay: world, player, vehicles, camera, interaction, audio, HUD, After Hours
 │   ├── agent/              # Agent runtime: contracts, providers, loop, executor, traces, evaluation
-│   ├── server/agent/       # Server-side Jev adapter (credential, question, validation, rate limits)
+│   ├── server/agent/       # Server-side Jev adapter (credential, question, assists, validation, rate limits)
 │   ├── components/game/    # R3F bridge (GameRuntime), play-mode HUD and agent panel
 │   ├── components/site/    # Scene components (terrain, structures, roads, lighting, viewer HUD)
 │   ├── hooks/              # use-play-session (pointer lock lifecycle), use-after-hours, use-mobile

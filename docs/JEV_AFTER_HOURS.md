@@ -111,6 +111,7 @@ Server environment only:
 ```text
 TYPESAFE_API_KEY=<private credential>
 TYPESAFE_MODEL=jev-latest        # optional; a pinned version such as jev-1.13.0 also works
+JEV_ASSISTS=full                 # optional; full (default) · lean · none — see docs/NEXT_MODEL.md
 ```
 
 Never prefix these with `VITE_`. The browser talks only to `/api/agent/jev/decision` on its own origin.

@@ -1,0 +1,3089 @@
+{
+ "schema": "svs-agent-probes/v1",
+ "environment": "pine-gap",
+ "task": "after-hours",
+ "capturedAt": "2026-09-27",
+ "capturedWith": "scripted After Hours baseline (?controller=mock), headless; a heavy-handed variant (long holds on terminals) where the baseline never reaches the situation",
+ "probes": [
+  {
+   "id": "coffee-go-to-cart",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 1,
+    "timestampMs": 33,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 12,
+       "bearingDeg": -54,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      -61.2,
+      0.6,
+      175.3
+     ],
+     "headingDeg": 2,
+     "speedMps": 0,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 17,
+       "bearingDeg": 126,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 538,
+       "bearingDeg": 9,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 12,
+       "bearingDeg": -54,
+       "position": [
+        -70.4,
+        168
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 311,
+       "bearingDeg": 29,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 213,
+       "bearingDeg": -101,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "coffee",
+     "objective": "Collect the coffee from the canteen cart",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "available",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": null,
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "christopher woodyard (live)",
+       "frequency": 367.5,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": null,
+       "signalAcquired": false
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Evening, visitor. The technician at the north antenna hut has requested coffee. The cart is by the south hall.",
+        "kind": "story",
+        "ageS": 0
+       }
+      ],
+      "terminals": null,
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": null,
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "coffee-deliver-while-driving",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 9,
+    "timestampMs": 14083,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 0,
+       "bearingDeg": 178,
+       "state": "yours"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "driving",
+     "position": [
+      -70.4,
+      0.6,
+      168
+     ],
+     "headingDeg": 2,
+     "speedMps": 0,
+     "busy": false
+    },
+    "vehicle": {
+     "id": "uv-1",
+     "label": "4×4 utility vehicle · UV-1",
+     "speedMps": 0,
+     "headingDeg": 2,
+     "headlights": false
+    },
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 29,
+       "bearingDeg": 126,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 533,
+       "bearingDeg": 10,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 310,
+       "bearingDeg": 31,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 205,
+       "bearingDeg": -103,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "coffee",
+     "objective": "Deliver the coffee to the north antenna hut",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "active",
+       "carrying": true,
+       "remainingPercent": 100,
+       "timeRemainingS": 231,
+       "failReason": null,
+       "delivered": null,
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "christopher woodyard (live)",
+       "frequency": 367.5,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": false
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Evening, visitor. The technician at the north antenna hut has requested coffee. The cart is by the south hall.",
+        "kind": "story",
+        "ageS": 14.1
+       },
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 7.1
+       }
+      ],
+      "terminals": null,
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "enter_vehicle",
+      "target": "uv-1"
+     },
+     "outcome": "input_sent",
+     "durationS": 1.8
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "stop_vehicle"
+     },
+     {
+      "intent": "exit_vehicle"
+     },
+     {
+      "intent": "drive_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "drive_to",
+      "target": "technician"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "receiver-tune-toward-clue",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 46,
+    "timestampMs": 100500,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 2,
+       "bearingDeg": -45,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      44.6,
+      0.9,
+      -340.4
+     ],
+     "headingDeg": 196,
+     "speedMps": 0,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 534,
+       "bearingDeg": -6,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 12,
+       "bearingDeg": 175,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 2,
+       "bearingDeg": -45,
+       "position": [
+        45.7,
+        -338.5
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 256,
+       "bearingDeg": -29,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 632,
+       "bearingDeg": 14,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "channel",
+     "objective": "Tune the receiver to 420 and hold it there",
+     "complete": false,
+     "state": {
+      "prompt": "Enter vehicle",
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Numbers Station",
+       "frequency": 318,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": false
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Evening, visitor. The technician at the north antenna hut has requested coffee. The cart is by the south hall.",
+        "kind": "story",
+        "ageS": 100.5
+       },
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 93.5
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 56
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 14.2
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 7.7
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 0.2
+       }
+      ],
+      "terminals": null,
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "wait"
+     },
+     "outcome": "waited",
+     "durationS": 0.4
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "enter_vehicle",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "receiver-hold-signal",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 56,
+    "timestampMs": 111683,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 2,
+       "bearingDeg": -45,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      44.6,
+      0.9,
+      -340.4
+     ],
+     "headingDeg": 196,
+     "speedMps": 0,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 534,
+       "bearingDeg": -6,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 12,
+       "bearingDeg": 175,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 2,
+       "bearingDeg": -45,
+       "position": [
+        45.7,
+        -338.5
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 256,
+       "bearingDeg": -29,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 632,
+       "bearingDeg": 14,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "channel",
+     "objective": "Tune the receiver to 420 and hold it there",
+     "complete": false,
+     "state": {
+      "prompt": "Enter vehicle",
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": 8,
+       "signalTrend": "rising",
+       "signalAcquired": false
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Evening, visitor. The technician at the north antenna hut has requested coffee. The cart is by the south hall.",
+        "kind": "story",
+        "ageS": 111.7
+       },
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 104.7
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 67.2
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 25.4
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 18.9
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 11.4
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 7.3
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 0.7
+       }
+      ],
+      "terminals": null,
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     "outcome": "input_sent",
+     "durationS": 0.2
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "enter_vehicle",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "terminal-go-to-terminal",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 69,
+    "timestampMs": 143183,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 2,
+       "bearingDeg": 173,
+       "state": "parked"
+      },
+      {
+       "id": "uv-2",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-2",
+       "distanceM": 65,
+       "bearingDeg": -147,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      46.2,
+      0.3,
+      -126.6
+     ],
+     "headingDeg": 270,
+     "speedMps": 0,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 326,
+       "bearingDeg": -74,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 225,
+       "bearingDeg": 90,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "rhythm",
+       "label": "Rhythm terminal · near 11-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 287,
+       "bearingDeg": -56,
+       "position": [
+        -116.7,
+        109.4
+       ]
+      },
+      {
+       "id": "bass",
+       "label": "Bass terminal · near 85-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 86,
+       "bearingDeg": -30,
+       "position": [
+        -28.4,
+        -83.7
+       ]
+      },
+      {
+       "id": "harmony",
+       "label": "Harmony terminal · near 86-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 8,
+       "bearingDeg": -102,
+       "position": [
+        47.8,
+        -118.8
+       ]
+      },
+      {
+       "id": "melody",
+       "label": "Melody terminal · near 98-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 571,
+       "bearingDeg": -37,
+       "position": [
+        -411.9,
+        214.3
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 2,
+       "bearingDeg": 173,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 65,
+       "bearingDeg": -147,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 461,
+       "bearingDeg": -47,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "terminals",
+     "objective": "Tune the signal terminals · 0/4",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 136.2
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 98.7
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 56.9
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 50.4
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 42.9
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 38.8
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 32.2
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 28.7
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": false,
+        "distanceM": 287,
+        "bearingDeg": -56
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": false,
+        "distanceM": 86,
+        "bearingDeg": -30
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": false,
+        "distanceM": 8,
+        "bearingDeg": -102
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": false,
+        "distanceM": 571,
+        "bearingDeg": -37
+       }
+      ],
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "exit_vehicle"
+     },
+     "outcome": "input_sent",
+     "durationS": 2.1
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "rhythm"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "bass"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "harmony"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "melody"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "terminal-open-when-prompted",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 70,
+    "timestampMs": 145550,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "state": "parked"
+      },
+      {
+       "id": "uv-2",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-2",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      46.9,
+      0.3,
+      -119.9
+     ],
+     "headingDeg": 142,
+     "speedMps": 1.9,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 320,
+       "bearingDeg": 55,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 232,
+       "bearingDeg": -142,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "rhythm",
+       "label": "Rhythm terminal · near 11-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 282,
+       "bearingDeg": 73,
+       "position": [
+        -116.7,
+        109.4
+       ]
+      },
+      {
+       "id": "bass",
+       "label": "Bass terminal · near 85-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 84,
+       "bearingDeg": 102,
+       "position": [
+        -28.4,
+        -83.7
+       ]
+      },
+      {
+       "id": "harmony",
+       "label": "Harmony terminal · near 86-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 1,
+       "bearingDeg": 0,
+       "position": [
+        47.8,
+        -118.8
+       ]
+      },
+      {
+       "id": "melody",
+       "label": "Melody terminal · near 98-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 568,
+       "bearingDeg": 92,
+       "position": [
+        -411.9,
+        214.3
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 456,
+       "bearingDeg": 82,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "terminals",
+     "objective": "Tune the signal terminals · 0/4",
+     "complete": false,
+     "state": {
+      "prompt": "Tune the harmony terminal",
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 138.5
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 101
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 59.3
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 52.8
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 45.2
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 41.2
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 34.6
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 31.1
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": false,
+        "distanceM": 282,
+        "bearingDeg": 73
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": false,
+        "distanceM": 84,
+        "bearingDeg": 102
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": false,
+        "distanceM": 1,
+        "bearingDeg": 0
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": false,
+        "distanceM": 568,
+        "bearingDeg": 92
+       }
+      ],
+      "tuning": null,
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "navigate_to",
+      "target": "harmony"
+     },
+     "outcome": "arrived",
+     "durationS": 2.3
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "rhythm"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "bass"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "harmony"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "melody"
+     },
+     {
+      "intent": "interact",
+      "target": "harmony"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "terminal-hold-when-aligned",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 76,
+    "timestampMs": 148550,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "state": "parked"
+      },
+      {
+       "id": "uv-2",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-2",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      47,
+      0.3,
+      -119.9
+     ],
+     "headingDeg": 142,
+     "speedMps": 0,
+     "busy": true
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 320,
+       "bearingDeg": 55,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 232,
+       "bearingDeg": -142,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "rhythm",
+       "label": "Rhythm terminal · near 11-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 282,
+       "bearingDeg": 73,
+       "position": [
+        -116.7,
+        109.4
+       ]
+      },
+      {
+       "id": "bass",
+       "label": "Bass terminal · near 85-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 84,
+       "bearingDeg": 102,
+       "position": [
+        -28.4,
+        -83.7
+       ]
+      },
+      {
+       "id": "harmony",
+       "label": "Harmony terminal · near 86-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 1,
+       "bearingDeg": 0,
+       "position": [
+        47.8,
+        -118.8
+       ]
+      },
+      {
+       "id": "melody",
+       "label": "Melody terminal · near 98-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 568,
+       "bearingDeg": 92,
+       "position": [
+        -411.9,
+        214.3
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 456,
+       "bearingDeg": 82,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "terminals",
+     "objective": "Tune the harmony terminal",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 141.5
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 104
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 62.3
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 55.8
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 48.2
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 44.2
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 37.6
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 34.1
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": false,
+        "distanceM": 282,
+        "bearingDeg": 73
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": false,
+        "distanceM": 84,
+        "bearingDeg": 102
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": false,
+        "distanceM": 1,
+        "bearingDeg": 0
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": false,
+        "distanceM": 568,
+        "bearingDeg": 92
+       }
+      ],
+      "tuning": {
+       "terminal": "harmony",
+       "label": "Harmony terminal",
+       "kind": "pitch",
+       "instruction": "Turn until your wave matches the reference and the wobble stops.",
+       "status": "aligned_hold",
+       "matchPercent": 92,
+       "lockPercent": 16,
+       "dialPercent": 71,
+       "matchBeforePercent": 88,
+       "matchTrend": "rising"
+      },
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "tap"
+     },
+     "outcome": "input_sent",
+     "durationS": 0.2
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "long"
+     },
+     {
+      "intent": "leave_terminal"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "terminal-reverse-after-overshoot",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 74,
+    "timestampMs": 149117,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "state": "parked"
+      },
+      {
+       "id": "uv-2",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-2",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      47,
+      0.3,
+      -119.9
+     ],
+     "headingDeg": 142,
+     "speedMps": 0,
+     "busy": true
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 320,
+       "bearingDeg": 55,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 232,
+       "bearingDeg": -142,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "rhythm",
+       "label": "Rhythm terminal · near 11-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 282,
+       "bearingDeg": 73,
+       "position": [
+        -116.7,
+        109.4
+       ]
+      },
+      {
+       "id": "bass",
+       "label": "Bass terminal · near 85-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 84,
+       "bearingDeg": 102,
+       "position": [
+        -28.4,
+        -83.7
+       ]
+      },
+      {
+       "id": "harmony",
+       "label": "Harmony terminal · near 86-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 1,
+       "bearingDeg": 0,
+       "position": [
+        47.8,
+        -118.8
+       ]
+      },
+      {
+       "id": "melody",
+       "label": "Melody terminal · near 98-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 568,
+       "bearingDeg": 92,
+       "position": [
+        -411.9,
+        214.3
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 456,
+       "bearingDeg": 82,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "terminals",
+     "objective": "Tune the harmony terminal",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 142.1
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 104.6
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 62.9
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 56.4
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 48.8
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 44.8
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 38.2
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 34.7
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": false,
+        "distanceM": 282,
+        "bearingDeg": 73
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": false,
+        "distanceM": 84,
+        "bearingDeg": 102
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": false,
+        "distanceM": 1,
+        "bearingDeg": 0
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": false,
+        "distanceM": 568,
+        "bearingDeg": 92
+       }
+      ],
+      "tuning": {
+       "terminal": "harmony",
+       "label": "Harmony terminal",
+       "kind": "pitch",
+       "instruction": "Turn until your wave matches the reference and the wobble stops.",
+       "status": "drifting",
+       "matchPercent": 25,
+       "lockPercent": 0,
+       "dialPercent": 98,
+       "matchBeforePercent": 86,
+       "matchTrend": "falling"
+      },
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "long"
+     },
+     "outcome": "input_sent",
+     "durationS": 1.1
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "long"
+     },
+     {
+      "intent": "leave_terminal"
+     }
+    ]
+   },
+   "capturedBy": "heavy-handed baseline"
+  },
+  {
+   "id": "terminal-continue-while-rising",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 72,
+    "timestampMs": 146917,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-1",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-1",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "state": "parked"
+      },
+      {
+       "id": "uv-2",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-2",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      47,
+      0.3,
+      -119.9
+     ],
+     "headingDeg": 142,
+     "speedMps": 0,
+     "busy": true
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 320,
+       "bearingDeg": 55,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 232,
+       "bearingDeg": -142,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "rhythm",
+       "label": "Rhythm terminal · near 11-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 282,
+       "bearingDeg": 73,
+       "position": [
+        -116.7,
+        109.4
+       ]
+      },
+      {
+       "id": "bass",
+       "label": "Bass terminal · near 85-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 84,
+       "bearingDeg": 102,
+       "position": [
+        -28.4,
+        -83.7
+       ]
+      },
+      {
+       "id": "harmony",
+       "label": "Harmony terminal · near 86-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 1,
+       "bearingDeg": 0,
+       "position": [
+        47.8,
+        -118.8
+       ]
+      },
+      {
+       "id": "melody",
+       "label": "Melody terminal · near 98-A",
+       "kind": "device",
+       "reach": "any",
+       "distanceM": 568,
+       "bearingDeg": 92,
+       "position": [
+        -411.9,
+        214.3
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 7,
+       "bearingDeg": -135,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 61,
+       "bearingDeg": -24,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 456,
+       "bearingDeg": 82,
+       "position": [
+        -271.5,
+        206.9
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "terminals",
+     "objective": "Tune the harmony terminal",
+     "complete": false,
+     "state": {
+      "prompt": null,
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-1",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Night desk",
+        "text": "Coffee collected. North antenna hut, 4 minutes. Brake like it is full.",
+        "kind": "story",
+        "ageS": 139.9
+       },
+       {
+        "speaker": "Radio",
+        "text": "Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 102.4
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Temperature excellent. Ninety-three percent of the coffee remains. Promotion unlikely.",
+        "kind": "story",
+        "ageS": 60.7
+       },
+       {
+        "speaker": "Night-shift technician",
+        "text": "Thanks. Leave the Numbers Station on in the car. It has been counting to something all night.",
+        "kind": "story",
+        "ageS": 54.2
+       },
+       {
+        "speaker": "Numbers Station",
+        "text": "Attention. Four. Two. Zero. Four. Two. Zero. Hold the dial. End of transmission.",
+        "kind": "numbers",
+        "ageS": 46.6
+       },
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 42.6
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 36
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 32.5
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": false,
+        "distanceM": 282,
+        "bearingDeg": 73
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": false,
+        "distanceM": 84,
+        "bearingDeg": 102
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": false,
+        "distanceM": 1,
+        "bearingDeg": 0
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": false,
+        "distanceM": 568,
+        "bearingDeg": 92
+       }
+      ],
+      "tuning": {
+       "terminal": "harmony",
+       "label": "Harmony terminal",
+       "kind": "pitch",
+       "instruction": "Turn until your wave matches the reference and the wobble stops.",
+       "status": "drifting",
+       "matchPercent": 54,
+       "lockPercent": 0,
+       "dialPercent": 59,
+       "matchBeforePercent": 0,
+       "matchTrend": "rising"
+      },
+      "concert": {
+       "available": false,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "long"
+     },
+     "outcome": "input_sent",
+     "durationS": 1.1
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_terminal",
+      "direction": "down",
+      "amount": "long"
+     },
+     {
+      "intent": "leave_terminal"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  },
+  {
+   "id": "concert-start-when-prompted",
+   "observation": {
+    "schema": "svs-agent-observation/v1",
+    "sequence": 155,
+    "timestampMs": 328433,
+    "environment": {
+     "id": "pine-gap",
+     "timeOfDay": "day",
+     "nearbyEntities": [
+      {
+       "id": "uv-3",
+       "kind": "vehicle",
+       "label": "4×4 utility vehicle · UV-3",
+       "distanceM": 4,
+       "bearingDeg": -111,
+       "state": "parked"
+      }
+     ]
+    },
+    "controller": {
+     "mode": "agent",
+     "provider": "jev"
+    },
+    "actor": {
+     "locomotion": "on_foot",
+     "position": [
+      -119.1,
+      0.1,
+      -19.2
+     ],
+     "headingDeg": 312,
+     "speedMps": 1.6,
+     "busy": false
+    },
+    "vehicle": null,
+    "navigation": {
+     "targets": [
+      {
+       "id": "coffee_cart",
+       "label": "Canteen cart · south hall",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 217,
+       "bearingDeg": -152,
+       "position": [
+        -47.6,
+        186
+       ]
+      },
+      {
+       "id": "technician",
+       "label": "Technician · North antenna hut",
+       "kind": "person",
+       "reach": "any",
+       "distanceM": 372,
+       "bearingDeg": 74,
+       "position": [
+        47,
+        -352
+       ]
+      },
+      {
+       "id": "listening_point",
+       "label": "Listening point",
+       "kind": "place",
+       "reach": "any",
+       "distanceM": 1,
+       "bearingDeg": 0,
+       "position": [
+        -120,
+        -20
+       ]
+      },
+      {
+       "id": "uv-1",
+       "label": "4×4 utility vehicle · UV-1",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 199,
+       "bearingDeg": 105,
+       "position": [
+        47.8,
+        -126.8
+       ]
+      },
+      {
+       "id": "uv-2",
+       "label": "4×4 utility vehicle · UV-2",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 231,
+       "bearingDeg": 120,
+       "position": [
+        100.7,
+        -90.6
+       ]
+      },
+      {
+       "id": "uv-3",
+       "label": "4×4 utility vehicle · UV-3",
+       "kind": "vehicle",
+       "reach": "foot",
+       "distanceM": 4,
+       "bearingDeg": -111,
+       "position": [
+        -120.7,
+        -15
+       ]
+      }
+     ],
+     "stuckSeconds": 0
+    },
+    "task": {
+     "id": "after-hours",
+     "stage": "concert",
+     "objective": "Go to the listening point among the radomes",
+     "complete": false,
+     "state": {
+      "prompt": "Begin the midnight transmission",
+      "coffee": {
+       "state": "completed",
+       "carrying": false,
+       "remainingPercent": null,
+       "timeRemainingS": null,
+       "failReason": null,
+       "delivered": {
+        "percent": 93,
+        "seconds": 81
+       },
+       "retryAvailable": false
+      },
+      "radio": {
+       "vehicle": "uv-3",
+       "inReach": true,
+       "powered": true,
+       "station": "Frequency 420",
+       "frequency": 419.9,
+       "signalBars": 5,
+       "holdPercent": null,
+       "signalTrend": "steady",
+       "signalAcquired": true
+      },
+      "captions": [
+       {
+        "speaker": "Radio",
+        "text": "christopher woodyard (live) · Antigravity — Indigo People",
+        "kind": "radio",
+        "ageS": 224.1
+       },
+       {
+        "speaker": "Radio",
+        "text": "Frequency 420",
+        "kind": "radio",
+        "ageS": 217.5
+       },
+       {
+        "speaker": "Receiver",
+        "text": "Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).",
+        "kind": "story",
+        "ageS": 214
+       },
+       {
+        "speaker": "Frequency 420",
+        "text": "Harmony layer locked. 1 of 4.",
+        "kind": "story",
+        "ageS": 178.5
+       },
+       {
+        "speaker": "Frequency 420",
+        "text": "Bass layer locked. 2 of 4.",
+        "kind": "story",
+        "ageS": 156.2
+       },
+       {
+        "speaker": "Frequency 420",
+        "text": "Rhythm layer locked. 3 of 4.",
+        "kind": "story",
+        "ageS": 114.9
+       },
+       {
+        "speaker": "Radio",
+        "text": "Radio now playing in UV-3.",
+        "kind": "radio",
+        "ageS": 80.1
+       },
+       {
+        "speaker": "Frequency 420",
+        "text": "All four layers locked. Something is waiting at the listening point among the radomes.",
+        "kind": "story",
+        "ageS": 51
+       }
+      ],
+      "terminals": [
+       {
+        "id": "rhythm",
+        "label": "Rhythm terminal",
+        "completed": true,
+        "distanceM": 129,
+        "bearingDeg": -134
+       },
+       {
+        "id": "bass",
+        "label": "Bass terminal",
+        "completed": true,
+        "distanceM": 111,
+        "bearingDeg": 102
+       },
+       {
+        "id": "harmony",
+        "label": "Harmony terminal",
+        "completed": true,
+        "distanceM": 194,
+        "bearingDeg": 107
+       },
+       {
+        "id": "melody",
+        "label": "Melody terminal",
+        "completed": true,
+        "distanceM": 375,
+        "bearingDeg": -81
+       }
+      ],
+      "tuning": null,
+      "concert": {
+       "available": true,
+       "running": false,
+       "complete": false,
+       "section": null
+      }
+     }
+    },
+    "execution": null,
+    "previousOutcome": {
+     "intent": {
+      "intent": "navigate_to",
+      "target": "listening_point"
+     },
+     "outcome": "arrived",
+     "durationS": 1.9
+    },
+    "legal": [
+     {
+      "intent": "wait"
+     },
+     {
+      "intent": "request_human"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-1"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-2"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "uv-3"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "coffee_cart"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "technician"
+     },
+     {
+      "intent": "navigate_to",
+      "target": "listening_point"
+     },
+     {
+      "intent": "start_concert"
+     },
+     {
+      "intent": "radio_power"
+     },
+     {
+      "intent": "radio_next_station"
+     },
+     {
+      "intent": "radio_next_track"
+     },
+     {
+      "intent": "radio_previous_track"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "up",
+      "amount": "long"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "tap"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "short"
+     },
+     {
+      "intent": "tune_receiver",
+      "direction": "down",
+      "amount": "long"
+     }
+    ]
+   },
+   "capturedBy": "baseline"
+  }
+ ]
+}
