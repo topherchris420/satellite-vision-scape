@@ -32,6 +32,14 @@ Choose **Jev After Hours** or **Co-pilot** next to the After Hours button. Jev n
 
 This is a first, working reference integration — one environment, one task — not a general platform: there is no environment-authoring tool and no multiplayer persistence yet. Architecture, contracts and limits: [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md).
 
+### Jev After Hours flier
+
+<p align="center">
+  <a href="docs/media/jev-after-hours-flier.svg">
+    <img src="docs/media/jev-after-hours-flier.svg" alt="Jev After Hours flier: 212 decisions, 100% of the coffee delivered, and zero collisions or human interventions." width="620" />
+  </a>
+</p>
+
 ---
 
 <p align="center">
