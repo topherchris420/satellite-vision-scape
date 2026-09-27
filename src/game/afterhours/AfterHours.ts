@@ -567,6 +567,7 @@ export class AfterHours {
     // Coffee cart.
     const cart = near(COFFEE_CART, RANGES.cart);
     if (cart >= 0 && this.mission.state !== "active") {
+      offer.id = "coffee_cart";
       offer.distance = cart;
       offer.priority = true;
       offer.label =
@@ -580,6 +581,7 @@ export class AfterHours {
     }
     const delivery = near(DELIVERY, RANGES.delivery);
     if (delivery >= 0 && this.mission.state === "active") {
+      offer.id = "technician";
       offer.distance = delivery;
       offer.priority = true;
       offer.label = "Hand over the coffee";
@@ -591,6 +593,7 @@ export class AfterHours {
         const d = near(t, RANGES.terminal);
         if (d < 0) continue;
         if (this.progress.terminals[t.layer] || this.session) return null;
+        offer.id = t.layer;
         offer.distance = d;
         offer.priority = true;
         offer.label = `Tune the ${LAYERS[t.layer].label.toLowerCase()} terminal`;
@@ -602,6 +605,7 @@ export class AfterHours {
     if (concertUnlocked(this.progress)) {
       const d = near(LISTENING_POINT, RANGES.listening);
       if (d >= 0) {
+        offer.id = "listening_point";
         offer.distance = d;
         offer.priority = false;
         if (this.concert.state === "running") {

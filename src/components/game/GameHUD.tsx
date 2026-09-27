@@ -1,5 +1,3 @@
-import { AgentLaunch } from "./AgentLaunch";
-import { AgentHUD } from "./AgentHUD";
 import { useCallback, useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import {
   CarFront,
@@ -19,6 +17,8 @@ import { Minimap } from "@/components/site/Minimap";
 import { SOUNDTRACK_CREDIT } from "@/game/afterhours/soundtrack";
 import { useAfterHours } from "@/hooks/use-after-hours";
 import { AfterHoursMenu, AfterHoursOverlay, CharacterPicker } from "./AfterHoursHUD";
+import { AgentHUD } from "./AgentHUD";
+import { AgentLaunch } from "./AgentLaunch";
 
 const glass =
   "border border-white/10 bg-[#071014]/78 text-white shadow-[0_16px_50px_rgba(0,0,0,.28)] backdrop-blur-xl";
@@ -162,6 +162,8 @@ export function GameHUD({
   status,
   onStart,
   onStartAfterHours,
+  onResumeUnlocked,
+  onReleasePointer,
   onLeaveAfterHours,
   onPause,
   onExplore,
@@ -174,6 +176,10 @@ export function GameHUD({
   onStart: () => void;
   /** Begin After Hours at dusk (from a click, so audio may start). */
   onStartAfterHours: (capturePointer?: boolean) => void;
+  /** Resume play without capturing the mouse (an agent is taking the controls). */
+  onResumeUnlocked: () => void;
+  /** Free the mouse without pausing (an agent was started from a query). */
+  onReleasePointer: () => void;
   onLeaveAfterHours: () => void;
   onPause: () => void;
   onExplore: () => void;
@@ -310,10 +316,8 @@ export function GameHUD({
             </div>
           )}
 
-          <>
-            <AfterHoursOverlay game={game} isMobile={isMobile} />
-            <AgentHUD game={game} />
-          </>
+          <AfterHoursOverlay game={game} isMobile={isMobile} />
+          <AgentHUD game={game} isMobile={isMobile} onReleasePointer={onReleasePointer} />
 
           {/* Vehicle instruments */}
           {inVehicle && (
@@ -450,7 +454,12 @@ export function GameHUD({
               <Play size={14} /> Resume
             </button>
           </div>
-          <AgentLaunch game={game} onStart={() => onStartAfterHours(false)} />
+          <div className="mt-4">
+            <AgentLaunch
+              game={game}
+              onStart={() => (after.active ? onResumeUnlocked() : onStartAfterHours(false))}
+            />
+          </div>
           {after.active ? (
             <AfterHoursMenu game={game} onLeave={onLeaveAfterHours} />
           ) : (

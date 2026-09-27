@@ -1,60 +1,254 @@
+/**
+ * Local route planning and on-foot steering.
+ *
+ * The planner answers "how do I get there?" for a destination the agent has
+ * already chosen; it never chooses one. It searches a coarse grid with A*,
+ * using only a caller-supplied `clear` query (the environment's collision
+ * geometry), then pulls the path taut. It is bounded in nodes and area, and
+ * it allocates only per plan — never per frame.
+ */
+
 export interface Point {
   x: number;
   z: number;
 }
+
+/** True when a body of `radius` can travel straight from `a` to `b`. */
 export type ClearSegment = (a: Point, b: Point, radius: number) => boolean;
-/** Bounded A*, over collision geometry only. It never selects the destination. */
-export function findRoute(start: Point, goal: Point, radius: number, clear: ClearSegment): Point[] {
-  if (clear(start, goal, radius)) return [{ ...goal }];
-  const size = 6,
-    key = (x: number, z: number) => `${x},${z}`;
-  type Node = Point & { cost: number; score: number; parent: Node | null };
-  const first: Node = { ...start, cost: 0, score: 0, parent: null },
-    open: Node[] = [first],
-    costs = new Map<string, number>();
-  const dirs = [
-    [1, 0],
-    [-1, 0],
-    [0, 1],
-    [0, -1],
-    [1, 1],
-    [-1, 1],
-    [1, -1],
-    [-1, -1],
-  ];
-  let found: Node | null = null;
-  for (let count = 0; open.length && count < 12000; count++) {
-    let best = 0;
-    for (let i = 1; i < open.length; i++) if (open[i].score < open[best].score) best = i;
-    const cur = open[best];
-    open[best] = open[open.length - 1];
-    open.pop();
-    if (Math.hypot(cur.x - goal.x, cur.z - goal.z) < size * 2 && clear(cur, goal, radius)) {
-      found = cur;
+
+export interface RouteOptions {
+  /** Clearance radius of the travelling body (metres). */
+  radius: number;
+  /** Grid spacing (metres). */
+  cell: number;
+  /** Expansion budget; the plan fails (or falls back) beyond it. */
+  maxNodes?: number;
+  /** Accept the nearest reachable point within this distance of the goal. */
+  tolerance?: number;
+  /** Search half-extent around the midpoint of start and goal (metres). */
+  extent?: number;
+}
+
+const NEIGHBOURS: readonly [number, number, number][] = [
+  [1, 0, 1],
+  [-1, 0, 1],
+  [0, 1, 1],
+  [0, -1, 1],
+  [1, 1, Math.SQRT2],
+  [-1, 1, Math.SQRT2],
+  [1, -1, Math.SQRT2],
+  [-1, -1, Math.SQRT2],
+];
+
+/** Minimal binary heap keyed by f-score. */
+class Heap {
+  private readonly ids: number[] = [];
+  private readonly scores: number[] = [];
+
+  get size(): number {
+    return this.ids.length;
+  }
+
+  push(id: number, score: number): void {
+    const ids = this.ids;
+    const scores = this.scores;
+    let i = ids.length;
+    ids.push(id);
+    scores.push(score);
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (scores[parent] <= score) break;
+      ids[i] = ids[parent];
+      scores[i] = scores[parent];
+      i = parent;
+    }
+    ids[i] = id;
+    scores[i] = score;
+  }
+
+  pop(): number {
+    const ids = this.ids;
+    const scores = this.scores;
+    const top = ids[0];
+    const lastId = ids.pop()!;
+    const lastScore = scores.pop()!;
+    const n = ids.length;
+    if (n > 0) {
+      let i = 0;
+      for (;;) {
+        const l = i * 2 + 1;
+        if (l >= n) break;
+        const r = l + 1;
+        const c = r < n && scores[r] < scores[l] ? r : l;
+        if (scores[c] >= lastScore) break;
+        ids[i] = ids[c];
+        scores[i] = scores[c];
+        i = c;
+      }
+      ids[i] = lastId;
+      scores[i] = lastScore;
+    }
+    return top;
+  }
+}
+
+/**
+ * Plan a route from `start` to `goal`. Returns the waypoints after `start`
+ * (the last is the goal, or the nearest reachable point within `tolerance`),
+ * or an empty list when no route was found within budget.
+ */
+export function findRoute(
+  start: Point,
+  goal: Point,
+  clear: ClearSegment,
+  options: RouteOptions,
+): Point[] {
+  const { radius, cell } = options;
+  const maxNodes = options.maxNodes ?? 6000;
+  const tolerance = options.tolerance ?? 0;
+  if (clear(start, goal, radius)) return [{ x: goal.x, z: goal.z }];
+
+  const span = Math.hypot(goal.x - start.x, goal.z - start.z);
+  const extent = options.extent ?? Math.max(120, span * 0.75 + 80);
+  const cx = (start.x + goal.x) / 2;
+  const cz = (start.z + goal.z) / 2;
+  const half = Math.ceil(extent / cell);
+  const width = half * 2 + 1;
+  const toIndex = (ix: number, iz: number) => (iz + half) * width + (ix + half);
+  const fromIndex = (id: number): Point => {
+    const iz = Math.floor(id / width) - half;
+    const ix = (id % width) - half;
+    return { x: cx + ix * cell, z: cz + iz * cell };
+  };
+
+  // The start is not a grid node: connect it to the clear nodes around it.
+  const cost = new Map<number, number>();
+  const parent = new Map<number, number>();
+  const closed = new Set<number>();
+  const open = new Heap();
+  const h = (p: Point) => Math.hypot(goal.x - p.x, goal.z - p.z);
+  const six = Math.round((start.x - cx) / cell);
+  const siz = Math.round((start.z - cz) / cell);
+  for (let dz = -1; dz <= 1; dz++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const ix = six + dx;
+      const iz = siz + dz;
+      if (Math.abs(ix) > half || Math.abs(iz) > half) continue;
+      const id = toIndex(ix, iz);
+      const p = fromIndex(id);
+      if (!clear(start, p, radius)) continue;
+      const g = Math.hypot(p.x - start.x, p.z - start.z);
+      cost.set(id, g);
+      parent.set(id, -1);
+      open.push(id, g + h(p));
+    }
+  }
+
+  let found = -1;
+  let nearest = -1;
+  let nearestDistance = Infinity;
+  let expanded = 0;
+  while (open.size > 0 && expanded < maxNodes) {
+    const id = open.pop();
+    if (closed.has(id)) continue;
+    closed.add(id);
+    expanded++;
+    const p = fromIndex(id);
+    const remaining = h(p);
+    if (remaining < nearestDistance) {
+      nearestDistance = remaining;
+      nearest = id;
+    }
+    if (remaining <= cell * 1.5 && clear(p, goal, radius)) {
+      found = id;
       break;
     }
-    for (const [dx, dz] of dirs) {
-      const x = cur.x + dx * size,
-        z = cur.z + dz * size;
-      if (Math.abs(x) > 950 || Math.abs(z) > 950) continue;
-      const cost = cur.cost + Math.hypot(dx, dz) * size,
-        k = key(x, z);
-      if ((costs.get(k) ?? Infinity) <= cost || !clear(cur, { x, z }, radius)) continue;
-      costs.set(k, cost);
-      open.push({ x, z, cost, score: cost + Math.hypot(x - goal.x, z - goal.z), parent: cur });
+    const ix = Math.round((p.x - cx) / cell);
+    const iz = Math.round((p.z - cz) / cell);
+    const g0 = cost.get(id)!;
+    for (const [dx, dz, step] of NEIGHBOURS) {
+      const nx = ix + dx;
+      const nz = iz + dz;
+      if (Math.abs(nx) > half || Math.abs(nz) > half) continue;
+      const nid = toIndex(nx, nz);
+      if (closed.has(nid)) continue;
+      const g = g0 + step * cell;
+      if (g >= (cost.get(nid) ?? Infinity)) continue;
+      const q = fromIndex(nid);
+      if (!clear(p, q, radius)) continue;
+      cost.set(nid, g);
+      parent.set(nid, id);
+      open.push(nid, g + h(q));
     }
   }
-  if (!found) return [];
-  const raw: Point[] = [{ ...goal }];
-  for (let n: Node | null = found; n; n = n.parent) raw.push({ x: n.x, z: n.z });
+
+  let end = found;
+  let reachesGoal = found >= 0;
+  if (end < 0) {
+    if (nearest < 0 || nearestDistance > tolerance) return [];
+    end = nearest;
+    reachesGoal = false;
+  }
+  const raw: Point[] = [];
+  for (let id = end; id >= 0; id = parent.get(id) ?? -1) raw.push(fromIndex(id));
   raw.reverse();
-  const route: Point[] = [];
+  if (reachesGoal) raw.push({ x: goal.x, z: goal.z });
+  return smooth([start, ...raw], clear, radius).slice(1);
+}
+
+/** Pull a polyline taut: skip every waypoint the body can bypass in a straight line. */
+function smooth(points: Point[], clear: ClearSegment, radius: number): Point[] {
+  const out: Point[] = [points[0]];
   let i = 0;
-  while (i < raw.length - 1) {
-    let j = raw.length - 1;
-    while (j > i + 1 && !clear(raw[i], raw[j], radius)) j--;
-    route.push(raw[j]);
+  while (i < points.length - 1) {
+    let j = points.length - 1;
+    while (j > i + 1 && !clear(points[i], points[j], radius)) j--;
+    out.push(points[j]);
     i = j;
   }
-  return route;
+  return out;
+}
+
+export function wrapAngle(a: number): number {
+  return Math.atan2(Math.sin(a), Math.cos(a));
+}
+
+/** World heading (radians, 0 = +Z, like the game's yaw) from `a` towards `b`. */
+export function headingTo(a: Point, b: Point): number {
+  return Math.atan2(b.x - a.x, b.z - a.z);
+}
+
+export interface FootCommand {
+  /** Camera-relative stick, as a player's movement keys produce. */
+  moveX: number;
+  moveY: number;
+  /** Camera rotation to apply this frame (radians, + turns towards +yaw). */
+  turn: number;
+  sprint: boolean;
+}
+
+/**
+ * On-foot steering towards a waypoint, the way a player does it: turn the
+ * camera towards the direction of travel (at a bounded rate, like a mouse)
+ * and push the stick camera-relative. Slows near the destination.
+ */
+export function footControl(
+  from: Point,
+  cameraYaw: number,
+  to: Point,
+  distanceToGoal: number,
+  dt: number,
+  options: { careful: boolean; final: boolean },
+  out: FootCommand,
+): FootCommand {
+  const travel = headingTo(from, to);
+  const relative = wrapAngle(travel - cameraYaw);
+  // Mouse-like camera turn: proportional, capped at ~200°/s.
+  const maxTurn = 3.5 * dt;
+  out.turn = Math.max(-maxTurn, Math.min(maxTurn, relative * Math.min(1, 6 * dt)));
+  const speed = options.final ? Math.max(0.3, Math.min(1, distanceToGoal / 3)) : 1;
+  out.moveX = -Math.sin(relative) * speed;
+  out.moveY = Math.cos(relative) * speed;
+  out.sprint = !options.careful && distanceToGoal > 18;
+  return out;
 }

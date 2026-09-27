@@ -218,6 +218,8 @@ export function SiteScene() {
   }, []);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
+  const gameRef = useRef<Game | null>(null);
+  gameRef.current = game;
   const playing = mode === "play" && gameError === null;
   const session = usePlaySession(game, canvas, playing);
   const immersive = playing && session.status === "running";
@@ -298,6 +300,9 @@ export function SiteScene() {
           setTime((t) => (t === "day" ? "dusk" : t === "dusk" ? "night" : "day"));
           break;
         case "KeyH":
+          // While an agent holds the controls, H is "take control" (handled by
+          // the game input), not the shortcuts overlay.
+          if (gameRef.current?.agent.runtime.mode !== "human") break;
           setShowHelp((v) => !v);
           break;
         case "KeyI":
@@ -357,6 +362,8 @@ export function SiteScene() {
           status={session.status}
           onStart={session.start}
           onStartAfterHours={startAfterHours}
+          onResumeUnlocked={session.startUnlocked}
+          onReleasePointer={session.releasePointer}
           onLeaveAfterHours={leaveAfterHours}
           onPause={session.pause}
           onExplore={() => setMode("fly")}

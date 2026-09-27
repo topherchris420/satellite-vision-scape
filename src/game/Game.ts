@@ -317,7 +317,7 @@ export class Game {
 
   setPaused(paused: boolean): void {
     if (paused) {
-      this.agent.runtime.takeover("paused");
+      this.agent.runtime.toHuman("paused");
       this.audio?.suspend();
       this.input.releaseAll();
     } else {
