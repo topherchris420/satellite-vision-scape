@@ -342,7 +342,7 @@ export class AgentSession implements AgentEnvironment, MotorWorld {
 
   legal(): AgentIntent[] {
     const out: AgentIntent[] = [{ intent: "wait" }, { intent: "request_human" }];
-    if (!this.task.active()) return out;
+    if (!this.task.active() || this.task.passive()) return out;
     const frame = this.frame();
     const g = this.game;
     if (frame.onFoot && !g.movementLocked) {
