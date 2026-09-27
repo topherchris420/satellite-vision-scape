@@ -37,6 +37,7 @@ import {
   type KeyValueStorage,
   type LayerId,
   type Preferences,
+  type StationId,
 } from "./progress";
 import { LAYERS, TuningSession } from "./puzzle";
 import { RadioLogic, type RadioEvent } from "./radio";
@@ -402,10 +403,7 @@ export class AfterHours {
       this.radioErrors = 0;
       return;
     }
-    if (!this.radioInReach() && command !== "volumeUp" && command !== "volumeDown") {
-      this.outOfReach();
-      return;
-    }
+    if (command !== "volumeUp" && command !== "volumeDown" && !this.reachRadio()) return;
     const status = this.rig?.radio.status;
     if (command === "power" && (status === "blocked" || status === "error") && this.radio.power) {
       // The browser refused playback (or the stream failed): this press retries.
@@ -439,6 +437,33 @@ export class AfterHours {
         break;
     }
     this.dirty = true;
+  }
+
+  /** Tune straight to a preset (the HUD's station chips). Switches the radio on. */
+  tuneToStation(id: StationId): void {
+    if (!this.active || !this.reachRadio()) return;
+    this.rig?.radio.retry();
+    if (this.radio.station?.id === id && this.radio.strength > 0.5 && this.radio.power) return;
+    this.radio.selectStation(id);
+    this.rig?.cue("radio");
+    this.dirty = true;
+  }
+
+  /** Play an album track from the track list, tuning to the album if needed. */
+  playTrack(index: number): void {
+    if (!this.active || !this.reachRadio()) return;
+    this.rig?.radio.retry();
+    if (this.radio.station?.kind !== "album" || !this.radio.power)
+      this.radio.selectStation("indigo");
+    this.radio.setTrack(index, false);
+    this.dirty = true;
+  }
+
+  /** True when the player can reach the radio; otherwise explains why not. */
+  private reachRadio(): boolean {
+    if (this.radioInReach()) return true;
+    this.outOfReach();
+    return false;
   }
 
   private outOfReach(): void {
@@ -1564,6 +1589,8 @@ export class AfterHours {
     const track = this.radio.track;
     const dur = rig && rig.radio.duration > 0 ? rig.radio.duration : track.durationSeconds;
     hud.text("radio-time", `${fmt(t)} / ${fmt(dur)}`);
+    const played = dur > 0 ? Math.min(1, Math.max(0, t / dur)) : 0;
+    hud.style("radio-progress", "transform", `scaleX(${played.toFixed(3)})`);
     const level = rig ? Math.min(1, rig.radio.level() * 3.2) : 0;
     hud.style("radio-meter", "transform", `scaleX(${level.toFixed(2)})`);
 

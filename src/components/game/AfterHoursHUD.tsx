@@ -5,7 +5,7 @@ import {
   ChevronRight,
   Clapperboard,
   Coffee,
-  Disc3,
+  Play,
   Power,
   Radio,
   RotateCcw,
@@ -31,6 +31,7 @@ import {
 import { LAYER_IDS, type CharacterKind, type LayerId } from "@/game/afterhours/progress";
 import { LAYERS } from "@/game/afterhours/puzzle";
 import { COFFEE_CART, TERMINAL_SITES } from "@/game/afterhours/sites";
+import { STATIONS, type StationDef } from "@/game/afterhours/radio";
 
 /** Deep spectral teal and warm amber: the After Hours instrument palette. */
 const TEAL = "#0B5D63";
@@ -266,6 +267,9 @@ function RadioPanel({
     dialOpen || r.holding || s.stage === "channel" || (r.power && r.stationId === null);
   const track = GREEN_MACHINE.tracks[r.trackIndex];
   const album = r.stationId === "indigo";
+  const playing = album && r.power && r.status === "playing";
+  const live = album && r.power;
+  const presets = STATIONS.filter((st) => !st.hidden || (st.id === "f420" && r.f420Discovered));
   const cmd = (c: Parameters<typeof ah.radioCommand>[0]) => () => ah.radioCommand(c);
   const tuneHold = (dir: number) => (down: boolean) => {
     if (down) ah.tuneTap(dir);
@@ -281,8 +285,8 @@ function RadioPanel({
           : null;
   const inVehicle = game.interaction.cameraMode === "vehicle";
   const position = isMobile
-    ? "left-3 top-[10.5rem] w-[15.5rem]"
-    : `right-5 w-[16.5rem] ${inVehicle ? "bottom-[10.5rem]" : "bottom-5"}`;
+    ? "left-3 top-[10.5rem] w-[16rem]"
+    : `right-5 w-[17.5rem] ${inVehicle ? "bottom-[10.5rem]" : "bottom-5"}`;
 
   if (!r.inReach) {
     return (
@@ -298,7 +302,7 @@ function RadioPanel({
   return (
     <section
       aria-label="Vehicle radio"
-      className={`${panel} absolute ${position} rounded-lg p-2.5`}
+      className={`${panel} absolute ${position} rounded-lg p-2.5 ${s.preferences.reducedMotion ? "ah-still" : ""}`}
     >
       <div className="flex items-center gap-2.5">
         <button
@@ -321,47 +325,106 @@ function RadioPanel({
           )}
         </button>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2 font-mono text-[8px] uppercase tracking-[.16em]">
-            <span className="truncate text-[#7fd6d0]">
-              {r.power ? r.stationLabel : "Radio off"}
-            </span>
-            <span className="shrink-0 text-white/35">{r.ownerLabel}</span>
+          <div
+            className={`font-sans text-[12px] font-semibold leading-tight tracking-[.01em] ${r.power ? "text-[#9be3dd]" : "text-white/45"}`}
+          >
+            {r.power ? r.stationLabel : "Radio off"}
           </div>
           {album && r.power ? (
             <>
-              <div className="truncate font-sans text-[12px] text-white/90">{track.title}</div>
-              <div className="flex items-center justify-between font-sans text-[10px] text-white/50">
-                <span className="truncate">{GREEN_MACHINE.artist}</span>
+              <div className="mt-0.5 flex items-center gap-1.5">
+                <Equaliser playing={playing} />
+                <div
+                  className="min-w-0 flex-1 truncate font-sans text-[12px] text-white/90"
+                  aria-live="polite"
+                >
+                  {track.title}
+                </div>
+                <span
+                  className="flex shrink-0 items-center gap-1 rounded-sm bg-red-500/15 px-1 py-px font-mono text-[8px] font-semibold uppercase tracking-[.18em] text-red-300"
+                  title="Live broadcast"
+                >
+                  <span className="ah-live-dot h-1.5 w-1.5 rounded-full bg-red-400" aria-hidden />
+                  Live
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-2 font-sans text-[10px] text-white/50">
+                <span className="truncate">
+                  {GREEN_MACHINE.artist} · {track.number}/{GREEN_MACHINE.tracks.length}
+                </span>
                 <span ref={bind("radio-time")} className="font-mono tabular-nums text-white/40" />
               </div>
             </>
           ) : (
-            <div className="font-sans text-[11px] text-white/55">
+            <div className="mt-0.5 font-sans text-[11px] leading-snug text-white/55">
               {r.power
                 ? r.stationId === "numbers"
                   ? "Fictional numbers transmission"
                   : r.stationId === "f420"
                     ? "Procedural signal · not part of the album"
-                    : "Between stations"
-                : "Press R to switch on"}
+                    : "Between stations · pick a preset below"
+                : "Press R, or pick a station below"}
             </div>
           )}
         </div>
       </div>
+      {album && r.power && (
+        <div
+          className="mt-2 h-[3px] overflow-hidden rounded-full bg-white/10"
+          aria-label="Track progress"
+        >
+          <div
+            ref={bind("radio-progress")}
+            className="h-full origin-left rounded-full bg-gradient-to-r from-amber-300/70 to-amber-200 [transform:scaleX(0)]"
+          />
+        </div>
+      )}
       {statusText && (
         <button
           type="button"
           onClick={cmd("retry")}
-          className="pointer-events-auto mt-1.5 w-full rounded border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-left font-mono text-[9px] uppercase tracking-[.12em] text-amber-200"
+          className="pointer-events-auto mt-2 w-full rounded border border-amber-300/30 bg-amber-300/10 px-2 py-1 text-left font-mono text-[9px] uppercase tracking-[.12em] text-amber-200"
         >
           {statusText}{" "}
           {r.status === "blocked" || r.status === "error" ? "· tap or press R to retry" : ""}
         </button>
       )}
+      {/* One-tap presets (T still cycles them). */}
+      <div className="mt-2 flex gap-1" role="radiogroup" aria-label="Stations">
+        {presets.map((st) => {
+          const on = r.power && r.stationId === st.id;
+          return (
+            <button
+              key={st.id}
+              type="button"
+              role="radio"
+              aria-checked={on}
+              aria-label={`${st.label}, ${st.frequency.toFixed(1)}`}
+              title={`${st.label} · ${st.frequency.toFixed(1)}`}
+              onClick={() => ah.tuneToStation(st.id)}
+              onPointerUp={(e) => e.currentTarget.blur()}
+              className={`pointer-events-auto min-w-0 rounded-md border px-1.5 py-1 text-left transition ${
+                st.kind === "album" ? "flex-[1.7]" : "flex-1"
+              } ${
+                on
+                  ? "border-amber-300/60 bg-amber-300/15 text-amber-100 shadow-[0_0_12px_rgba(252,211,77,.15)]"
+                  : "border-white/10 bg-white/[.03] text-white/60 hover:border-white/25 hover:bg-white/[.07] hover:text-white"
+              }`}
+            >
+              <span className="block font-sans text-[10px] leading-tight">{shortLabel(st)}</span>
+              <span
+                className={`block font-mono text-[8px] tabular-nums ${on ? "text-amber-200/80" : "text-white/35"}`}
+              >
+                {st.frequency.toFixed(1)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       <div className="mt-2 h-0.5 overflow-hidden rounded-full bg-white/10" aria-hidden>
         <div
           ref={bind("radio-meter")}
-          className="h-full origin-left scale-x-0 bg-gradient-to-r from-[#0B5D63] to-amber-300/80"
+          className="h-full origin-left bg-gradient-to-r from-[#0B5D63] to-amber-300/80 [transform:scaleX(0)]"
         />
       </div>
       {/* Receiver dial (shown while it matters, or on request) */}
@@ -409,11 +472,14 @@ function RadioPanel({
             <span>keep still</span>
           </div>
           <div className="mt-0.5 h-1 overflow-hidden rounded bg-white/10">
-            <div ref={bind("radio-hold")} className="h-full origin-left scale-x-0 bg-[#b9a4f0]" />
+            <div
+              ref={bind("radio-hold")}
+              className="h-full origin-left [transform:scaleX(0)] bg-[#b9a4f0]"
+            />
           </div>
         </div>
       )}
-      <div className="mt-2 flex items-center justify-between gap-1">
+      <div className="mt-2 flex items-center justify-between gap-0.5">
         <HudButton
           label={r.power ? "Radio off (R)" : "Radio on (R)"}
           onClick={cmd("power")}
@@ -427,14 +493,11 @@ function RadioPanel({
         <HudButton label="Next track (.)" onClick={cmd("next")}>
           <SkipForward size={13} />
         </HudButton>
-        <HudButton label="Next station (T)" onClick={cmd("station")}>
-          <Disc3 size={13} />
-        </HudButton>
         <HudButton label="Volume down (-)" onClick={cmd("volumeDown")}>
           <Volume1 size={13} />
         </HudButton>
         <span
-          className="w-7 text-center font-mono text-[9px] tabular-nums text-white/50"
+          className="w-6 text-center font-mono text-[9px] tabular-nums text-white/50"
           aria-label="Music volume"
         >
           {Math.round(r.volume * 100)}
@@ -451,20 +514,35 @@ function RadioPanel({
         </HudButton>
       </div>
       {albumOpen && (
-        <AlbumView onClose={() => setAlbumOpen(false)} current={album ? r.trackIndex : -1} />
+        <AlbumView
+          onClose={() => setAlbumOpen(false)}
+          current={album && r.power ? r.trackIndex : -1}
+          playing={playing}
+          onPlay={(i) => ah.playTrack(i)}
+        />
       )}
     </section>
   );
 }
 
-function AlbumView({ onClose, current }: { onClose: () => void; current: number }) {
+function AlbumView({
+  onClose,
+  current,
+  playing,
+  onPlay,
+}: {
+  onClose: () => void;
+  current: number;
+  playing: boolean;
+  onPlay: (index: number) => void;
+}) {
   return (
     <div className="pointer-events-auto mt-2 rounded-md border border-white/10 bg-black/40 p-2.5">
       <div className="flex items-start gap-2.5">
         <img
           src={GREEN_MACHINE.artwork.display}
           alt="Green Machine cover art"
-          className="h-20 w-20 rounded-sm object-cover"
+          className="h-20 w-20 rounded-sm object-cover shadow-[0_6px_20px_rgba(0,0,0,.45)]"
         />
         <div className="min-w-0 flex-1">
           <div className="font-sans text-[13px] text-white">{GREEN_MACHINE.album}</div>
@@ -482,23 +560,63 @@ function AlbumView({ onClose, current }: { onClose: () => void; current: number 
           <X size={13} />
         </button>
       </div>
-      <ol className="mt-2 space-y-0.5 font-sans text-[10px]">
-        {GREEN_MACHINE.tracks.map((t, i) => (
-          <li
-            key={t.id}
-            className={`flex justify-between ${i === current ? "text-amber-200" : "text-white/60"}`}
-          >
-            <span>
-              {t.number}. {t.title}
-              {i === current ? " ◂" : ""}
-            </span>
-            <span className="font-mono tabular-nums text-white/35">
-              {formatDuration(t.durationSeconds)}
-            </span>
-          </li>
-        ))}
+      <ol className="mt-2 space-y-px font-sans text-[10px]" aria-label="Tracks">
+        {GREEN_MACHINE.tracks.map((t, i) => {
+          const now = i === current;
+          return (
+            <li key={t.id}>
+              <button
+                type="button"
+                onClick={() => onPlay(i)}
+                onPointerUp={(e) => e.currentTarget.blur()}
+                aria-current={now ? "true" : undefined}
+                aria-label={`Play ${t.title}`}
+                className={`group flex w-full items-center gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-white/[.07] ${
+                  now ? "bg-amber-300/10 text-amber-200" : "text-white/60 hover:text-white"
+                }`}
+              >
+                <span className="flex w-3.5 shrink-0 justify-center font-mono tabular-nums text-white/35">
+                  {now ? (
+                    <Equaliser playing={playing} />
+                  ) : (
+                    <>
+                      <span className="group-hover:hidden">{t.number}</span>
+                      <Play size={9} className="hidden text-white group-hover:block" />
+                    </>
+                  )}
+                </span>
+                <span className="flex-1 truncate">{t.title}</span>
+                <span className="font-mono tabular-nums text-white/35">
+                  {formatDuration(t.durationSeconds)}
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ol>
     </div>
+  );
+}
+
+/** Short chip name for a preset ("christopher woodyard (live)" stays readable). */
+function shortLabel(st: StationDef): string {
+  if (st.kind === "album") return st.label.replace(/\s*\(live\)\s*$/i, "");
+  if (st.id === "numbers") return "Numbers";
+  if (st.id === "f420") return "420";
+  return st.label;
+}
+
+/** Three bouncing bars while the album plays; flat when paused or buffering. */
+function Equaliser({ playing }: { playing: boolean }) {
+  return (
+    <span
+      className={`ah-eq inline-flex h-2.5 shrink-0 items-end gap-[2px] ${playing ? "ah-eq--on" : ""}`}
+      aria-hidden
+    >
+      <span />
+      <span />
+      <span />
+    </span>
   );
 }
 
@@ -756,7 +874,7 @@ function ConcertBar({
       <div className="mt-1.5 h-1 overflow-hidden rounded bg-white/10">
         <div
           ref={bind("concert-progress")}
-          className="h-full origin-left scale-x-0 bg-gradient-to-r from-[#0B5D63] via-[#b9a4f0] to-amber-300"
+          className="h-full origin-left [transform:scaleX(0)] bg-gradient-to-r from-[#0B5D63] via-[#b9a4f0] to-amber-300"
         />
       </div>
       <div className="mt-2 flex items-center justify-between gap-2">
