@@ -18,6 +18,8 @@ export type Prompt = { key: string; label: string };
 
 /** Something the player can use on foot (a mission prop, a terminal…). */
 export interface InteractionOffer {
+  /** Stable id of the thing offered (read by observers, e.g. the agent runtime). */
+  id?: string;
   label: string;
   /** Horizontal distance to the player (the nearest offer wins). */
   distance: number;
@@ -53,6 +55,11 @@ export class InteractionManager {
   /** Vehicle being entered, driven or exited. */
   vehicle: Vehicle | null = null;
   prompt: Prompt | null = null;
+  /**
+   * What the current prompt acts on: an offer's id, a vehicle id or
+   * `gate:<id>`; null when there is no prompt. Read-only for observers.
+   */
+  promptTarget: string | null = null;
   /** Seat blend for the animator (0 standing … 1 seated). */
   seatWeight = 0;
   /** When set, the on-foot controller is steered by the choreography. */
@@ -202,6 +209,7 @@ export class InteractionManager {
       case GameplayState.Driving:
         this.pose = "seated";
         this.prompt = { key: "E", label: "Exit vehicle" };
+        this.promptTarget = null;
         if (input.wasPressed("interact")) this.beginExit();
         break;
       case GameplayState.ExitingVehicle:
@@ -226,22 +234,26 @@ export class InteractionManager {
     this.pose = "physics";
     this.overrideIntent = null;
     this.prompt = null;
+    this.promptTarget = null;
     if (!p.grounded || locked) return;
     const priority = this.nearestOffer(true);
     if (priority) {
       this.prompt = { key: "E", label: priority.label };
+      this.promptTarget = priority.id ?? null;
       if (input.wasPressed("interact")) priority.act();
       return;
     }
     const vehicle = this.deps.vehicles.nearest(p.position.x, p.position.z, INTERACTION.enterRange);
     if (vehicle && Math.abs(vehicle.physics.y - p.position.y) < 1.6) {
       this.prompt = { key: "E", label: "Enter vehicle" };
+      this.promptTarget = vehicle.id;
       if (input.wasPressed("interact")) this.beginEnter(vehicle);
       return;
     }
     const offer = this.nearestOffer(false);
     if (offer) {
       this.prompt = { key: "E", label: offer.label };
+      this.promptTarget = offer.id ?? null;
       if (input.wasPressed("interact")) offer.act();
       return;
     }
@@ -252,6 +264,7 @@ export class InteractionManager {
     );
     if (gate) {
       this.prompt = { key: "E", label: gate.raised ? "Lower barrier" : "Raise barrier" };
+      this.promptTarget = `gate:${gate.id}`;
       if (input.wasPressed("interact")) gate.toggle();
     }
   }
@@ -324,6 +337,7 @@ export class InteractionManager {
     const v = this.vehicle!;
     const p = this.deps.player;
     this.prompt = null;
+    this.promptTarget = null;
     if (this.phase === "approach") {
       this.pose = "physics";
       const target = this.approachPoints[0];
@@ -516,6 +530,7 @@ export class InteractionManager {
   private updateExiting(dt: number): void {
     const v = this.vehicle!;
     this.prompt = null;
+    this.promptTarget = null;
     if (this.phase === "stopping") {
       this.pose = "seated";
       const speed = v.physics.speed;

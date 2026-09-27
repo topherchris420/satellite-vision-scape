@@ -20,13 +20,17 @@
 
 ## Humans and agents, one world
 
-Satellite Vision Scape is evolving into a browser-native simulation environment where humans and AI agents can inhabit persistent 3D worlds, interact under the same rules, and be evaluated by what they actually do.
+Satellite Vision Scape is a browser-native simulation environment where humans and AI agents can inhabit persistent 3D worlds, interact under the same rules, and be evaluated by what they actually do.
 
-**Pine Gap** is the first environment. **After Hours** is the first multi-stage task. **Jev** is the first external agent provider. The new experimental runtime separates observation, provider choice, deterministic input execution and world authority, with human takeover, co-pilot delegation and downloadable traces.
+- **Pine Gap** is the first environment and **After Hours** the first multi-stage task.
+- **Jev** (TypeSafe) is the first external agent provider. It receives a structured observation of what a player can see, chooses one legal intention — _walk to the coffee cart_, _drive to the technician_, _tune the receiver up a little_ — and a deterministic local controller carries it out with the same controls a person uses. **The agent decides what it wants to do; the simulation decides whether it succeeds.**
+- Human and agent actions go through the same input, interaction and physics code. The agent layer cannot move the character, set a velocity, fill the coffee, unlock a terminal or touch the save — tests prove it.
+- **H** (or any movement, look or click) takes the controller back instantly, with nothing reset. **Co-pilot** mode keeps the person in control and lets Jev suggest one move at a time.
+- Every session can be exported as a provider-neutral trace (`svs-agent-trace/v1`) with decisions, outcomes and measurements, so human, Jev, baseline and replayed runs can be compared under the same rules.
 
-Start After Hours, choose **Jev After Hours** or **Co-pilot** at launch, then use **AFTER HOURS · CONTROL** to take over, delegate a co-pilot suggestion, export a trace or replay intentions. Human play remains one click away. Jev requires a configured server endpoint; normal play works without it. A deterministic mock completes the entire journey through real physics in tests. **Live autonomous Jev completion has not yet been verified.**
+Choose **Jev After Hours** or **Co-pilot** next to the After Hours button. Jev needs a server-side `TYPESAFE_API_KEY`; without it the buttons say so and ordinary play is unaffected. In a recorded live run Jev played the whole of After Hours on its own — coffee delivered at 100%, the hidden frequency found, four terminals locked, the midnight transmission received — in 212 decisions and under eight minutes, with no collisions and no human input ([results and trace](docs/JEV_AFTER_HOURS.md#live-jev)). A labelled scripted baseline completes the same journey through real physics in the test suite.
 
-Read the [agent architecture](docs/AGENT_RUNTIME.md) and [Jev After Hours guide](docs/JEV_AFTER_HOURS.md). New providers and environments can use these boundaries; generic environment authoring and multiplayer persistence are not implemented.
+This is a first, working reference integration — one environment, one task — not a general platform: there is no environment-authoring tool and no multiplayer persistence yet. Architecture, contracts and limits: [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md).
 
 ---
 
@@ -306,11 +310,13 @@ bun run typecheck    # TypeScript
 bun run lint         # ESLint
 bun run build        # production build
 bun run preview      # preview the production build
+bun run test:agent   # agent runtime suites (contracts, lifecycle, authority, driving, journey, server, secrets)
+bun run verify:secrets  # production build with a canary key, scanned for leaks
 ```
 
 The headless integration test (`tests/game-integration.test.ts`) plays the game through the real input path: it walks to a vehicle, enters, drives, steers, reverses, brakes, exits, repeats ten enter/exit cycles checking for leaks, and verifies exits are refused when both doors are walled in. Vehicle dynamics (acceleration, braking, steering direction, reverse, wall and vehicle-to-vehicle collisions) and the collision world have their own suites.
 
-After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recovery, spill step-size independence, mission transitions and retries, duplicate-reward prevention, radio dial and ownership, terminal locking, score coherence, concert arc) and `tests/after-hours-journey.test.ts`, which plays the whole expansion headless through the real input path — collects the coffee, drives the 620 m route with an analog autopilot, exits, delivers, tunes 420, locks four terminals, interrupts, completes and replays the concert, reloads, fails and retries. In the browser, `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls.
+After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recovery, spill step-size independence, mission transitions and retries, duplicate-reward prevention, radio dial and ownership, terminal locking, score coherence, concert arc) and `tests/after-hours-journey.test.ts`, which plays the whole expansion headless through the real input path — collects the coffee, drives the 620 m route with an analog autopilot, exits, delivers, tunes 420, locks four terminals, interrupts, completes and replays the concert, reloads, fails and retries. The agent runtime has eight suites of its own (`tests/agent-*.test.ts`): the action and observation contracts, hidden-answer leakage, the decision lifecycle (timeouts, stale and duplicate answers, epochs, backoff), takeover and co-pilot delegation in the running game, route planning and driving (including smooth vs aggressive coffee profiles on real physics), the authority boundary (progress only through gameplay code paths), an end-to-end After Hours run through the real runtime, and the server adapter and credential boundary. `AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts` is an opt-in, billable live Jev check. In the browser, `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls.
 
 ## 📂 Project structure
 
@@ -320,11 +326,13 @@ After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recover
 ├── scripts/                # Thesis recorder, artifact builders, After Hours verification and perf scripts
 ├── src/
 │   ├── game/               # Gameplay: core, world, player, vehicles, camera, interaction, effects, audio, hud, afterhours
-│   ├── components/game/    # R3F bridge (GameRuntime) and play-mode HUD
+│   ├── agent/              # Agent runtime: contracts, providers, decision loop, executor, tasks, traces, evaluation
+│   ├── server/agent/       # Server-side Jev adapter (TypeSafe credential, question, validation, rate limits)
+│   ├── components/game/    # R3F bridge (GameRuntime), play-mode HUD and agent panel
 │   ├── components/site/    # Scene components (terrain, structures, roads, lighting, viewer HUD)
 │   ├── hooks/              # use-play-session (pointer lock lifecycle), use-mobile
 │   ├── lib/                # Pine Gap manifest, layout traces, fences, terrain, textures, wind
-│   └── routes/             # `/` (world) and `/thesis`
+│   └── routes/             # `/` (world), `/thesis` and `/api/agent/jev/decision`
 └── tests/                  # bun:test suites
 ```
 
@@ -367,6 +375,7 @@ A 35-second motion piece arguing that modern web graphics plus public OSINT can 
 - After Hours' fictional props have no colliders (by design, so collision geometry is unchanged): you can walk through the coffee cart, the terminals and the waiting technician.
 - The procedural score schedules notes from the render loop about 0.3 s ahead; on a device rendering at only a few frames per second, beats can be skipped (the timeline and visuals stay in sync with the audio clock regardless).
 - Spatial radio uses equal-power panning (no HRTF) and a simple door-dependent low-pass; it is a stylised cab, not an acoustic simulation.
+- The agent runtime has one environment and one task; its navigation is a bounded grid planner with local recovery, its metrics are client-reported, and the Jev endpoint's rate limits are per server instance (see [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md#15-limitations)).
 
 ## 🛠️ Tech stack
 

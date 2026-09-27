@@ -13,9 +13,9 @@
     "terrain:build": "bun scripts/build-terrain-artifact.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "test:agent": "bun test tests/agent-runtime.test.ts tests/agent-journey.test.ts",
+    "test:agent": "bun test tests/agent-",
     "agent:live": "bun scripts/verify-agent-live.ts",
-    "scan:agent-secrets": "node scripts/scan-agent-secrets.mjs"
+    "verify:secrets": "node scripts/verify-secret-boundary.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

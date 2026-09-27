@@ -70,6 +70,12 @@ export function usePlaySession(
   const start = useCallback(() => begin(true), [begin]);
   const startUnlocked = useCallback(() => begin(false), [begin]);
 
+  /** Free the mouse without pausing: an agent now drives the controls. */
+  const releasePointer = useCallback(() => {
+    lockedRef.current = false;
+    if (document.pointerLockElement) document.exitPointerLock();
+  }, []);
+
   const pause = useCallback(() => {
     if (statusRef.current !== "running") return;
     update("paused");
@@ -104,5 +110,5 @@ export function usePlaySession(
     if (!enabled) pause();
   }, [enabled, pause]);
 
-  return { status, start, startUnlocked, pause };
+  return { status, start, startUnlocked, releasePointer, pause };
 }

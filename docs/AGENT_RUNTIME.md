@@ -1,111 +1,354 @@
-# Satellite Vision Scape agent runtime
+# Agent runtime
 
-Satellite Vision Scape is developing into a browser-native simulation environment where humans and AI agents can inhabit persistent 3D worlds, interact under the same rules, and be evaluated by what they actually do. Pine Gap is the first environment, After Hours the first task, and Jev the first external provider. This implementation is an experimental reference integration, not an environment-authoring platform or a claim of general autonomous competence.
+> **The agent decides what it wants to do. Satellite Vision Scape decides whether it succeeds.**
 
-The provider chooses an intention. The simulation decides whether it succeeds.
+Satellite Vision Scape is becoming a browser-native simulation environment where humans and AI agents can inhabit the same persistent 3D worlds, act under the same rules, and be evaluated by what they actually do. This document describes the runtime that makes that possible today: what it is, how the pieces fit, what an agent may see and do, and what it cannot.
+
+It is an experimental reference implementation with one environment (Pine Gap), one multi-stage task (After Hours) and one external provider (Jev, through TypeSafe). It is **not** a general environment-authoring platform, a multiplayer server or a sandbox for untrusted code. The Jev-specific walkthrough is in [JEV_AFTER_HOURS.md](JEV_AFTER_HOURS.md).
+
+---
+
+## 1. The loop
 
 ```mermaid
 flowchart TD
-  World[Authoritative simulation] --> View[World and task observations]
-  View --> Runtime[Agent runtime]
-  Runtime --> Provider[Provider adapter]
-  Provider --> Validate[Schema and live legality checks]
-  Validate --> Motor[Deterministic controller]
-  Motor --> Arbiter[Input arbitration]
-  Human[Human input] --> Arbiter
-  Arbiter --> Physics[Existing input and physics]
-  Physics --> World
-  World --> Record[Trace and evaluation]
+  World["Persistent world<br/>(Game: physics, interaction, After Hours)"] --> Bridge["Observation builder<br/>AgentSession"]
+  Bridge --> Task["Task adapter<br/>AfterHoursTaskAdapter"]
+  Task --> Obs["WorldObservation<br/>svs-agent-observation/v1"]
+  Obs --> Runtime["Agent runtime<br/>modes · decision loop · state machine"]
+  Runtime --> Provider["Agent provider<br/>Jev · Mock · Random · Replay"]
+  Provider --> Intent["Intent<br/>svs-agent-action/v1"]
+  Intent --> Validate{"Schema + legal now?<br/>same epoch?"}
+  Validate -- no --> Reject["Rejected: recorded, not executed"]
+  Validate -- yes --> Executor["Deterministic executor<br/>navigation · driving · holds · presses"]
+  Executor --> Arbiter["Control arbitration<br/>ControlArbiter"]
+  Human["Keyboard · mouse · touch"] --> Arbiter
+  Arbiter --> Gameplay["Existing input · interaction · physics"]
+  Gameplay --> World
+  World --> Trace["Trace + evaluation<br/>svs-agent-trace/v1"]
 ```
 
-## Boundaries and modules
+Two timescales:
 
-| Module                                       | Responsibility                                                                        |
-| -------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `src/agent/contract.ts`                      | Strict, finite, size-bounded observation and intention schemas                        |
-| `provider.ts`, `providers/`                  | Provider interface; Jev, seeded Random, Mock and intent Replay                        |
-| `runtime.ts`                                 | Control modes, request lifecycle, co-pilot suggestions and delegation                 |
-| `control.ts`                                 | Separate human and synthetic input channels, explicit source                          |
-| `executor.ts`, `navigation.ts`, `driving.ts` | Collision-aware routing, walking, steering, braking, bounded recovery and input edges |
-| `tasks/task.ts`, `tasks/afterHours.ts`       | Task interface and read-only After Hours adapter                                      |
-| `session.ts`                                 | Pine Gap composition root and read-only sensor bridge                                 |
-| `trace.ts`, `evaluation.ts`                  | Bounded in-memory recording and common measurements                                   |
-| `src/server/agent/`                          | Server-owned TypeSafe question, credential, admission and HTTP handling               |
+| Loop     | Rate                                                                       | Owner                                      | Decides                            |
+| :------- | :------------------------------------------------------------------------- | :----------------------------------------- | :--------------------------------- |
+| Semantic | at most 4 requests/s; one in flight; a travel intent is reviewed every 3 s | `AgentRuntime` + `DecisionLoop` + provider | _what_ to do next                  |
+| Motor    | every rendered frame, before gameplay reads input                          | `IntentExecutor`                           | _how_: stick, camera, pedals, keys |
 
-The reusable runtime does not import Game, AfterHours, physics, puzzle solutions or save storage. Providers receive copied serializable observations and return intentions. The executor receives copied motor sensors, a collision-query callback and a synthetic input channel. It has no teleport, velocity, progression, save, or completion setter. The environment composition root reads Game and connects these capabilities. This is an application architecture boundary, not a security sandbox for arbitrary third-party JavaScript.
+Slow intelligence chooses. Fast deterministic control executes. The simulation's own fixed 120 Hz step decides what happens.
 
-## Provider and task interfaces
+## 2. Separable pieces
+
+```text
+Environment      src/agent/session.ts            AgentSession (Pine Gap), the only module that reads Game
+Task             src/agent/tasks/afterHours.ts   AfterHoursTaskAdapter: read-only view of After Hours
+                 src/agent/tasks/afterHoursSchema.ts   its observation payload schema (data only)
+Provider         src/agent/provider.ts           AgentProvider interface, typed results
+                 src/agent/providers/jev.ts      JevProvider (HTTP to this deployment's server)
+                 src/agent/providers/local.ts    MockProvider, RandomProvider, ReplayProvider
+Observation      src/agent/observation.ts        WorldObservation schema, bounds, hashing
+Action contract  src/agent/contract.ts           intents, decisions, legality
+Execution        src/agent/runtime.ts            state machine, modes, takeover, co-pilot
+                 src/agent/loop.ts               one-in-flight decision loop, epochs, backoff
+                 src/agent/executor.ts           intent → controls
+                 src/agent/navigation.ts         A* route planning, on-foot steering
+                 src/agent/driving.ts            driving profiles and control
+Control          src/agent/control.ts            ControlArbiter, SyntheticInput
+Trace            src/agent/trace.ts              svs-agent-trace/v1
+Evaluation       src/agent/evaluation.ts         generic metrics + task metrics + episode windows
+Server           src/server/agent/               Jev adapter: handler, question, rate limits
+UI               src/components/game/AgentHUD.tsx, AgentLaunch.tsx, src/lib/agent-ui.ts
+```
+
+`runtime.ts`, `loop.ts`, `contract.ts`, `observation.ts`, the providers and the scripted baseline import nothing from `src/game/`. A test enforces it (`tests/agent-authority.test.ts`). There is no `if (provider === "jev")` in the core loop: provider behaviour lives in adapters.
+
+## 3. Provider interface
 
 ```ts
 interface AgentProvider {
-  readonly id: string;
-  decide(input: {
+  readonly id: string; // "jev", "mock", "random", "replay"
+  readonly label: string; // shown to people; never another provider's name
+  readonly source: "agent" | "replay" | "test";
+  decide(request: {
     sequence: number;
-    observation: WorldObservation;
+    observation: WorldObservation; // a detached, validated copy
     signal: AbortSignal;
-  }): Promise<AgentDecisionResult>;
+  }): Promise<ProviderResult>;
+}
+
+type ProviderResult =
+  | { ok: true; decision: { intent: unknown; model; confidence; alternatives; serverLatencyMs } }
+  | {
+      ok: false;
+      failure:
+        | "timeout"
+        | "unavailable"
+        | "rate_limited"
+        | "network"
+        | "http_error"
+        | "invalid"
+        | "aborted";
+      detail;
+      retryAfterMs;
+    };
+```
+
+Providers never throw at the runtime and never receive the game. The returned intent is untrusted until validated.
+
+| Provider         | Id       | Source | What it is                                                                                         |
+| :--------------- | :------- | :----- | :------------------------------------------------------------------------------------------------- |
+| `JevProvider`    | `jev`    | agent  | TypeSafe Jev through `/api/agent/jev/decision`                                                     |
+| `MockProvider`   | `mock`   | test   | A policy function. In the app: the labelled **scripted After Hours baseline** (`?controller=mock`) |
+| `RandomProvider` | `random` | agent  | Seeded uniform choice among legal intents (`?controller=random&seed=42`)                           |
+| `ReplayProvider` | `replay` | replay | Re-issues a trace's intents, in order, through the same validation                                 |
+
+Adding a provider (a local model, another hosted model, a scripted agent) means implementing this interface. For a remote model, keep the credential and the question on the server, as the Jev adapter does.
+
+## 4. Observation contract — `svs-agent-observation/v1`
+
+```ts
+interface WorldObservation<TaskState> {
+  schema: "svs-agent-observation/v1";
+  sequence: number;
+  timestampMs: number; // simulation time
+  environment: { id; timeOfDay; nearbyEntities: NearbyEntity[] }; // vehicles, barriers
+  controller: { mode: "agent" | "copilot"; provider: string };
+  actor: {
+    locomotion: "on_foot" | "entering_vehicle" | "driving" | "exiting_vehicle";
+    position: [x, y, z];
+    headingDeg;
+    speedMps;
+    busy;
+  };
+  vehicle: null | { id; label; speedMps; headingDeg; headlights };
+  navigation: { targets: NavigationTarget[]; stuckSeconds }; // id, label, kind, reach, distanceM, bearingDeg, position
+  task: { id; stage; objective; complete; state: TaskState }; // task-owned payload
+  execution: null | { intent; elapsedS }; // what the executor is doing now
+  previousOutcome: null | { intent; outcome; durationS }; // how the last intent ended
+  legal: AgentIntent[]; // what may be chosen now (≤ 64)
 }
 ```
 
-A `TaskAdapter` provides an ID, observations, known targets, currently legal intentions and task evaluation. After Hours retains ownership of all progress. Its adapter does not reproduce the mission state machine.
+- **Generic vs task.** The generic runtime never reads `task.state`. After Hours' payload (coffee meter and timer, radio readouts, captions, signal guidance, terminal panel, concert) is defined in `afterHoursSchema.ts` and validated by the task's own schema, looked up by task id in `tasks/registry.ts`.
+- **Bounded.** Every object is strict (no extra keys), every number finite, every string length-bounded with no control characters, every list capped, and the serialised observation is at most 16 KiB. Observations are validated in the browser before sending and again on the server.
+- **Deterministic.** Building an observation has no side effects: the same world yields the same observation and the same FNV-1a hash (traces reference observations by hash). Trends ("rising since your last action") are measured against a baseline taken when an action starts, not when observing.
+- **Relative directions.** Bearings are relative to the actor's facing (+right, −left) and distances are in metres, so a provider never has to do geometry.
 
-A future provider implements this interface without changing the core loop. A second environment would replace `AgentSession`'s sensor, collision and task bindings. Generic world authoring, multiplayer persistence and remote authoritative simulation are not implemented. Persistence currently means the existing After Hours browser save/checkpoint system; traces are exported explicitly.
+### No omniscience
 
-## Observation and actions
+The observation is what a player can perceive — HUD, prompts, captions, minimap, signal guidance — not what exists in the simulation.
 
-`svs-agent-observation/v1` separates actor, vehicle, environment, navigation, task and previous outcome. Observations contain at most 24 targets, 80 legal intentions and 12 recent player-visible captions, with a 24 KB serialized cap. Numbers must be finite, string lengths are bounded and object keys are strict. The generic task envelope has bounded scalar facts, clues, stage and objective, so coffee-specific measurements do not enter the generic evaluator.
+| Hidden in the simulation                                        | What the agent gets instead                                                                                                                                           |
+| :-------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The hidden station's frequency (station table)                  | The dial readout, signal bars, the Numbers Station captions ("Four. Two. Zero. …") and, only after the clue has been heard, the objective line the HUD shows everyone |
+| Each terminal's target dial position                            | The panel's status word (Drifting · Close · Aligned — hold · Locked), match meter, lock meter and the dial's own position                                             |
+| Terminal and listening-point locations before they are revealed | Nothing; they appear with the signal guidance / objective                                                                                                             |
+| The spill model                                                 | The coffee meter and timer                                                                                                                                            |
 
-The adapter reveals mission destinations from the ordinary briefing, nearby vehicles within 65 m, terminal locations only when the ordinary HUD reveals them, and the listening point when unlocked. Receiver frequency, signal bars, terminal dial, alignment percentage and status are player-visible feedback. Neither the station table's hidden answer nor terminal target values are exported. When the normal objective reveals a frequency after the clue, the agent can read it too. Recent captions are retained as observed memory, not inferred facts.
+The task adapter does not import the station table or the terminal definitions, and tests check that the answers never appear (`tests/agent-contract.test.ts`, `tests/agent-authority.test.ts`).
 
-`svs-agent-action/v1` includes wait, request human, walk/drive to a known target, interact, enter/exit/stop vehicle, radio power/station/track controls, one receiver or terminal dial nudge, leave terminal and start concert. Navigation does not implicitly interact. Tuning does not snap to a solution. Legal intentions are finite concrete candidates, validated by the server and rechecked against a fresh client observation before execution.
+## 5. Action contract — `svs-agent-action/v1`
 
-The server uses TypeSafe's Choice primitive with these candidate intentions, using the current `POST /v1/systemone` contract. No prose parsing, browser-supplied system prompt or generated code is involved. The selected intention is a choice, not hidden reasoning.
+| Intent                                                                             | Arguments                                               | Executed as                                                                               |
+| :--------------------------------------------------------------------------------- | :------------------------------------------------------ | :---------------------------------------------------------------------------------------- |
+| `wait`                                                                             | —                                                       | Hold still ~1.5 s (brake gently if driving); ends early when something observable changes |
+| `request_human`                                                                    | —                                                       | Hand control back to the person                                                           |
+| `navigate_to`                                                                      | `target`                                                | Walk a planned route to a known target and stop within reach                              |
+| `drive_to`                                                                         | `target`                                                | Drive a planned route, park near the target                                               |
+| `stop_vehicle`                                                                     | —                                                       | Brake to a standstill                                                                     |
+| `enter_vehicle`                                                                    | `target`                                                | Press E at that vehicle's door (only offered when the prompt is for it)                   |
+| `exit_vehicle`                                                                     | —                                                       | Press E while driving (the game brakes and steps out)                                     |
+| `interact`                                                                         | `target`                                                | Press E (only offered when the on-screen prompt is for that target)                       |
+| `start_concert`                                                                    | —                                                       | Press E at the listening point                                                            |
+| `radio_power` · `radio_next_station` · `radio_next_track` · `radio_previous_track` | —                                                       | The radio keys                                                                            |
+| `tune_receiver`                                                                    | `direction: up \| down`, `amount: tap \| short \| long` | Tap or hold `[` / `]` (0.8 s or 2.5 s)                                                    |
+| `tune_terminal`                                                                    | `direction`, `amount`                                   | Tap or hold A / D on the terminal dial (0.35 s or 0.9 s)                                  |
+| `leave_terminal`                                                                   | —                                                       | X                                                                                         |
+| `retry`                                                                            | —                                                       | Y after a failed delivery                                                                 |
 
-## Controller arbitration and lifecycle
+Least privilege: tuning is a tap or a hold of the same keys a player uses — there is no way to name a frequency or a dial value. Navigation takes a target id from the observation's list — never coordinates. Every intent passes the schema, then must equal one of the observation's `legal` intents, then must still be legal in the **current** world when it is applied (otherwise it is recorded as stale). Validation happens on the server (for Jev), in the provider client, and in the runtime.
 
-Human is the default, with no provider requests during ordinary play. Human device input remains in `game.input`; synthetic controls use a distinct `AgentInputState`. Exactly one is selected for gameplay. `source` is `human`, `agent`, `replay` or `test`.
+Legal sets follow the world: interactions are offered only where the game's own prompt offers them (via a read-only `InteractionManager.promptTarget`), driving intents only while driving, terminal intents only while a terminal panel is open, and nothing but waiting during vehicle transitions and the concert.
 
-Agent mode delegates control. Co-pilot mode only suggests until the user clicks **LET AGENT ACT**; delegation lasts for one intention. H, meaningful human movement/look/interaction during delegated control, pause, leaving gameplay and disposal clear synthetic controls and invalidate requests. Human movement while simply receiving co-pilot suggestions remains ordinary gameplay. Pointer and accessibility command buttons also cancel delegated control before they act. Takeover never resets world or mission state.
+## 6. Runtime state machine
 
-The state vocabulary is OFF, OBSERVING, THINKING, ACTING, BLOCKED, WAITING, HUMAN CONTROL and OFFLINE. There is one primary request in flight, a monotonic sequence, generation invalidation, an AbortController, a five-second timeout, stage-change invalidation and bounded exponential retry delay. Rate-limit retry delays are honored. Late responses cannot regain control. No fallback is silently represented as Jev.
-
-Decisions are scheduled outside the render stack. The runtime requests a new intention after the current bounded action finishes, with a minimum 350 ms interval; it does not continually replace a route at 1–4 Hz. Long travel goals therefore make fewer model calls. The existing fixed-step physics remains unchanged.
-
-## Motor controller
-
-The local navigator uses bounded A\* over the existing collision query, followed by collision-checked route simplification. Walking converts a world direction into normal camera-relative movement. Driving follows waypoints with smoothed existing vehicle dynamics and early braking. Coffee carrying selects a gentler speed/pedal profile. Neither profile changes physics or spill rules.
-
-Static route planning uses the scene's collision geometry; that geometric assistance is supplied by code, not inferred by Jev from pixels. Dynamic gates are planned through their lanes, then opened or blocked by normal proximity sensors and physics. Stalls trigger bounded reverse/side recovery, then a blocked outcome. A route has a 180-second execution deadline. It does not teleport, select another task goal, or auto-complete an interaction.
-
-## Traces, replay and comparison
-
-**EXPORT TRACE** downloads `svs-agent-trace/v1` JSON. Header fields identify observation/action versions, environment, task, session, build and timestamp. Set public `VITE_BUILD_ID` to a commit/build identifier when deploying; otherwise it is explicitly `development`.
-
-Decision records retain the observation, a deterministic non-cryptographic hash, legal actions, selected intention, provider/model, sequence and latency. Action start/end, mode changes, takeover, provider failures, stale responses, collision, recovery, vehicle and task changes are separate events. `input_submitted` means a control was issued, not that an interaction succeeded; subsequent world task events are the evidence. Records cap at 10,000 and report dropped entries. No trace is uploaded automatically.
-
-Replay reissues validated intentions in order against the current world. It is **not** deterministic full-world restoration: save state, timing, physics and provider versions can differ. Imported traces are size/schema checked. There is no replay path for arbitrary world mutations.
-
-Generic evaluation reports completion, elapsed simulation time, distance walked/driven, collisions, recovery, interventions, decision counts, latency distribution, provider failures and abrupt acceleration/braking durations. After Hours adds coffee integrity/time, receiver and terminal attempts, terminal completion and concert reach. Compare Human, Jev, Random and Replay using these measurements; there is no winner score. Human sessions also use the same world event/metric collector.
-
-## Server and deployment
-
-The TanStack Start server route is `/api/agent/jev/decision`, available in the existing Nitro server build. Configure only server environment variables:
-
-```text
-TYPESAFE_API_KEY=<private credential>
-TYPESAFE_MODEL=jev-latest
+```mermaid
+stateDiagram-v2
+  [*] --> OFF
+  OFF --> OBSERVING: start(agent | copilot)
+  HUMAN_CONTROL --> OBSERVING: start(agent | copilot)
+  OBSERVING --> THINKING: request issued
+  THINKING --> ACTING: intent accepted (agent / delegated)
+  THINKING --> WAITING: suggestion (co-pilot)
+  THINKING --> OFFLINE: failure (backoff)
+  OFFLINE --> THINKING: backoff elapsed
+  ACTING --> OBSERVING: intent finished
+  ACTING --> BLOCKED: stuck · no route · no effect · timed out
+  BLOCKED --> THINKING: next decision
+  WAITING --> ACTING: LET … (delegate)
+  OBSERVING --> HUMAN_CONTROL: H · movement · look · click · pause · request_human
+  THINKING --> HUMAN_CONTROL: takeover
+  ACTING --> HUMAN_CONTROL: takeover
 ```
 
-Do not use a `VITE_` prefix for secrets. GET reports configuration without calling TypeSafe; POST accepts only session and observation. The server rejects cross-origin browser requests, excessive bodies, invalid schemas and unknown choices. Upstream requests have a four-second timeout and a 32 KB response cap. Error bodies do not reflect upstream text or exceptions.
+The runtime owns its state explicitly: sequence number, epoch, active intent, co-pilot suggestion, last outcome, last failure and control source. Provider answers never act on arrival: they wait in an inbox and are applied (or rejected) at the next tick, inside the frame.
 
-Pacing is in memory per process: minimum 350 ms per session, at most four concurrent calls and 120 requests/minute per instance. These are not global quotas or authentication. Before exposing a heavily used public deployment, apply deployment-level access/rate limits and spending controls. Browser observations are untrusted reports, not server-attested benchmark results.
+### Decision lifecycle (`loop.ts`)
 
-## Validation and limitations
+- one request in flight, no queue; at most one request per 250 ms;
+- monotonically increasing sequence numbers across providers;
+- an `AbortController` per request and a 6 s timeout, measured on a simulation clock (deterministic in tests);
+- **epochs**: takeover, a mode change or a task-stage change moves the epoch on, so any answer still in flight is stale — however late it arrives;
+- stale answers (abandoned, superseded, older epoch, too old, after a timeout) and duplicate answers are recorded and discarded;
+- failures back off deterministically: 500 ms → 8 s exponential for network/invalid, 1 s for rate limits unless the server says `retryAfterMs`, 8 s for "unavailable";
+- a provider that throws, rejects or returns a malformed decision is a failure, never a decision;
+- when the only legal intents are waiting or handing back, the runtime waits without spending a provider call.
 
-Run `bun run test:agent`, `bun test`, `bun run typecheck`, `bun run lint`, and `bun run build`. Build with a fake `TYPESAFE_API_KEY=svs-secret-boundary-canary-2026`, then run `bun run scan:agent-secrets` to verify client artifacts. No CI test calls TypeSafe. `AGENT_LIVE_TEST=1 bun run agent:live` is an explicit live, billable one-decision smoke test with a separately configured server key.
+## 7. Control arbitration and takeover
 
-The deterministic mock test traverses the complete After Hours journey with normal input, real collision/vehicle physics and the gameplay camera, without teleporting or writing task progress. The scripted **test policy** is not the production Jev provider. A successful mock journey establishes the integration and motor path; it does not establish Jev's ability to choose the entire sequence. Live Jev completion remains unverified.
+```text
+Keyboard / mouse / touch ─▶ human InputState ──┐
+                                               ├─▶ ControlArbiter.input ─▶ gameplay (unchanged)
+Agent executor / replay ──▶ SyntheticInput ────┘       .source = human | agent | replay | test
+```
 
-Navigation is a bounded geometric controller, not a general driving planner; difficult dynamic obstructions can still block it. Per-frame physics is deterministic for a fixed initial state and inputs, but live async decision timing is not. Traces are in-memory until exported. Episode metrics are for the current session and are not authenticated scientific benchmark claims.
+- Gameplay reads exactly one `InputState` per frame — the arbiter's. No DOM events are synthesised and no keyboard events are faked. `SyntheticInput` has the same interface, so the interaction state machine, vehicle controller, radio and terminals behave identically for a person and an agent.
+- `source` answers "who generated this control?" at any moment, and every trace record carries it.
+- Presentation controls (mute, music volume, Altered Signal, the concert's cinematic camera, zoom) stay with the person and never take control.
+- **Takeover.** H, any meaningful movement, mouse/touch look, any gameplay key, or a click anywhere outside the agent panel hands control back **in the same frame**: the executor stops, every synthetic control is released, the request in flight is aborted and the epoch moves on. Nothing is reset or moved: position, vehicle, momentum, coffee, radio, terminal progress and saved progress are exactly as they were. Pausing, leaving After Hours or switching to a factual viewer mode also returns control.
+- **Co-pilot.** The person keeps control; the agent only suggests. **LET JEV DRIVE/WALK/…** delegates one intent. Any movement, look or interaction cancels the delegation (co-pilot stays on). The agent never seizes control.
+- In human mode the runtime makes no requests and the arbiter passes the person's own `InputState` straight through: no extra latency.
 
-All agent behavior is fictional gameplay. It changes neither historical source anchors nor reconstruction evidence and says nothing about actual Pine Gap activity.
+## 8. Authority boundary
+
+The agent layer cannot mutate: player or vehicle position, velocity or physics, collisions, coffee amount or delivery, After Hours progression, the radio's solution state, terminal completion, the concert, barrier gates, save state, or the factual site data.
+
+How that is enforced:
+
+1. **Capabilities.** Providers receive a detached JSON copy (mutating it changes nothing). The executor's only world interface (`MotorWorld`) is read-only sensors, target and route queries, and a caution factor; its only output is `SyntheticInput`. The runtime talks to the world only through `AgentEnvironment` (observe, legal, stage, signature, summary).
+2. **One reader.** Only `session.ts` and `tasks/afterHours.ts` import the game, and neither assigns to world, task or save state nor calls a task-mutating method (static test).
+3. **Progress through gameplay.** A test plays the whole journey with the scripted baseline and records the call stack of every coffee collection, delivery and concert start: each comes from `InteractionManager` inside `Game.handleFrameInput` — the E press — never from the runtime, a provider, the executor or the bridge.
+4. **No hidden physics.** A static test rejects any write to positions, velocities, yaw, physics or collision state anywhere under `src/agent/`.
+
+This is an application architecture boundary for first-party code, not a security sandbox for arbitrary third-party JavaScript running in the page.
+
+## 9. Deterministic executor
+
+- **On foot.** A\* over the collision world (3 m grid, bounded), pulled taut; the camera turns towards travel at a mouse-like rate and the stick is pushed camera-relative, exactly as a player's WASD + mouse. Sprints on long legs unless carrying the coffee; slows on arrival and stops within the target's interaction range.
+- **Driving.** A\* for the vehicle's clearance (6 m grid; barrier booms are planned through because they lift for driven vehicles). Steering towards the route, target speed limited by profile, upcoming turn angle, proximity to barriers and a braking curve to park short of the destination. A reversing turn when the route starts behind the vehicle. Brake is never used as reverse at walking pace.
+- **Recovery.** No progress for 1.4 s (foot) / 2 s (vehicle) triggers a bounded back-off (reverse with the wheel turned towards the route first), then a replan; after four recoveries the intent ends as `stuck`, and the agent decides what next.
+- **Profiles.** `smooth` (carrying coffee: 9 m/s cruise, gentle pedal and steering rates, early braking), `standard`, and `aggressive` (tests and comparison only). A profile is a driving style, not a physics change.
+- **Presses and holds.** One edge for E and radio keys; a bounded hold for tuning, released at the end; terminal holds stop at once if the panel closes.
+
+Navigation never teleports, never writes a velocity and never chooses a destination.
+
+## 10. Traces — `svs-agent-trace/v1`
+
+Provider-neutral; the same format for Jev, the baseline, random, replay and human segments.
+
+```jsonc
+{
+  "schema": "svs-agent-trace/v1",
+  "observationSchema": "svs-agent-observation/v1",
+  "actionContract": "svs-agent-action/v1",
+  "environment": "pine-gap", "task": "after-hours",
+  "session": "32 hex", "build": "VITE_BUILD_ID or development",
+  "startedAt": "…", "provider": "jev", "model": "jev-1.13.0", "controlMode": "agent",
+  "segments": [ { "t": 0, "mode": "agent", "provider": "jev", "label": "Jev" } ],
+  "decisions": [ {
+    "t": 12345, "sequence": 7, "observationHash": "9f2c…", "mode": "agent",
+    "provider": "jev", "model": "jev-1.13.0", "source": "agent",
+    "legal": ["wait", "navigate_to:coffee_cart", …], "intent": {…}, "target": "coffee_cart",
+    "confidence": 0.93, "alternatives": [ { "intent": "…", "probability": 0.93 } ],
+    "latencyMs": 296, "serverLatencyMs": 293,
+    "disposition": "executed | continued | suggested | delegated | rejected", "rejection": null,
+    "actionStart": 12345, "actionEnd": 26010, "outcome": "arrived",
+    "stage": "coffee",
+    "actor": { "locomotion": "on_foot", "position": [x, z], "speedMps": 0 },
+    "vehicle": null,
+    "task": { "coffee": "available", "coffeePercent": null, "station": "…", "frequency": 367.5, … }
+  } ],
+  "events": [ { "t": …, "type": "coffee_collected", "source": "agent" }, … ],
+  "observations": { "9f2c…": { /* the last 40 distinct observations, by hash */ } },
+  "dropped": { "decisions": 0, "events": 0 },
+  "evaluation": { … }
+}
+```
+
+Event types include `mode`, `human_takeover`, `human_input`, `human_ui`, `paused`, `timeout`, `stale_response`, `duplicate_response`, `invalid_response`, `network_failure`, `rate_limited`, `provider_unavailable`, `request_aborted`, `stuck_recovery`, `blocked`, `collision`, `vehicle_entry`, `vehicle_exit`, `coffee_collected`, `coffee_delivered`, `coffee_failed`, `radio_event`, `frequency_clue_discovered`, `receiver_locked`, `terminal_completed`, `concert_started`, `concert_completed`, `suggestion`, `delegated`, `delegation_cancelled`, `dismissed`, `interaction_outcome`.
+
+Traces are bounded (4,000 decisions, 6,000 events; overflow is counted), live in memory and are exported only by **Export trace**. They contain no credentials, prompts or provider reasoning. **Replay** re-issues a trace's intents through the same validation against the current world; it is not a state restore, and timing or world differences can make a replayed intent illegal (it is then rejected, not forced).
+
+## 11. Evaluation
+
+```ts
+interface EvaluationResult {
+  schema: "svs-agent-evaluation/v1";
+  environment: string; task: string; providers: string[];
+  generic: GenericMetrics;                 // same for every task and controller
+  taskMetrics: Record<string, number | string | boolean | null>;
+  windows: Record<string, Record<string, …>>;   // named episodes, e.g. last_coffee
+}
+```
+
+Generic: task completion, elapsed time, distance travelled / walked / driven, collisions (vehicle impacts > 1.2 m/s), stuck recoveries, human interventions, agent decisions, mean / median / p95 decision latency, provider failures, stale and invalid responses, interactions with no effect, hard braking and hard acceleration events, and seconds under each control source.
+
+After Hours adds: coffee delivered, coffee remaining, mission time, collections and failures, radio commands, receiver and terminal tuning inputs (counted from the input gameplay actually read — the same for people and agents), frequency found, terminals completed, concert reached and completed. The `last_coffee` window records, for the latest run, time, coffee remaining, distance, collisions, hard braking/acceleration, interventions and which source was in control.
+
+Human, Jev, random, baseline and replay runs are measured by the same code under the same world rules. There is no score and no winner: the numbers are there to be compared.
+
+## 12. Security
+
+- `TYPESAFE_API_KEY` and `TYPESAFE_MODEL` are **server** environment variables, read only by `src/server/agent/jev.server.ts`. Never use a `VITE_` prefix.
+- The browser sends `{ session, observation }` only; unknown fields are refused. The server builds every word of the TypeSafe question; displayed game text is quoted as data and the context says it is not an instruction. The endpoint cannot be used as a prompt proxy: its only output is one of the offered intents.
+- Requests: same-origin only, JSON only, ≤ 16.9 KiB, strict schema, `controller.provider === "jev"`.
+- Answers: an offered option only, confidence and probabilities in [0, 1], probabilities over offered options summing to 1 within rounding, the choice the most probable; otherwise 502 — never a decision.
+- Upstream: 4.5 s timeout, 64 KiB answer cap, the upstream body never relayed, errors carry codes not details, logs carry codes and sequence numbers only.
+- Pacing (per instance, in memory): per-client token bucket, 200 ms per session, a global bucket and at most 12 upstream calls in flight. These are brakes, not a wall: several instances or a restart each start fresh. Put durable limits and spend controls in front of a public deployment.
+- `GET /api/agent/jev/decision` reports whether Jev is configured without calling TypeSafe. The page calls it only when someone presses **Jev After Hours** or **Co-pilot**.
+- `tests/agent-secret-boundary.test.ts` checks the source tree; `bun run verify:secrets` builds the production app with a canary key and fails if the canary, any key-shaped string, the upstream endpoint or the variable name appears in client assets, or if the key was inlined into the server bundle.
+
+Observations are client-reported. Nothing here is a server-attested benchmark: a modified client can send any valid observation.
+
+## 13. Development entry points
+
+| Query                        | Effect (after After Hours starts)      |
+| :--------------------------- | :------------------------------------- |
+| `?controller=human`          | Default                                |
+| `?controller=jev`            | Probe, then Jev in agent mode          |
+| `?controller=jev&copilot=1`  | Probe, then Jev as co-pilot            |
+| `?controller=mock`           | The labelled scripted baseline         |
+| `?controller=random&seed=42` | Seeded random baseline                 |
+| `?controller=replay`         | Opens the panel to choose a trace file |
+| `?agentHud=1`                | Shows the agent panel in human play    |
+
+None of these provides a world mutation.
+
+## 14. Testing
+
+```sh
+bun run test:agent        # all agent suites (contract, loop, runtime, motor, authority, journey, server, secrets)
+bun test                  # everything
+bun run typecheck && bun run lint
+bun run verify:secrets    # production build with a canary key, then scan
+AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts [--decisions N | --journey --minutes 30 --trace out.json]
+```
+
+The live script is billable, opt-in and never part of CI; it runs the real handler and runtime, headless, paced to wall-clock time.
+
+## 15. Limitations
+
+- One environment and one task. A second environment needs its own `AgentSession`-style bridge (observation builder, `MotorWorld`, legal intents) and a task adapter + schema; the runtime, contracts, loop, providers, traces and evaluation do not change. There is no environment-authoring tool.
+- Navigation is a bounded grid planner with local recovery, not a general driving AI. Unusual parking spots or crowded vehicles can still need several recoveries.
+- The simulation is deterministic for a given sequence of inputs, but live provider latency is not, so live runs are not reproducible frame for frame.
+- Metrics are session-local and client-reported.
+- Replay re-issues intentions; it does not restore state.
+- Rate limits are per server instance.
+
+## 16. Future providers and environments
+
+Designed-for, not built: `OpenAIProvider`, `AnthropicProvider`, `LocalModelProvider` (each an `AgentProvider`, with remote credentials behind a server adapter like Jev's), a `ScriptedProvider` library, benchmark suites that run many seeded episodes headless and compare `EvaluationResult`s, human-vs-agent leaderboards built on traces, and new environments (Lop Nur, a fictional city) that implement the same environment and task interfaces.
+
+---
+
+All agent behaviour is fictional gameplay inside the simulation layer. It changes neither the historical source anchors nor the approximate reconstruction, and says nothing about real activity at Pine Gap.
