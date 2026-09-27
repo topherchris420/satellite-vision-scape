@@ -1,0 +1,197 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 440" width="1280" height="440" role="img" aria-labelledby="t d">
+  <title id="t">Pine Gap — a shared 3D world for people and AI agents</title>
+  <desc id="d">Night falls over a desert ridge. A row of radomes sits on the plain while signal rings pulse outward and a waveform locks onto 420.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05070f"/>
+      <stop offset="0.45" stop-color="#101532"/>
+      <stop offset="0.72" stop-color="#3a1f3f"/>
+      <stop offset="0.86" stop-color="#b4502a"/>
+      <stop offset="1" stop-color="#e6843f"/>
+    </linearGradient>
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a2413"/>
+      <stop offset="1" stop-color="#1b0a06"/>
+    </linearGradient>
+    <linearGradient id="ridgeFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a2233"/>
+      <stop offset="1" stop-color="#6b2d22"/>
+    </linearGradient>
+    <linearGradient id="ridgeNear" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a160f"/>
+      <stop offset="1" stop-color="#26100a"/>
+    </linearGradient>
+    <radialGradient id="dome" cx="0.36" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.55" stop-color="#d9dbe6"/>
+      <stop offset="1" stop-color="#7b7a92"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffd9a0" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="title" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff4e6"/>
+      <stop offset="0.5" stop-color="#ffd2a1"/>
+      <stop offset="1" stop-color="#fff4e6"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4" stop-opacity="0"/>
+      <stop offset="0.2" stop-color="#5eead4"/>
+      <stop offset="0.6" stop-color="#a78bfa"/>
+      <stop offset="0.9" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#fbbf24" stop-opacity="0"/>
+    </linearGradient>
+    <clipPath id="frame"><rect width="1280" height="440" rx="18"/></clipPath>
+  </defs>
+
+  <style>
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+    .tw { animation: tw 4s ease-in-out infinite; }
+    .tw2 { animation: tw 5.5s ease-in-out infinite 1.2s; }
+    .tw3 { animation: tw 3.2s ease-in-out infinite 2.1s; }
+    @keyframes tw { 0%, 100% { opacity: .25 } 50% { opacity: 1 } }
+    .blink { animation: blink 1.6s steps(1) infinite; }
+    @keyframes blink { 0%, 60% { opacity: 1 } 61%, 100% { opacity: .15 } }
+    @media (prefers-reduced-motion: reduce) { .tw, .tw2, .tw3, .blink { animation: none } }
+  </style>
+
+  <g clip-path="url(#frame)">
+    <rect width="1280" height="440" fill="url(#sky)"/>
+
+    <!-- stars -->
+    <g fill="#fff">
+      <circle class="tw"  cx="96"   cy="42"  r="1.3"/>
+      <circle class="tw2" cx="178"  cy="96"  r="0.9"/>
+      <circle class="tw3" cx="251"  cy="28"  r="1.1"/>
+      <circle class="tw"  cx="334"  cy="74"  r="0.8"/>
+      <circle class="tw2" cx="418"  cy="36"  r="1.4"/>
+      <circle class="tw3" cx="512"  cy="118" r="0.8"/>
+      <circle class="tw"  cx="603"  cy="22"  r="1"/>
+      <circle class="tw2" cx="688"  cy="64"  r="0.9"/>
+      <circle class="tw3" cx="776"  cy="30"  r="1.3"/>
+      <circle class="tw"  cx="858"  cy="102" r="0.8"/>
+      <circle class="tw2" cx="941"  cy="46"  r="1.1"/>
+      <circle class="tw3" cx="1022" cy="84"  r="0.9"/>
+      <circle class="tw"  cx="1104" cy="30"  r="1.4"/>
+      <circle class="tw2" cx="1188" cy="70"  r="1"/>
+      <circle class="tw3" cx="1240" cy="126" r="0.8"/>
+      <circle class="tw2" cx="44"   cy="140" r="0.8"/>
+      <circle class="tw"  cx="140"  cy="176" r="0.7"/>
+      <circle class="tw3" cx="1150" cy="160" r="0.7"/>
+      <circle class="tw"  cx="1226" cy="12"  r="0.9"/>
+      <circle class="tw2" cx="22"   cy="20"  r="0.9"/>
+    </g>
+    <!-- Southern Cross -->
+    <g fill="#fff">
+      <circle class="tw"  cx="1086" cy="118" r="2.1"/>
+      <circle class="tw2" cx="1112" cy="150" r="1.7"/>
+      <circle class="tw3" cx="1066" cy="166" r="1.8"/>
+      <circle class="tw"  cx="1094" cy="204" r="2.3"/>
+      <circle class="tw2" cx="1101" cy="176" r="0.9"/>
+    </g>
+
+    <!-- far ridge (MacDonnell Ranges) -->
+    <path d="M0 300 L70 286 L140 292 L210 268 L262 276 L318 248 L372 262 L430 254 L488 270 L560 262 L640 276 L720 266 L800 272 L884 252 L940 262 L1002 244 L1060 258 L1126 250 L1190 266 L1280 256 L1280 440 L0 440 Z" fill="url(#ridgeFar)" opacity="0.9"/>
+    <!-- near ridge -->
+    <path d="M0 322 L90 312 L150 318 L228 300 L290 312 L360 304 L404 314 L1280 318 L1280 440 L0 440 Z" fill="url(#ridgeNear)"/>
+    <!-- plain -->
+    <path d="M0 344 L1280 336 L1280 440 L0 440 Z" fill="url(#ground)"/>
+    <!-- road -->
+    <path d="M300 440 L590 346 L612 346 L420 440 Z" fill="#221512" opacity="0.8"/>
+    <path d="M360 440 L600 346" stroke="#e7d3b0" stroke-width="1.2" stroke-dasharray="8 10" opacity="0.35"/>
+
+    <!-- perimeter fence -->
+    <path d="M660 350 L1230 344" stroke="#8a6e60" stroke-width="1" opacity="0.6"/>
+    <g stroke="#8a6e60" stroke-width="1" opacity="0.6">
+      <line x1="690" y1="350" x2="690" y2="343"/><line x1="760" y1="349" x2="760" y2="342"/>
+      <line x1="830" y1="348" x2="830" y2="341"/><line x1="900" y1="348" x2="900" y2="341"/>
+      <line x1="970" y1="347" x2="970" y2="340"/><line x1="1040" y1="346" x2="1040" y2="339"/>
+      <line x1="1110" y1="346" x2="1110" y2="339"/><line x1="1180" y1="345" x2="1180" y2="338"/>
+    </g>
+
+    <!-- signal rings from the lead radome -->
+    <g fill="none" stroke="#5eead4">
+      <circle cx="900" cy="296" r="30" stroke-width="1.5">
+        <animate attributeName="r" values="30;190" dur="4.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;0" dur="4.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="900" cy="296" r="30" stroke-width="1.5" stroke="#a78bfa">
+        <animate attributeName="r" values="30;190" dur="4.5s" begin="1.5s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;0" dur="4.5s" begin="1.5s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="900" cy="296" r="30" stroke-width="1.5" stroke="#fbbf24">
+        <animate attributeName="r" values="30;190" dur="4.5s" begin="3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.7;0" dur="4.5s" begin="3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- radomes -->
+    <ellipse cx="900" cy="300" rx="120" ry="60" fill="url(#glow)"/>
+    <g>
+      <rect x="752" y="330" width="56" height="10" fill="#6f6a78"/>
+      <circle cx="780" cy="306" r="28" fill="url(#dome)"/>
+      <rect x="860" y="330" width="80" height="12" fill="#6f6a78"/>
+      <circle cx="900" cy="296" r="40" fill="url(#dome)"/>
+      <rect x="982" y="332" width="50" height="9" fill="#6f6a78"/>
+      <circle cx="1007" cy="311" r="24" fill="url(#dome)"/>
+      <rect x="1068" y="333" width="38" height="8" fill="#6f6a78"/>
+      <circle cx="1087" cy="317" r="18" fill="url(#dome)"/>
+      <rect x="1140" y="334" width="26" height="7" fill="#6f6a78"/>
+      <circle cx="1153" cy="323" r="12" fill="url(#dome)"/>
+      <!-- geodesic hint on the lead dome -->
+      <g stroke="#9aa0b8" stroke-width="0.6" fill="none" opacity="0.55">
+        <path d="M862 290 Q900 276 938 290"/><path d="M866 312 Q900 300 934 312"/>
+        <path d="M886 258 Q880 296 886 334"/><path d="M914 258 Q920 296 914 334"/>
+      </g>
+    </g>
+    <!-- open dish antenna -->
+    <g transform="translate(690 318)">
+      <rect x="-3" y="0" width="6" height="22" fill="#6f6a78"/>
+      <path d="M-26 -6 Q0 22 26 -18" fill="none" stroke="#d9dbe6" stroke-width="4" stroke-linecap="round"/>
+      <line x1="0" y1="4" x2="12" y2="-18" stroke="#d9dbe6" stroke-width="1.2"/>
+    </g>
+    <!-- obstruction beacons -->
+    <circle class="blink" cx="900" cy="254" r="2.6" fill="#ff4d4d"/>
+    <circle class="blink" cx="690" cy="300" r="2" fill="#ff4d4d" style="animation-delay:.8s"/>
+
+    <!-- 4x4 with headlights, heading up the road -->
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff1c2" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#fff1c2" stop-opacity="0"/>
+    </linearGradient>
+    <g transform="translate(506 380) rotate(-21)">
+      <path d="M22 -6 L150 -26 L150 18 Z" fill="url(#beam)"/>
+      <rect x="-20" y="-12" width="42" height="13" rx="3" fill="#2d241c"/>
+      <rect x="-14" y="-20" width="24" height="10" rx="2" fill="#3a2f24"/>
+      <rect x="-10" y="-18" width="8" height="6" rx="1" fill="#6b8fb3" opacity="0.5"/>
+      <circle cx="-10" cy="2" r="4" fill="#0e0a08"/><circle cx="13" cy="2" r="4" fill="#0e0a08"/>
+      <circle cx="21" cy="-6" r="2.2" fill="#fff3c4"/>
+      <circle cx="-19" cy="-7" r="1.6" fill="#ff5a4a"/>
+    </g>
+
+    <!-- title block -->
+    <text x="72" y="118" class="mono" font-size="14" letter-spacing="3.2" fill="#fbbf24" opacity="0.9">SATELLITE VISION SCAPE · 23.80°S 133.74°E</text>
+    <text x="68" y="196" class="sans" font-size="92" font-weight="800" letter-spacing="10" fill="url(#title)">PINE GAP</text>
+    <text x="72" y="238" class="sans" font-size="24" font-weight="500" fill="#f4e7d8">A shared 3D world where people and AI agents</text>
+    <text x="72" y="270" class="sans" font-size="24" font-weight="500" fill="#f4e7d8">play the same mission, under the same rules.</text>
+
+    <!-- receiver readout -->
+    <g transform="translate(72 296)">
+      <rect width="380" height="34" rx="8" fill="#0b0f22" fill-opacity="0.72" stroke="#5eead4" stroke-opacity="0.4"/>
+      <text x="14" y="22" class="mono" font-size="13" fill="#9ca3af">RX</text>
+      <text x="42" y="22" class="mono" font-size="13" font-weight="700" fill="#5eead4">420.0
+        <animate attributeName="opacity" values="1;0.55;1" dur="2.4s" repeatCount="indefinite"/>
+      </text>
+      <path d="M100 17 C112 5 124 29 136 17 S160 5 172 17 S196 29 208 17 S232 5 244 17 S268 29 280 17 S304 5 316 17" fill="none" stroke="url(#wave)" stroke-width="2">
+        <animate attributeName="d" dur="3s" repeatCount="indefinite"
+          values="M100 17 C112 5 124 29 136 17 S160 5 172 17 S196 29 208 17 S232 5 244 17 S268 29 280 17 S304 5 316 17;
+                  M100 17 C112 27 124 7 136 17 S160 27 172 17 S196 7 208 17 S232 27 244 17 S268 7 280 17 S304 27 316 17;
+                  M100 17 C112 5 124 29 136 17 S160 5 172 17 S196 29 208 17 S232 5 244 17 S268 29 280 17 S304 5 316 17"/>
+      </path>
+      <text x="330" y="22" class="mono" font-size="11" font-weight="700" fill="#fbbf24">LOCK</text>
+    </g>
+  </g>
+  <rect x="0.5" y="0.5" width="1279" height="439" rx="18" fill="none" stroke="#ffffff" stroke-opacity="0.08"/>
+</svg>
