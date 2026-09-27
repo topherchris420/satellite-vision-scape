@@ -48,21 +48,27 @@ export function usePlaySession(
     game?.setPaused(!running);
   }, [running, game]);
 
-  const start = useCallback(() => {
-    if (!game) return;
-    game.unlockAudio();
-    // A focused HUD button would otherwise "click" again on Space.
-    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-    update("running");
-    if (canvas && typeof canvas.requestPointerLock === "function") {
-      try {
-        const request = canvas.requestPointerLock() as unknown;
-        if (request instanceof Promise) request.catch(() => undefined);
-      } catch {
-        // Pointer lock unavailable: drag-to-look fallback stays active.
+  const begin = useCallback(
+    (capturePointer: boolean) => {
+      if (!game) return;
+      game.unlockAudio();
+      // A focused HUD button would otherwise "click" again on Space.
+      if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+      update("running");
+      if (capturePointer && canvas && typeof canvas.requestPointerLock === "function") {
+        try {
+          const request = canvas.requestPointerLock() as unknown;
+          if (request instanceof Promise) request.catch(() => undefined);
+        } catch {
+          // Pointer lock unavailable: drag-to-look fallback stays active.
+        }
       }
-    }
-  }, [game, canvas, update]);
+    },
+    [game, canvas, update],
+  );
+
+  const start = useCallback(() => begin(true), [begin]);
+  const startUnlocked = useCallback(() => begin(false), [begin]);
 
   const pause = useCallback(() => {
     if (statusRef.current !== "running") return;
@@ -98,5 +104,5 @@ export function usePlaySession(
     if (!enabled) pause();
   }, [enabled, pause]);
 
-  return { status, start, pause };
+  return { status, start, startUnlocked, pause };
 }

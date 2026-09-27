@@ -1,3 +1,5 @@
+import { AgentLaunch } from "./AgentLaunch";
+import { AgentHUD } from "./AgentHUD";
 import { useCallback, useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
 import {
   CarFront,
@@ -171,7 +173,7 @@ export function GameHUD({
   status: PlayStatus;
   onStart: () => void;
   /** Begin After Hours at dusk (from a click, so audio may start). */
-  onStartAfterHours: () => void;
+  onStartAfterHours: (capturePointer?: boolean) => void;
   onLeaveAfterHours: () => void;
   onPause: () => void;
   onExplore: () => void;
@@ -308,7 +310,10 @@ export function GameHUD({
             </div>
           )}
 
-          <AfterHoursOverlay game={game} isMobile={isMobile} />
+          <>
+            <AfterHoursOverlay game={game} isMobile={isMobile} />
+            <AgentHUD game={game} />
+          </>
 
           {/* Vehicle instruments */}
           {inVehicle && (
@@ -394,11 +399,12 @@ export function GameHUD({
               </div>
               <div className="flex flex-col items-start gap-2">
                 <button
-                  onClick={onStartAfterHours}
+                  onClick={() => onStartAfterHours()}
                   className="flex items-center gap-2 rounded-xl bg-[#0B5D63] px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-white ring-1 ring-[#7fd6d0]/40 transition hover:bg-[#0e727a]"
                 >
                   <MoonStar size={14} /> {returning ? "Continue After Hours" : "After Hours"}
                 </button>
+                <AgentLaunch game={game} onStart={() => onStartAfterHours(false)} />
                 <CharacterPicker game={game} />
               </div>
             </div>
@@ -444,12 +450,13 @@ export function GameHUD({
               <Play size={14} /> Resume
             </button>
           </div>
+          <AgentLaunch game={game} onStart={() => onStartAfterHours(false)} />
           {after.active ? (
             <AfterHoursMenu game={game} onLeave={onLeaveAfterHours} />
           ) : (
             <div className="mt-5 flex flex-wrap items-center gap-3 rounded-xl border border-[#0B5D63]/70 bg-[#041517]/60 p-3">
               <button
-                onClick={onStartAfterHours}
+                onClick={() => onStartAfterHours()}
                 className="flex items-center gap-2 rounded-lg bg-[#0B5D63] px-4 py-2 text-[10px] font-bold uppercase tracking-[.16em] text-white transition hover:bg-[#0e727a]"
               >
                 <MoonStar size={13} /> {returning ? "Continue After Hours" : "Start After Hours"}

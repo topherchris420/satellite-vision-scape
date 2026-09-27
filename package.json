@@ -12,7 +12,10 @@
     "typecheck": "tsc --noEmit",
     "terrain:build": "bun scripts/build-terrain-artifact.ts",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "test:agent": "bun test tests/agent-runtime.test.ts tests/agent-journey.test.ts",
+    "agent:live": "bun scripts/verify-agent-live.ts",
+    "scan:agent-secrets": "node scripts/scan-agent-secrets.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

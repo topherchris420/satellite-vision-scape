@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as ThesisRouteImport } from './routes/thesis'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiAgentJevDecisionRouteImport } from './routes/api.agent.jev.decision'
 
 const ThesisRoute = ThesisRouteImport.update({
   id: '/thesis',
@@ -22,31 +23,40 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAgentJevDecisionRoute = ApiAgentJevDecisionRouteImport.update({
+  id: '/api/agent/jev/decision',
+  path: '/api/agent/jev/decision',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/thesis': typeof ThesisRoute
+  '/api/agent/jev/decision': typeof ApiAgentJevDecisionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/thesis': typeof ThesisRoute
+  '/api/agent/jev/decision': typeof ApiAgentJevDecisionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/thesis': typeof ThesisRoute
+  '/api/agent/jev/decision': typeof ApiAgentJevDecisionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/thesis'
+  fullPaths: '/' | '/thesis' | '/api/agent/jev/decision'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/thesis'
-  id: '__root__' | '/' | '/thesis'
+  to: '/' | '/thesis' | '/api/agent/jev/decision'
+  id: '__root__' | '/' | '/thesis' | '/api/agent/jev/decision'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ThesisRoute: typeof ThesisRoute
+  ApiAgentJevDecisionRoute: typeof ApiAgentJevDecisionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/agent/jev/decision': {
+      id: '/api/agent/jev/decision'
+      path: '/api/agent/jev/decision'
+      fullPath: '/api/agent/jev/decision'
+      preLoaderRoute: typeof ApiAgentJevDecisionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ThesisRoute: ThesisRoute,
+  ApiAgentJevDecisionRoute: ApiAgentJevDecisionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

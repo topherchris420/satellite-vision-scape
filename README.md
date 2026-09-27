@@ -6,7 +6,7 @@
   S A T E L L I T E   G R O U N D   S T A T I O N
 ```
 
-# Pine Gap — Open-World Exterior Reconstruction
+# Satellite Vision Scape — Shared Worlds for Humans and Agents
 
 [![React 19](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
 [![Three.js](https://img.shields.io/badge/Three.js-r185-black?style=flat-square&logo=three.js)](https://threejs.org)
@@ -16,7 +16,17 @@
 [![Bun](https://img.shields.io/badge/Runtime-Bun-f9f1e1?style=flat-square&logo=bun)](https://bun.sh)
 
 > **A playable, browser-based open world set in a real-time 3D exterior reconstruction of the Joint Defence Facility Pine Gap, Central Australia.**
-> *Third-person exploration and driving in a fictionalised interpretation built only from publicly observable exterior features.*
+> _Third-person exploration and driving in a fictionalised interpretation built only from publicly observable exterior features._
+
+## Humans and agents, one world
+
+Satellite Vision Scape is evolving into a browser-native simulation environment where humans and AI agents can inhabit persistent 3D worlds, interact under the same rules, and be evaluated by what they actually do.
+
+**Pine Gap** is the first environment. **After Hours** is the first multi-stage task. **Jev** is the first external agent provider. The new experimental runtime separates observation, provider choice, deterministic input execution and world authority, with human takeover, co-pilot delegation and downloadable traces.
+
+Start After Hours, choose **Jev After Hours** or **Co-pilot** at launch, then use **AFTER HOURS · CONTROL** to take over, delegate a co-pilot suggestion, export a trace or replay intentions. Human play remains one click away. Jev requires a configured server endpoint; normal play works without it. A deterministic mock completes the entire journey through real physics in tests. **Live autonomous Jev completion has not yet been verified.**
+
+Read the [agent architecture](docs/AGENT_RUNTIME.md) and [Jev After Hours guide](docs/JEV_AFTER_HOURS.md). New providers and environments can use these boundaries; generic environment authoring and multiplayer persistence are not implemented.
 
 ---
 
@@ -65,7 +75,7 @@ This project started as an interactive exterior reconstruction: the antenna arra
 ## 🌙 Pine Gap: After Hours
 
 > [!IMPORTANT]
-> **Soundtrack.** Original music written by **Christopher Woodyard**, performing as **Indigo People**. Featured album: ***Green Machine***. The recordings and cover art are used in this game with the songwriter's permission; they are **not** covered by this repository's software licence (see [docs/SOUNDTRACK.md](docs/SOUNDTRACK.md)).
+> **Soundtrack.** Original music written by **Christopher Woodyard**, performing as **Indigo People**. Featured album: **_Green Machine_**. The recordings and cover art are used in this game with the songwriter's permission; they are **not** covered by this repository's software licence (see [docs/SOUNDTRACK.md](docs/SOUNDTRACK.md)).
 
 An optional, fictional night shift layered on the playable reconstruction. An ordinary shift turns into a small musical mystery:
 
@@ -80,37 +90,37 @@ arrive at dusk → collect coffee → drive with Indigo People on the radio → 
 ### The journey
 
 1. **Operation: Last Coffee.** Collect the cup at the canteen cart by the south hall (**E**) and take it to the technician at the north antenna hut (~620 m by road) within **4 minutes**. The coffee is always with you — in your hand on foot, in the cup holder of whichever vehicle you drive — so walking, exiting, re-entering and switching vehicles never disturb the mission. The **coffee meter** responds to braking, launching, cornering and impacts, never to speed alone: smooth driving keeps nearly all of it. Delivery scores time and coffee remaining ("Temperature acceptable. Seventy-three percent of the coffee remains. Promotion unlikely."). If it goes cold or spills, press **Y** (or the **Retry** button) to start again at the cart, or collect a fresh cup there. The mission is replayable; the reward is granted once.
-2. **Frequency 420.** The technician suggests leaving the **Numbers Station** on. Its transmission (captioned, with pip patterns: four pips for "four", a long tone for "zero") counts *four, two, zero*. Sweep the receiver dial to **420** with **[ ]** (or the on-screen ◀ ▶) and hold it there for three seconds. This unlocks **Altered Signal** and reveals the terminals.
-3. **Four terminals.** Fictional tuning terminals stand beside antennas 11-A, 85-A, 86-A and 98-A (Rhythm, Bass, Harmony, Melody). At each one (**E**), turn the dial (**A D**, the touch stick or ◀ ▶) until your signal matches the reference: a pulse for Rhythm and Melody, a tone for Bass and Harmony. Feedback is audible (a pulse that lands on the beat, a wobble that stops) and always visual too — reference and player waveforms, a dial with the target marked, a *Match* meter and a text status (*Drifting · Close · Aligned — hold · Locked*). Each locked layer joins one shared composition; the radio ducks while you tune. Leave with **E** at any time; completed terminals are saved.
-4. **The midnight concert.** With all four layers locked, the listening point among the radomes opens. Start the ~83 s transmission there (**E**): opening signal → rhythm and bass → harmony expands → melody → a release back into desert ambience. Beams at the terminals, rings at four radome bases and a sky band are driven by the concert's musical timeline (the same clock the audio is scheduled on). **V** toggles an optional cinematic camera (moving or looking hands the camera straight back); **X** ends the transmission. It closes with *TRANSMISSION RECEIVED. SOURCE UNKNOWN.*, then returns to your Indigo People selection at the position you left it, with the album credit. The concert can be replayed and Frequency 420 stays on your preset list.
+2. **Frequency 420.** The technician suggests leaving the **Numbers Station** on. Its transmission (captioned, with pip patterns: four pips for "four", a long tone for "zero") counts _four, two, zero_. Sweep the receiver dial to **420** with **[ ]** (or the on-screen ◀ ▶) and hold it there for three seconds. This unlocks **Altered Signal** and reveals the terminals.
+3. **Four terminals.** Fictional tuning terminals stand beside antennas 11-A, 85-A, 86-A and 98-A (Rhythm, Bass, Harmony, Melody). At each one (**E**), turn the dial (**A D**, the touch stick or ◀ ▶) until your signal matches the reference: a pulse for Rhythm and Melody, a tone for Bass and Harmony. Feedback is audible (a pulse that lands on the beat, a wobble that stops) and always visual too — reference and player waveforms, a dial with the target marked, a _Match_ meter and a text status (_Drifting · Close · Aligned — hold · Locked_). Each locked layer joins one shared composition; the radio ducks while you tune. Leave with **E** at any time; completed terminals are saved.
+4. **The midnight concert.** With all four layers locked, the listening point among the radomes opens. Start the ~83 s transmission there (**E**): opening signal → rhythm and bass → harmony expands → melody → a release back into desert ambience. Beams at the terminals, rings at four radome bases and a sky band are driven by the concert's musical timeline (the same clock the audio is scheduled on). **V** toggles an optional cinematic camera (moving or looking hands the camera straight back); **X** ends the transmission. It closes with _TRANSMISSION RECEIVED. SOURCE UNKNOWN._, then returns to your Indigo People selection at the position you left it, with the album credit. The concert can be replayed and Frequency 420 stays on your preset list.
 
 ### The vehicle radio
 
 The radio is physical: it lives in one vehicle at a time — the one parked nearest when After Hours starts, then whichever you last entered (the station and position carry over; the previous vehicle falls silent). Inside the cab it is clear; outside it plays from the parked vehicle with distance attenuation and a muffled sound that opens up while a door is open. Controls work in the cab or standing beside the vehicle.
 
-| Key | Radio | Touch / mouse |
-| :---: | :--- | :--- |
-| `R` | Power (also retries if the browser blocked playback) | ⏻ |
-| `,` `.` | Previous · next track (album order; previous restarts after 3 s) | ⏮ ⏭ |
-| `T` | Next station | ◉ |
-| `[` `]` | Tune the receiver (tap to step, hold to sweep) | ◀ ▶ (hold) |
-| `-` `=` | Music volume (independent of effects) | 🔉 🔊 |
+|   Key   | Radio                                                            | Touch / mouse |
+| :-----: | :--------------------------------------------------------------- | :------------ |
+|   `R`   | Power (also retries if the browser blocked playback)             | ⏻             |
+| `,` `.` | Previous · next track (album order; previous restarts after 3 s) | ⏮ ⏭         |
+|   `T`   | Next station                                                     | ◉             |
+| `[` `]` | Tune the receiver (tap to step, hold to sweep)                   | ◀ ▶ (hold)    |
+| `-` `=` | Music volume (independent of effects)                            | 🔉 🔊         |
 
-Stations (all fictional apart from the recordings): **christopher woodyard (live)** — the default, playing *Green Machine* in album order; **Numbers Station**; and, once found, **Frequency 420** (the procedural score). Track changes and station changes are identified briefly on screen; the cover opens an album view with the songwriting credit and track list.
+Stations (all fictional apart from the recordings): **christopher woodyard (live)** — the default, playing _Green Machine_ in album order; **Numbers Station**; and, once found, **Frequency 420** (the procedural score). Track changes and station changes are identified briefly on screen; the cover opens an album view with the songwriting credit and track list.
 
 ### Other controls
 
-| Key | Action |
-| :---: | :--- |
-| `E` | Coffee cart · hand over · terminals · listening point (plus the usual vehicles and barriers) |
-| `A` `D` / `←` `→` | Turn a terminal dial (movement is paused while tuning) |
-| `V` · `X` | Concert: cinematic view · end the transmission |
-| `O` | Altered Signal on / off (immediately) |
-| `Y` | Retry the delivery after a failure |
+|        Key        | Action                                                                                       |
+| :---------------: | :------------------------------------------------------------------------------------------- |
+|        `E`        | Coffee cart · hand over · terminals · listening point (plus the usual vehicles and barriers) |
+| `A` `D` / `←` `→` | Turn a terminal dial (movement is paused while tuning)                                       |
+|     `V` · `X`     | Concert: cinematic view · end the transmission                                               |
+|        `O`        | Altered Signal on / off (immediately)                                                        |
+|        `Y`        | Retry the delivery after a failure                                                           |
 
 ### Accessibility, clean audio and reset
 
-Pause (**Esc**) → **After Hours** → *Settings*:
+Pause (**Esc**) → **After Hours** → _Settings_:
 
 - **Music volume** and **Effect intensity** sliders; **Altered Signal** on/off (off is immediate).
 - **Reduced motion** freezes the colour drift, trace flow, star rotation and cinematic orbit (it defaults to the OS preference).
@@ -119,7 +129,7 @@ Pause (**Esc**) → **After Hours** → *Settings*:
 - Every audio clue has a visual equivalent (captions for radio, numbers and announcements; waveforms and text status at terminals), so the whole journey can be completed muted (**M**).
 - Everything is playable with keyboard, mouse or touch (radio buttons, dial buttons, the touch stick for terminal dials, and the Interact button).
 
-*Progress* shows what is done and offers **Reset progress** (with confirmation; preferences are kept). Progress and preferences are stored in versioned, validated `localStorage` (`pine-gap.after-hours`); damaged, outdated or unavailable storage falls back safely, and play resumes at safe checkpoints — a coffee run or a concert is never restored half-way.
+_Progress_ shows what is done and offers **Reset progress** (with confirmation; preferences are kept). Progress and preferences are stored in versioned, validated `localStorage` (`pine-gap.after-hours`); damaged, outdated or unavailable storage falls back safely, and play resumes at safe checkpoints — a coffee run or a concert is never restored half-way.
 
 ### Altered Signal
 
@@ -127,8 +137,8 @@ An optional presentation mode that reveals the mystery: slow teal / violet / amb
 
 ### Soundtrack and procedural score
 
-- ***Green Machine*** by **Indigo People** — written by **Christopher Woodyard** — five tracks streamed one at a time from `public/music/indigo-people/green-machine/`, byte-identical to the supplied files (no re-encoding). Nothing is downloaded until After Hours starts, and then only the track that plays.
-- The **puzzle and concert music is a procedural score generated in-game** for After Hours (A minor, 92 BPM, four layers on one clock). It is not part of *Green Machine*, is not written by Christopher Woodyard, and never plays over the album.
+- **_Green Machine_** by **Indigo People** — written by **Christopher Woodyard** — five tracks streamed one at a time from `public/music/indigo-people/green-machine/`, byte-identical to the supplied files (no re-encoding). Nothing is downloaded until After Hours starts, and then only the track that plays.
+- The **puzzle and concert music is a procedural score generated in-game** for After Hours (A minor, 92 BPM, four layers on one clock). It is not part of _Green Machine_, is not written by Christopher Woodyard, and never plays over the album.
 
 **Adding a track:** copy the file under `public/music/…` with a URL-safe name and append an entry (id, number, title, `src`, measured duration) to `GREEN_MACHINE.tracks` in [`src/game/afterhours/soundtrack.ts`](src/game/afterhours/soundtrack.ts). The radio, credits, album view and HUD all read from that manifest.
 
@@ -138,14 +148,14 @@ An optional presentation mode that reveals the mystery: slow teal / violet / amb
 
 The briefing card lists these on first load; **Esc** pauses and shows them again.
 
-| On foot | | Driving | | General | |
-| :---: | :--- | :---: | :--- | :---: | :--- |
-| `W A S D` | Move (camera-relative) | `W` / `S` | Accelerate · brake / reverse | `Esc` | Pause · release mouse |
-| Mouse | Look | `A` / `D` | Steer | Wheel | Camera distance |
-| `Shift` | Sprint | `Space` | Handbrake | `M` | Mute |
-| `C` | Toggle walk | `L` | Headlights | `N` | Day / dusk / night |
-| `Space` | Jump | `E` | Exit vehicle | `1`–`4` | Play · Explore · Tour · Plan |
-| `E` | Enter vehicle · operate barrier | | | `H` / `I` | Shortcuts · asset index |
+|  On foot  |                                 |  Driving  |                              |  General  |                              |
+| :-------: | :------------------------------ | :-------: | :--------------------------- | :-------: | :--------------------------- |
+| `W A S D` | Move (camera-relative)          | `W` / `S` | Accelerate · brake / reverse |   `Esc`   | Pause · release mouse        |
+|   Mouse   | Look                            | `A` / `D` | Steer                        |   Wheel   | Camera distance              |
+|  `Shift`  | Sprint                          |  `Space`  | Handbrake                    |    `M`    | Mute                         |
+|    `C`    | Toggle walk                     |    `L`    | Headlights                   |    `N`    | Day / dusk / night           |
+|  `Space`  | Jump                            |    `E`    | Exit vehicle                 |  `1`–`4`  | Play · Explore · Tour · Plan |
+|    `E`    | Enter vehicle · operate barrier |           |                              | `H` / `I` | Shortcuts · asset index      |
 
 After Hours adds its own keys (radio `R` `,` `.` `T` `[` `]` `-` `=`, concert `V` `X`, `O`, `Y`) — see [Pine Gap: After Hours](#-pine-gap-after-hours).
 
@@ -155,12 +165,12 @@ Play uses **Pointer Lock**; where the browser refuses it (embedded frames, touch
 
 The original reconstruction viewer is fully preserved alongside Play, and the playable world persists while you switch:
 
-| Key | Mode | Description |
-| :---: | :--- | :--- |
-| `1` | **Play** | Third-person open world (default) |
+| Key | Mode        | Description                                                        |
+| :-: | :---------- | :----------------------------------------------------------------- |
+| `1` | **Play**    | Third-person open world (default)                                  |
 | `2` | **Explore** | Free orbit / fly camera; click structures for their source dossier |
-| `3` | **Tour** | Automated cinematic pass |
-| `4` | **Plan** | North-up orthographic plan to compare with the overhead reference |
+| `3` | **Tour**    | Automated cinematic pass                                           |
+| `4` | **Plan**    | North-up orthographic plan to compare with the overhead reference  |
 
 ---
 
@@ -192,47 +202,47 @@ The `InteractionManager` owns every transition (validated by `canTransition`), d
 
 ### Modules
 
-| Area | Module | Responsibility |
-| :--- | :--- | :--- |
-| Core | `game/Game.ts` | Owns and orders all systems; fixed-step loop with render interpolation |
-| | `game/config.ts` | Every tunable: speeds, accelerations, camera framing, interaction timings, gate behaviour |
-| | `game/core/Input.ts`, `DomInput.ts` | Device-independent actions; keyboard, pointer-lock mouse, drag and touch bindings |
-| | `game/core/EventBus.ts`, `events.ts` | Typed gameplay events consumed by audio, HUD and effects |
-| | `game/core/MeshBatcher.ts` | Merges static part assemblies per material (vehicles, antennas) |
-| World | `game/world/CollisionWorld.ts` | Spatial-hash broadphase, circle/box/sphere narrowphase, sphere-cast raycasts, layers |
-| | `game/world/GroundQuery.ts` | Exact rendered-terrain height plus roads, pads, lawns and aprons; surface kinds |
-| | `game/world/buildSiteWorld.ts` | Builds gameplay colliders and surfaces from the Pine Gap layout data |
-| | `game/world/BarrierGate.ts`, `GateVisuals.ts`, `WorldManager.ts` | Boom barriers: sensors, manual control, safety, instanced visuals |
-| | `lib/terrain/mesh-grid.ts` | Shared terrain grid: the render mesh and gameplay ground use identical triangles |
-| | `lib/site-fences.ts` | Fence runs and openings where roads cross fences steeply |
-| Player | `game/player/PlayerController.ts` | Kinematic capsule: acceleration, sprint, jump buffer/coyote time, slopes, steps, wall sliding |
-| | `game/player/CharacterVisual.ts`, `CharacterAnimator.ts` | Procedural soldier rig; distance-driven gait, idle, airborne and seated pose blending |
-| Vehicles | `game/vehicles/VehiclePhysics.ts` | Slip-angle tyre model, load transfer, 4WD, brakes, handbrake, drag, sprung body, impulses |
-| | `game/vehicles/VehicleVisual.ts`, `VehicleMaterials.ts` | Procedural RHD military 4×4 with doors, interior, lamps, steering and spinning wheels |
-| | `game/vehicles/Vehicle.ts`, `VehicleController.ts`, `VehicleManager.ts`, `VehicleSpec.ts` | Entity, input → controls (auto gearbox), fleet + shared headlight, specs and variants |
-| Camera | `game/camera/ThirdPersonCamera.ts` | Orbit camera, collision, on-foot/vehicle profile blend, auto-recentre, shake, intro glide |
-| Interaction | `game/interaction/InteractionManager.ts` | State machine, door choreography, safe-exit search, barrier use |
-| Effects / audio | `game/effects/DustSystem.ts`, `game/audio/GameAudio.ts` | Pooled particles; procedural Web Audio |
-| UI | `game/hud/HudModel.ts`, `components/game/GameHUD.tsx` | Discrete HUD state via `useSyncExternalStore`; throttled direct-DOM readouts |
-| Bridge | `components/game/GameRuntime.tsx`, `hooks/use-play-session.ts` | R3F mounting and frame driving; pointer-lock session (briefing / running / paused) |
-| After Hours | `game/afterhours/AfterHours.ts` | Orchestrator: session lifecycle, interactables, captions, objective, audio/visual/HUD presentation |
-| | `game/afterhours/progress.ts` | Progression model, preferences, versioned zod-validated storage with safe fallbacks |
-| | `game/afterhours/radio.ts`, `soundtrack.ts`, `numbers.ts` | Radio logic (dial, presets, ownership, 420 hold), album manifest, Numbers Station script |
-| | `game/afterhours/coffee.ts` | Mission state machine and frame-rate-independent spill model |
-| | `game/afterhours/puzzle.ts`, `composition.ts`, `concert.ts` | Terminal tuning, the procedural score's notes and chord grid, concert timeline and mix |
-| | `game/afterhours/AfterHoursVisuals.ts`, `AfterHoursHud.ts` | Fictional props, beacons, traces, concert accents; HUD store and throttled DOM readouts |
-| | `game/audio/RadioAudio.ts`, `ProceduralScore.ts`, `AfterHoursAudio.ts` | One streamed media element through the shared context (cabin/exterior paths); score scheduler; cues |
-| | `components/game/AfterHoursHUD.tsx`, `SpectralGrade.tsx` | Objective, captions, radio, meters, tuning and settings UI; Altered Signal grade |
+| Area            | Module                                                                                    | Responsibility                                                                                      |
+| :-------------- | :---------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------- |
+| Core            | `game/Game.ts`                                                                            | Owns and orders all systems; fixed-step loop with render interpolation                              |
+|                 | `game/config.ts`                                                                          | Every tunable: speeds, accelerations, camera framing, interaction timings, gate behaviour           |
+|                 | `game/core/Input.ts`, `DomInput.ts`                                                       | Device-independent actions; keyboard, pointer-lock mouse, drag and touch bindings                   |
+|                 | `game/core/EventBus.ts`, `events.ts`                                                      | Typed gameplay events consumed by audio, HUD and effects                                            |
+|                 | `game/core/MeshBatcher.ts`                                                                | Merges static part assemblies per material (vehicles, antennas)                                     |
+| World           | `game/world/CollisionWorld.ts`                                                            | Spatial-hash broadphase, circle/box/sphere narrowphase, sphere-cast raycasts, layers                |
+|                 | `game/world/GroundQuery.ts`                                                               | Exact rendered-terrain height plus roads, pads, lawns and aprons; surface kinds                     |
+|                 | `game/world/buildSiteWorld.ts`                                                            | Builds gameplay colliders and surfaces from the Pine Gap layout data                                |
+|                 | `game/world/BarrierGate.ts`, `GateVisuals.ts`, `WorldManager.ts`                          | Boom barriers: sensors, manual control, safety, instanced visuals                                   |
+|                 | `lib/terrain/mesh-grid.ts`                                                                | Shared terrain grid: the render mesh and gameplay ground use identical triangles                    |
+|                 | `lib/site-fences.ts`                                                                      | Fence runs and openings where roads cross fences steeply                                            |
+| Player          | `game/player/PlayerController.ts`                                                         | Kinematic capsule: acceleration, sprint, jump buffer/coyote time, slopes, steps, wall sliding       |
+|                 | `game/player/CharacterVisual.ts`, `CharacterAnimator.ts`                                  | Procedural soldier rig; distance-driven gait, idle, airborne and seated pose blending               |
+| Vehicles        | `game/vehicles/VehiclePhysics.ts`                                                         | Slip-angle tyre model, load transfer, 4WD, brakes, handbrake, drag, sprung body, impulses           |
+|                 | `game/vehicles/VehicleVisual.ts`, `VehicleMaterials.ts`                                   | Procedural RHD military 4×4 with doors, interior, lamps, steering and spinning wheels               |
+|                 | `game/vehicles/Vehicle.ts`, `VehicleController.ts`, `VehicleManager.ts`, `VehicleSpec.ts` | Entity, input → controls (auto gearbox), fleet + shared headlight, specs and variants               |
+| Camera          | `game/camera/ThirdPersonCamera.ts`                                                        | Orbit camera, collision, on-foot/vehicle profile blend, auto-recentre, shake, intro glide           |
+| Interaction     | `game/interaction/InteractionManager.ts`                                                  | State machine, door choreography, safe-exit search, barrier use                                     |
+| Effects / audio | `game/effects/DustSystem.ts`, `game/audio/GameAudio.ts`                                   | Pooled particles; procedural Web Audio                                                              |
+| UI              | `game/hud/HudModel.ts`, `components/game/GameHUD.tsx`                                     | Discrete HUD state via `useSyncExternalStore`; throttled direct-DOM readouts                        |
+| Bridge          | `components/game/GameRuntime.tsx`, `hooks/use-play-session.ts`                            | R3F mounting and frame driving; pointer-lock session (briefing / running / paused)                  |
+| After Hours     | `game/afterhours/AfterHours.ts`                                                           | Orchestrator: session lifecycle, interactables, captions, objective, audio/visual/HUD presentation  |
+|                 | `game/afterhours/progress.ts`                                                             | Progression model, preferences, versioned zod-validated storage with safe fallbacks                 |
+|                 | `game/afterhours/radio.ts`, `soundtrack.ts`, `numbers.ts`                                 | Radio logic (dial, presets, ownership, 420 hold), album manifest, Numbers Station script            |
+|                 | `game/afterhours/coffee.ts`                                                               | Mission state machine and frame-rate-independent spill model                                        |
+|                 | `game/afterhours/puzzle.ts`, `composition.ts`, `concert.ts`                               | Terminal tuning, the procedural score's notes and chord grid, concert timeline and mix              |
+|                 | `game/afterhours/AfterHoursVisuals.ts`, `AfterHoursHud.ts`                                | Fictional props, beacons, traces, concert accents; HUD store and throttled DOM readouts             |
+|                 | `game/audio/RadioAudio.ts`, `ProceduralScore.ts`, `AfterHoursAudio.ts`                    | One streamed media element through the shared context (cabin/exterior paths); score scheduler; cues |
+|                 | `components/game/AfterHoursHUD.tsx`, `SpectralGrade.tsx`                                  | Objective, captions, radio, meters, tuning and settings UI; Altered Signal grade                    |
 
 ### Collision layers
 
-| Layer | Contents | Blocks character | Blocks vehicle | Blocks camera |
-| :--- | :--- | :---: | :---: | :---: |
-| `Structure` | Buildings, radome plinths and spherical shells, tanks, antenna pedestals | ✓ | ✓ | ✓ |
-| `Prop` | Floodlight poles, vestibules, tree trunks, barrier housings | ✓ | ✓ | |
-| `Fence` | Fence runs between openings | ✓ | ✓ | |
-| `Vehicle` | Vehicle bodies (dynamic) | ✓ | ✓ | ✓ (except the one being driven) |
-| `Gate` | Lowered barrier booms (dynamic) | ✓ | ✓ | |
+| Layer       | Contents                                                                 | Blocks character | Blocks vehicle |          Blocks camera          |
+| :---------- | :----------------------------------------------------------------------- | :--------------: | :------------: | :-----------------------------: |
+| `Structure` | Buildings, radome plinths and spherical shells, tanks, antenna pedestals |        ✓         |       ✓        |                ✓                |
+| `Prop`      | Floodlight poles, vestibules, tree trunks, barrier housings              |        ✓         |       ✓        |                                 |
+| `Fence`     | Fence runs between openings                                              |        ✓         |       ✓        |                                 |
+| `Vehicle`   | Vehicle bodies (dynamic)                                                 |        ✓         |       ✓        | ✓ (except the one being driven) |
+| `Gate`      | Lowered barrier booms (dynamic)                                          |        ✓         |       ✓        |                                 |
 
 Gameplay collision uses analytic shapes, separate from render meshes. Radome shells are true spheres, so a walker's head meets the bulge and the camera slides round it.
 
@@ -242,10 +252,10 @@ Gameplay collision uses analytic shapes, separate from render meshes. Radome she
 
 Measured with a WebGL draw-call counter in headless Chromium (software rendering in the development container, so draw calls rather than frame time were the comparable metric):
 
-| View | Before | After |
-| :--- | ---: | ---: |
-| Site overview (Explore) | 1,783 draw calls / frame | 846 |
-| Ground level (old walk mode → Play on foot, now with character and vehicles) | 1,157 | 438 |
+| View                                                                         |                   Before | After |
+| :--------------------------------------------------------------------------- | -----------------------: | ----: |
+| Site overview (Explore)                                                      | 1,783 draw calls / frame |   846 |
+| Ground level (old walk mode → Play on foot, now with character and vehicles) |                    1,157 |   438 |
 
 - **Instancing** — radome vents, vestibules, doors, floodlight poles and heads, building parapets, parking stall lines, fence terminal posts, barrier hardware and beacons are instanced meshes (one draw call per kind).
 - **Merged static assemblies** — each dish antenna (≈40 parts) and each vehicle body are merged per material via `MeshBatcher`; only moving parts (doors, wheels, steering wheel) stay separate.
@@ -259,11 +269,11 @@ Measured with a WebGL draw-call counter in headless Chromium (software rendering
 
 **After Hours** was measured the same way, back to back against the previous commit (Bun, headless; Chromium 141 with SwiftShader at 640×360, so draw calls are comparable and frame times are not):
 
-| Measurement | Before | After · free roam | After · After Hours |
-| :--- | ---: | ---: | ---: |
+| Measurement                                   |                                     Before |                          After · free roam |                        After · After Hours |
+| :-------------------------------------------- | -----------------------------------------: | -----------------------------------------: | -----------------------------------------: |
 | `Game.frame` median, idle / walking / driving | 0.015–0.019 / 0.016–0.017 / 0.029–0.031 ms | 0.018–0.020 / 0.016–0.017 / 0.028–0.030 ms | 0.021–0.030 / 0.018–0.019 / 0.030–0.035 ms |
-| Draw calls, Play walking | 449 | 450 | 494 |
-| Draw calls, Explore overview | 849 | 849 | 857 (technician rig) |
+| Draw calls, Play walking                      |                                        449 |                                        450 |                                        494 |
+| Draw calls, Explore overview                  |                                        849 |                                        849 |                       857 (technician rig) |
 
 - Fiction is a bounded set of unlit meshes: no lights, no shadows except the cart, a fixed 144-point trace buffer, ≤320 star arcs (none at the low tier) and four radome accent rings. The grade is one extra effect inside the existing post-processing pass (a CSS wash at the low tier).
 - The album streams one track at a time (`preload="none"`); nothing is decoded up front. Score voices are scheduled on the audio clock ~0.3 s ahead and disconnected when they end, with a per-frame sweep as a backstop; persistent nodes are built once.

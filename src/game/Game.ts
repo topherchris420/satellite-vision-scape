@@ -1,3 +1,4 @@
+import { AgentSession } from "../agent/session";
 import * as THREE from "three";
 import { CAMERA, EFFECTS, INTERACTION, SIMULATION } from "./config";
 import { EventBus } from "./core/EventBus";
@@ -69,6 +70,7 @@ const Y_AXIS = new THREE.Vector3(0, 1, 0);
 export class Game {
   readonly events = new EventBus<GameEvents>();
   readonly input = new InputState();
+  readonly agent: AgentSession;
   readonly root = new THREE.Group();
   readonly collision: CollisionWorld;
   readonly ground: GroundQuery;
@@ -160,6 +162,7 @@ export class Game {
       options.storage !== undefined ? options.storage : options.visuals ? browserStorage() : null,
       options.visuals ? () => new AfterHoursVisuals((x, z) => this.ground.heightAt(x, z)) : null,
     );
+    this.agent = new AgentSession(this);
   }
 
   /** The player's character visual (null headless). */
@@ -314,6 +317,7 @@ export class Game {
 
   setPaused(paused: boolean): void {
     if (paused) {
+      this.agent.runtime.takeover("paused");
       this.audio?.suspend();
       this.input.releaseAll();
     } else {
@@ -326,6 +330,7 @@ export class Game {
 
   frame(rawDt: number, options: FrameOptions): void {
     const dt = Math.min(rawDt, SIMULATION.maxFrameDelta);
+    this.agent.beforeFrame(dt, options.simulate);
     if (options.simulate) {
       this.handleFrameInput(dt);
       this.accumulator += dt;
@@ -342,11 +347,13 @@ export class Game {
     // The world freezes when not simulating, but the camera keeps animating
     // (intro glides, the establishing orbit) on real frame time.
     this.present(options.simulate ? dt : 0, dt, options);
+    this.agent.afterFrame(dt, options.simulate);
+    this.agent.controls.synthetic.endFrame();
     this.input.endFrame();
   }
 
   private handleFrameInput(dt: number): void {
-    const input = this.input;
+    const input = this.agent.controls.input;
     if (input.wasPressed("mute") && this.audio) {
       this.hud.update({ muted: this.audio.toggleMute() });
     }
@@ -443,9 +450,9 @@ export class Game {
       if (options.establishing) {
         this.camera.updateEstablishing(cameraDt, this.focus, options.camera);
       } else if (!this.afterHours.updateCinematic(cameraDt, options.camera)) {
-        this.look.x = options.simulate ? this.input.lookX : 0;
-        this.look.y = options.simulate ? this.input.lookY : 0;
-        this.look.zoom = options.simulate ? this.input.zoom : 0;
+        this.look.x = options.simulate ? this.agent.controls.input.lookX : 0;
+        this.look.y = options.simulate ? this.agent.controls.input.lookY : 0;
+        this.look.zoom = options.simulate ? this.agent.controls.input.zoom : 0;
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
       if (this.characterVisual)
@@ -606,6 +613,7 @@ export class Game {
   }
 
   dispose(): void {
+    this.agent.dispose();
     this.afterHours.dispose();
     for (const off of this.unsubscribers) off();
     this.unsubscribers.length = 0;

@@ -234,16 +234,17 @@ export function SiteScene() {
     game?.afterHours.visuals?.setQuality(qualityTier);
   }, [game, qualityTier]);
 
-  const startAfterHours = useCallback(() => {
+  const startAfterHours = useCallback((capturePointer = true) => {
     if (!game) return;
     setTime("dusk");
-    session.start();
+    if (capturePointer) session.start();
+    else session.startUnlocked();
     // Unpause now (not in the next effect) so the radio starts inside this click.
     game.setPaused(false);
     game.afterHours.start();
     game.afterHours.kickAudio();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [game, session.start]);
+  }, [game, session.start, session.startUnlocked]);
   const leaveAfterHours = useCallback(() => game?.afterHours.stop(), [game]);
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",

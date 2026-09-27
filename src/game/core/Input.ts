@@ -5,6 +5,7 @@
  */
 
 export type Action =
+  | "takeover"
   | "forward"
   | "back"
   | "left"
@@ -31,6 +32,7 @@ export type Action =
   | "alteredSignal";
 
 export const KEY_BINDINGS: Record<Action, readonly string[]> = {
+  takeover: ["KeyH"],
   forward: ["KeyW", "ArrowUp"],
   back: ["KeyS", "ArrowDown"],
   left: ["KeyA", "ArrowLeft"],
@@ -90,6 +92,10 @@ export class InputState {
     tune: 0,
     dial: 0,
   };
+
+  get hasActivity(): boolean {
+    return this.down.size > 0 || this.pressed.size > 0 || Math.abs(this.lookAccumX) + Math.abs(this.lookAccumY) > 0.01 || Math.hypot(this.virtual.moveX, this.virtual.moveY) > 0.1 || this.virtual.action || this.virtual.interactRequested || this.virtual.tune !== 0 || this.virtual.dial !== 0;
+  }
 
   keyDown(code: string): void {
     if (!this.down.has(code)) {
