@@ -7,7 +7,11 @@
 </p>
 
 <p align="center">
-  <a href="#try-it-in-60-seconds"><img alt="Runs in the browser" src="https://img.shields.io/badge/runs_in-the_browser-f59e0b?style=flat-square" /></a>
+  <a href="https://geotwn.vercel.app"><img alt="Play it live in your browser at geotwn.vercel.app" src="https://img.shields.io/badge/%E2%96%B6%20Play%20it%20live-geotwn.vercel.app-f59e0b?style=for-the-badge" /></a>
+  <a href="https://geotwn.vercel.app/?controller=mock"><img alt="Watch an agent play, no key needed" src="https://img.shields.io/badge/%E2%96%B6%20Watch%20an%20agent%20play-no%20key%20needed-5eead4?style=for-the-badge" /></a>
+</p>
+
+<p align="center">
   <a href="#tests-and-verification"><img alt="201 tests" src="https://img.shields.io/badge/tests-201_passing-34d399?style=flat-square" /></a>
   <a href="#engineering"><img alt="Gameplay update 0.05 ms per frame" src="https://img.shields.io/badge/gameplay_update-0.05_ms%2Fframe-5eead4?style=flat-square" /></a>
   <a href="docs/AGENT_RUNTIME.md#10-traces--svs-agent-tracev1"><img alt="Trace format svs-agent-trace/v1" src="https://img.shields.io/badge/trace-svs--agent--trace%2Fv1-a78bfa?style=flat-square" /></a>
@@ -20,7 +24,8 @@
 </p>
 
 <p align="center">
-  <a href="#try-it-in-60-seconds"><b>Quick start</b></a> ·
+  <a href="https://geotwn.vercel.app"><b>▶ Play live</b></a> ·
+  <a href="#try-it-now"><b>Quick start</b></a> ·
   <a href="#watch-an-agent-finish-the-whole-mission"><b>The live agent run</b></a> ·
   <a href="#pine-gap-after-hours"><b>After Hours</b></a> ·
   <a href="#how-the-agent-plays"><b>How the agent plays</b></a> ·
@@ -33,7 +38,7 @@
 <p align="center">
   <img src="docs/media/agent-drive.gif" alt="Animated capture: an agent drives the 4×4 out of the car park towards the north antenna hut. The agent panel shows OBSERVE, CHOOSE, ACT and OUTCOME, the coffee stays at 100% in the cup holder and the radio plays Indigo People." width="100%" />
   <br />
-  <sub><i>Real capture from this repo: an agent at the wheel, driving the coffee run through the same controls and physics you use. This is the labelled scripted baseline (<code>?controller=mock</code>), which you can run without a key. Jev's own run is <a href="#watch-an-agent-finish-the-whole-mission">below</a>.</i></sub>
+  <sub><i>Real capture from this repo: an agent at the wheel, driving the coffee run through the same controls and physics you use. This is the labelled scripted baseline (<code>?controller=mock</code>): <a href="https://geotwn.vercel.app/?controller=mock">watch it live</a>, no key needed, by pressing <b>After Hours</b>. Jev's own run is <a href="#watch-an-agent-finish-the-whole-mission">below</a>.</i></sub>
 </p>
 
 ---
@@ -74,7 +79,11 @@ It's easy to make an agent look capable: give it an API that teleports it, a pee
 
 ---
 
-## Try it in 60 seconds
+## Try it now
+
+**In your browser, nothing to install:** open **[geotwn.vercel.app](https://geotwn.vercel.app)** and press **Deploy** or **After Hours**. To watch an agent play instead, open **[geotwn.vercel.app/?controller=mock](https://geotwn.vercel.app/?controller=mock)** and press **After Hours**.
+
+**On your machine, in about a minute:**
 
 ```sh
 git clone https://github.com/topherchris420/satellite-vision-scape.git
@@ -84,7 +93,7 @@ bun install && bun run dev      # then open the URL Vite prints
 
 <sub>Needs [Bun](https://bun.sh) 1.3+ and Node 20.19+ or 22.12+ (Vite 8 runs on Node). Where IPv6 is unavailable, use <code>bun run dev --host 127.0.0.1</code>.</sub>
 
-Then pick how you want to meet it:
+Then pick how you want to meet it (the same choices work on the live site):
 
 | I want to…                             | Do this                                                                                                              |
 | :------------------------------------- | :------------------------------------------------------------------------------------------------------------------- |
@@ -95,7 +104,7 @@ Then pick how you want to meet it:
 | **Fly over the site**                  | Keys `2` Explore · `3` Tour · `4` Plan. Click any structure for its source dossier.                                  |
 
 > [!TIP]
-> No key? Everything except Jev works out of the box. Without `TYPESAFE_API_KEY` the Jev buttons say **Unavailable on this deployment** and nothing else changes.
+> No key? Everything except Jev works out of the box. Without `TYPESAFE_API_KEY` the Jev buttons say **Unavailable on this deployment** and nothing else changes. The public demo runs this way, so to hand the controls to Jev, deploy your own copy with a key.
 
 ---
 
