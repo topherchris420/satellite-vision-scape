@@ -46,6 +46,13 @@ export interface TaskAdapter<State = unknown> {
   targets(): TaskTarget[];
   /** Task actions legal right now. */
   legalIntents(frame: ActorFrame): AgentIntent[];
+  /**
+   * The task is playing itself out (a transmission, a panel closing on its
+   * own): nothing the actor does changes it, so the only choice is to wait.
+   * The environment then offers nothing else, and the runtime waits without
+   * spending a provider call.
+   */
+  passive(): boolean;
   /** Fragile cargo: the executor should move carefully. */
   careful(): boolean;
   /** Fingerprint of task state that interactions change. */

@@ -39,6 +39,7 @@ describe("import boundary", () => {
     "src/agent/tasks/registry.ts",
     "src/agent/tasks/afterHoursSchema.ts",
     "src/agent/tasks/afterHoursBaseline.ts",
+    "src/agent/probes/afterHours.ts",
   ];
 
   test("providers, runtime, contracts and the baseline import nothing from the game", () => {

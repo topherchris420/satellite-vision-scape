@@ -104,6 +104,11 @@ export class AfterHoursTaskAdapter implements TaskAdapter<AfterHoursState> {
     return this.snapshot.concert.completed;
   }
 
+  passive(): boolean {
+    const s = this.snapshot;
+    return s.active && (s.concert.running || s.tuning?.locked === true);
+  }
+
   careful(): boolean {
     return this.game.afterHours.mission.state === "active";
   }
