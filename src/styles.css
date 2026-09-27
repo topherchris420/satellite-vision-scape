@@ -220,6 +220,14 @@
     transform: scaleY(1);
   }
 }
+/* Still for the OS setting and for the in-game Reduced motion preference. */
+.ah-still .ah-live-dot,
+.ah-still .ah-eq--on > span {
+  animation: none;
+}
+.ah-still .ah-eq--on > span {
+  height: 70%;
+}
 @media (prefers-reduced-motion: reduce) {
   .ah-live-dot,
   .ah-eq--on > span {

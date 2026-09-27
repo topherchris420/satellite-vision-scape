@@ -302,7 +302,7 @@ function RadioPanel({
   return (
     <section
       aria-label="Vehicle radio"
-      className={`${panel} absolute ${position} rounded-lg p-2.5`}
+      className={`${panel} absolute ${position} rounded-lg p-2.5 ${s.preferences.reducedMotion ? "ah-still" : ""}`}
     >
       <div className="flex items-center gap-2.5">
         <button
