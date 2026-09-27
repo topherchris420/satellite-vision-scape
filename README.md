@@ -1,36 +1,30 @@
-```
-   ___  _____  ______  ________   ___
-  / _ \/  _/ |/ / __/ / ___/ _ | / _ \
- / ___// //    / _/  / (_ / __ |/ ___/
-/_/  /___/_/|_/___/  \___/_/ |_/_/
-  S A T E L L I T E   G R O U N D   S T A T I O N
-```
+# Satellite Vision Scape
 
-# Satellite Vision Scape — Shared Worlds for Humans and Agents
+## A shared world. One set of rules. Actions you can inspect.
 
-[![React 19](https://img.shields.io/badge/React-19.0-61DAFB?style=flat-square&logo=react)](https://react.dev)
-[![Three.js](https://img.shields.io/badge/Three.js-r185-black?style=flat-square&logo=three.js)](https://threejs.org)
-[![React Three Fiber](https://img.shields.io/badge/R3F-v9.6-black?style=flat-square)](https://docs.pmnd.rs/react-three-fiber)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
-[![Vite 8](https://img.shields.io/badge/Vite-v8.0-646CFF?style=flat-square&logo=vite)](https://vitejs.dev)
-[![Bun](https://img.shields.io/badge/Runtime-Bun-f9f1e1?style=flat-square&logo=bun)](https://bun.sh)
+Satellite Vision Scape is a browser-based 3D environment where people and AI agents can take on the same mission, through the same controls, under the same simulation rules.
 
-> **A playable, browser-based open world set in a real-time 3D exterior reconstruction of the Joint Defence Facility Pine Gap, Central Australia.**
-> _Third-person exploration and driving in a fictionalised interpretation built only from publicly observable exterior features._
+[Agent architecture](docs/AGENT_RUNTIME.md) · [Recorded Jev run and trace](docs/JEV_AFTER_HOURS.md#live-jev) · [Pine Gap source notes](docs/PINE_GAP_REFERENCE.md)
 
-## Humans and agents, one world
+---
 
-Satellite Vision Scape is a browser-native simulation environment where humans and AI agents can inhabit persistent 3D worlds, interact under the same rules, and be evaluated by what they actually do.
+## One world, one set of rules
 
-- **Pine Gap** is the first environment and **After Hours** the first multi-stage task.
-- **Jev** (TypeSafe) is the first external agent provider. It receives a structured observation of what a player can see, chooses one legal intention — _walk to the coffee cart_, _drive to the technician_, _tune the receiver up a little_ — and a deterministic local controller carries it out with the same controls a person uses. **The agent decides what it wants to do; the simulation decides whether it succeeds.**
-- Human and agent actions go through the same input, interaction and physics code. The agent layer cannot move the character, set a velocity, fill the coffee, unlock a terminal or touch the save — tests prove it.
-- **H** (or any movement, look or click) takes the controller back instantly, with nothing reset. **Co-pilot** mode keeps the person in control and lets Jev suggest one move at a time.
-- Every session can be exported as a provider-neutral trace (`svs-agent-trace/v1`) with decisions, outcomes and measurements, so human, Jev, baseline and replayed runs can be compared under the same rules.
+Pine Gap is the first environment. **After Hours** is the first multi-stage task. Together, they make agent behavior visible in a world with real movement, interaction, driving, and mission objectives.
 
-Choose **Jev After Hours** or **Co-pilot** next to the After Hours button. Jev needs a server-side `TYPESAFE_API_KEY`; without it the buttons say so and ordinary play is unaffected. In a recorded live run Jev played the whole of After Hours on its own — coffee delivered at 100%, the hidden frequency found, four terminals locked, the midnight transmission received — in 212 decisions and under eight minutes, with no collisions and no human input ([results and trace](docs/JEV_AFTER_HOURS.md#live-jev)). A labelled scripted baseline completes the same journey through real physics in the test suite.
+**Jev** (TypeSafe) sees a structured view of the world and proposes one legal intention: walk to the coffee cart, drive to the technician, or tune the receiver. A deterministic controller carries it out using the same controls available to a person. **The agent chooses what to try. The simulation decides what happens.**
 
-This is a first, working reference integration — one environment, one task — not a general platform: there is no environment-authoring tool and no multiplayer persistence yet. Architecture, contracts and limits: [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md).
+People remain in control. Press **H**, move, look, or click to take over at any time. In **Co-pilot**, Jev suggests one move while the person stays in charge.
+
+Every session can be exported as a provider-neutral trace (`svs-agent-trace/v1`) containing decisions, outcomes, and measurements. That makes human, agent, baseline, and replayed runs comparable under the same rules.
+
+### A measured live run
+
+In one recorded run, Jev completed After Hours in **212 decisions and under eight minutes**: it delivered the coffee, found the hidden frequency, tuned four terminals, and reached the midnight transmission. The coffee arrived at **100%**. There were **zero collisions and zero human interventions**. [See the run results and trace](docs/JEV_AFTER_HOURS.md#live-jev).
+
+Jev requires a server-side `TYPESAFE_API_KEY`. Without it, the agent controls report that the service is unavailable; ordinary play remains available. A labelled scripted baseline completes the same journey through the real physics in the test suite.
+
+This is a working reference integration for **one environment and one task**. It does not yet provide an environment-authoring tool or multiplayer persistence. Read the [agent architecture, contracts, and limits](docs/AGENT_RUNTIME.md).
 
 ### Jev After Hours flier
 
@@ -65,18 +59,18 @@ This is a first, working reference integration — one environment, one task —
 
 ---
 
-## 🛰️ Overview
+## The environment
 
-Deep in the ochre heart of Australia's Northern Territory, nestled against the MacDonnell Ranges, lies **Pine Gap** — one of the world's most prominent satellite ground stations.
+Pine Gap, in Australia's Northern Territory, anchors this playable exterior reconstruction. Published antenna survey coordinates provide the factual reference; the surrounding landscape is simulated, and its sources can be inspected in the world.
 
-This project started as an interactive exterior reconstruction: the antenna array is positioned from historical open-source survey data (February 2016 survey by Desmond Ball, Bill Robinson and Richard Tanter), set within a deterministically simulated outback landscape with atmospheric lighting and click-to-inspect provenance. It is now also a **playable world**: you deploy as a soldier on foot, walk the compound, take one of the military utility vehicles parked on site and drive the roads, through the barrier gates and out into the surrounding outback — continuously, with no scene loads or separate modes for walking and driving.
+Move from on-foot exploration to the driver's seat and out across the surrounding roads without a scene change. The same world supports free exploration and the fictional After Hours mission.
 
 > [!NOTE]
 > **Evidence boundary.** Published antenna IDs, coordinates and dish diameters are historical factual anchors. Buildings, roads, fences and topography are approximate context traced from public overhead imagery. Gameplay additions — the character, vehicles, barrier gates at road/fence crossings, obstruction beacons — are **fictional** game dressing, and so is everything in the **After Hours** expansion (the technician, the coffee, the radio stations, Frequency 420, the tuning terminals, the signal traces and the concert). No interiors, operational layouts, security procedures or non-public details are modelled or implied.
 
 ---
 
-## 🎮 Gameplay
+## Explore the world
 
 - **On foot** — third-person soldier with camera-relative movement, smooth acceleration, sprint, walk toggle, jumping with gravity, slopes, kerb/pad step-ups and sliding along walls, fences and structures.
 - **Vehicles** — three right-hand-drive 4×4 utility vehicles (canvas canopy and hardtop variants). Walk up to either door and press **E**: the character walks to the door, it swings open, they climb (or slide across) into the driver's seat and the camera eases into the chase framing. Press **E** again to brake to a stop, find a clear spot beside a door and step out.
@@ -84,7 +78,7 @@ This project started as an interactive exterior reconstruction: the antenna arra
 - **World** — boom barriers wherever a road crosses a fence (they lift for an approaching vehicle, lower once the lane is clear and never onto anything beneath them; press **E** at the housing to operate one by hand), wind-driven spinifex and trees, drifting dust and cloud, blinking obstruction beacons, and procedural audio (engine, tyres, footsteps per surface, doors, impacts, barrier motors, wind).
 - **Day / dusk / night** — press **N**; headlights come on automatically after dark.
 
-## 🌙 Pine Gap: After Hours
+## Pine Gap: After Hours
 
 > [!IMPORTANT]
 > **Soundtrack.** Original music written by **Christopher Woodyard**, performing as **Indigo People**. Featured album: **_Green Machine_**. The recordings and cover art are used in this game with the songwriter's permission; they are **not** covered by this repository's software licence (see [docs/SOUNDTRACK.md](docs/SOUNDTRACK.md)).
@@ -99,7 +93,7 @@ arrive at dusk → collect coffee → drive with Indigo People on the radio → 
 
 **Start it** from the briefing card (**After Hours**, or **Continue After Hours** once there is saved progress) or from the pause menu (**Esc**). It begins at dusk with the night-shift technician (the soldier stays selectable in both menus). **Deploy** still starts the original free exploration, and **Leave After Hours · free roam** (pause → Progress) returns to it at any time. Explore, Tour and Plan stay factual: entering them hides every After Hours prop and effect and pauses the radio.
 
-### The journey
+### The mission
 
 1. **Operation: Last Coffee.** Collect the cup at the canteen cart by the south hall (**E**) and take it to the technician at the north antenna hut (~620 m by road) within **4 minutes**. The coffee is always with you — in your hand on foot, in the cup holder of whichever vehicle you drive — so walking, exiting, re-entering and switching vehicles never disturb the mission. The **coffee meter** responds to braking, launching, cornering and impacts, never to speed alone: smooth driving keeps nearly all of it. Delivery scores time and coffee remaining ("Temperature acceptable. Seventy-three percent of the coffee remains. Promotion unlikely."). If it goes cold or spills, press **Y** (or the **Retry** button) to start again at the cart, or collect a fresh cup there. The mission is replayable; the reward is granted once.
 2. **Frequency 420.** The technician suggests leaving the **Numbers Station** on. Its transmission (captioned, with pip patterns: four pips for "four", a long tone for "zero") counts _four, two, zero_. Sweep the receiver dial to **420** with **[ ]** (or the on-screen ◀ ▶) and hold it there for three seconds. This unlocks **Altered Signal** and reveals the terminals.
@@ -156,7 +150,7 @@ An optional presentation mode that reveals the mystery: slow teal / violet / amb
 
 ---
 
-## ⌨️ Controls
+## Controls
 
 The briefing card lists these on first load; **Esc** pauses and shows them again.
 
@@ -186,7 +180,7 @@ The original reconstruction viewer is fully preserved alongside Play, and the pl
 
 ---
 
-## 🧱 Architecture
+## How the world works
 
 The gameplay layer is plain TypeScript under `src/game/`, independent of React. React Three Fiber mounts its scene graph and calls one method per frame; tests drive the same code headless.
 
@@ -260,7 +254,7 @@ Gameplay collision uses analytic shapes, separate from render meshes. Radome she
 
 ---
 
-## ⚡ Optimisation strategy
+## Performance
 
 Measured with a WebGL draw-call counter in headless Chromium (software rendering in the development container, so draw calls rather than frame time were the comparable metric):
 
@@ -295,7 +289,7 @@ The whole gameplay update (`Game.frame`: input, 120 Hz physics, collision, anima
 
 ---
 
-## 🧩 Extending the world
+## Extend the world
 
 - **A new vehicle type** — add a `VehicleSpec` (dimensions, mass, engine, tyres, seats, doors) and a `VehicleVariant` in `VehicleSpec.ts`, then spawn it in `world/spawns.ts`. Physics, interaction, camera and HUD read everything from the spec.
 - **A GLTF vehicle or character** — the procedural visuals are replaceable: a class exposing `root`, `update(physics, doorOpen)` / `setLights` / `dispose` (vehicles) or `root`, `applyPose` / `dispose` (character) can wrap a loaded model. Load it asynchronously and hand it to `Vehicle` / `Game` in place of `VehicleVisual` / `CharacterVisual`; physics and gameplay are unaffected.
@@ -306,7 +300,7 @@ The whole gameplay update (`Game.frame`: input, 120 Hz physics, collision, anima
 
 ---
 
-## 🚀 Getting started
+## Run locally
 
 This project uses [Bun](https://bun.sh).
 
@@ -326,7 +320,7 @@ The headless integration test (`tests/game-integration.test.ts`) plays the game 
 
 After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recovery, spill step-size independence, mission transitions and retries, duplicate-reward prevention, radio dial and ownership, terminal locking, score coherence, concert arc) and `tests/after-hours-journey.test.ts`, which plays the whole expansion headless through the real input path — collects the coffee, drives the 620 m route with an analog autopilot, exits, delivers, tunes 420, locks four terminals, interrupts, completes and replays the concert, reloads, fails and retries. The agent runtime has eight suites of its own (`tests/agent-*.test.ts`): the action and observation contracts, hidden-answer leakage, the decision lifecycle (timeouts, stale and duplicate answers, epochs, backoff), takeover and co-pilot delegation in the running game, route planning and driving (including smooth vs aggressive coffee profiles on real physics), the authority boundary (progress only through gameplay code paths), an end-to-end After Hours run through the real runtime, and the server adapter and credential boundary. `AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts` is an opt-in, billable live Jev check. In the browser, `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls.
 
-## 📂 Project structure
+## Project structure
 
 ```text
 ├── docs/                   # Spatial reference notes, provenance, terrain architecture
@@ -344,7 +338,7 @@ After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recover
 └── tests/                  # bun:test suites
 ```
 
-## 🏗️ Evidence & reference boundary
+## Evidence and reference boundary
 
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -369,11 +363,11 @@ After Hours has two more: `tests/after-hours-logic.test.ts` (saved-state recover
 The historical survey records antenna `98-A` longitude as `33.732769`; the model restores it to `133.732769` and flags the correction in the asset dossier. Further notes:
 [Pine Gap reference](docs/PINE_GAP_REFERENCE.md) · [Terrain architecture](docs/TERRAIN_ARCHITECTURE.md) · [Vertical datums](docs/VERTICAL_DATUMS.md) · [Provenance](docs/PROVENANCE.md) · [Layer providers](docs/LAYER_PROVIDERS.md) · [Offline terrain pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md)
 
-## 🎬 Digital twin thesis (`/thesis`)
+## Digital twin thesis (`/thesis`)
 
 A 35-second motion piece arguing that modern web graphics plus public OSINT can render high-fidelity interactive digital twins without classified data. Append `?chrome=0` to hide UI for capture.
 
-## ⚠️ Known limitations
+## Known limitations
 
 - Exterior only: buildings have no interiors, and doors on structures are not enterable.
 - Vehicle dynamics are a single-track model with a sprung body rather than a full rigid-body simulation; body pitch and roll are limited, so vehicles cannot roll over.
@@ -385,14 +379,14 @@ A 35-second motion piece arguing that modern web graphics plus public OSINT can 
 - Spatial radio uses equal-power panning (no HRTF) and a simple door-dependent low-pass; it is a stylised cab, not an acoustic simulation.
 - The agent runtime has one environment and one task; its navigation is a bounded grid planner with local recovery, its metrics are client-reported, and the Jev endpoint's rate limits are per server instance (see [docs/AGENT_RUNTIME.md](docs/AGENT_RUNTIME.md#15-limitations)).
 
-## 🛠️ Tech stack
+## Built with
 
 - **Framework**: React 19 + TanStack Start / Router
 - **3D**: Three.js + React Three Fiber + Drei; post-processing via @react-three/postprocessing
 - **Styling**: Tailwind CSS v4
 - **Tooling**: Vite 8, Bun, TypeScript
 
-## 🛡️ Disclaimer
+## Disclaimer
 
 > [!WARNING]
 > This project is an independent public-source visualisation and a fictionalised game interpretation. It is built strictly from published 2016 academic surveys, public overhead imagery, synthetic relief and approximate geometric modelling. Gameplay elements are invented and do not depict real procedures, access arrangements or operations.
