@@ -207,7 +207,11 @@ export function AgentHUD({
             {s.thinking && (
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#7fd6d0]" aria-hidden />
             )}
-            {s.thinking && s.state === "ACTING" ? "Acting · thinking" : STATE_TEXT[s.state]}
+            {s.mode === "human"
+              ? null
+              : s.thinking && s.state === "ACTING"
+                ? "Acting · thinking"
+                : STATE_TEXT[s.state]}
           </div>
         </div>
 
