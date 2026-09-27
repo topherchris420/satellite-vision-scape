@@ -139,6 +139,13 @@ export class AgentSession implements AgentEnvironment, MotorWorld {
           vehicle: slug(e.vehicleId),
         }),
       ),
+      game.events.on("archiveRecordOpened", (e) =>
+        this.trace.event(this.runtime.now, "archive_record_opened", this.controls.source, {
+          id: e.id,
+          x: e.x,
+          z: e.z,
+        }),
+      ),
     );
   }
 

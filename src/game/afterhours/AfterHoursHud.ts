@@ -27,6 +27,7 @@ export interface AfterHoursSnapshot {
   /** Short key hint shown under the objective. */
   hint: string | null;
   caption: Caption | null;
+  recordZero: { open: boolean; observer: "human" | "agent" };
   /** Album credit toast (opening, after the concert, on request). */
   credit: { id: number; reason: "opening" | "return" } | null;
   radio: {

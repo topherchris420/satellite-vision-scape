@@ -6,7 +6,14 @@ import { BEAT_SECONDS } from "./composition";
 import type { ConcertMix } from "./concert";
 import type { MissionState } from "./coffee";
 import type { LayerId } from "./progress";
-import { COFFEE_CART, DELIVERY, LISTENING_POINT, TERMINAL_SITES, type Site } from "./sites";
+import {
+  COFFEE_CART,
+  DELIVERY,
+  LISTENING_POINT,
+  RECORD_ZERO,
+  TERMINAL_SITES,
+  type Site,
+} from "./sites";
 
 /**
  * Scene objects for After Hours. Everything here is fictional dressing,
@@ -27,6 +34,7 @@ export interface VisualState {
   sessionLayer: LayerId | null;
   sessionAlignment: number;
   listeningVisible: boolean;
+  recordZeroVisible: boolean;
   concertRunning: boolean;
   concertBar: number;
   concertMix: ConcertMix | null;
@@ -128,6 +136,8 @@ export class AfterHoursVisuals {
   private readonly npcAnimator = new CharacterAnimator();
   private readonly terminals: TerminalVisual[] = [];
   private readonly listening = new THREE.Group();
+  private readonly recordZero = new THREE.Group();
+  private readonly recordScreen: THREE.MeshStandardMaterial;
   private readonly listeningMaterial: THREE.MeshBasicMaterial;
   private readonly waypoint = new THREE.Group();
   private readonly waypointMaterial: THREE.MeshBasicMaterial;
@@ -211,6 +221,51 @@ export class AfterHoursVisuals {
     }
     cart.add(body, top, canopy, bulb, urn, cup);
     this.root.add(cart);
+
+    // A small unlisted work station; the chair is present throughout the shift.
+    const archive = this.recordZero;
+    archive.position.set(RECORD_ZERO.x, heightAt(RECORD_ZERO.x, RECORD_ZERO.z), RECORD_ZERO.z);
+    archive.rotation.y = RECORD_ZERO.yaw;
+    const timber = this.mat(new THREE.MeshStandardMaterial({ color: "#343634", roughness: 0.92 }));
+    const frame = this.mat(new THREE.MeshStandardMaterial({ color: "#242d2e", roughness: 0.75 }));
+    const wall = this.mat(
+      new THREE.MeshStandardMaterial({ color: "#575c55", roughness: 1, side: THREE.DoubleSide }),
+    );
+    const part = (
+      w: number,
+      h: number,
+      d: number,
+      x: number,
+      y: number,
+      z: number,
+      material: THREE.Material,
+    ) => {
+      const mesh = new THREE.Mesh(this.geo(new THREE.BoxGeometry(w, h, d)), material);
+      mesh.position.set(x, y, z);
+      archive.add(mesh);
+    };
+    // Open doorway toward the path. No colliders or invisible walls are added.
+    part(5, 0.12, 4, 0, 0.04, 0, wall);
+    part(5, 2.6, 0.14, 0, 1.3, -2, wall);
+    part(0.14, 2.6, 4, -2.5, 1.3, 0, wall);
+    part(0.14, 2.6, 4, 2.5, 1.3, 0, wall);
+    part(5, 0.14, 4, 0, 2.68, 0, frame);
+    part(2.2, 0.12, 0.85, 0, 0.9, -1.35, timber);
+    for (const x of [-0.95, 0.95]) part(0.1, 0.85, 0.1, x, 0.46, -1.5, frame);
+    part(0.55, 0.1, 0.52, 0, 0.48, 0.2, frame);
+    part(0.55, 0.62, 0.1, 0, 0.78, 0.46, frame);
+    part(0.07, 0.42, 0.07, 0, 0.24, 0.2, frame);
+    part(0.48, 0.06, 0.48, 0, 0.06, 0.2, frame);
+    part(0.52, 0.4, 0.12, 0, 1.22, -1.6, frame);
+    this.recordScreen = this.mat(
+      new THREE.MeshStandardMaterial({
+        color: "#081719",
+        emissive: "#68b4ab",
+        emissiveIntensity: 0,
+      }),
+    );
+    part(0.43, 0.3, 0.01, 0, 1.22, -1.53, this.recordScreen);
+    this.root.add(archive);
 
     // --- Night-shift technician waiting at the north antenna hut -------------------------
     this.npc = new CharacterVisual({ variant: "technician", palette: "staff" });
@@ -483,6 +538,7 @@ export class AfterHoursVisuals {
   update(dt: number, s: VisualState): void {
     this.root.visible = s.active;
     if (!s.active) return;
+    this.recordScreen.emissiveIntensity = s.recordZeroVisible ? 0.24 : 0;
     const t = s.time;
     const breathe = s.reducedMotion ? 0.5 : 0.5 + 0.5 * Math.sin(t * 0.9);
 

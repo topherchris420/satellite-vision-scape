@@ -41,7 +41,15 @@ import {
 } from "./progress";
 import { LAYERS, TuningSession } from "./puzzle";
 import { RadioLogic, type RadioEvent } from "./radio";
-import { COFFEE_CART, DELIVERY, LISTENING_POINT, RANGES, TERMINAL_SITES, type Site } from "./sites";
+import {
+  COFFEE_CART,
+  DELIVERY,
+  LISTENING_POINT,
+  RECORD_ZERO,
+  RANGES,
+  TERMINAL_SITES,
+  type Site,
+} from "./sites";
 import { GREEN_MACHINE, trackIndexById } from "./soundtrack";
 import type { AfterHoursVisuals, VisualState } from "./AfterHoursVisuals";
 
@@ -59,16 +67,11 @@ export interface AfterHoursHost {
   setCarrying(carrying: boolean): void;
   setDustTint(color: string | null): void;
   lockMovement(owner: string, locked: boolean): void;
+  controlSource(): "human" | "agent";
 }
 
 export type RadioCommand =
-  | "power"
-  | "next"
-  | "previous"
-  | "station"
-  | "volumeUp"
-  | "volumeDown"
-  | "retry";
+  "power" | "next" | "previous" | "station" | "volumeUp" | "volumeDown" | "retry";
 
 /** Values read every frame by the React post-processing grade (no React state). */
 export interface AfterHoursPresentation {
@@ -99,6 +102,7 @@ const CAPTION_MIN = 2.6;
 /** Queued captions older than this (s) are dropped rather than shown late. */
 const CAPTION_STALE = 12;
 const CINEMATIC_TARGET = new THREE.Vector3(-62, 14, -70);
+export const RECORD_ZERO_URL = "https://the-idea-that-never-was.ciao-chris.chatgpt.site";
 
 /**
  * Pine Gap: After Hours — the fictional night-shift expansion layered on
@@ -131,6 +135,8 @@ export class AfterHours {
   cinematic = false;
   /** Heard "four two zero" on the Numbers Station this visit. */
   heardClue = false;
+  recordZeroOpen = false;
+  private recordZeroObserver: "human" | "agent" = "human";
 
   private viewerActive = true;
   private paused = false;
@@ -360,6 +366,7 @@ export class AfterHours {
   stop(): void {
     if (!this.active) return;
     this.closeSession();
+    this.closeRecordZero();
     if (this.concert.state === "running") this.finishConcert(false);
     this.mission.abort();
     this.setCinematic(false);
@@ -379,6 +386,7 @@ export class AfterHours {
     if (this.viewerActive === on) return;
     this.viewerActive = on;
     if (!on) {
+      this.closeRecordZero();
       this.closeSession();
       if (this.concert.state === "running") this.finishConcert(false);
       this.setCinematic(false);
@@ -511,6 +519,7 @@ export class AfterHours {
   /** Reset progression to a fresh night; preferences are kept. */
   resetProgress(): void {
     this.closeSession();
+    this.closeRecordZero();
     if (this.concert.state === "running") this.finishConcert(false);
     this.mission.abort();
     if (this.mission.state !== "available") this.mission.retry();
@@ -556,6 +565,29 @@ export class AfterHours {
     this.closeSession();
   }
 
+  closeRecordZero(): void {
+    if (!this.recordZeroOpen) return;
+    this.recordZeroOpen = false;
+    this.dirty = true;
+  }
+
+  /** A second ordinary interaction, or the focused panel button, opens the record. */
+  openRecordZero(): void {
+    if (
+      !this.active ||
+      !this.viewerActive ||
+      !this.progress.concertCompleted ||
+      !this.recordZeroOpen
+    )
+      return;
+    const p = this.host.player.position;
+    if (Math.hypot(p.x - RECORD_ZERO.x, p.z - RECORD_ZERO.z) > RANGES.record) return;
+    this.host.events.emit("archiveRecordOpened", { id: "zero", x: p.x, z: p.z });
+    if (typeof window !== "undefined")
+      window.open(RECORD_ZERO_URL, "_blank", "noopener,noreferrer");
+    this.closeRecordZero();
+  }
+
   endConcert(): void {
     if (this.concert.state === "running") this.finishConcert(false);
   }
@@ -589,6 +621,23 @@ export class AfterHours {
       const d = Math.hypot(s.x - x, s.z - z);
       return d <= range ? d : -1;
     };
+    // Only the completed concert changes this otherwise ordinary corner of the world.
+    const record = near(RECORD_ZERO, RANGES.record);
+    if (record >= 0 && this.progress.concertCompleted && this.concert.state !== "running") {
+      offer.id = "record_zero";
+      offer.distance = record;
+      offer.priority = true;
+      offer.label = this.recordZeroOpen ? "Open the record" : "Inspect the empty chair";
+      offer.act = () => {
+        if (this.recordZeroOpen) this.openRecordZero();
+        else {
+          this.recordZeroObserver = this.host.controlSource();
+          this.recordZeroOpen = true;
+          this.dirty = true;
+        }
+      };
+      return offer;
+    }
     // Coffee cart.
     const cart = near(COFFEE_CART, RANGES.cart);
     if (cart >= 0 && this.mission.state !== "active") {
@@ -830,6 +879,14 @@ export class AfterHours {
   /** Once per simulated frame, after the interaction state machine. */
   update(dt: number, input: InputState): void {
     if (!this.active) return;
+    if (this.recordZeroOpen) {
+      const p = this.host.player.position;
+      if (
+        Math.hypot(p.x - RECORD_ZERO.x, p.z - RECORD_ZERO.z) > RANGES.record + 0.5 ||
+        input.wasPressed("cancel")
+      )
+        this.closeRecordZero();
+    }
     this.time += dt;
     this.announcer.update(dt);
     this.handleRadioInput(dt, input);
@@ -1509,6 +1566,7 @@ export class AfterHours {
       objective: o.text,
       hint: o.hint,
       caption: c ? { id: c.id, speaker: c.speaker, text: c.text, kind: c.kind } : null,
+      recordZero: { open: this.recordZeroOpen, observer: this.recordZeroObserver },
       credit: this.credit ? { id: this.credit.id, reason: this.credit.reason } : null,
       radio: {
         power: this.radio.power,
@@ -1728,6 +1786,7 @@ export class AfterHours {
     s.sessionLayer = this.session?.layer ?? null;
     s.sessionAlignment = this.session?.tuning.alignment ?? 0;
     s.listeningVisible = concertUnlocked(p);
+    s.recordZeroVisible = p.concertCompleted;
     s.concertRunning = this.concert.state === "running" && this.viewerActive;
     s.concertBar = this.concert.bar;
     s.concertMix = this.concert.mix;
@@ -1773,6 +1832,7 @@ export function createVisualState(): VisualState {
     sessionLayer: null,
     sessionAlignment: 0,
     listeningVisible: false,
+    recordZeroVisible: false,
     concertRunning: false,
     concertBar: 0,
     concertMix: null,

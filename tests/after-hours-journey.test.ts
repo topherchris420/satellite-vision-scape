@@ -10,6 +10,7 @@ import {
   COFFEE_CART,
   DELIVERY,
   LISTENING_POINT,
+  RECORD_ZERO,
   TERMINAL_SITES,
 } from "../src/game/afterhours/sites";
 import { buildSiteWorld } from "../src/game/world/buildSiteWorld";
@@ -205,10 +206,46 @@ describe("fictional props sit on open, reachable ground", () => {
   test("no prop overlaps the reconstruction's colliders", () => {
     const { collision, ground } = buildSiteWorld();
     const mask = CollisionLayer.Structure | CollisionLayer.Prop | CollisionLayer.Fence;
-    for (const s of [COFFEE_CART, DELIVERY, LISTENING_POINT, ...TERMINAL_SITES]) {
+    for (const s of [COFFEE_CART, DELIVERY, LISTENING_POINT, RECORD_ZERO, ...TERMINAL_SITES]) {
       const y = ground.heightAt(s.x, s.z);
       expect(collision.overlapCircle(s.x, s.z, 1.2, y + 0.3, y + 1.8, mask, null)).toBe(false);
     }
+  });
+});
+
+describe("unlisted work station", () => {
+  test("stays ordinary until the concert, then uses the normal interaction and trace path", () => {
+    const game = new Game({ visuals: false, storage: null });
+    const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 9000);
+    const ah = game.afterHours;
+    const events: string[] = [];
+    game.events.on("archiveRecordOpened", (e) => events.push(e.id));
+    ah.start();
+    game.player.teleport(RECORD_ZERO.x, RECORD_ZERO.z + 1.5, 0);
+    run(game, camera, 0.2);
+    expect(game.interaction.promptTarget).not.toBe("record_zero");
+    expect(ah.recordZeroOpen).toBe(false);
+
+    ah.progress.coffeeCompleted = true;
+    ah.progress.channelDiscovered = true;
+    for (const id of LAYER_IDS) ah.progress.terminals[id] = true;
+    ah.progress.concertCompleted = true;
+    run(game, camera, 0.2);
+    expect(game.interaction.promptTarget).toBe("record_zero");
+    press(game, camera, "KeyE");
+    expect(ah.hud.getSnapshot().recordZero.open).toBe(true);
+    expect(ah.hud.getSnapshot().recordZero.observer).toBe("human");
+    press(game, camera, "KeyX");
+    expect(ah.recordZeroOpen).toBe(false);
+    press(game, camera, "KeyE");
+    press(game, camera, "KeyE");
+    expect(events).toEqual(["zero"]);
+    expect(game.agent.trace.count("archive_record_opened")).toBe(1);
+    expect(ah.recordZeroOpen).toBe(false);
+    ah.resetProgress();
+    run(game, camera, 0.2);
+    expect(game.interaction.promptTarget).not.toBe("record_zero");
+    game.dispose();
   });
 });
 

@@ -44,6 +44,14 @@ export const LISTENING_POINT: Site = {
   label: "Listening point",
 };
 
+/** A forgotten work station off the south hall route. No waypoint points here. */
+export const RECORD_ZERO: Site = {
+  x: -80,
+  z: 203,
+  yaw: 0.65,
+  label: "Unlisted work station",
+};
+
 function antennaPosition(id: string): [number, number] {
   const hit = domes.find((d) => d.sourceId === id) ?? dishes.find((d) => d.sourceId === id);
   if (!hit) throw new Error(`Unknown antenna ${id}`);
@@ -76,4 +84,5 @@ export const RANGES = {
   delivery: 3,
   terminal: 2.4,
   listening: 4,
+  record: 2.6,
 } as const;

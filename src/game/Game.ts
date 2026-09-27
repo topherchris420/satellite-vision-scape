@@ -174,6 +174,10 @@ export class Game {
     return this.kind;
   }
 
+  controlSource(): "human" | "agent" {
+    return this.agent?.controls.source === "human" ? "human" : this.agent ? "agent" : "human";
+  }
+
   get timeOfDay(): TimeOfDay {
     return this.time;
   }

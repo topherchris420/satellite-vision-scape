@@ -320,7 +320,7 @@ export class AfterHoursTaskAdapter implements TaskAdapter<AfterHoursState> {
     if (free && frame.promptTarget) {
       const p = frame.promptTarget;
       if (p === "listening_point") out.push({ intent: "start_concert" });
-      else if (p === "coffee_cart" || p === "technician" || isTerminal(p))
+      else if (p === "record_zero" || p === "coffee_cart" || p === "technician" || isTerminal(p))
         out.push({ intent: "interact", target: p });
     }
 

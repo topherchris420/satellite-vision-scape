@@ -15,4 +15,5 @@ export type GameEvents = {
   gateMove: { gateId: string; raising: boolean; x: number; z: number };
   headlights: { on: boolean };
   message: { text: string };
+  archiveRecordOpened: { id: "zero"; x: number; z: number };
 };

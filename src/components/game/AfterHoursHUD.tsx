@@ -118,12 +118,54 @@ export function AfterHoursOverlay({ game, isMobile }: { game: Game; isMobile: bo
       {s.mission.state === "active" && <CoffeeMeter bind={bind} game={game} isMobile={isMobile} />}
       {s.mission.state === "failed" && <FailureCard s={s} game={game} />}
       {s.tuning && <TuningOverlay s={s} game={game} bind={bind} isMobile={isMobile} />}
+      {s.recordZero.open && <RecordZero game={game} observer={s.recordZero.observer} />}
       {s.concert.running && <ConcertBar s={s} game={game} bind={bind} isMobile={isMobile} />}
       {s.terminalsRevealed &&
         s.preferences.signalOverlay &&
         !s.concert.running &&
         s.stage !== "complete" && <SignalOverlay s={s} bind={bind} isMobile={isMobile} />}
     </>
+  );
+}
+
+function RecordZero({ game, observer }: { game: Game; observer: "human" | "agent" }) {
+  return (
+    <section
+      role="dialog"
+      aria-label="Archive entry"
+      className={`${panel} pointer-events-auto absolute left-1/2 top-1/2 z-30 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-sm p-6 font-mono text-sm shadow-[0_20px_70px_rgba(0,0,0,.7)]`}
+    >
+      <div className="mb-8 flex items-start justify-between gap-4 text-[11px] tracking-[.2em] text-[#90c3be]">
+        <span>ARCHIVE ENTRY ∅</span>
+        <button
+          type="button"
+          onClick={() => game.afterHours.closeRecordZero()}
+          aria-label="Close archive entry"
+          className="rounded p-1 text-white/60 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200"
+        >
+          <X size={16} />
+        </button>
+      </div>
+      <p className="text-[11px] leading-6 text-white/50">INCIDENT</p>
+      <p className="mb-5 text-base text-white/90">THE IDEA THAT NEVER WAS</p>
+      <p className="text-[11px] leading-6 text-white/50">STATUS</p>
+      <p className="mb-8 text-base text-white/90">NO INCIDENT OCCURRED.</p>
+      <p className="mb-5 text-xs leading-6 text-white/65">
+        {observer === "human"
+          ? "THE PERSON READING THIS IS NOT NECESSARILY THE PERSON WHO FOUND IT."
+          : "OBSERVER TYPE: NON-HUMAN. THIS DOES NOT ALTER THE RECORD."}
+      </p>
+      <button
+        type="button"
+        onClick={() => game.afterHours.openRecordZero()}
+        className="w-full rounded-sm border border-[#9bd3ca]/50 px-4 py-3 text-left text-xs tracking-[.18em] text-[#b4e6dc] hover:bg-[#0B5D63]/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-200"
+      >
+        OPEN RECORD ↗
+      </button>
+      <p className="mt-3 text-[10px] text-white/40">
+        A second E press opens the record. X closes this entry.
+      </p>
+    </section>
   );
 }
 
