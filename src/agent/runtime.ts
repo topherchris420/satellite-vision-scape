@@ -144,6 +144,17 @@ export class AgentRuntime {
   revision = 0;
   /** Waits taken without asking, because nothing else was offered. */
   idleWaits = 0;
+  /**
+   * How often a travel intent is reviewed. An experiment knob
+   * (`travel-review-interval`); the product default is `RUNTIME.reviewMs`.
+   */
+  reviewMs: number = RUNTIME.reviewMs;
+  /**
+   * Clock used to measure decision latency. Wall time by default; headless
+   * experiments that simulate provider latency measure it on the simulation
+   * clock instead (see `experiments/lib/latency.ts`). Read when a mode starts.
+   */
+  latencyClock: (() => number) | undefined;
 
   private readonly env: AgentEnvironment;
   private readonly controls: ControlArbiter;
@@ -152,7 +163,6 @@ export class AgentRuntime {
   private readonly metrics: EvaluationMetrics;
   private readonly validate: (value: unknown) => Validated<WorldObservation>;
   private readonly loopOptions: RuntimeOptions["loop"];
-  private readonly wallClock: (() => number) | undefined;
   private readonly clock = new SimulationClock();
 
   private loop: DecisionLoop | null = null;
@@ -175,7 +185,7 @@ export class AgentRuntime {
     this.metrics = options.metrics;
     this.validate = options.validate;
     this.loopOptions = options.loop;
-    this.wallClock = options.wallClock;
+    this.latencyClock = options.wallClock;
   }
 
   /** Simulation time, milliseconds since the runtime was created. */
@@ -213,7 +223,7 @@ export class AgentRuntime {
       {
         provider,
         clock: this.clock,
-        wallClock: this.wallClock,
+        wallClock: this.latencyClock,
         ...this.loopOptions,
         onDecision: (decision) => {
           this.inbox = { decision, epoch: this.epoch };
@@ -429,7 +439,7 @@ export class AgentRuntime {
       if (this.env.complete()) return false;
       const intent = this.executor.intent;
       if (!intent) return true;
-      return isTravel(intent) && this.now - this.lastDecisionAt >= RUNTIME.reviewMs;
+      return isTravel(intent) && this.now - this.lastDecisionAt >= this.reviewMs;
     }
     if (this.mode === "copilot")
       return !this.delegated && !this.suggestion && this.now >= this.suggestAfter;
@@ -650,6 +660,7 @@ export class AgentRuntime {
         });
         break;
       case "requested":
+        this.metrics.requests++;
         this.revision++;
         break;
     }

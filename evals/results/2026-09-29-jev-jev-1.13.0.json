@@ -1,0 +1,747 @@
+{
+ "schema": "svs-agent-probe-results/v1",
+ "date": "2026-09-29",
+ "provider": "jev",
+ "model": "jev-1.13.0",
+ "repeats": 10,
+ "calls": 400,
+ "probes": {
+  "path": "evals/after-hours-probes.json",
+  "capturedAt": "2026-09-27",
+  "sha256": "c4d7e5bb177fb7a1"
+ },
+ "results": [
+  {
+   "probe": "coffee-go-to-cart",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.059,
+   "meanLatencyMs": 305,
+   "answers": {
+    "navigate_to:coffee_cart": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 295,
+   "answers": {
+    "drive_to:technician": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "receiver-tune-toward-clue",
+   "profile": "full",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.167,
+   "meanLatencyMs": 285,
+   "answers": {
+    "enter_vehicle:uv-1": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "receiver-hold-signal",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.056,
+   "meanLatencyMs": 261,
+   "answers": {
+    "wait": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-go-to-terminal",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.19,
+   "meanLatencyMs": 273,
+   "answers": {
+    "navigate_to:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-open-when-prompted",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.045,
+   "meanLatencyMs": 285,
+   "answers": {
+    "interact:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-hold-when-aligned",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.111,
+   "meanLatencyMs": 267,
+   "answers": {
+    "wait": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 282,
+   "answers": {
+    "tune_terminal:down:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 259,
+   "answers": {
+    "tune_terminal:up:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "concert-start-when-prompted",
+   "profile": "full",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.053,
+   "meanLatencyMs": 275,
+   "answers": {
+    "start_concert": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-go-to-cart",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.059,
+   "meanLatencyMs": 273,
+   "answers": {
+    "navigate_to:coffee_cart": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 281,
+   "answers": {
+    "drive_to:technician": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "receiver-tune-toward-clue",
+   "profile": "lean",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.167,
+   "meanLatencyMs": 272,
+   "answers": {
+    "enter_vehicle:uv-1": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "receiver-hold-signal",
+   "profile": "lean",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.056,
+   "meanLatencyMs": 276,
+   "answers": {
+    "tune_receiver:up:tap": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "terminal-go-to-terminal",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.19,
+   "meanLatencyMs": 274,
+   "answers": {
+    "navigate_to:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-open-when-prompted",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.045,
+   "meanLatencyMs": 263,
+   "answers": {
+    "interact:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-hold-when-aligned",
+   "profile": "lean",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.111,
+   "meanLatencyMs": 268,
+   "answers": {
+    "tune_terminal:up:tap": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 290,
+   "answers": {
+    "tune_terminal:down:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 262,
+   "answers": {
+    "tune_terminal:up:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "concert-start-when-prompted",
+   "profile": "lean",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.053,
+   "meanLatencyMs": 267,
+   "answers": {
+    "start_concert": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-go-to-cart",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.059,
+   "meanLatencyMs": 270,
+   "answers": {
+    "navigate_to:coffee_cart": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 274,
+   "answers": {
+    "drive_to:technician": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "receiver-tune-toward-clue",
+   "profile": "none",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.167,
+   "meanLatencyMs": 302,
+   "answers": {
+    "enter_vehicle:uv-1": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "receiver-hold-signal",
+   "profile": "none",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.056,
+   "meanLatencyMs": 268,
+   "answers": {
+    "enter_vehicle:uv-1": 6,
+    "tune_receiver:up:tap": 4
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "terminal-go-to-terminal",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.19,
+   "meanLatencyMs": 264,
+   "answers": {
+    "navigate_to:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-open-when-prompted",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.045,
+   "meanLatencyMs": 270,
+   "answers": {
+    "interact:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-hold-when-aligned",
+   "profile": "none",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.111,
+   "meanLatencyMs": 306,
+   "answers": {
+    "tune_terminal:up:tap": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 276,
+   "answers": {
+    "tune_terminal:down:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 274,
+   "answers": {
+    "tune_terminal:up:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "concert-start-when-prompted",
+   "profile": "none",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.053,
+   "meanLatencyMs": 258,
+   "answers": {
+    "start_concert": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-go-to-cart",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.059,
+   "meanLatencyMs": 282,
+   "answers": {
+    "navigate_to:coffee_cart": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 279,
+   "answers": {
+    "drive_to:technician": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "receiver-tune-toward-clue",
+   "profile": "full-semantic_bearings",
+   "passes": 0,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.167,
+   "meanLatencyMs": 270,
+   "answers": {
+    "enter_vehicle:uv-1": 10
+   },
+   "rate": 0,
+   "wilson95": [
+    0,
+    0.278
+   ]
+  },
+  {
+   "probe": "receiver-hold-signal",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.056,
+   "meanLatencyMs": 276,
+   "answers": {
+    "wait": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-go-to-terminal",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.19,
+   "meanLatencyMs": 269,
+   "answers": {
+    "navigate_to:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-open-when-prompted",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.045,
+   "meanLatencyMs": 292,
+   "answers": {
+    "interact:harmony": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-hold-when-aligned",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.111,
+   "meanLatencyMs": 268,
+   "answers": {
+    "wait": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 279,
+   "answers": {
+    "tune_terminal:down:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 273,
+   "answers": {
+    "tune_terminal:up:long": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  },
+  {
+   "probe": "concert-start-when-prompted",
+   "profile": "full-semantic_bearings",
+   "passes": 10,
+   "trials": 10,
+   "failures": 0,
+   "chance": 0.053,
+   "meanLatencyMs": 291,
+   "answers": {
+    "start_concert": 10
+   },
+   "rate": 1,
+   "wilson95": [
+    0.722,
+    1
+   ]
+  }
+ ],
+ "verdicts": [
+  {
+   "assist": "trend_inference",
+   "with": "full",
+   "without": "lean",
+   "verdict": "keep",
+   "reasons": [
+    "terminal-reverse-after-overshoot: 10/10 without it (lower bound 0.72 < 0.8)",
+    "terminal-continue-while-rising: 10/10 without it (lower bound 0.72 < 0.8)"
+   ]
+  },
+  {
+   "assist": "hold_still_rule",
+   "with": "full",
+   "without": "lean",
+   "verdict": "keep",
+   "reasons": [
+    "terminal-hold-when-aligned: 0/10 without it (lower bound 0.00 < 0.8)",
+    "receiver-hold-signal: 0/10 without it (lower bound 0.00 < 0.8)"
+   ]
+  },
+  {
+   "assist": "control_magnitudes",
+   "with": "lean",
+   "without": "none",
+   "verdict": "keep",
+   "reasons": [
+    "terminal-reverse-after-overshoot: 10/10 without it (lower bound 0.72 < 0.8)",
+    "receiver-tune-toward-clue: 0/10 without it (lower bound 0.00 < 0.8)"
+   ]
+  },
+  {
+   "assist": "spill_advice",
+   "with": "full",
+   "without": "lean",
+   "verdict": "keep",
+   "reasons": [
+    "coffee-deliver-while-driving: 10/10 without it (lower bound 0.72 < 0.8)"
+   ]
+  },
+  {
+   "assist": "semantic_bearings",
+   "with": "full",
+   "without": "full-semantic_bearings",
+   "verdict": "keep",
+   "reasons": [
+    "coffee-deliver-while-driving: 10/10 without it (lower bound 0.72 < 0.8)",
+    "terminal-go-to-terminal: 10/10 without it (lower bound 0.72 < 0.8)"
+   ]
+  }
+ ]
+}

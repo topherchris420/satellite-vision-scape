@@ -1,0 +1,506 @@
+{
+ "schema": "svs-experiment-summary/v1",
+ "experiment": "tuning-trend-reading",
+ "status": "complete",
+ "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+ "conditions": [
+  {
+   "id": "trend",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "trend"
+   },
+   "runs": [
+    {
+     "runId": "trend-01",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-02",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-03",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-04",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-05",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-06",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-07",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-08",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-09",
+     "status": "ok"
+    },
+    {
+     "runId": "trend-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 308.55,
+     "min": 307.8,
+     "max": 309.2,
+     "p95": 309.11,
+     "mean": 308.54,
+     "constant": false
+    },
+    "terminalsCompleted": {
+     "n": 10,
+     "missing": 0,
+     "median": 4,
+     "min": 4,
+     "max": 4,
+     "p95": 4,
+     "mean": 4,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalSecondsOpen": {
+     "n": 10,
+     "missing": 0,
+     "median": 27.65,
+     "min": 27.3,
+     "max": 27.9,
+     "p95": 27.855,
+     "mean": 27.61,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 134,
+     "min": 134,
+     "max": 136,
+     "p95": 135.55,
+     "mean": 134.5,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "sweep",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "sweep"
+   },
+   "runs": [
+    {
+     "runId": "sweep-01",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-02",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-03",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-04",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-05",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-06",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-07",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-08",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-09",
+     "status": "ok"
+    },
+    {
+     "runId": "sweep-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 308.55,
+     "min": 307.8,
+     "max": 309.2,
+     "p95": 309.11,
+     "mean": 308.54,
+     "constant": false
+    },
+    "terminalsCompleted": {
+     "n": 10,
+     "missing": 0,
+     "median": 4,
+     "min": 4,
+     "max": 4,
+     "p95": 4,
+     "mean": 4,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalSecondsOpen": {
+     "n": 10,
+     "missing": 0,
+     "median": 27.65,
+     "min": 27.3,
+     "max": 27.9,
+     "p95": 27.855,
+     "mean": 27.61,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 134,
+     "min": 134,
+     "max": 136,
+     "p95": 135.55,
+     "mean": 134.5,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "blind",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "blind"
+   },
+   "runs": [
+    {
+     "runId": "blind-01",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-02",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-03",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-04",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-05",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-06",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-07",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-08",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-09",
+     "status": "ok"
+    },
+    {
+     "runId": "blind-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 319.95,
+     "min": 319,
+     "max": 320.4,
+     "p95": 320.4,
+     "mean": 319.93,
+     "constant": false
+    },
+    "terminalsCompleted": {
+     "n": 10,
+     "missing": 0,
+     "median": 4,
+     "min": 4,
+     "max": 4,
+     "p95": 4,
+     "mean": 4,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 27,
+     "min": 27,
+     "max": 27,
+     "p95": 27,
+     "mean": 27,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalSecondsOpen": {
+     "n": 10,
+     "missing": 0,
+     "median": 38.75,
+     "min": 38.1,
+     "max": 39.3,
+     "p95": 39.255,
+     "mean": 38.73,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 141,
+     "min": 141,
+     "max": 143,
+     "p95": 142.55,
+     "mean": 141.5,
+     "constant": false
+    }
+   }
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": {
+    "metric": "completed",
+    "from": "trend",
+    "to": "sweep",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "trend-01",
+    "sweep-01",
+    "trend-02",
+    "sweep-02",
+    "trend-03",
+    "sweep-03",
+    "trend-04",
+    "sweep-04",
+    "trend-05",
+    "sweep-05",
+    "trend-06",
+    "sweep-06",
+    "trend-07",
+    "sweep-07",
+    "trend-08",
+    "sweep-08",
+    "trend-09",
+    "sweep-09",
+    "trend-10",
+    "sweep-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median change 0 within ±0; 0/10 pairs moved further"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "terminalTuningInputs",
+    "from": "trend",
+    "to": "sweep",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "trend-01",
+    "sweep-01",
+    "trend-02",
+    "sweep-02",
+    "trend-03",
+    "sweep-03",
+    "trend-04",
+    "sweep-04",
+    "trend-05",
+    "sweep-05",
+    "trend-06",
+    "sweep-06",
+    "trend-07",
+    "sweep-07",
+    "trend-08",
+    "sweep-08",
+    "trend-09",
+    "sweep-09",
+    "trend-10",
+    "sweep-10"
+   ],
+   "verdict": "NOT SUPPORTED",
+   "reasons": [
+    "median paired change 0 is short of the predicted increase of 10 (0 towards, 0 against, 10 ties)"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "terminalTuningInputs",
+    "from": "trend",
+    "to": "blind",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   "pairs": 10,
+   "medianChange": 7,
+   "towards": 10,
+   "against": 0,
+   "ties": 0,
+   "signTestP": 0.001,
+   "exact": false,
+   "runIds": [
+    "trend-01",
+    "blind-01",
+    "trend-02",
+    "blind-02",
+    "trend-03",
+    "blind-03",
+    "trend-04",
+    "blind-04",
+    "trend-05",
+    "blind-05",
+    "trend-06",
+    "blind-06",
+    "trend-07",
+    "blind-07",
+    "trend-08",
+    "blind-08",
+    "trend-09",
+    "blind-09",
+    "trend-10",
+    "blind-10"
+   ],
+   "verdict": "NOT SUPPORTED",
+   "reasons": [
+    "median paired change 7 is short of the predicted increase of 10 (10 towards, 0 against, 0 ties)"
+   ]
+  }
+ ],
+ "excluded": []
+}

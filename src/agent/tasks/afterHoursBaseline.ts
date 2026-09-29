@@ -59,7 +59,29 @@ function amountFor(remaining: number, long: number, short: number): TuningAmount
   return "tap";
 }
 
-export function createAfterHoursBaseline(): (o: WorldObservation) => AgentIntent {
+/**
+ * Variants of the baseline's terminal tuning, for experiments that ask what
+ * the task charges for a missing skill. They change only how the scripted
+ * policy turns a terminal dial; everything else is the baseline.
+ *
+ *  - `tuningAmount`: `graded` (the default: long, short or tap by how far
+ *    the match meter is from full), or always one amount. Always `long` is
+ *    live run A's habit.
+ *  - `tuningDirection`: `trend` (the default: reverse when the match meter
+ *    falls) or `sweep`, a policy that cannot read the trend: it keeps
+ *    turning one way and reverses only at the end of the dial. `blind` is a
+ *    sweep that also ignores where the dial starts: it always turns up first.
+ */
+export interface BaselineOptions {
+  tuningAmount?: "graded" | TuningAmount;
+  tuningDirection?: "trend" | "sweep" | "blind";
+}
+
+export function createAfterHoursBaseline(
+  options: BaselineOptions = {},
+): (o: WorldObservation) => AgentIntent {
+  const amountPolicy = options.tuningAmount ?? "graded";
+  const directionPolicy = options.tuningDirection ?? "trend";
   let dialDirection: "up" | "down" | null = null;
   let dialTerminal: string | null = null;
 
@@ -105,13 +127,20 @@ export function createAfterHoursBaseline(): (o: WorldObservation) => AgentIntent
       if (t.status === "aligned_hold" || t.status === "locked") return wait;
       if (dialTerminal !== t.terminal) {
         dialTerminal = t.terminal;
-        dialDirection = t.dialPercent > 50 ? "down" : "up";
-      } else if (t.matchTrend === "falling") {
+        dialDirection = directionPolicy === "blind" ? "up" : t.dialPercent > 50 ? "down" : "up";
+      } else if (t.matchTrend === "falling" && directionPolicy === "trend") {
         dialDirection = dialDirection === "up" ? "down" : "up";
       }
       if (t.dialPercent <= 1) dialDirection = "up";
       if (t.dialPercent >= 99) dialDirection = "down";
-      const amount = t.matchPercent < 40 ? "long" : t.matchPercent < 80 ? "short" : "tap";
+      const amount =
+        amountPolicy !== "graded"
+          ? amountPolicy
+          : t.matchPercent < 40
+            ? "long"
+            : t.matchPercent < 80
+              ? "short"
+              : "tap";
       return offered({ intent: "tune_terminal", direction: dialDirection!, amount }) ?? wait;
     }
     dialTerminal = null;

@@ -1,0 +1,75 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "semantic-bearings-terminals",
+  "title": "Does removing semantic bearings make Jev's terminal-stage navigation worse?",
+  "question": "The coffee run showed no difference without semantic bearings. The terminal stage asks Jev to choose among four destinations by distance and direction: does it navigate that stage worse when told signed degrees?",
+  "hypothesis": "Removing semantic_bearings (and nothing else) does not change how Jev reaches and locks the four terminals: time to lock all four changes by less than 20 s, with no extra rejected or wasted decisions.",
+  "motivation": {
+    "observation": "semantic-bearings-navigation (5 paired live coffee runs): every run chose the same intents in the same order with and without the assist, and the assist passes its probes 20/20 without help. The coffee run exercises only two navigation choices; the terminal stage, with four destinations, is where directions could matter.",
+    "evidence": [
+      "experiments/results/semantic-bearings-navigation/report.md",
+      "evals/results/2026-09-29-jev-jev-1.13.0-ablate-semantic_bearings.json"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+    "until": "terminals_completed",
+    "maxSimSeconds": 600,
+    "maxCallsPerRun": 400
+  },
+  "independentVariable": "assists",
+  "controlled": {
+    "provider": "jev"
+  },
+  "conditions": [
+    {
+      "id": "full",
+      "label": "Every assist (run B's question)",
+      "set": {
+        "assists": "full"
+      }
+    },
+    {
+      "id": "no-bearings",
+      "label": "Every assist but semantic_bearings",
+      "set": {
+        "assists": "full-semantic_bearings"
+      }
+    }
+  ],
+  "runsPerCondition": 5,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "terminalsCompleted",
+    "distanceTraveledM",
+    "rejectedDecisions",
+    "wrongInteractions",
+    "routeReviewsChanged",
+    "terminalTuningInputs",
+    "providerRequests",
+    "providerFailures"
+  ],
+  "predictions": [
+    {
+      "metric": "goalSeconds",
+      "from": "full",
+      "to": "no-bearings",
+      "direction": "no_change",
+      "minEffect": 20
+    }
+  ],
+  "successCriteria": [
+    "no-bearings locks all four terminals as reliably as full, within 20 s: with the probes, enough to retire semantic_bearings from the default question"
+  ],
+  "falsificationCriteria": [
+    "no-bearings is more than 20 s slower (median paired) or fails runs that full completes: keep the assist"
+  ],
+  "limitations": [
+    "Live, about 130 requests per run (≈ 1,300 for the experiment).",
+    "Five pairs can show a large effect; they cannot rule out a small one."
+  ],
+  "live": true
+}

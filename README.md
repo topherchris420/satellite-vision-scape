@@ -23,7 +23,7 @@
 </table>
 
 <p align="center">
-  <a href="#tests-are-evidence"><img alt="214 tests passing" src="https://img.shields.io/badge/tests-214_passing-34d399?style=flat-square" /></a>
+  <a href="#tests-are-evidence"><img alt="257 tests passing" src="https://img.shields.io/badge/tests-257_passing-34d399?style=flat-square" /></a>
   <a href="#inspect-the-trace"><img alt="Trace format svs-agent-trace/v1" src="https://img.shields.io/badge/trace-svs--agent--trace%2Fv1-a78bfa?style=flat-square" /></a>
   <a href="#known-limitations"><img alt="Status: experimental, one environment, one task" src="https://img.shields.io/badge/status-experimental_%C2%B7_1_environment_%C2%B7_1_task-f59e0b?style=flat-square" /></a>
 </p>
@@ -39,6 +39,7 @@
   <a href="#human-and-agent-side-by-side"><b>Human vs agent</b></a> ·
   <a href="#case-study-jev-plays-after-hours"><b>The Jev run</b></a> ·
   <a href="#inspect-the-trace"><b>Traces</b></a> ·
+  <a href="#experiments"><b>Experiments</b></a> ·
   <a href="#try-it-yourself"><b>Try it</b></a> ·
   <a href="#after-hours-the-worked-task"><b>After Hours</b></a> ·
   <a href="#bring-your-own-agent"><b>Bring your own agent</b></a> ·
@@ -151,7 +152,7 @@ t (s)    seq    layer       what the trace records
 - **Motor skill.** A person steers every frame. An agent chooses _what_ to do ("drive to the technician", "hold the dial up briefly", "wait") and a deterministic executor does _how_: A\* routes, steering, pedals, parking. So an agent run measures judgement, not hand–eye coordination. The executor is identical for every provider, and it drives with a smooth profile while the coffee is aboard, which is part of why agent runs keep most of the coffee.
 - **Fine controls are the same keys.** Tuning a dial is a tap, short hold or long hold of the keys a person uses. There is no intent that names a frequency, a dial value or a coordinate.
 - **A human has no discrete "decision" to log**, so human segments carry events, metrics and control time, but no per-decision records, and cannot be replayed.
-- **No human reference run is committed yet.** The evaluation code is shared; a side-by-side comparison is something you record yourself (below).
+- **No human reference run is committed yet.** People's sessions record the same route samples and world metrics as agents; import an exported run into [`coffee-run-human-agent`](experiments/definitions/coffee-run-human-agent.json) to put it beside the baseline ([Experiments](#experiments)).
 
 ---
 
@@ -239,7 +240,7 @@ Result is recorded           Run B: the complete journey above, committed as a t
 
 **The fix changed what Jev is told, not what it is allowed to do.** No intent was added, no control got bigger, and nothing was scored differently.
 
-> **One run is an existence proof, not a success rate.** Latency and Jev's choices vary between runs; the simulation itself is deterministic. The scripted baseline says nothing about Jev's ability. It proves the runtime can finish the task through ordinary controls (≈ 412 s, 93% coffee, 0 collisions).
+> **One run is an existence proof, not a success rate.** Latency and Jev's choices vary between runs; the simulation itself is deterministic. The scripted baseline says nothing about Jev's ability. It proves the runtime can finish the task through ordinary controls (≈ 426 s, 100% coffee, 0 collisions on this build).
 
 Full walkthrough, configuration and how to re-run it: [docs/JEV_AFTER_HOURS.md](docs/JEV_AFTER_HOURS.md#live-jev).
 
@@ -280,6 +281,36 @@ jq '.decisions[] | select(.disposition == "rejected") | {sequence, intent, rejec
 Traces are bounded (4,000 decisions, 6,000 events; overflow is counted), stay in memory until you export them, and contain **no credentials, prompts or provider reasoning**. Human play records the same events and metrics under `source: "human"`; add `?agentHud=1` to show the panel (and its **Export trace** button) while you play yourself.
 
 **Replay** (`?controller=replay`, or **Replay** in the panel) re-issues a trace's intentions through the same validation, against the current world. It is not a state restore: if timing or the world differs, a replayed intention can become illegal, and it is then rejected, not forced.
+
+---
+
+## Experiments
+
+**A question about behaviour becomes a reproducible set of runs.** Write the hypothesis and the one thing you will change, and `bun run experiment <id>` plays paired episodes through the real runtime, keeps one trace per run and rebuilds the report from those traces. The world decides what happened; fixed rules decide whether the prediction held, and _NOT SUPPORTED_ is a normal answer.
+
+```sh
+bun run experiment list                        # every question, and whether it has been run
+bun run experiment tuning-control-magnitude    # 30 episodes, ~20 s, free
+bun run trace <run>.trace.json.gz              # one run, with a diagnosis and where to look
+bun run compare <trace|result-dir>...          # people vs agents, or before vs after
+```
+
+A real one, committed with its raw runs ([report](experiments/results/tuning-control-magnitude/report.md)):
+
+|                  |                                                                                                                                                                                            |
+| :--------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Question**     | Jev oscillated for 473 decisions at a terminal in run A. Does a control bigger than the target zone produce that on its own, even for an agent that reads the meter perfectly?             |
+| **Hypothesis**   | A policy with a perfect direction rule but always a long hold (≈ 20% of the dial; the aligned zone is ≈ 7%) will fail to lock the terminals; graded turns will lock all four.              |
+| **Conditions**   | `graded` · `long` · `tap` (the scripted baseline's turn size; everything else held fixed, latency resampled from run B)                                                                    |
+| **Runs**         | 10 per condition, paired by seed: run _i_ of each condition shares seed _i_                                                                                                                |
+| **Measurements** | terminals locked · tuning inputs · overshoots (the panel read ALIGNED, then stopped reading it without locking) · time at panels · requests                                                |
+| **Result**       | `graded` 4/4 terminals, 20 inputs, 0 overshoots · `long` **0/4 in 10 of 10 runs, 153 overshoots** in 433 s · `tap` 4/4 but 104 inputs. Predictions **SUPPORTED** (sign test, 10/10 pairs). |
+| **Raw traces**   | [`experiments/results/tuning-control-magnitude/runs/`](experiments/results/tuning-control-magnitude/runs/): `bun run trace …/long-01.trace.json.gz` points at seq 66–382                   |
+| **Limitations**  | A scripted policy, not a model: it shows what the task does to a habit, not whether Jev has it. One build, one task.                                                                       |
+
+**The world disagrees with us, and that is the point.** Of the 15 predictions in the free experiments, 11 held and 4 did not ([backlog](experiments/HYPOTHESES.md)). And the first experiment meant to ask whether latency hurts found two environment bugs instead: at run B's latency the baseline finished only 4 of 10 journeys, because a parked car's "Enter vehicle" prompt hid "Begin the midnight transmission" and, later, because the route planner treated a player pressed against a car as unable to move. Both are fixed; the same seeds now finish 10/10 at every latency up to 10×, and the before-results are [archived](experiments/archive/) for `bun run compare`.
+
+People are part of it: record a run with `?agentHud=1` → **Export trace**, then `bun run experiment import coffee-run-human-agent human <file>`. Metrics that exist only for agents (latency, requests, provider failures) read _n/a_ for a person, never zero, and there is no overall score. Live, billable conditions need `"live": true`, `--live` and `AGENT_LIVE_TEST=1`; CI never makes a model call. Method, verdict rules and evidence levels: [docs/EXPERIMENTS.md](docs/EXPERIMENTS.md).
 
 ---
 
@@ -538,22 +569,22 @@ WAIT                      "Do nothing for about 1.5 seconds and watch…"
 <summary><b>The full action contract (<code>svs-agent-action/v1</code>)</b></summary>
 <br />
 
-| Intent                                                                             | Arguments                                               | Executed as                                                                               |
-| :--------------------------------------------------------------------------------- | :------------------------------------------------------ | :---------------------------------------------------------------------------------------- |
-| `wait`                                                                             | —                                                       | Hold still ~1.5 s (brake gently if driving); ends early when something observable changes |
-| `request_human`                                                                    | —                                                       | Hand control back to the person                                                           |
-| `navigate_to`                                                                      | `target`                                                | Walk a planned route to a known target and stop within reach                              |
-| `drive_to`                                                                         | `target`                                                | Drive a planned route, park near the target                                               |
-| `stop_vehicle`                                                                     | —                                                       | Brake to a standstill                                                                     |
-| `enter_vehicle`                                                                    | `target`                                                | Press E at that vehicle's door (only offered when the prompt is for it)                   |
-| `exit_vehicle`                                                                     | —                                                       | Press E while driving (the game brakes and steps out)                                     |
-| `interact`                                                                         | `target`                                                | Press E (only offered when the on-screen prompt is for that target)                       |
-| `start_concert`                                                                    | —                                                       | Press E at the listening point                                                            |
-| `radio_power` · `radio_next_station` · `radio_next_track` · `radio_previous_track` | —                                                       | The radio keys                                                                            |
-| `tune_receiver`                                                                    | `direction: up \| down`, `amount: tap \| short \| long` | Tap or hold `[` / `]` (0.8 s or 2.5 s)                                                    |
-| `tune_terminal`                                                                    | `direction`, `amount`                                   | Tap or hold A / D on the terminal dial (0.35 s or 0.9 s)                                  |
-| `leave_terminal`                                                                   | —                                                       | X                                                                                         |
-| `retry`                                                                            | —                                                       | Y after a failed delivery                                                                 |
+| Intent                                                                             | Arguments                                               | Executed as                                                                                                 |
+| :--------------------------------------------------------------------------------- | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------- |
+| `wait`                                                                             | —                                                       | Hold still ~1.5 s (brake gently if driving); ends early when something observable changes                   |
+| `request_human`                                                                    | —                                                       | Hand control back to the person                                                                             |
+| `navigate_to`                                                                      | `target`                                                | Walk a planned route to a known target and stop within reach                                                |
+| `drive_to`                                                                         | `target`                                                | Drive a planned route, park near the target                                                                 |
+| `stop_vehicle`                                                                     | —                                                       | Brake to a standstill                                                                                       |
+| `enter_vehicle`                                                                    | `target`                                                | Press E at that vehicle's door (only offered when the prompt is for it)                                     |
+| `exit_vehicle`                                                                     | —                                                       | Press E while driving (the game brakes and steps out); with the coffee aboard, brake gently to a stop first |
+| `interact`                                                                         | `target`                                                | Press E (only offered when the on-screen prompt is for that target)                                         |
+| `start_concert`                                                                    | —                                                       | Press E at the listening point                                                                              |
+| `radio_power` · `radio_next_station` · `radio_next_track` · `radio_previous_track` | —                                                       | The radio keys                                                                                              |
+| `tune_receiver`                                                                    | `direction: up \| down`, `amount: tap \| short \| long` | Tap or hold `[` / `]` (0.8 s or 2.5 s)                                                                      |
+| `tune_terminal`                                                                    | `direction`, `amount`                                   | Tap or hold A / D on the terminal dial (0.35 s or 0.9 s)                                                    |
+| `leave_terminal`                                                                   | —                                                       | X                                                                                                           |
+| `retry`                                                                            | —                                                       | Y after a failed delivery                                                                                   |
 
 Least privilege: navigation takes a target id from the observation's list, never coordinates; tuning is a tap or a hold of the same keys a player uses. The executor plans with A\* over the collision world, steers the camera and stick as a player would, recovers from being stuck with a bounded back-off, and after four failed recoveries ends the intent as `stuck` so the agent decides what next. It never teleports, never writes a velocity and never chooses a destination.
 
@@ -623,7 +654,7 @@ Run A → run B was already one such upgrade. The sentences that fixed run A are
 
 | `JEV_ASSISTS`    | Jev is told                                                                          | Role                                                         | Question size |
 | :--------------- | :----------------------------------------------------------------------------------- | :----------------------------------------------------------- | ------------: |
-| `full` (default) | Run B's question, **byte for byte** (checked on 155 real observations)               | What today's model needs                                     |       4,917 B |
+| `full` (default) | Run B's question, plus one fact about the radio's reach (2026-09-29)                 | What today's model needs                                     |       4,917 B |
 | `lean`           | Facts, not conclusions: what's on screen, how the controls feel, directions in words | **The bet** on the next model                                |         −5.7% |
 | `none`           | Raw numbers only                                                                     | A ceiling probe to show where the frontier is; never shipped |         −9.9% |
 
@@ -647,7 +678,7 @@ AGENT_LIVE_TEST=1 bun run probes -- --provider jev --ablate                  # f
 | Screenshots instead of text    | Text probes ≥ 95% at `none`, so the remaining gap is perception                           |
 | Coordinates, exact dial values | Never. It's a design boundary, not a capability gap                                       |
 
-The live Jev probe matrix **has not been run yet**; the ledger has a row waiting for it. Method, numbers and ledger: [docs/NEXT_MODEL.md](docs/NEXT_MODEL.md).
+**The live probe matrix has now been run** (`jev-1.13.0`, 600 calls). Jev on `full` passes **all ten probes** (after one fact about the radio's reach was added: it had been getting into the car to tune). `hold_still_rule` is still needed: without it Jev fails both hold probes 0/10, so `lean` stays the bet, not the default. `trend_inference`, `spill_advice` and `semantic_bearings` each pass their probes 20/20 without help, which makes them _eligible_ for retirement; because a probe repeats one observation, removal waits for an in-flow experiment to agree. The first one has: without `semantic_bearings`, five paired live coffee runs made exactly the same choices as with it (−0.3 s); the terminal stage is next. Method, numbers and ledger: [docs/NEXT_MODEL.md](docs/NEXT_MODEL.md).
 
 ---
 
@@ -656,26 +687,28 @@ The live Jev probe matrix **has not been run yet**; the ledger has a row waiting
 The claim this project rests on is that **the environment, not the model, determines what happened**. The test suite is where that claim is checked, and it doesn't mock the game. It **plays** it.
 
 ```sh
-bun run test            # 214 tests · 20 suites · 121,320 assertions · ~6 s, headless
-bun run test:agent      # the 9 agent suites (97 tests)
+bun run test            # 257 tests · 22 suites · 121,629 assertions · ~7 s, headless
+bun run test:agent      # the 9 agent suites (99 tests)
+bun run test:experiments  # the 2 experiment suites (40 tests), no network
 bun run typecheck       # TypeScript
 bun run lint            # ESLint
 bun run build           # production build (bun run preview to serve it)
 bun run verify:secrets  # production build with a canary key, scanned for leaks
 ```
 
-| Claim                                                      | Checked by                                                                                                                                                                                                                                                                                                  |
-| :--------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The world behaves like a world                             | **`game-integration`**, **`game-vehicle`**, **`game-world`**, **`game-gates`**: walk to a vehicle, enter, drive, steer, reverse, brake, exit; stop against walls instead of passing through; no tunnelling through fences; booms never lower onto a person                                                  |
-| The task can be completed through ordinary input           | **`after-hours-journey`** plays the whole expansion through the real input path: coffee, a 620 m drive, delivery, 420, four terminals, the concert, reload, fail and retry                                                                                                                                  |
-| An agent can complete it through the same world            | **`agent-journey`** runs the full mission through the real runtime and vehicle physics (≈ 412 s simulated, 93% coffee, 0 collisions); the agent learns 420 from the captions a player heard; taking over mid-drive keeps vehicle, coffee and momentum; a recorded trace replays through the same validation |
-| Only the world completes the task                          | **`agent-authority`**: every coffee pickup, delivery and concert start comes from an E press in `InteractionManager`; the agent core imports nothing from the game; providers get detached copies                                                                                                           |
-| Agents move through physics, not around it                 | **`agent-motor`**: no teleports, bounded steps, stuck recovery that gives up and releases every control, and a static check that no agent module writes positions, velocities or physics. Smooth vs aggressive driving on the same coffee run: **100% vs 11%** coffee, **2 vs 16** abrupt control changes   |
-| The agent sees what a player sees, and no more             | **`agent-contract`**: the frequency is hidden until heard, terminal targets never appear, interactions are offered only where the prompt offers them, observations are strict and bounded                                                                                                                   |
-| The human stays in charge                                  | **`agent-runtime`**: H, movement, look and touch take over in the same frame; late answers become stale; unoffered intents never execute; co-pilot moves only when delegated                                                                                                                                |
-| The decision loop is honest about time and failure         | **`agent-loop`**: one request in flight, epochs, timeouts, deterministic backoff; a provider that throws is a failure, never a decision                                                                                                                                                                     |
-| The model can't be talked into acting outside the contract | **`agent-server`**, **`agent-secret-boundary`**: server-owned questions, game text quoted as data, unoffered or malformed answers rejected, the key never reaches the browser                                                                                                                               |
-| The next-model machinery is sound                          | **`agent-assists`**: the default question is run B's byte for byte; `none` keeps every on-screen fact; zero model calls while the transmission plays                                                                                                                                                        |
+| Claim                                                      | Checked by                                                                                                                                                                                                                                                                                                                                                                                   |
+| :--------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The world behaves like a world                             | **`game-integration`**, **`game-vehicle`**, **`game-world`**, **`game-gates`**: walk to a vehicle, enter, drive, steer, reverse, brake, exit; stop against walls instead of passing through; no tunnelling through fences; booms never lower onto a person                                                                                                                                   |
+| The task can be completed through ordinary input           | **`after-hours-journey`** plays the whole expansion through the real input path: coffee, a 620 m drive, delivery, 420, four terminals, the concert, reload, fail and retry                                                                                                                                                                                                                   |
+| An agent can complete it through the same world            | **`agent-journey`** runs the full mission through the real runtime and vehicle physics (≈ 426 s simulated, 100% coffee, 0 collisions); the agent learns 420 from the captions a player heard; taking over mid-drive keeps vehicle, coffee and momentum; a recorded trace replays through the same validation                                                                                 |
+| Only the world completes the task                          | **`agent-authority`**: every coffee pickup, delivery and concert start comes from an E press in `InteractionManager`; the agent core imports nothing from the game; providers get detached copies                                                                                                                                                                                            |
+| Agents move through physics, not around it                 | **`agent-motor`**: no teleports, bounded steps, stuck recovery that gives up and releases every control, and a static check that no agent module writes positions, velocities or physics. Smooth vs aggressive driving on the same coffee run: **100% vs 11%** coffee, **2 vs 16** abrupt control changes                                                                                    |
+| The agent sees what a player sees, and no more             | **`agent-contract`**: the frequency is hidden until heard, terminal targets never appear, interactions are offered only where the prompt offers them, observations are strict and bounded                                                                                                                                                                                                    |
+| The human stays in charge                                  | **`agent-runtime`**: H, movement, look and touch take over in the same frame; late answers become stale; unoffered intents never execute; co-pilot moves only when delegated                                                                                                                                                                                                                 |
+| The decision loop is honest about time and failure         | **`agent-loop`**: one request in flight, epochs, timeouts, deterministic backoff; a provider that throws is a failure, never a decision                                                                                                                                                                                                                                                      |
+| The model can't be talked into acting outside the contract | **`agent-server`**, **`agent-secret-boundary`**: server-owned questions, game text quoted as data, unoffered or malformed answers rejected, the key never reaches the browser                                                                                                                                                                                                                |
+| The next-model machinery is sound                          | **`agent-assists`**: the default question is the full profile; `none` keeps every on-screen fact; zero model calls while the transmission plays                                                                                                                                                                                                                                              |
+| An experiment measures what it says it does                | **`experiment-definition`**, **`experiment-runs`**: confounded, malformed or unacknowledged-billable definitions are refused; paired seeds; deterministic conditions reproduce exactly; every run links to a hashed trace; a missing or altered trace is excluded, never averaged; live conditions refuse without opt-in; no network call anywhere; agent-only metrics read n/a for a person |
 
 Beyond CI: `node scripts/verify-after-hours.mjs` (with the dev server running) checks the same journey in Chromium against the real media element and Web Audio graph; `scripts/perf-gameplay.ts` and `scripts/perf-browser.mjs` measure CPU cost and draw calls; `AGENT_LIVE_TEST=1 bun scripts/verify-agent-live.ts` is the opt-in, billable live Jev check; and `bun run probes` scores any provider on the capability probes.
 
@@ -687,7 +720,7 @@ Beyond CI: `node scripts/verify-after-hours.mjs` (with the dev server running) c
   <tr>
     <td align="center" width="25%"><h2>&lt;&nbsp;0.05&nbsp;ms</h2><sub>median gameplay update per frame<br />(input, 120 Hz physics, collision, animation, camera, HUD)</sub></td>
     <td align="center" width="25%"><h2>−53%</h2><sub>draw calls on the site overview<br />(1,783 → 846)</sub></td>
-    <td align="center" width="25%"><h2>214</h2><sub>tests across 20 suites<br />121,320 assertions in ~6 s</sub></td>
+    <td align="center" width="25%"><h2>257</h2><sub>tests across 22 suites<br />121,629 assertions in ~7 s</sub></td>
     <td align="center" width="25%"><h2>0</h2><sub>per-frame allocations<br />in gameplay loops</sub></td>
   </tr>
 </table>
@@ -771,6 +804,7 @@ One `InteractionManager` owns every transition (validated by `canTransition`), d
 |                 | `agent/executor.ts`, `navigation.ts`, `driving.ts`, `control.ts`                          | Intent → controls; A\* routes; driving profiles; `ControlArbiter` and `SyntheticInput`              |
 |                 | `agent/trace.ts`, `evaluation.ts`, `providers/`, `probes/`                                | `svs-agent-trace/v1`; shared metrics; Jev, mock, random and replay providers; capability probes     |
 |                 | `server/agent/`                                                                           | Server-side Jev adapter: credential, question, assists, answer validation, rate limits              |
+| Experiments     | `experiments/lib/` (Node-side, never bundled)                                             | Definitions, headless runner, metrics registry, aggregation and verdicts, reports, trace diagnosis  |
 
 </details>
 
@@ -864,7 +898,8 @@ A 35-second motion piece arguing that modern web graphics plus public OSINT can 
 **Scope**
 
 - **One environment, one task.** Pine Gap and After Hours. The runtime is designed to take others, but none exists yet, and there is no environment-authoring tool.
-- **One complete live run.** Run B is an existence proof, not a success rate. The live Jev probe matrix hasn't been run, and no human reference run is committed.
+- **One complete live run.** Run B is an existence proof, not a success rate. The live probe matrix and a small live coffee-run experiment have been run; no human reference run is committed.
+- **Probes repeat one situation.** Twenty answers to one captured observation measure consistency, not generality, so probe results make an assist eligible for retirement, never retire it alone.
 
 **Measurement**
 
@@ -912,8 +947,9 @@ Nothing consumes that boundary automatically today; export a trace and it is you
 ├── docs/                   # Agent runtime, next-model method, Jev run + trace, spatial reference, provenance, terrain
 │   └── traces/             # The committed live Jev trace (svs-agent-trace/v1)
 ├── evals/                  # Capability probes (captured observations) and probe results
+├── experiments/            # Hypotheses: definitions, results (one trace per run), backlog, archive; lib/ runs them
 ├── public/music/           # Indigo People, Green Machine (streamed; not under the software licence)
-├── scripts/                # Browser checks, perf, live agent check, probe capture + runner, thesis recorder, builders
+├── scripts/                # Browser checks, perf, live agent check, probes, experiment / compare / trace CLIs, builders
 ├── src/
 │   ├── game/               # Gameplay: world, player, vehicles, camera, interaction, audio, HUD, After Hours
 │   ├── agent/              # Agent runtime: contracts, providers, loop, executor, traces, evaluation, probes

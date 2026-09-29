@@ -150,22 +150,22 @@ The task adapter does not import the station table or the terminal definitions, 
 
 ## 5. Action contract — `svs-agent-action/v1`
 
-| Intent                                                                             | Arguments                                               | Executed as                                                                               |
-| :--------------------------------------------------------------------------------- | :------------------------------------------------------ | :---------------------------------------------------------------------------------------- |
-| `wait`                                                                             | —                                                       | Hold still ~1.5 s (brake gently if driving); ends early when something observable changes |
-| `request_human`                                                                    | —                                                       | Hand control back to the person                                                           |
-| `navigate_to`                                                                      | `target`                                                | Walk a planned route to a known target and stop within reach                              |
-| `drive_to`                                                                         | `target`                                                | Drive a planned route, park near the target                                               |
-| `stop_vehicle`                                                                     | —                                                       | Brake to a standstill                                                                     |
-| `enter_vehicle`                                                                    | `target`                                                | Press E at that vehicle's door (only offered when the prompt is for it)                   |
-| `exit_vehicle`                                                                     | —                                                       | Press E while driving (the game brakes and steps out)                                     |
-| `interact`                                                                         | `target`                                                | Press E (only offered when the on-screen prompt is for that target)                       |
-| `start_concert`                                                                    | —                                                       | Press E at the listening point                                                            |
-| `radio_power` · `radio_next_station` · `radio_next_track` · `radio_previous_track` | —                                                       | The radio keys                                                                            |
-| `tune_receiver`                                                                    | `direction: up \| down`, `amount: tap \| short \| long` | Tap or hold `[` / `]` (0.8 s or 2.5 s)                                                    |
-| `tune_terminal`                                                                    | `direction`, `amount`                                   | Tap or hold A / D on the terminal dial (0.35 s or 0.9 s)                                  |
-| `leave_terminal`                                                                   | —                                                       | X                                                                                         |
-| `retry`                                                                            | —                                                       | Y after a failed delivery                                                                 |
+| Intent                                                                             | Arguments                                               | Executed as                                                                                                 |
+| :--------------------------------------------------------------------------------- | :------------------------------------------------------ | :---------------------------------------------------------------------------------------------------------- |
+| `wait`                                                                             | —                                                       | Hold still ~1.5 s (brake gently if driving); ends early when something observable changes                   |
+| `request_human`                                                                    | —                                                       | Hand control back to the person                                                                             |
+| `navigate_to`                                                                      | `target`                                                | Walk a planned route to a known target and stop within reach                                                |
+| `drive_to`                                                                         | `target`                                                | Drive a planned route, park near the target                                                                 |
+| `stop_vehicle`                                                                     | —                                                       | Brake to a standstill                                                                                       |
+| `enter_vehicle`                                                                    | `target`                                                | Press E at that vehicle's door (only offered when the prompt is for it)                                     |
+| `exit_vehicle`                                                                     | —                                                       | Press E while driving (the game brakes and steps out); with the coffee aboard, brake gently to a stop first |
+| `interact`                                                                         | `target`                                                | Press E (only offered when the on-screen prompt is for that target)                                         |
+| `start_concert`                                                                    | —                                                       | Press E at the listening point                                                                              |
+| `radio_power` · `radio_next_station` · `radio_next_track` · `radio_previous_track` | —                                                       | The radio keys                                                                                              |
+| `tune_receiver`                                                                    | `direction: up \| down`, `amount: tap \| short \| long` | Tap or hold `[` / `]` (0.8 s or 2.5 s)                                                                      |
+| `tune_terminal`                                                                    | `direction`, `amount`                                   | Tap or hold A / D on the terminal dial (0.35 s or 0.9 s)                                                    |
+| `leave_terminal`                                                                   | —                                                       | X                                                                                                           |
+| `retry`                                                                            | —                                                       | Y after a failed delivery                                                                                   |
 
 Least privilege: tuning is a tap or a hold of the same keys a player uses — there is no way to name a frequency or a dial value. Navigation takes a target id from the observation's list — never coordinates. Every intent passes the schema, then must equal one of the observation's `legal` intents, then must still be legal in the **current** world when it is applied (otherwise it is recorded as stale). Validation happens on the server (for Jev), in the provider client, and in the runtime.
 
@@ -271,6 +271,8 @@ Provider-neutral; the same format for Jev, the baseline, random, replay and huma
   } ],
   "events": [ { "t": …, "type": "coffee_collected", "source": "agent" }, … ],
   "observations": { "9f2c…": { /* the last 40 distinct observations, by hash */ } },
+  "pathFormat": ["t", "x", "z", "locomotion", "source"],
+  "path": [[1000, -52.3, 118.4, "on_foot", "agent"], …],   // one route sample a second, for people too
   "dropped": { "decisions": 0, "events": 0 },
   "evaluation": { … }
 }
@@ -292,16 +294,16 @@ interface EvaluationResult {
 }
 ```
 
-Generic: task completion, elapsed time, distance travelled / walked / driven, collisions (vehicle impacts > 1.2 m/s), stuck recoveries, human interventions, agent decisions, mean / median / p95 decision latency, provider failures, stale and invalid responses, interactions with no effect, hard braking and hard acceleration events, and seconds under each control source.
+Generic: task completion, elapsed time, distance travelled / walked / driven, collisions (vehicle impacts > 1.2 m/s), provider requests, stuck recoveries, human interventions, agent decisions, mean / median / p95 decision latency, provider failures, stale and invalid responses, interactions with no effect, hard braking and hard acceleration events, and seconds under each control source.
 
-After Hours adds: coffee delivered, coffee remaining, mission time, collections and failures, radio commands, receiver and terminal tuning inputs (counted from the input gameplay actually read — the same for people and agents), frequency found, terminals completed, concert reached and completed. The `last_coffee` window records, for the latest run, time, coffee remaining, distance, collisions, hard braking/acceleration, interventions and which source was in control.
+After Hours adds: coffee delivered, coffee remaining, mission time, collections and failures, radio commands, receiver and terminal tuning inputs (counted from the input gameplay actually read — the same for people and agents), terminal overshoots (the panel read ALIGNED, then stopped reading it without locking; each is also a `terminal_alignment_lost` event), time at terminal panels, frequency found, terminals completed, concert reached and completed. The `last_coffee` window records, for the latest run, time, coffee remaining, distance, collisions, hard braking/acceleration, interventions and which source was in control.
 
 Human, Jev, random, baseline and replay runs are measured by the same code under the same world rules. There is no score and no winner: the numbers are there to be compared.
 
 ## 12. Security
 
 - `TYPESAFE_API_KEY` and `TYPESAFE_MODEL` are **server** environment variables, read only by `src/server/agent/jev.server.ts`. Never use a `VITE_` prefix.
-- `JEV_ASSISTS` (server, not secret) sets how much the question coaches: `full` (default; run B's question, byte for byte), `lean` (facts, not conclusions) or `none`. The status `GET` reports the profile in force. See [NEXT_MODEL.md](NEXT_MODEL.md).
+- `JEV_ASSISTS` (server, not secret) sets how much the question coaches: `full` (default; run B's question plus one fact about the radio's reach), `lean` (facts, not conclusions) or `none`. The status `GET` reports the profile in force. See [NEXT_MODEL.md](NEXT_MODEL.md).
 - The browser sends `{ session, observation }` only; unknown fields are refused. The server builds every word of the TypeSafe question; displayed game text is quoted as data and the context says it is not an instruction. The endpoint cannot be used as a prompt proxy: its only output is one of the offered intents.
 - Requests: same-origin only, JSON only, ≤ 16.9 KiB, strict schema, `controller.provider === "jev"`.
 - Answers: an offered option only, confidence and probabilities in [0, 1], probabilities over offered options summing to 1 within rounding, the choice the most probable; otherwise 502 — never a decision.

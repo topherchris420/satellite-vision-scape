@@ -73,6 +73,8 @@ export const EXECUTION = {
   footTimeout: 240,
   driveTimeout: 300,
   stopTimeout: 15,
+  /** Carrying something fragile, get out only below this speed (m/s). */
+  carefulExitSpeed: 0.5,
   /** Tuning holds, per device (seconds). */
   holds: {
     tune_receiver: { short: 0.8, long: 2.5 },
@@ -143,6 +145,8 @@ export class IntentExecutor {
   private startRevision = 0;
   private pressed = false;
   private braking = false;
+  /** When the press of the current press-type intent went out. */
+  private pressedAt = 0;
   private readonly foot: FootCommand = { moveX: 0, moveY: 0, turn: 0, sprint: false };
   private readonly next: DriveCommand = neutralDrive();
   private readonly driveInput: DriveInput = {
@@ -201,6 +205,7 @@ export class IntentExecutor {
     this.turning = 0;
     this.pressed = false;
     this.braking = false;
+    this.pressedAt = 0;
     this.profile = null;
     this.drive.steer = 0;
     this.drive.pedal = 0;
@@ -245,12 +250,29 @@ export class IntentExecutor {
         else if (s.locomotion === "on_foot" && this.elapsed > 0.6) this.finish("no_effect");
         else if (this.elapsed > EXECUTION.enterTimeout) this.finish("timed_out");
         return;
-      case "exit_vehicle":
+      case "exit_vehicle": {
+        // With fragile cargo aboard, come to a gentle standstill before
+        // pressing E: pressed at speed, the game brakes hard to let the
+        // driver out, and that stop spills the coffee (travel-review-interval:
+        // 7 points in 10 of 10 paired runs, whenever the choice to get out
+        // arrived while the vehicle was still rolling).
+        if (!this.pressed && s.locomotion === "driving" && s.careful) {
+          if (
+            Math.abs(s.speed) > EXECUTION.carefulExitSpeed &&
+            this.elapsed < EXECUTION.stopTimeout
+          ) {
+            this.hold(s);
+            return;
+          }
+        }
+        if (!this.pressed) this.pressedAt = this.elapsed;
         this.pressOnce("interact");
+        const since = this.elapsed - this.pressedAt;
         if (s.locomotion === "on_foot") this.finish("input_sent");
-        else if (s.locomotion === "driving" && this.elapsed > 0.6) this.finish("no_effect");
-        else if (this.elapsed > EXECUTION.exitTimeout) this.finish("timed_out");
+        else if (s.locomotion === "driving" && since > 0.6) this.finish("no_effect");
+        else if (since > EXECUTION.exitTimeout) this.finish("timed_out");
         return;
+      }
       case "tune_receiver":
       case "tune_terminal":
         this.tune(intent.intent, intent.direction, intent.amount, s);

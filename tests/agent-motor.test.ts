@@ -10,11 +10,13 @@ import {
 } from "../src/agent/driving";
 import { IntentExecutor, type MotorState, type MotorWorld } from "../src/agent/executor";
 import { findRoute, type Point } from "../src/agent/navigation";
+import { GameplayState } from "../src/game/core/GameState";
 import { InputState } from "../src/game/core/Input";
 import { COFFEE_CART, DELIVERY } from "../src/game/afterhours/sites";
 import type { AgentIntent } from "../src/agent/contract";
 import type { WorldObservation } from "../src/agent/observation";
 import type { AfterHoursState } from "../src/agent/tasks/afterHoursSchema";
+import { createAfterHoursBaseline } from "../src/agent/tasks/afterHoursBaseline";
 import { FRAME, afterHoursGame, run, scripted } from "./agent-helpers";
 
 /** Wall from x = 8…14, |z| < 7: a detour is needed from (0,0) to (24,0). */
@@ -60,6 +62,32 @@ describe("route planning", () => {
     });
     expect(near.length).toBeGreaterThan(0);
     expect(Math.hypot(near.at(-1)!.x - 50, near.at(-1)!.z)).toBeLessThanOrEqual(9);
+  });
+
+  test("a start pressed against an obstacle steps out instead of failing every plan", () => {
+    // A parked vehicle's corner within the clearance margin of where the body
+    // stands (decision-latency, run-b-x10: 211 route_blocked in a row). The
+    // box spans x 0.2…4, |z| < 1; the body stands at the origin with 0.45 m
+    // clearance, so the start itself reads as blocked.
+    const car = (a: Point, b: Point) => {
+      for (let i = 0; i <= 40; i++) {
+        const x = a.x + ((b.x - a.x) * i) / 40;
+        const z = a.z + ((b.z - a.z) * i) / 40;
+        if (x > 0.2 - 0.45 && x < 4.45 && Math.abs(z) < 1.45) return false;
+      }
+      return true;
+    };
+    const goal = { x: 30, z: 0 };
+    const route = findRoute({ x: 0, z: 0 }, goal, car, { radius: 0.45, cell: 3 });
+    expect(route.length).toBeGreaterThan(1);
+    expect(route.at(-1)).toEqual(goal);
+    // The first step leaves the obstacle's margin; every later leg is clear.
+    expect(car(route[0], route[0])).toBe(true);
+    expect(Math.hypot(route[0].x, route[0].z)).toBeLessThanOrEqual(2.5);
+    for (let i = 1; i < route.length; i++) expect(car(route[i - 1], route[i])).toBe(true);
+    // Truly boxed in: still no route, never a teleport.
+    const boxed = (a: Point, b: Point) => Math.hypot(a.x, a.z) > 5 && Math.hypot(b.x, b.z) > 5;
+    expect(findRoute({ x: 0, z: 0 }, goal, boxed, { radius: 0.45, cell: 3 })).toEqual([]);
   });
 });
 
@@ -268,6 +296,43 @@ describe("driving, in the real world", () => {
       }),
     );
   }, 60_000);
+
+  test("with the coffee aboard, getting out mid-drive stops gently first and spills nothing", async () => {
+    // The situation travel-review-interval found: a route review arrives while
+    // the vehicle is still rolling and the agent chooses to get out. Pressed
+    // at speed, the game brakes hard to let the driver out.
+    const g = afterHoursGame();
+    const baseline = createAfterHoursBaseline();
+    let exitAsked = false;
+    g.agent.runtime.start(
+      "agent",
+      scripted((o) => {
+        const st = (o as WorldObservation<AfterHoursState>).task.state;
+        if (
+          st.coffee.carrying &&
+          o.actor.locomotion === "driving" &&
+          (o.vehicle?.speedMps ?? 0) > 5
+        ) {
+          exitAsked = true;
+          return { intent: "exit_vehicle" };
+        }
+        return baseline(o);
+      }),
+    );
+    let speedAtExit: number | null = null;
+    await run(g, 120, () => {
+      const v = g.interaction.driven;
+      if (exitAsked && speedAtExit === null && g.interaction.state === GameplayState.ExitingVehicle)
+        speedAtExit = Math.abs(g.interaction.vehicle?.physics.forwardSpeed ?? 0);
+      return speedAtExit !== null && v === null && g.interaction.state === GameplayState.OnFoot;
+    });
+    expect(exitAsked).toBe(true);
+    expect(speedAtExit).not.toBeNull();
+    expect(speedAtExit!).toBeLessThan(0.6);
+    expect(g.afterHours.mission.state).toBe("active");
+    expect(g.afterHours.mission.spill.integrity).toBeGreaterThan(99);
+    g.dispose();
+  }, 30_000);
 });
 
 describe("driving control (pure)", () => {

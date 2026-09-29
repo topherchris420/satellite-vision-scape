@@ -20,6 +20,25 @@ const MAX_DECISIONS = 4000;
 const MAX_EVENTS = 6000;
 /** Full observations kept (most recent), keyed by hash. */
 const MAX_OBSERVATIONS = 40;
+/** Route samples kept: one a second is an hour of play. */
+const MAX_PATH = 3600;
+/** Simulation milliseconds between route samples. */
+export const PATH_INTERVAL_MS = 1000;
+
+/**
+ * One route sample: where the actor was, how it moved and who was in
+ * control. Recorded for every source alike, so a person's route and an
+ * agent's route can be compared. Additive to `svs-agent-trace/v1`: traces
+ * exported before it simply have no `path`.
+ */
+export type PathSample = [
+  t: number,
+  x: number,
+  z: number,
+  locomotion: string,
+  source: ControlSource,
+];
+export const PATH_FORMAT = ["t", "x", "z", "locomotion", "source"] as const;
 
 export type Scalar = number | string | boolean | null;
 export type Summary = Record<string, Scalar>;
@@ -79,7 +98,9 @@ export class TraceRecorder {
   readonly decisions: DecisionRecord[] = [];
   readonly events: TraceEvent[] = [];
   readonly segments: { t: number; mode: string; provider: string; label: string }[] = [];
-  readonly dropped = { decisions: 0, events: 0 };
+  readonly dropped = { decisions: 0, events: 0, path: 0 };
+  readonly path: PathSample[] = [];
+  private nextPathAt = 0;
   private readonly observations = new Map<string, WorldObservation>();
 
   constructor(options: { environment: string; task: string; session: string; build: string }) {
@@ -129,6 +150,17 @@ export class TraceRecorder {
     this.events.push(data ? { t, type, source, data } : { t, type, source });
   }
 
+  /** A route sample at most every `PATH_INTERVAL_MS` of simulation time. */
+  pathSample(t: number, x: number, z: number, locomotion: string, source: ControlSource): void {
+    if (t < this.nextPathAt) return;
+    this.nextPathAt = t + PATH_INTERVAL_MS;
+    if (this.path.length >= MAX_PATH) {
+      this.dropped.path++;
+      return;
+    }
+    this.path.push([Math.round(t), round1(x), round1(z), locomotion, source]);
+  }
+
   count(type: string): number {
     let n = 0;
     for (const e of this.events) if (e.type === type) n++;
@@ -145,6 +177,8 @@ export class TraceRecorder {
         decisions: this.decisions,
         events: this.events,
         observations: Object.fromEntries(this.observations),
+        pathFormat: PATH_FORMAT,
+        path: this.path,
         dropped: this.dropped,
         evaluation,
       },
@@ -152,6 +186,10 @@ export class TraceRecorder {
       1,
     );
   }
+}
+
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
 }
 
 export function alternativesOf(

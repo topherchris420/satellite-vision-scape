@@ -1,0 +1,1006 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "decision-latency",
+ "title": "Does decision latency change what happens in the world?",
+ "status": "complete",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "decision-latency",
+  "title": "Does decision latency change what happens in the world?",
+  "question": "Jev answered in 289 ms (median) in run B. Would a slower model do worse at After Hours, or merely take longer?",
+  "hypothesis": "At run B's latency the world is insensitive to decision speed. At four times run B's latency the whole journey takes measurably longer (at least 10 s), but completion and the coffee are unchanged, because the executor, not the decision loop, does the time-critical control.",
+  "motivation": {
+   "observation": "NEXT_MODEL.md argues speed is not today's constraint (p95 397 ms against a 6 s timeout). That was an argument from one run, not a measurement: nothing has ever varied latency and watched the world.",
+   "evidence": [
+    "docs/NEXT_MODEL.md §3: latency median / p95 289 / 397 ms"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "task_complete",
+   "maxSimSeconds": 900,
+   "maxCallsPerRun": 400
+  },
+  "independentVariable": "latency",
+  "controlled": {
+   "provider": "baseline"
+  },
+  "conditions": [
+   {
+    "id": "instant",
+    "label": "Instant (a scripted policy's own speed)",
+    "set": {
+     "latency": "instant"
+    }
+   },
+   {
+    "id": "run-b",
+    "label": "Run B's recorded latencies",
+    "set": {
+     "latency": "run-b"
+    }
+   },
+   {
+    "id": "run-b-x4",
+    "label": "Four times slower",
+    "set": {
+     "latency": "run-b-x4"
+    }
+   },
+   {
+    "id": "run-b-x10",
+    "label": "Ten times slower",
+    "set": {
+     "latency": "run-b-x10"
+    }
+   }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "coffeeRemainingPercent",
+   "coffeeMissionSeconds",
+   "collisions",
+   "terminalTuningInputs",
+   "terminalOvershoots",
+   "receiverTuningInputs",
+   "providerRequests",
+   "staleResponses",
+   "medianDecisionLatencyMs",
+   "p95DecisionLatencyMs"
+  ],
+  "predictions": [
+   {
+    "metric": "goalSeconds",
+    "from": "instant",
+    "to": "run-b",
+    "direction": "no_change",
+    "minEffect": 10
+   },
+   {
+    "metric": "goalSeconds",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   {
+    "metric": "completed",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   {
+    "metric": "coffeeRemainingPercent",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "no_change",
+    "minEffect": 2
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "run-b finishes within 10 s of instant, run-b-x4 takes at least 10 s longer, and neither loses completion or coffee"
+  ],
+  "falsificationCriteria": [
+   "run-b already costs more than 10 s (latency matters at today's speed)",
+   "run-b-x4 loses completion or more than 2 points of coffee (latency changes outcomes, not just time)",
+   "run-b-x4 is no slower (the decision loop is not on the critical path at all)"
+  ],
+  "limitations": [
+   "The scripted baseline never needs to rethink, so this measures what latency costs a decider that is always right; a model that corrects itself pays latency once per correction.",
+   "Simulated latency is resampled from one live run and scaled; real tail latency may be heavier."
+  ],
+  "live": false
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/decision-latency.json",
+   "sha256": "c77186a53c6ef9977278c475e9c4cb5a89adf9450a0997dbb5dd70d5d2bfaec6"
+  },
+  "git": {
+   "commit": "c50b0a8e2f83036032880947c436629e753db304",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:29:11.008Z",
+  "finishedAt": "2026-09-29T04:29:37.647Z",
+  "command": "bun run experiment decision-latency"
+ },
+ "conditions": [
+  {
+   "id": "instant",
+   "label": "Instant (a scripted policy's own speed)",
+   "config": {
+    "provider": "baseline",
+    "latency": "instant"
+   },
+   "stochastic": false,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "run-b",
+   "label": "Run B's recorded latencies",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "run-b-x4",
+   "label": "Four times slower",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b-x4"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "run-b-x10",
+   "label": "Ten times slower",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b-x10"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  }
+ ],
+ "runs": [
+  {
+   "runId": "instant-01",
+   "condition": "instant",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 931,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-01.trace.json.gz",
+    "sha256": "75dd8a5ee618f0ba6ed145ca1d660fbf0872ebfb6be5dbd8eeeb63be93a93322",
+    "bytes": 328388,
+    "session": "3ba27e1a9b84aae0f00c6cc501e59835"
+   }
+  },
+  {
+   "runId": "run-b-01",
+   "condition": "run-b",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 431.4,
+   "wallMs": 660,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-01.trace.json.gz",
+    "sha256": "ee2dcb1123070e7febf8ab05cba1664f840777130f63cde45477f5c305e16531",
+    "bytes": 319155,
+    "session": "b7b77c72cc0ce41a43b2bd93545c76b6"
+   }
+  },
+  {
+   "runId": "run-b-x4-01",
+   "condition": "run-b-x4",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 497.6,
+   "wallMs": 650,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-01.trace.json.gz",
+    "sha256": "b7f9a6333b60082ca94fc0fe7c2d3dab54b8e6a68f0eb4178a5dbb0839295559",
+    "bytes": 307436,
+    "session": "46c57867bfd833a40ba7238c0e347f98"
+   }
+  },
+  {
+   "runId": "run-b-x10-01",
+   "condition": "run-b-x10",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 613.6,
+   "wallMs": 686,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-01.trace.json.gz",
+    "sha256": "679b3786c47c5658dd3ce0debd842bbee71fcd9cf0b8b05131e45e1047e7627d",
+    "bytes": 291170,
+    "session": "07d1cd9e669dd6e3de012803d8ce1e14"
+   }
+  },
+  {
+   "runId": "instant-02",
+   "condition": "instant",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 555,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-02.trace.json.gz",
+    "sha256": "3333e0cddefd87f08cd6049776d9e4121d32e6fe103e13e02195dbde7160e316",
+    "bytes": 328388,
+    "session": "050b93a625c2fc9b195253ca3f44e25c"
+   }
+  },
+  {
+   "runId": "run-b-02",
+   "condition": "run-b",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 431.6,
+   "wallMs": 572,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-02.trace.json.gz",
+    "sha256": "6f113f0723155c9c8b676b2b38a75b7d6dc5557711722b3f639c0077ddad3bfb",
+    "bytes": 319034,
+    "session": "358f26aded3fd8f2dfac9d3a97e52053"
+   }
+  },
+  {
+   "runId": "run-b-x4-02",
+   "condition": "run-b-x4",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 495.3,
+   "wallMs": 621,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-02.trace.json.gz",
+    "sha256": "66c1f15f673958cdf8cb462a2bbf6d7aa948f52fae672e811571677df8842966",
+    "bytes": 307383,
+    "session": "967d2b833e94f6313c825fc4caa74832"
+   }
+  },
+  {
+   "runId": "run-b-x10-02",
+   "condition": "run-b-x10",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 611,
+   "wallMs": 679,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-02.trace.json.gz",
+    "sha256": "d8cbeb8d21ed2b3c6cb77aec511bc90a5e190342a8cf4d77d9e383f79e8bc90a",
+    "bytes": 290085,
+    "session": "2202096bfc9845352f68acdbc915a423"
+   }
+  },
+  {
+   "runId": "instant-03",
+   "condition": "instant",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 561,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-03.trace.json.gz",
+    "sha256": "368dbb01b2df3184b2bb55560c32bef982d7bb4fbcba9ad8d54ed92164d4256e",
+    "bytes": 328388,
+    "session": "c5355c0feddeb97eabc7e33fbc08e493"
+   }
+  },
+  {
+   "runId": "run-b-03",
+   "condition": "run-b",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 429.8,
+   "wallMs": 582,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-03.trace.json.gz",
+    "sha256": "c91bac40bc1744d26d399f022a886a28bb1ec466b3adb345530064edbbf2a2a4",
+    "bytes": 319075,
+    "session": "8141c7968a0b24c95d75f0086483ff6a"
+   }
+  },
+  {
+   "runId": "run-b-x4-03",
+   "condition": "run-b-x4",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 500.6,
+   "wallMs": 615,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-03.trace.json.gz",
+    "sha256": "a8128a83ac95c7c5f26fa433c4ab76660dd4e31c8b1758fa9f09ceaea5cb924a",
+    "bytes": 310644,
+    "session": "e9b570853043833d2b89bfff3eb7e500"
+   }
+  },
+  {
+   "runId": "run-b-x10-03",
+   "condition": "run-b-x10",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 602.3,
+   "wallMs": 738,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-03.trace.json.gz",
+    "sha256": "f25cb51d2abca6636de5789071c5c32af6ea330a878087d74891c3b9040d0e7a",
+    "bytes": 288790,
+    "session": "70abd49abe396787c2d79eda3ae52960"
+   }
+  },
+  {
+   "runId": "instant-04",
+   "condition": "instant",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 591,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-04.trace.json.gz",
+    "sha256": "e2a6b2129642891777647aac88c5c1080f2d12ecef11aba3b19ef46008518535",
+    "bytes": 328388,
+    "session": "ce3a04f313f04e16b460560a865d8a1f"
+   }
+  },
+  {
+   "runId": "run-b-04",
+   "condition": "run-b",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 444.4,
+   "wallMs": 601,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-04.trace.json.gz",
+    "sha256": "e8ca58e69b4b6ee35d998ad42ce0d7d18f5aa99d47243610b7e87dfd5a485808",
+    "bytes": 326527,
+    "session": "4158576e762650c4c604f4176b7dfa48"
+   }
+  },
+  {
+   "runId": "run-b-x4-04",
+   "condition": "run-b-x4",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 502.5,
+   "wallMs": 631,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-04.trace.json.gz",
+    "sha256": "41a61401b0ee1ecb8f16d0b3eafd410a392fdc3a92b1a743773a504070bc3720",
+    "bytes": 309713,
+    "session": "10351bdcca26ff480aedd7713ed3357d"
+   }
+  },
+  {
+   "runId": "run-b-x10-04",
+   "condition": "run-b-x10",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 607,
+   "wallMs": 689,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-04.trace.json.gz",
+    "sha256": "3dde594690bf3ee965ddb8a290890714709d4b8a3e3a9e92a53147d14a745796",
+    "bytes": 288814,
+    "session": "dd69e29ba9e303759093c25c71208624"
+   }
+  },
+  {
+   "runId": "instant-05",
+   "condition": "instant",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 535,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-05.trace.json.gz",
+    "sha256": "79e7054649a74697ead81c4295dad9a154032fa330b6946a962f5bbe9865b57a",
+    "bytes": 328388,
+    "session": "63e282901d41fb3424c5e116337b7c77"
+   }
+  },
+  {
+   "runId": "run-b-05",
+   "condition": "run-b",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446,
+   "wallMs": 633,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-05.trace.json.gz",
+    "sha256": "44735e681d98d55a5eca12629ed13f2a6fbc3feca993d80b470b56f18eb71bd3",
+    "bytes": 324844,
+    "session": "cdaa2279e2887e270a1d1e9c8f7d747b"
+   }
+  },
+  {
+   "runId": "run-b-x4-05",
+   "condition": "run-b-x4",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 502.6,
+   "wallMs": 625,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-05.trace.json.gz",
+    "sha256": "175bd2cafb66cb59b2150bf68e8f1e531170cd3f598f3ac007112d48f52df212",
+    "bytes": 307923,
+    "session": "97298aa2a9a3a83e900819f936ddfa82"
+   }
+  },
+  {
+   "runId": "run-b-x10-05",
+   "condition": "run-b-x10",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 900,
+   "wallMs": 965,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-05.trace.json.gz",
+    "sha256": "0ed0e1de965acfa4e1e3f9c9769a4e9e2a99412f608ebd7393f002b6b52c0d8f",
+    "bytes": 535929,
+    "session": "a6e4e143896acb71822cf830df0fa0ee"
+   }
+  },
+  {
+   "runId": "instant-06",
+   "condition": "instant",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 536,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-06.trace.json.gz",
+    "sha256": "b1bcb331e5719f7573a3238333e75ebfea551c54320ce87829cbab09d315c360",
+    "bytes": 328388,
+    "session": "a9ed9b080b0c00d0edf24acd8f7b3b28"
+   }
+  },
+  {
+   "runId": "run-b-06",
+   "condition": "run-b",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.4,
+   "wallMs": 556,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-06.trace.json.gz",
+    "sha256": "39e7e82f7f951635022d8f18f7a42eadbe80272c0e4cedc5bb1378d24ee5a2bd",
+    "bytes": 326381,
+    "session": "43909c2e7caafdd1aac11034dcf04fa5"
+   }
+  },
+  {
+   "runId": "run-b-x4-06",
+   "condition": "run-b-x4",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 499,
+   "wallMs": 574,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-06.trace.json.gz",
+    "sha256": "d552d26262789ef262198e845e310dc0249a47bec87947f4b69f6fdef7d4ffdb",
+    "bytes": 309212,
+    "session": "ca372e75cfea9bc753e722f0975fd712"
+   }
+  },
+  {
+   "runId": "run-b-x10-06",
+   "condition": "run-b-x10",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 611.3,
+   "wallMs": 646,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-06.trace.json.gz",
+    "sha256": "3ea747f4036d070f748549da64b99ee945595a7fb71f2b5ad9ebc9799b730c1b",
+    "bytes": 291028,
+    "session": "1a3d2da22415741e61fc0896a5cfb8c7"
+   }
+  },
+  {
+   "runId": "instant-07",
+   "condition": "instant",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 538,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-07.trace.json.gz",
+    "sha256": "037e891baf325b7cb0f449e8571856951d9f63e26475c1907204c9eb563bac64",
+    "bytes": 328388,
+    "session": "da55b7e931dd3c6d1829e7e35e8784d4"
+   }
+  },
+  {
+   "runId": "run-b-07",
+   "condition": "run-b",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 429.9,
+   "wallMs": 560,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-07.trace.json.gz",
+    "sha256": "3ad9d5a4c7b0826c171d991be78dd11400fa3a5cf95cbc568b38edf5c3aa1667",
+    "bytes": 316750,
+    "session": "2773f42b88f44a5aa119831ee03778af"
+   }
+  },
+  {
+   "runId": "run-b-x4-07",
+   "condition": "run-b-x4",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 506.4,
+   "wallMs": 632,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-07.trace.json.gz",
+    "sha256": "b3d933a0bb91538cd144a1340283523d8b6dfebb7147b73c2751d76bf412c7cb",
+    "bytes": 310819,
+    "session": "3a5a2c799ba31771f087e19a04bc56e2"
+   }
+  },
+  {
+   "runId": "run-b-x10-07",
+   "condition": "run-b-x10",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 900,
+   "wallMs": 962,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-07.trace.json.gz",
+    "sha256": "f4e487211553741264ac64eaef5420f07694b3286b570b3912cc1562a3e4c93b",
+    "bytes": 542759,
+    "session": "8bae9e8924b0d5240df2863a01405898"
+   }
+  },
+  {
+   "runId": "instant-08",
+   "condition": "instant",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 532,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-08.trace.json.gz",
+    "sha256": "53e02f0e2c927031fc3cbfda0350e0d1f318869a4259ae3b5dced6aaa94470d2",
+    "bytes": 328388,
+    "session": "3edae41e0fda342532c0202b7820c300"
+   }
+  },
+  {
+   "runId": "run-b-08",
+   "condition": "run-b",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446.1,
+   "wallMs": 605,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-08.trace.json.gz",
+    "sha256": "c25a330ed5d0f937cfa1f598990245b99aa219ca0c76043f11ecc50e0d7159d8",
+    "bytes": 327470,
+    "session": "5dd11ed406191e738ad114340f012dc5"
+   }
+  },
+  {
+   "runId": "run-b-x4-08",
+   "condition": "run-b-x4",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 498.2,
+   "wallMs": 586,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-08.trace.json.gz",
+    "sha256": "9b3ddc391cfd7f9f8f985fd2fdb45401a77193a3b773b9975e54080a8aa3d500",
+    "bytes": 308505,
+    "session": "cb139618faf69cdc9a671351a824e747"
+   }
+  },
+  {
+   "runId": "run-b-x10-08",
+   "condition": "run-b-x10",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 900,
+   "wallMs": 990,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-08.trace.json.gz",
+    "sha256": "e971d3491b236ef8ccfa260bfdc88c8c7418627158ada5ce587cb15936be6924",
+    "bytes": 540812,
+    "session": "8b82735015c020385c640e08631aaf15"
+   }
+  },
+  {
+   "runId": "instant-09",
+   "condition": "instant",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 529,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-09.trace.json.gz",
+    "sha256": "93de3f5fbef1b2311d2b0e4ab00208ffe3ab6d2c7b41d5f98b28365ba5ef2a4d",
+    "bytes": 328388,
+    "session": "d564dd0eaec8474e90021aa45852d854"
+   }
+  },
+  {
+   "runId": "run-b-09",
+   "condition": "run-b",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.3,
+   "wallMs": 586,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-09.trace.json.gz",
+    "sha256": "84c4c79a5e80211c4b76d317e55147fe7cf4d1b2a9bf257069c5d6c22bf5cb7b",
+    "bytes": 325826,
+    "session": "e12438b1fa68f7cdb104e890a3abaa10"
+   }
+  },
+  {
+   "runId": "run-b-x4-09",
+   "condition": "run-b-x4",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 501.4,
+   "wallMs": 597,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-09.trace.json.gz",
+    "sha256": "5adb7ae4a79f3d0c734ff1f54ec42a43cfb116492261fea61c92007aefbf8cbf",
+    "bytes": 306829,
+    "session": "5105e1e01690f1fe0035cbb0dc66fc77"
+   }
+  },
+  {
+   "runId": "run-b-x10-09",
+   "condition": "run-b-x10",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 900,
+   "wallMs": 989,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-09.trace.json.gz",
+    "sha256": "e9c238b64e626669c75fc9c352b89d908439fde546449dba75dcb81a13165d60",
+    "bytes": 537514,
+    "session": "1b1b472a8189dd69accefca07dca4567"
+   }
+  },
+  {
+   "runId": "instant-10",
+   "condition": "instant",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 411.9,
+   "wallMs": 529,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/instant-10.trace.json.gz",
+    "sha256": "a8207575d4b3ca7f2397f2a200b9d06e46462f4c5041f4b7313ede762d9cd306",
+    "bytes": 328388,
+    "session": "d178f56cdbb42a9e06f3eec29091c705"
+   }
+  },
+  {
+   "runId": "run-b-10",
+   "condition": "run-b",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 443.9,
+   "wallMs": 544,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-10.trace.json.gz",
+    "sha256": "49594bf228f500ab4b596ec646a7634a66728d9ffb59e9ad4d3ce447ab128971",
+    "bytes": 325979,
+    "session": "fa1b669d288f7860a0d2643a7f3cf0db"
+   }
+  },
+  {
+   "runId": "run-b-x4-10",
+   "condition": "run-b-x4",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 499.9,
+   "wallMs": 586,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x4-10.trace.json.gz",
+    "sha256": "61548cbef73409d7f25927b64b902a1085af80905c51275e8eb1c089acb9b592",
+    "bytes": 308351,
+    "session": "832b72eea8fce38c5ccabe0807a6e5f2"
+   }
+  },
+  {
+   "runId": "run-b-x10-10",
+   "condition": "run-b-x10",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 900,
+   "wallMs": 959,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/run-b-x10-10.trace.json.gz",
+    "sha256": "4c9145ee42240705114a0d5a3a657907e5b854e933ff45410cc400d6a16b0eb5",
+    "bytes": 538256,
+    "session": "78b4f189233c07a0021abf201df84d67"
+   }
+  }
+ ]
+}

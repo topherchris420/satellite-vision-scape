@@ -1,0 +1,95 @@
+{
+ "schema": "svs-agent-probe-results/v1",
+ "date": "2026-09-29",
+ "provider": "jev",
+ "model": "jev-1.13.0",
+ "repeats": 20,
+ "calls": 80,
+ "probes": {
+  "path": "evals/after-hours-probes.json",
+  "capturedAt": "2026-09-27",
+  "sha256": "c4d7e5bb177fb7a1"
+ },
+ "results": [
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "full",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 295,
+   "answers": {
+    "tune_terminal:down:long": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "full",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 277,
+   "answers": {
+    "tune_terminal:up:long": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-reverse-after-overshoot",
+   "profile": "full-trend_inference",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 280,
+   "answers": {
+    "tune_terminal:down:long": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  },
+  {
+   "probe": "terminal-continue-while-rising",
+   "profile": "full-trend_inference",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.333,
+   "meanLatencyMs": 294,
+   "answers": {
+    "tune_terminal:up:long": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  }
+ ],
+ "verdicts": [
+  {
+   "assist": "trend_inference",
+   "with": "full",
+   "without": "full-trend_inference",
+   "verdict": "retire",
+   "reasons": [
+    "terminal-reverse-after-overshoot: 20/20 without it, holds",
+    "terminal-continue-while-rising: 20/20 without it, holds"
+   ]
+  }
+ ]
+}

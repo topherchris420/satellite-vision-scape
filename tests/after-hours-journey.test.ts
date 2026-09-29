@@ -249,6 +249,47 @@ describe("unlisted work station", () => {
   });
 });
 
+describe("the listening point beside a parked vehicle", () => {
+  // Found by the decision-latency experiment: with realistic latency the
+  // scripted baseline parked UV-3 about 4 m from the listening point, and
+  // "Enter vehicle" hid "Begin the midnight transmission". Agents re-arrived
+  // at the listening point forever (1,700 decisions); a person would have
+  // seen the wrong prompt too.
+  test("beginning the transmission outranks entering the vehicle", () => {
+    const game = new Game({ visuals: false, storage: null });
+    const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 9000);
+    const ah = game.afterHours;
+    ah.start();
+    ah.progress.coffeeCompleted = true;
+    ah.progress.channelDiscovered = true;
+    for (const id of LAYER_IDS) ah.progress.terminals[id] = true;
+    game.player.teleport(LISTENING_POINT.x, LISTENING_POINT.z + 1, 0);
+    run(game, camera, 0.2);
+    expect(game.interaction.promptTarget).toBe("listening_point");
+
+    // Park a vehicle so that its door is within reach of where the player stands.
+    const vehicle = game.vehicles.vehicles[0];
+    const p = game.player.position;
+    let parked = false;
+    for (let a = 0; a < Math.PI * 2 && !parked; a += Math.PI / 16) {
+      for (const r of [2.6, 3, 3.4, 3.8]) {
+        vehicle.place(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r, a);
+        if (game.vehicles.nearest(p.x, p.z, 1.6) === vehicle) {
+          parked = true;
+          break;
+        }
+      }
+    }
+    expect(parked).toBe(true);
+    run(game, camera, 0.2);
+    expect(game.interaction.prompt?.label).toBe("Begin the midnight transmission");
+    expect(game.interaction.promptTarget).toBe("listening_point");
+    press(game, camera, "KeyE");
+    expect(ah.concert.state).toBe("running");
+    game.dispose();
+  });
+});
+
 describe("After Hours journey (headless, through the real input path)", () => {
   const storage = new MemoryStorage();
   const game = new Game({ visuals: false, storage });

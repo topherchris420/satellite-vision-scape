@@ -69,7 +69,12 @@ export class AfterHoursTaskAdapter implements TaskAdapter<AfterHoursState> {
     receiverTuningInputs: 0,
     radioCommands: 0,
     terminalTuningInputs: 0,
+    /** A terminal dial entered the aligned zone and left it before locking. */
+    terminalOvershoots: 0,
   };
+  /** Seconds with a terminal panel open (tuning time, whoever tunes). */
+  private terminalSeconds = 0;
+  private wasAligned = false;
   private previous: {
     mission: string;
     heard: boolean;
@@ -381,6 +386,8 @@ export class AfterHoursTaskAdapter implements TaskAdapter<AfterHoursState> {
       frequencyFound: p.channelDiscovered,
       terminalTuningInputs: this.counts.terminalTuningInputs,
       terminalsCompleted: TERMINAL_IDS.filter((id) => p.terminals[id]).length,
+      terminalOvershoots: this.counts.terminalOvershoots,
+      terminalSecondsOpen: round(this.terminalSeconds, 1),
       concertReached: ah.concert.state === "running" || p.concertCompleted,
       concertCompleted: p.concertCompleted,
     };
@@ -405,6 +412,22 @@ export class AfterHoursTaskAdapter implements TaskAdapter<AfterHoursState> {
   sample(dt: number): void {
     this.time += dt;
     const ah = this.game.afterHours;
+    // Overshoots, from what the panel shows: its status word read ALIGNED
+    // and then stopped reading it without the layer locking. Counted per
+    // frame from the world, so a person and an agent are measured alike.
+    const tuning = ah.active ? ah.session?.tuning : undefined;
+    if (tuning) {
+      this.terminalSeconds += dt;
+      const aligned = tuning.status === "Aligned — hold";
+      if (this.wasAligned && !aligned && !tuning.locked) {
+        this.counts.terminalOvershoots++;
+        this.onEvent("terminal_alignment_lost", {
+          terminal: ah.session!.layer,
+          matchPercent: Math.round(tuning.alignment * 100),
+        });
+      }
+      this.wasAligned = aligned;
+    } else this.wasAligned = false;
     const s = this.snapshot;
     // The HUD snapshot is immutable and replaced on every change (the clue
     // flag marks it dirty too): nothing to compare until it changes.

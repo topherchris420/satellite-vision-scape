@@ -171,6 +171,7 @@ export class AgentSession implements AgentEnvironment, MotorWorld {
       locomotion: s.locomotion,
       source: this.controls.source,
     });
+    this.trace.pathSample(this.runtime.now, s.x, s.z, s.locomotion, this.controls.source);
     this.task.sampleInput(this.controls.input);
     this.task.sample(dt);
     // The agent panel: on runtime changes, and four times a second while an

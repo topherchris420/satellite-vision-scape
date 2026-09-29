@@ -1,0 +1,71 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "coffee-run-human-agent",
+  "title": "The coffee run: a person, the scripted baseline and the chance floor",
+  "question": "How does a person's coffee run compare with an agent's on what the world can measure for both: time, route, collisions and coffee retained?",
+  "hypothesis": "On the coffee run, the scripted baseline (smooth executor driving) retains more coffee than a person, while a person is faster; the random agent almost never delivers. This is a comparison of observable behaviour, not a contest: perception and motor control differ between the columns.",
+  "motivation": {
+    "observation": "The README says no human reference run is committed and that a side-by-side comparison is something you record yourself. Human sessions now record route samples, overshoots and the same windows as agents, so a person's exported trace can be imported into this experiment and compared on shared metrics only.",
+    "evidence": [
+      "README.md: 'No human reference run is committed yet'",
+      "tests/agent-motor.test.ts: smooth vs aggressive driving, 100% vs 11% coffee"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "coffee_delivered", "maxSimSeconds": 300 },
+  "independentVariable": "provider",
+  "controlled": {},
+  "conditions": [
+    {
+      "id": "baseline",
+      "label": "Scripted baseline (no latency)",
+      "set": { "provider": "baseline" }
+    },
+    {
+      "id": "random",
+      "label": "Seeded random agent (the chance floor)",
+      "set": { "provider": "random" }
+    },
+    {
+      "id": "human",
+      "label": "A person (exported with ?agentHud=1, imported)",
+      "set": { "provider": "human" }
+    }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "coffeeRemainingPercent",
+    "coffeeRunDistanceM",
+    "coffeeRouteEfficiency",
+    "coffeeRunCollisions",
+    "coffeeRunHardBraking",
+    "coffeeFailures",
+    "distanceWalkedM",
+    "providerRequests",
+    "wrongInteractions"
+  ],
+  "predictions": [
+    {
+      "metric": "completed",
+      "from": "baseline",
+      "to": "random",
+      "direction": "decrease",
+      "minEffect": 1
+    }
+  ],
+  "successCriteria": [
+    "the random agent delivers far less often than the baseline (the floor is low)"
+  ],
+  "falsificationCriteria": [
+    "the random agent delivers as often as the baseline: the coffee run would not discriminate at all"
+  ],
+  "limitations": [
+    "Human runs are recorded in the browser and imported; their seeds are not controlled, so human comparisons are measurements only, never verdicts.",
+    "A person perceives pixels and audio and steers every frame; agents read text and use the shared executor. Only world-measured metrics are compared.",
+    "The random agent may choose 'hand control back', which ends its run: that is what the random provider does in the product too."
+  ]
+}

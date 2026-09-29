@@ -1,0 +1,863 @@
+{
+ "schema": "svs-experiment-summary/v1",
+ "experiment": "decision-latency",
+ "status": "complete",
+ "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+ "conditions": [
+  {
+   "id": "instant",
+   "config": {
+    "provider": "baseline",
+    "latency": "instant"
+   },
+   "runs": [
+    {
+     "runId": "instant-01",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-02",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-03",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-04",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-05",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-06",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-07",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-08",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-09",
+     "status": "ok"
+    },
+    {
+     "runId": "instant-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 426.1,
+     "min": 426.1,
+     "max": 426.1,
+     "p95": 426.1,
+     "mean": 426.1,
+     "constant": true
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeMissionSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 82.2,
+     "min": 82.2,
+     "max": 82.2,
+     "p95": 82.2,
+     "mean": 82.2,
+     "constant": true
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "receiverTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 10,
+     "min": 10,
+     "max": 10,
+     "p95": 10,
+     "mean": 10,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 164,
+     "min": 164,
+     "max": 164,
+     "p95": 164,
+     "mean": 164,
+     "constant": true
+    },
+    "staleResponses": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "medianDecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "p95DecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    }
+   }
+  },
+  {
+   "id": "run-b",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b"
+   },
+   "runs": [
+    {
+     "runId": "run-b-01",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-02",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-03",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-04",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-05",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-06",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-07",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-08",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-09",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 445.85,
+     "min": 444.5,
+     "max": 446.2,
+     "p95": 446.2,
+     "mean": 445.69,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeMissionSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 83.95,
+     "min": 83.8,
+     "max": 84.1,
+     "p95": 84.1,
+     "mean": 83.95,
+     "constant": false
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "receiverTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 10,
+     "min": 10,
+     "max": 10,
+     "p95": 10,
+     "mean": 10,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 152,
+     "min": 151,
+     "max": 154,
+     "p95": 153.55,
+     "mean": 152.2,
+     "constant": false
+    },
+    "staleResponses": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "medianDecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 300,
+     "min": 300,
+     "max": 300,
+     "p95": 300,
+     "mean": 300,
+     "constant": true
+    },
+    "p95DecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 400,
+     "min": 383.33,
+     "max": 450,
+     "p95": 442.499,
+     "mean": 404.999,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "run-b-x4",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b-x4"
+   },
+   "runs": [
+    {
+     "runId": "run-b-x4-01",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-02",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-03",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-04",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-05",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-06",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-07",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-08",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-09",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x4-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 501.25,
+     "min": 496.2,
+     "max": 506.4,
+     "p95": 504.915,
+     "mean": 501.23,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeMissionSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 88.55,
+     "min": 88.1,
+     "max": 89.8,
+     "p95": 89.755,
+     "mean": 88.81,
+     "constant": false
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "receiverTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 10,
+     "min": 10,
+     "max": 10,
+     "p95": 10,
+     "mean": 10,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 134,
+     "min": 133,
+     "max": 136,
+     "p95": 136,
+     "mean": 134.3,
+     "constant": false
+    },
+    "staleResponses": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "medianDecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 1166.67,
+     "min": 1150,
+     "max": 1200,
+     "p95": 1192.499,
+     "mean": 1170.002,
+     "constant": false
+    },
+    "p95DecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 1583.335,
+     "min": 1500,
+     "max": 1750,
+     "p95": 1742.499,
+     "mean": 1598.333,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "run-b-x10",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b-x10"
+   },
+   "runs": [
+    {
+     "runId": "run-b-x10-01",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-02",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-03",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-04",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-05",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-06",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-07",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-08",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-09",
+     "status": "ok"
+    },
+    {
+     "runId": "run-b-x10-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 609.05,
+     "min": 600.1,
+     "max": 617.9,
+     "p95": 617.54,
+     "mean": 609.14,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeMissionSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 99.4,
+     "min": 96.8,
+     "max": 100.2,
+     "p95": 100.155,
+     "mean": 98.98,
+     "constant": false
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "terminalTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 20,
+     "min": 20,
+     "max": 20,
+     "p95": 20,
+     "mean": 20,
+     "constant": true
+    },
+    "terminalOvershoots": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "receiverTuningInputs": {
+     "n": 10,
+     "missing": 0,
+     "median": 10,
+     "min": 10,
+     "max": 10,
+     "p95": 10,
+     "mean": 10,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 110,
+     "min": 109,
+     "max": 112,
+     "p95": 111.55,
+     "mean": 110.3,
+     "constant": false
+    },
+    "staleResponses": {
+     "n": 10,
+     "missing": 0,
+     "median": 1,
+     "min": 0,
+     "max": 2,
+     "p95": 1.55,
+     "mean": 0.7,
+     "constant": false
+    },
+    "medianDecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 2900,
+     "min": 2850,
+     "max": 3000,
+     "p95": 2958.748,
+     "mean": 2898.332,
+     "constant": false
+    },
+    "p95DecisionLatencyMs": {
+     "n": 10,
+     "missing": 0,
+     "median": 3875,
+     "min": 3450,
+     "max": 4083.33,
+     "p95": 4083.33,
+     "mean": 3865,
+     "constant": false
+    }
+   }
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": {
+    "metric": "goalSeconds",
+    "from": "instant",
+    "to": "run-b",
+    "direction": "no_change",
+    "minEffect": 10
+   },
+   "pairs": 10,
+   "medianChange": 19.75,
+   "towards": 10,
+   "against": 0,
+   "ties": 0,
+   "signTestP": 0.002,
+   "exact": false,
+   "runIds": [
+    "instant-01",
+    "run-b-01",
+    "instant-02",
+    "run-b-02",
+    "instant-03",
+    "run-b-03",
+    "instant-04",
+    "run-b-04",
+    "instant-05",
+    "run-b-05",
+    "instant-06",
+    "run-b-06",
+    "instant-07",
+    "run-b-07",
+    "instant-08",
+    "run-b-08",
+    "instant-09",
+    "run-b-09",
+    "instant-10",
+    "run-b-10"
+   ],
+   "verdict": "NOT SUPPORTED",
+   "reasons": [
+    "median change 19.75 exceeds ±10 (sign test p = 0.002)"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "goalSeconds",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   "pairs": 10,
+   "medianChange": 75.15,
+   "towards": 10,
+   "against": 0,
+   "ties": 0,
+   "signTestP": 0.001,
+   "exact": false,
+   "runIds": [
+    "instant-01",
+    "run-b-x4-01",
+    "instant-02",
+    "run-b-x4-02",
+    "instant-03",
+    "run-b-x4-03",
+    "instant-04",
+    "run-b-x4-04",
+    "instant-05",
+    "run-b-x4-05",
+    "instant-06",
+    "run-b-x4-06",
+    "instant-07",
+    "run-b-x4-07",
+    "instant-08",
+    "run-b-x4-08",
+    "instant-09",
+    "run-b-x4-09",
+    "instant-10",
+    "run-b-x4-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median paired change 75.15 (≥ 10 predicted); 10 of 10 moving pairs in the predicted direction, sign test p = 0.001"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "completed",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "instant-01",
+    "run-b-x4-01",
+    "instant-02",
+    "run-b-x4-02",
+    "instant-03",
+    "run-b-x4-03",
+    "instant-04",
+    "run-b-x4-04",
+    "instant-05",
+    "run-b-x4-05",
+    "instant-06",
+    "run-b-x4-06",
+    "instant-07",
+    "run-b-x4-07",
+    "instant-08",
+    "run-b-x4-08",
+    "instant-09",
+    "run-b-x4-09",
+    "instant-10",
+    "run-b-x4-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median change 0 within ±0; 0/10 pairs moved further"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "coffeeRemainingPercent",
+    "from": "instant",
+    "to": "run-b-x4",
+    "direction": "no_change",
+    "minEffect": 2
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "instant-01",
+    "run-b-x4-01",
+    "instant-02",
+    "run-b-x4-02",
+    "instant-03",
+    "run-b-x4-03",
+    "instant-04",
+    "run-b-x4-04",
+    "instant-05",
+    "run-b-x4-05",
+    "instant-06",
+    "run-b-x4-06",
+    "instant-07",
+    "run-b-x4-07",
+    "instant-08",
+    "run-b-x4-08",
+    "instant-09",
+    "run-b-x4-09",
+    "instant-10",
+    "run-b-x4-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median change 0 within ±2; 0/10 pairs moved further"
+   ]
+  }
+ ],
+ "excluded": []
+}

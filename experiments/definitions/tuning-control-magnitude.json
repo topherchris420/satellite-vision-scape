@@ -1,0 +1,78 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "tuning-control-magnitude",
+  "title": "Is a control bigger than the target zone enough to reproduce run A's oscillation?",
+  "question": "Does always turning a terminal dial with a long hold (run A's habit) make tuning oscillate, even for a policy that reads the match trend correctly?",
+  "hypothesis": "Control size alone decides whether terminal tuning converges. A policy that follows the match trend perfectly but always uses a long hold (≈ 20% of the dial, wider than the ≈ 7% aligned zone) will overshoot again and again and fail to lock the terminals within the episode; the same policy with graded turns will lock all four.",
+  "motivation": {
+    "observation": "Live run A stopped after 473 decisions alternating dial up / dial down at the Harmony terminal. The fix for run B added three assists at once (trend_inference, hold_still_rule, control_magnitudes), so the run cannot say which one mattered. This experiment isolates the control-size half of the failure with a scripted policy, where the direction rule is held perfect.",
+    "evidence": [
+      "docs/NEXT_MODEL.md §1: run A, 473 decisions oscillating at Harmony",
+      "src/game/afterhours/puzzle.ts: aligned tolerance 0.035 (≈ 7% of the dial wide), a 0.9 s hold ramps to ≈ 20%",
+      "scripts/capture-probes.ts: the heavy-handed (always long) baseline was needed to produce the overshoot probe"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "terminals_completed", "maxSimSeconds": 600 },
+  "independentVariable": "tuningAmount",
+  "controlled": { "provider": "baseline", "tuningDirection": "trend", "latency": "run-b" },
+  "conditions": [
+    { "id": "graded", "label": "Graded turns (the baseline)", "set": { "tuningAmount": "graded" } },
+    {
+      "id": "long",
+      "label": "Always a long hold (run A's habit)",
+      "set": { "tuningAmount": "long" }
+    },
+    { "id": "tap", "label": "Always one click", "set": { "tuningAmount": "tap" } }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "terminalsCompleted",
+    "terminalTuningInputs",
+    "terminalOvershoots",
+    "terminalSecondsOpen",
+    "tuningDirectionReversals",
+    "providerRequests",
+    "decisions",
+    "staleResponses"
+  ],
+  "predictions": [
+    {
+      "metric": "completed",
+      "from": "graded",
+      "to": "long",
+      "direction": "decrease",
+      "minEffect": 1
+    },
+    {
+      "metric": "terminalOvershoots",
+      "from": "graded",
+      "to": "long",
+      "direction": "increase",
+      "minEffect": 10
+    },
+    {
+      "metric": "terminalTuningInputs",
+      "from": "graded",
+      "to": "tap",
+      "direction": "increase",
+      "minEffect": 20
+    }
+  ],
+  "successCriteria": [
+    "long fails to lock all four terminals in most seeded runs, with many overshoots, while graded locks all four",
+    "tap converges, but only by paying many more inputs than graded"
+  ],
+  "falsificationCriteria": [
+    "long locks all four terminals as reliably as graded: control size alone does not explain run A, and the direction/hold-still half deserves the attention",
+    "long overshoots fewer than 10 more times than graded (median, paired)"
+  ],
+  "limitations": [
+    "A scripted policy with a perfect direction rule, not a model: it isolates what the task does to one habit, not whether Jev has the habit.",
+    "Latency is resampled from one live run's 212 recorded latencies."
+  ]
+}

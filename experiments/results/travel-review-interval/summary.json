@@ -1,0 +1,463 @@
+{
+ "schema": "svs-experiment-summary/v1",
+ "experiment": "travel-review-interval",
+ "status": "complete",
+ "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+ "conditions": [
+  {
+   "id": "review-3s",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b",
+    "reviewMs": 3000
+   },
+   "runs": [
+    {
+     "runId": "review-3s-01",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-02",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-03",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-04",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-05",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-06",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-07",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-08",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-09",
+     "status": "ok"
+    },
+    {
+     "runId": "review-3s-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 445.85,
+     "min": 444.5,
+     "max": 446.2,
+     "p95": 446.2,
+     "mean": 445.69,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 152,
+     "min": 151,
+     "max": 154,
+     "p95": 153.55,
+     "mean": 152.2,
+     "constant": false
+    },
+    "routeReviewsKept": {
+     "n": 10,
+     "missing": 0,
+     "median": 67.5,
+     "min": 67,
+     "max": 69,
+     "p95": 68.55,
+     "mean": 67.6,
+     "constant": false
+    },
+    "routeReviewsChanged": {
+     "n": 10,
+     "missing": 0,
+     "median": 6,
+     "min": 5,
+     "max": 7,
+     "p95": 6.55,
+     "mean": 5.7,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "stuckRecoveries": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "distanceTraveledM": {
+     "n": 10,
+     "missing": 0,
+     "median": 1935.135,
+     "min": 1925.51,
+     "max": 1940.49,
+     "p95": 1940.477,
+     "mean": 1934.445,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "review-6s",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b",
+    "reviewMs": 6000
+   },
+   "runs": [
+    {
+     "runId": "review-6s-01",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-02",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-03",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-04",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-05",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-06",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-07",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-08",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-09",
+     "status": "ok"
+    },
+    {
+     "runId": "review-6s-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 451.5,
+     "min": 450.3,
+     "max": 452.6,
+     "p95": 452.51,
+     "mean": 451.53,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 120,
+     "min": 119,
+     "max": 120,
+     "p95": 120,
+     "mean": 119.7,
+     "constant": false
+    },
+    "routeReviewsKept": {
+     "n": 10,
+     "missing": 0,
+     "median": 35,
+     "min": 34,
+     "max": 35,
+     "p95": 35,
+     "mean": 34.9,
+     "constant": false
+    },
+    "routeReviewsChanged": {
+     "n": 10,
+     "missing": 0,
+     "median": 3,
+     "min": 2,
+     "max": 4,
+     "p95": 3.55,
+     "mean": 2.8,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "collisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "stuckRecoveries": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "distanceTraveledM": {
+     "n": 10,
+     "missing": 0,
+     "median": 1958.695,
+     "min": 1953.39,
+     "max": 1960.08,
+     "p95": 1959.981,
+     "mean": 1958.098,
+     "constant": false
+    }
+   }
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": {
+    "metric": "providerRequests",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "decrease",
+    "minEffect": 20
+   },
+   "pairs": 10,
+   "medianChange": -32,
+   "towards": 10,
+   "against": 0,
+   "ties": 0,
+   "signTestP": 0.001,
+   "exact": false,
+   "runIds": [
+    "review-3s-01",
+    "review-6s-01",
+    "review-3s-02",
+    "review-6s-02",
+    "review-3s-03",
+    "review-6s-03",
+    "review-3s-04",
+    "review-6s-04",
+    "review-3s-05",
+    "review-6s-05",
+    "review-3s-06",
+    "review-6s-06",
+    "review-3s-07",
+    "review-6s-07",
+    "review-3s-08",
+    "review-6s-08",
+    "review-3s-09",
+    "review-6s-09",
+    "review-3s-10",
+    "review-6s-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median paired change -32 (≥ 20 predicted); 10 of 10 moving pairs in the predicted direction, sign test p = 0.001"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "completed",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "review-3s-01",
+    "review-6s-01",
+    "review-3s-02",
+    "review-6s-02",
+    "review-3s-03",
+    "review-6s-03",
+    "review-3s-04",
+    "review-6s-04",
+    "review-3s-05",
+    "review-6s-05",
+    "review-3s-06",
+    "review-6s-06",
+    "review-3s-07",
+    "review-6s-07",
+    "review-3s-08",
+    "review-6s-08",
+    "review-3s-09",
+    "review-6s-09",
+    "review-3s-10",
+    "review-6s-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median change 0 within ±0; 0/10 pairs moved further"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "goalSeconds",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 5
+   },
+   "pairs": 10,
+   "medianChange": 5.75,
+   "towards": 7,
+   "against": 0,
+   "ties": 3,
+   "signTestP": 0.016,
+   "exact": false,
+   "runIds": [
+    "review-3s-01",
+    "review-6s-01",
+    "review-3s-02",
+    "review-6s-02",
+    "review-3s-03",
+    "review-6s-03",
+    "review-3s-04",
+    "review-6s-04",
+    "review-3s-05",
+    "review-6s-05",
+    "review-3s-06",
+    "review-6s-06",
+    "review-3s-07",
+    "review-6s-07",
+    "review-3s-08",
+    "review-6s-08",
+    "review-3s-09",
+    "review-6s-09",
+    "review-3s-10",
+    "review-6s-10"
+   ],
+   "verdict": "NOT SUPPORTED",
+   "reasons": [
+    "median change 5.75 exceeds ±5 (sign test p = 0.016)"
+   ]
+  },
+  {
+   "prediction": {
+    "metric": "coffeeRemainingPercent",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 2
+   },
+   "pairs": 10,
+   "medianChange": 0,
+   "towards": 0,
+   "against": 0,
+   "ties": 10,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "review-3s-01",
+    "review-6s-01",
+    "review-3s-02",
+    "review-6s-02",
+    "review-3s-03",
+    "review-6s-03",
+    "review-3s-04",
+    "review-6s-04",
+    "review-3s-05",
+    "review-6s-05",
+    "review-3s-06",
+    "review-6s-06",
+    "review-3s-07",
+    "review-6s-07",
+    "review-3s-08",
+    "review-6s-08",
+    "review-3s-09",
+    "review-6s-09",
+    "review-3s-10",
+    "review-6s-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median change 0 within ±2; 0/10 pairs moved further"
+   ]
+  }
+ ],
+ "excluded": []
+}

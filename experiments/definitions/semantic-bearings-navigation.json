@@ -1,0 +1,64 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "semantic-bearings-navigation",
+  "title": "Does removing semantic bearings make Jev's navigation worse?",
+  "question": "Jev is told directions in words (\"ahead and to the left\"). Does it navigate the coffee run worse when told signed degrees instead?",
+  "hypothesis": "Removing semantic_bearings (and nothing else) makes the coffee run worse for Jev: at least 10 s slower to deliver, through more wrong or wasted choices.",
+  "motivation": {
+    "observation": "semantic_bearings was added on TypeSafe's integration guidance, not after an observed failure. It is the one assist with no failure behind it, so it is the cheapest to test and the likeliest to retire. Navigation itself is done by the executor; Jev only picks the destination, so the effect may be small.",
+    "evidence": [
+      "src/server/agent/assists.ts: semantic_bearings, evidence 'TypeSafe integration guidance'",
+      "docs/NEXT_MODEL.md §1: probes coffee-deliver-while-driving, terminal-go-to-terminal"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "coffee_delivered", "maxSimSeconds": 300, "maxCallsPerRun": 150 },
+  "independentVariable": "assists",
+  "controlled": { "provider": "jev" },
+  "conditions": [
+    { "id": "full", "label": "Every assist (run B's question)", "set": { "assists": "full" } },
+    {
+      "id": "no-bearings",
+      "label": "Every assist but semantic_bearings",
+      "set": { "assists": "full-semantic_bearings" }
+    }
+  ],
+  "runsPerCondition": 5,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "coffeeRemainingPercent",
+    "coffeeRunDistanceM",
+    "coffeeRouteEfficiency",
+    "distanceWalkedM",
+    "rejectedDecisions",
+    "wrongInteractions",
+    "routeReviewsChanged",
+    "providerRequests",
+    "providerFailures",
+    "medianDecisionLatencyMs"
+  ],
+  "predictions": [
+    {
+      "metric": "goalSeconds",
+      "from": "full",
+      "to": "no-bearings",
+      "direction": "increase",
+      "minEffect": 10
+    }
+  ],
+  "successCriteria": [
+    "no-bearings takes at least 10 s longer to deliver in a clear majority of paired runs"
+  ],
+  "falsificationCriteria": [
+    "no-bearings is no more than 10 s slower (median paired change): the assist does not earn its bytes on this run, and its probes decide retirement"
+  ],
+  "limitations": [
+    "Live: Jev's latency and choices vary between runs, and pairing by seed only aligns the order of runs, not the model's randomness.",
+    "Five runs per condition can show a large effect; they cannot rule out a small one.",
+    "The coffee run exercises two navigation choices; the terminal stage (four destinations) is covered by the probes."
+  ],
+  "live": true
+}

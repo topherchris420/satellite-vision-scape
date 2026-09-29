@@ -681,7 +681,11 @@ export class AfterHours {
       if (d >= 0) {
         offer.id = "listening_point";
         offer.distance = d;
-        offer.priority = false;
+        // Like the cart, the technician and the terminals, beginning the
+        // transmission outranks "Enter vehicle": a vehicle parked beside the
+        // listening point used to hide the task's final action (found by the
+        // decision-latency experiment: agents live-locked, re-arriving forever).
+        offer.priority = this.concert.state !== "running";
         if (this.concert.state === "running") {
           offer.label = "End the transmission";
           offer.act = () => this.finishConcert(false);

@@ -6,6 +6,8 @@
  *   bun scripts/probe-capabilities.ts --provider baseline --repeats 1      # the scripted reference, free
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/probe-capabilities.ts --provider jev \
  *     --profiles full,lean,none --repeats 10                              # billable: 10 probes × 3 × 10 = 300 calls
+ *     (a profile may also be a single-factor ablation, e.g. full-semantic_bearings;
+ *      --only probe-a,probe-b asks just those probes)
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/probe-capabilities.ts --provider jev --ablate
  *                                                                          # full, and full minus each assist
  *
@@ -27,11 +29,10 @@ import { validateObservation } from "../src/agent/tasks/registry";
 import {
   ASSIST_IDS,
   ASSIST_PROFILES,
-  assistsFor,
   assistsWithout,
+  parseAssists,
   retirementVerdict,
   wilson,
-  type AssistProfile,
   type Assists,
   type ProbeTally,
 } from "../src/server/agent/assists";
@@ -64,15 +65,21 @@ if (
   process.exit(2);
 }
 
+const only = args.includes("--only") ? opt("--only", "").split(",") : null;
+
 const raw = readFileSync(probesPath, "utf8");
 const file = JSON.parse(raw) as ProbeFile;
-const fixtures = file.probes.map((f) => {
-  const v = validateObservation(f.observation);
-  if (!v.ok) throw new Error(`${f.id}: invalid observation: ${v.error}`);
-  const probe = probeById(f.id);
-  if (!probe) throw new Error(`${f.id}: no such probe`);
-  return { probe, observation: v.value as WorldObservation };
-});
+for (const id of only ?? [])
+  if (!file.probes.some((f) => f.id === id)) throw new Error(`--only: no probe ${id}`);
+const fixtures = file.probes
+  .filter((f) => !only || only.includes(f.id))
+  .map((f) => {
+    const v = validateObservation(f.observation);
+    if (!v.ok) throw new Error(`${f.id}: invalid observation: ${v.error}`);
+    const probe = probeById(f.id);
+    if (!probe) throw new Error(`${f.id}: no such probe`);
+    return { probe, observation: v.value as WorldObservation };
+  });
 
 // Profiles only change what Jev is asked; the free providers never read the question.
 const profiles: Assists[] =
@@ -82,8 +89,9 @@ const profiles: Assists[] =
         ...opt("--profiles", ablate ? "full" : "full,lean,none")
           .split(",")
           .map((p) => {
-            if (!(p in ASSIST_PROFILES)) throw new Error(`unknown profile ${p}`);
-            return assistsFor(p as AssistProfile);
+            const parsed = parseAssists(p);
+            if (!parsed) throw new Error(`unknown profile ${p}`);
+            return parsed;
           }),
         ...(ablate ? ASSIST_IDS.map(assistsWithout) : []),
       ];

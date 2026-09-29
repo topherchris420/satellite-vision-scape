@@ -1,0 +1,60 @@
+{
+ "schema": "svs-agent-probe-results/v1",
+ "date": "2026-09-29",
+ "provider": "jev",
+ "model": "jev-1.13.0",
+ "repeats": 20,
+ "calls": 40,
+ "probes": {
+  "path": "evals/after-hours-probes.json",
+  "capturedAt": "2026-09-27",
+  "sha256": "c4d7e5bb177fb7a1"
+ },
+ "results": [
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "full",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 269,
+   "answers": {
+    "drive_to:technician": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  },
+  {
+   "probe": "coffee-deliver-while-driving",
+   "profile": "full-spill_advice",
+   "passes": 20,
+   "trials": 20,
+   "failures": 0,
+   "chance": 0.063,
+   "meanLatencyMs": 283,
+   "answers": {
+    "drive_to:technician": 20
+   },
+   "rate": 1,
+   "wilson95": [
+    0.839,
+    1
+   ]
+  }
+ ],
+ "verdicts": [
+  {
+   "assist": "spill_advice",
+   "with": "full",
+   "without": "full-spill_advice",
+   "verdict": "retire",
+   "reasons": [
+    "coffee-deliver-while-driving: 20/20 without it, holds"
+   ]
+  }
+ ]
+}
