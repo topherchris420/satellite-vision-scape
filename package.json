@@ -14,9 +14,13 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test:agent": "bun test tests/agent-",
+    "test:experiments": "bun test tests/experiment-",
     "agent:live": "bun scripts/verify-agent-live.ts",
     "probes:capture": "bun scripts/capture-probes.ts",
     "probes": "bun scripts/probe-capabilities.ts",
+    "experiment": "bun scripts/experiment.ts",
+    "compare": "bun scripts/compare.ts",
+    "trace": "bun scripts/trace.ts",
     "verify:secrets": "node scripts/verify-secret-boundary.mjs"
   },
   "dependencies": {

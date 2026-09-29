@@ -6,6 +6,7 @@
  *   bun scripts/probe-capabilities.ts --provider baseline --repeats 1      # the scripted reference, free
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/probe-capabilities.ts --provider jev \
  *     --profiles full,lean,none --repeats 10                              # billable: 10 probes × 3 × 10 = 300 calls
+ *     (a profile may also be a single-factor ablation, e.g. full-semantic_bearings)
  *   AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/probe-capabilities.ts --provider jev --ablate
  *                                                                          # full, and full minus each assist
  *
@@ -27,11 +28,10 @@ import { validateObservation } from "../src/agent/tasks/registry";
 import {
   ASSIST_IDS,
   ASSIST_PROFILES,
-  assistsFor,
   assistsWithout,
+  parseAssists,
   retirementVerdict,
   wilson,
-  type AssistProfile,
   type Assists,
   type ProbeTally,
 } from "../src/server/agent/assists";
@@ -82,8 +82,9 @@ const profiles: Assists[] =
         ...opt("--profiles", ablate ? "full" : "full,lean,none")
           .split(",")
           .map((p) => {
-            if (!(p in ASSIST_PROFILES)) throw new Error(`unknown profile ${p}`);
-            return assistsFor(p as AssistProfile);
+            const parsed = parseAssists(p);
+            if (!parsed) throw new Error(`unknown profile ${p}`);
+            return parsed;
           }),
         ...(ablate ? ASSIST_IDS.map(assistsWithout) : []),
       ];

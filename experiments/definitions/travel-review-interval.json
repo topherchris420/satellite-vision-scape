@@ -1,0 +1,81 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "travel-review-interval",
+  "title": "Are route reviews every 3 s paying for anything?",
+  "question": "The runtime re-asks the provider every 3 s while it travels. In run B, 79 such reviews changed nothing. Would reviewing every 6 s save calls without changing outcomes?",
+  "hypothesis": "Stretching the travel review from 3 s to 6 s cuts provider requests by at least 20 per journey and changes neither completion, total time (within 5 s) nor the coffee (within 2 points).",
+  "motivation": {
+    "observation": "Run B: 79 of Jev's 212 decisions (37%) were mid-route reviews and 0 of 79 changed the plan. The scripted baseline spends 76 of its 155 calls the same way. NEXT_MODEL.md makes 6 s a tripwire at < 1% plan changes over ≥ 5 live runs; this experiment measures the other half of that trade, what reviews cost and what dropping half of them changes in the world.",
+    "evidence": [
+      "bun run trace docs/traces/jev-after-hours-live-2026-09-27.json: 79 reviews kept the plan, 0 replaced a running action",
+      "docs/NEXT_MODEL.md §4: tripwire, reviews every 6 s"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "task_complete", "maxSimSeconds": 900 },
+  "independentVariable": "reviewMs",
+  "controlled": { "provider": "baseline", "latency": "run-b" },
+  "conditions": [
+    {
+      "id": "review-3s",
+      "label": "Review every 3 s (product default)",
+      "set": { "reviewMs": 3000 }
+    },
+    { "id": "review-6s", "label": "Review every 6 s", "set": { "reviewMs": 6000 } }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "providerRequests",
+    "routeReviewsKept",
+    "routeReviewsChanged",
+    "coffeeRemainingPercent",
+    "collisions",
+    "stuckRecoveries",
+    "distanceTraveledM"
+  ],
+  "predictions": [
+    {
+      "metric": "providerRequests",
+      "from": "review-3s",
+      "to": "review-6s",
+      "direction": "decrease",
+      "minEffect": 20
+    },
+    {
+      "metric": "completed",
+      "from": "review-3s",
+      "to": "review-6s",
+      "direction": "no_change",
+      "minEffect": 0
+    },
+    {
+      "metric": "goalSeconds",
+      "from": "review-3s",
+      "to": "review-6s",
+      "direction": "no_change",
+      "minEffect": 5
+    },
+    {
+      "metric": "coffeeRemainingPercent",
+      "from": "review-3s",
+      "to": "review-6s",
+      "direction": "no_change",
+      "minEffect": 2
+    }
+  ],
+  "successCriteria": [
+    "at least 20 fewer requests per journey with no change in completion, time or coffee"
+  ],
+  "falsificationCriteria": [
+    "fewer than 20 requests saved (reviews are not where the calls go)",
+    "completion, time (> 5 s) or coffee (> 2 points) changes: reviews are doing work"
+  ],
+  "limitations": [
+    "The scripted baseline rarely changes its mind, so this measures the cost of reviews and the effect of fewer reviews on the world, not how often a model would use a review to correct itself. The tripwire in NEXT_MODEL.md still needs ≥ 5 live runs for that.",
+    "Does not change the product default: this is evidence for the tripwire, not the tripwire."
+  ]
+}

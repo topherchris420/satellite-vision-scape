@@ -121,20 +121,34 @@ export function assistsWithout(id: AssistId): Assists {
 }
 
 /**
- * `JEV_ASSISTS`: a profile name (`full`, `lean`, `none`) or a comma-separated
- * list of assist ids. Anything unrecognised falls back to `full`, so a typo
- * can only make the question more helpful, never less.
+ * Parse an assist configuration strictly: a profile name (`full`, `lean`,
+ * `none`), a single-factor ablation (`full-trend_inference`) or a
+ * comma-separated list of assist ids. Anything else is `null`: experiments
+ * use this so a typo is an error, never a silently different condition.
  */
-export function resolveAssists(value: string | undefined): Assists {
+export function parseAssists(value: string | undefined): Assists | null {
   const v = value?.trim().toLowerCase();
-  if (!v) return FULL_ASSISTS;
+  if (!v) return null;
   if (v in ASSIST_PROFILES) return assistsFor(v as AssistProfile);
+  if (v.startsWith("full-")) {
+    const id = v.slice(5);
+    return ASSIST_IDS.includes(id as AssistId) ? assistsWithout(id as AssistId) : null;
+  }
   const ids = v.split(",").map((s) => s.trim());
   if (ids.length > 0 && ids.every((id): id is AssistId => ASSIST_IDS.includes(id as AssistId))) {
     const on = new Set(ids);
     return { profile: [...on].sort().join(","), on };
   }
-  return FULL_ASSISTS;
+  return null;
+}
+
+/**
+ * `JEV_ASSISTS`: anything `parseAssists` accepts. Anything unrecognised falls
+ * back to `full`, so on a deployment a typo can only make the question more
+ * helpful, never less.
+ */
+export function resolveAssists(value: string | undefined): Assists {
+  return parseAssists(value) ?? FULL_ASSISTS;
 }
 
 // --- Retirement: the decision rule, applied to measurements ------------------------------

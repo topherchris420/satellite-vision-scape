@@ -1,0 +1,50 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "assist-profiles-journey",
+  "title": "Can Jev complete After Hours on the lean question?",
+  "question": "Is `lean` (facts, not conclusions) ready to be the default: does a lean journey match run B?",
+  "hypothesis": "With lean assists Jev completes the whole journey with no collisions and at most 1.2 times the decisions it needs with full assists (the NEXT_MODEL tripwire for making lean the default).",
+  "motivation": {
+    "observation": "NEXT_MODEL.md's first tripwire: make lean the default when every assist it drops retires on the probes and one full lean journey matches run B. The probes answer the first half cheaply; this experiment is the second half.",
+    "evidence": ["docs/NEXT_MODEL.md §4, first row"]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "task_complete", "maxSimSeconds": 900, "maxCallsPerRun": 500 },
+  "independentVariable": "assists",
+  "controlled": { "provider": "jev" },
+  "conditions": [
+    { "id": "full", "label": "Full (run B's question)", "set": { "assists": "full" } },
+    { "id": "lean", "label": "Lean (the bet on the next model)", "set": { "assists": "lean" } }
+  ],
+  "runsPerCondition": 5,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "decisions",
+    "providerRequests",
+    "terminalTuningInputs",
+    "terminalOvershoots",
+    "tuningDirectionReversals",
+    "coffeeRemainingPercent",
+    "collisions",
+    "providerFailures"
+  ],
+  "predictions": [
+    {
+      "metric": "completed",
+      "from": "full",
+      "to": "lean",
+      "direction": "no_change",
+      "minEffect": 0
+    }
+  ],
+  "falsificationCriteria": [
+    "lean fails to complete runs that full completes: keep full as the default"
+  ],
+  "limitations": [
+    "Expensive: about 200 billable calls per journey. Run the probes first; they are a hundred times cheaper."
+  ],
+  "live": true
+}

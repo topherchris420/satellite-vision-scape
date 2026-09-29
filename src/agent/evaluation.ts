@@ -28,6 +28,8 @@ export interface GenericMetrics {
   stuckRecoveries: number;
   humanInterventions: number;
   agentDecisions: number;
+  /** Requests sent to the provider (answered or not): what a run costs. */
+  providerRequests: number;
   meanDecisionLatencyMs: number | null;
   medianDecisionLatencyMs: number | null;
   p95DecisionLatencyMs: number | null;
@@ -93,6 +95,7 @@ export class EvaluationMetrics {
     test: 0,
   };
   decisions = 0;
+  requests = 0;
   providerFailures = 0;
   staleResponses = 0;
   invalidResponses = 0;
@@ -199,6 +202,7 @@ export class EvaluationMetrics {
       stuckRecoveries: c.recoveries,
       humanInterventions: c.interventions,
       agentDecisions: this.decisions,
+      providerRequests: this.requests,
       meanDecisionLatencyMs: n ? round(sorted.reduce((a, b) => a + b, 0) / n) : null,
       medianDecisionLatencyMs: n ? round((sorted[(n - 1) >> 1] + sorted[n >> 1]) / 2) : null,
       p95DecisionLatencyMs: n ? round(sorted[Math.min(n - 1, Math.floor(n * 0.95))]) : null,

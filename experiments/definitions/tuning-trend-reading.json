@@ -1,0 +1,96 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "tuning-trend-reading",
+  "title": "What does the tuning task charge an agent that cannot read the match trend?",
+  "question": "If an agent cannot infer from the match meter which way the reference lies, how much does terminal tuning cost it, and does it still finish?",
+  "hypothesis": "Reading the trend is worth a lot but is not required: a policy that ignores the match trend (sweeping one way and reversing only at the end of the dial) still locks all four terminals, because graded turns shrink near the reference, but it needs at least 10 more tuning inputs than the trend-reading policy.",
+  "motivation": {
+    "observation": "trend_inference is one of the three assists added after run A. It spells out the conclusion \"the reference lies the other way\". Before asking whether a model still needs it, measure how much the task rewards the underlying skill at all.",
+    "evidence": [
+      "src/server/agent/assists.ts: trend_inference, probes terminal-reverse-after-overshoot and terminal-continue-while-rising",
+      "evals/results/2026-09-27-baseline.json: the baseline itself fails terminal-continue-while-rising cold (it steers from memory)"
+    ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+    "until": "terminals_completed",
+    "maxSimSeconds": 600
+  },
+  "independentVariable": "tuningDirection",
+  "controlled": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b"
+  },
+  "conditions": [
+    {
+      "id": "trend",
+      "label": "Reverses when the match falls",
+      "set": {
+        "tuningDirection": "trend"
+      }
+    },
+    {
+      "id": "sweep",
+      "label": "Cannot read the trend: sweeps to the end of the dial",
+      "set": {
+        "tuningDirection": "sweep"
+      }
+    },
+    {
+      "id": "blind",
+      "label": "Cannot read the trend and ignores where the dial starts: always turns up first",
+      "set": {
+        "tuningDirection": "blind"
+      }
+    }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "terminalsCompleted",
+    "terminalTuningInputs",
+    "terminalOvershoots",
+    "terminalSecondsOpen",
+    "providerRequests"
+  ],
+  "predictions": [
+    {
+      "metric": "completed",
+      "from": "trend",
+      "to": "sweep",
+      "direction": "no_change",
+      "minEffect": 0
+    },
+    {
+      "metric": "terminalTuningInputs",
+      "from": "trend",
+      "to": "sweep",
+      "direction": "increase",
+      "minEffect": 10
+    },
+    {
+      "metric": "terminalTuningInputs",
+      "from": "trend",
+      "to": "blind",
+      "direction": "increase",
+      "minEffect": 10
+    }
+  ],
+  "successCriteria": [
+    "sweep locks all four terminals in every run, at a cost of at least 10 more inputs"
+  ],
+  "falsificationCriteria": [
+    "sweep fails to lock the terminals (the skill is required, not just valuable)",
+    "sweep costs fewer than 10 extra inputs (the skill is barely worth an assist)"
+  ],
+  "limitations": [
+    "A scripted stand-in for a missing skill: a real model without the skill may fail differently (for example by oscillating instead of sweeping).",
+    "Terminal start positions are fixed by the game, so the sweep's cost depends on which side of the reference each dial starts.",
+    "For the four current terminals, 'turn towards the middle' is always the right first direction (src/game/afterhours/puzzle.ts, TuningSession start), so the terminal stage only exercises trend reading after an overshoot."
+  ],
+  "notes": "The blind condition and its prediction were added after a 2-run pilot (not committed) in which sweep matched trend exactly: every terminal's dial starts 0.34 from its reference on the side nearer the middle of the dial, so 'turn towards the middle' is right at all four panels and graded turns never overshoot. The original two predictions were left unchanged."
+}

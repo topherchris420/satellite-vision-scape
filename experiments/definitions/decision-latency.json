@@ -1,0 +1,84 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "decision-latency",
+  "title": "Does decision latency change what happens in the world?",
+  "question": "Jev answered in 289 ms (median) in run B. Would a slower model do worse at After Hours, or merely take longer?",
+  "hypothesis": "At run B's latency the world is insensitive to decision speed. At four times run B's latency the whole journey takes measurably longer (at least 10 s), but completion and the coffee are unchanged, because the executor, not the decision loop, does the time-critical control.",
+  "motivation": {
+    "observation": "NEXT_MODEL.md argues speed is not today's constraint (p95 397 ms against a 6 s timeout). That was an argument from one run, not a measurement: nothing has ever varied latency and watched the world.",
+    "evidence": ["docs/NEXT_MODEL.md §3: latency median / p95 289 / 397 ms"]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "task_complete", "maxSimSeconds": 900 },
+  "independentVariable": "latency",
+  "controlled": { "provider": "baseline" },
+  "conditions": [
+    {
+      "id": "instant",
+      "label": "Instant (a scripted policy's own speed)",
+      "set": { "latency": "instant" }
+    },
+    { "id": "run-b", "label": "Run B's recorded latencies", "set": { "latency": "run-b" } },
+    { "id": "run-b-x4", "label": "Four times slower", "set": { "latency": "run-b-x4" } },
+    { "id": "run-b-x10", "label": "Ten times slower", "set": { "latency": "run-b-x10" } }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+    "completed",
+    "goalSeconds",
+    "coffeeRemainingPercent",
+    "coffeeMissionSeconds",
+    "collisions",
+    "terminalTuningInputs",
+    "terminalOvershoots",
+    "receiverTuningInputs",
+    "providerRequests",
+    "staleResponses",
+    "medianDecisionLatencyMs",
+    "p95DecisionLatencyMs"
+  ],
+  "predictions": [
+    {
+      "metric": "goalSeconds",
+      "from": "instant",
+      "to": "run-b",
+      "direction": "no_change",
+      "minEffect": 10
+    },
+    {
+      "metric": "goalSeconds",
+      "from": "instant",
+      "to": "run-b-x4",
+      "direction": "increase",
+      "minEffect": 10
+    },
+    {
+      "metric": "completed",
+      "from": "instant",
+      "to": "run-b-x4",
+      "direction": "no_change",
+      "minEffect": 0
+    },
+    {
+      "metric": "coffeeRemainingPercent",
+      "from": "instant",
+      "to": "run-b-x4",
+      "direction": "no_change",
+      "minEffect": 2
+    }
+  ],
+  "successCriteria": [
+    "run-b finishes within 10 s of instant, run-b-x4 takes at least 10 s longer, and neither loses completion or coffee"
+  ],
+  "falsificationCriteria": [
+    "run-b already costs more than 10 s (latency matters at today's speed)",
+    "run-b-x4 loses completion or more than 2 points of coffee (latency changes outcomes, not just time)",
+    "run-b-x4 is no slower (the decision loop is not on the critical path at all)"
+  ],
+  "limitations": [
+    "The scripted baseline never needs to rethink, so this measures what latency costs a decider that is always right; a model that corrects itself pays latency once per correction.",
+    "Simulated latency is resampled from one live run and scaled; real tail latency may be heavier."
+  ]
+}
