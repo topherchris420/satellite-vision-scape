@@ -303,7 +303,7 @@ Human, Jev, random, baseline and replay runs are measured by the same code under
 ## 12. Security
 
 - `TYPESAFE_API_KEY` and `TYPESAFE_MODEL` are **server** environment variables, read only by `src/server/agent/jev.server.ts`. Never use a `VITE_` prefix.
-- `JEV_ASSISTS` (server, not secret) sets how much the question coaches: `full` (default; run B's question, byte for byte), `lean` (facts, not conclusions) or `none`. The status `GET` reports the profile in force. See [NEXT_MODEL.md](NEXT_MODEL.md).
+- `JEV_ASSISTS` (server, not secret) sets how much the question coaches: `full` (default; run B's question plus one fact about the radio's reach), `lean` (facts, not conclusions) or `none`. The status `GET` reports the profile in force. See [NEXT_MODEL.md](NEXT_MODEL.md).
 - The browser sends `{ session, observation }` only; unknown fields are refused. The server builds every word of the TypeSafe question; displayed game text is quoted as data and the context says it is not an instruction. The endpoint cannot be used as a prompt proxy: its only output is one of the offered intents.
 - Requests: same-origin only, JSON only, ≤ 16.9 KiB, strict schema, `controller.provider === "jev"`.
 - Answers: an offered option only, confidence and probabilities in [0, 1], probabilities over offered options summing to 1 within rounding, the choice the most probable; otherwise 502 — never a decision.
