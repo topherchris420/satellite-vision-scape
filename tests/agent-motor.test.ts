@@ -10,11 +10,13 @@ import {
 } from "../src/agent/driving";
 import { IntentExecutor, type MotorState, type MotorWorld } from "../src/agent/executor";
 import { findRoute, type Point } from "../src/agent/navigation";
+import { GameplayState } from "../src/game/core/GameState";
 import { InputState } from "../src/game/core/Input";
 import { COFFEE_CART, DELIVERY } from "../src/game/afterhours/sites";
 import type { AgentIntent } from "../src/agent/contract";
 import type { WorldObservation } from "../src/agent/observation";
 import type { AfterHoursState } from "../src/agent/tasks/afterHoursSchema";
+import { createAfterHoursBaseline } from "../src/agent/tasks/afterHoursBaseline";
 import { FRAME, afterHoursGame, run, scripted } from "./agent-helpers";
 
 /** Wall from x = 8…14, |z| < 7: a detour is needed from (0,0) to (24,0). */
@@ -294,6 +296,43 @@ describe("driving, in the real world", () => {
       }),
     );
   }, 60_000);
+
+  test("with the coffee aboard, getting out mid-drive stops gently first and spills nothing", async () => {
+    // The situation travel-review-interval found: a route review arrives while
+    // the vehicle is still rolling and the agent chooses to get out. Pressed
+    // at speed, the game brakes hard to let the driver out.
+    const g = afterHoursGame();
+    const baseline = createAfterHoursBaseline();
+    let exitAsked = false;
+    g.agent.runtime.start(
+      "agent",
+      scripted((o) => {
+        const st = (o as WorldObservation<AfterHoursState>).task.state;
+        if (
+          st.coffee.carrying &&
+          o.actor.locomotion === "driving" &&
+          (o.vehicle?.speedMps ?? 0) > 5
+        ) {
+          exitAsked = true;
+          return { intent: "exit_vehicle" };
+        }
+        return baseline(o);
+      }),
+    );
+    let speedAtExit: number | null = null;
+    await run(g, 120, () => {
+      const v = g.interaction.driven;
+      if (exitAsked && speedAtExit === null && g.interaction.state === GameplayState.ExitingVehicle)
+        speedAtExit = Math.abs(g.interaction.vehicle?.physics.forwardSpeed ?? 0);
+      return speedAtExit !== null && v === null && g.interaction.state === GameplayState.OnFoot;
+    });
+    expect(exitAsked).toBe(true);
+    expect(speedAtExit).not.toBeNull();
+    expect(speedAtExit!).toBeLessThan(0.6);
+    expect(g.afterHours.mission.state).toBe("active");
+    expect(g.afterHours.mission.spill.integrity).toBeGreaterThan(99);
+    g.dispose();
+  }, 30_000);
 });
 
 describe("driving control (pure)", () => {

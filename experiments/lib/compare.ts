@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { basename, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { rate, summarize } from "./aggregate";
 import { METRICS, controlOf, measure, type TraceLike } from "./metrics";
 import { cell } from "./report";
@@ -89,7 +89,7 @@ export function loadGroups(paths: string[], metrics: string[], until: string): C
         if (runs.length === 0) continue;
         groups.push(
           groupFromTraces(
-            `${ev.result.experiment}:${c.id}`,
+            `${basename(path) === ev.result.experiment ? ev.result.experiment : basename(path)}:${c.id}`,
             runs.map((r) => ({
               trace: readTrace(join(path, r.trace!.file)),
               source: join(path, r.trace!.file),
@@ -161,7 +161,11 @@ export function renderComparison(groups: CompareGroup[], metrics: string[], unti
   out.push(
     "Sources:",
     "",
-    ...groups.flatMap((g) => g.sources.map((s) => `- ${g.label}: \`${s}\``)),
+    ...groups.map((g) =>
+      g.sources.length === 1
+        ? `- ${g.label}: \`${g.sources[0]}\``
+        : `- ${g.label}: ${g.sources.length} traces in \`${dirname(g.sources[0])}/\``,
+    ),
     "",
   );
   return out.join("\n");
