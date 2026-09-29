@@ -1,0 +1,788 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "tuning-control-magnitude",
+ "title": "Is a control bigger than the target zone enough to reproduce run A's oscillation?",
+ "status": "complete",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "tuning-control-magnitude",
+  "title": "Is a control bigger than the target zone enough to reproduce run A's oscillation?",
+  "question": "Does always turning a terminal dial with a long hold (run A's habit) make tuning oscillate, even for a policy that reads the match trend correctly?",
+  "hypothesis": "Control size alone decides whether terminal tuning converges. A policy that follows the match trend perfectly but always uses a long hold (≈ 20% of the dial, wider than the ≈ 7% aligned zone) will overshoot again and again and fail to lock the terminals within the episode; the same policy with graded turns will lock all four.",
+  "motivation": {
+   "observation": "Live run A stopped after 473 decisions alternating dial up / dial down at the Harmony terminal. The fix for run B added three assists at once (trend_inference, hold_still_rule, control_magnitudes), so the run cannot say which one mattered. This experiment isolates the control-size half of the failure with a scripted policy, where the direction rule is held perfect.",
+   "evidence": [
+    "docs/NEXT_MODEL.md §1: run A, 473 decisions oscillating at Harmony",
+    "src/game/afterhours/puzzle.ts: aligned tolerance 0.035 (≈ 7% of the dial wide), a 0.9 s hold ramps to ≈ 20%",
+    "scripts/capture-probes.ts: the heavy-handed (always long) baseline was needed to produce the overshoot probe"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "terminals_completed",
+   "maxSimSeconds": 600,
+   "maxCallsPerRun": 400
+  },
+  "independentVariable": "tuningAmount",
+  "controlled": {
+   "provider": "baseline",
+   "tuningDirection": "trend",
+   "latency": "run-b"
+  },
+  "conditions": [
+   {
+    "id": "graded",
+    "label": "Graded turns (the baseline)",
+    "set": {
+     "tuningAmount": "graded"
+    }
+   },
+   {
+    "id": "long",
+    "label": "Always a long hold (run A's habit)",
+    "set": {
+     "tuningAmount": "long"
+    }
+   },
+   {
+    "id": "tap",
+    "label": "Always one click",
+    "set": {
+     "tuningAmount": "tap"
+    }
+   }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "terminalsCompleted",
+   "terminalTuningInputs",
+   "terminalOvershoots",
+   "terminalSecondsOpen",
+   "tuningDirectionReversals",
+   "providerRequests",
+   "decisions",
+   "staleResponses"
+  ],
+  "predictions": [
+   {
+    "metric": "completed",
+    "from": "graded",
+    "to": "long",
+    "direction": "decrease",
+    "minEffect": 1
+   },
+   {
+    "metric": "terminalOvershoots",
+    "from": "graded",
+    "to": "long",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   {
+    "metric": "terminalTuningInputs",
+    "from": "graded",
+    "to": "tap",
+    "direction": "increase",
+    "minEffect": 20
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "long fails to lock all four terminals in most seeded runs, with many overshoots, while graded locks all four",
+   "tap converges, but only by paying many more inputs than graded"
+  ],
+  "falsificationCriteria": [
+   "long locks all four terminals as reliably as graded: control size alone does not explain run A, and the direction/hold-still half deserves the attention",
+   "long overshoots fewer than 10 more times than graded (median, paired)"
+  ],
+  "limitations": [
+   "A scripted policy with a perfect direction rule, not a model: it isolates what the task does to one habit, not whether Jev has the habit.",
+   "Latency is resampled from one live run's 212 recorded latencies."
+  ],
+  "live": false
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/tuning-control-magnitude.json",
+   "sha256": "d400a5b1bffeee7ff0400dbf0c1be189045c9498ca4c316dc2b202bee0d958d0"
+  },
+  "git": {
+   "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:37:51.178Z",
+  "finishedAt": "2026-09-29T04:38:10.771Z",
+  "command": "bun run experiment tuning-control-magnitude"
+ },
+ "conditions": [
+  {
+   "id": "graded",
+   "label": "Graded turns (the baseline)",
+   "config": {
+    "provider": "baseline",
+    "tuningDirection": "trend",
+    "latency": "run-b",
+    "tuningAmount": "graded"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "long",
+   "label": "Always a long hold (run A's habit)",
+   "config": {
+    "provider": "baseline",
+    "tuningDirection": "trend",
+    "latency": "run-b",
+    "tuningAmount": "long"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "tap",
+   "label": "Always one click",
+   "config": {
+    "provider": "baseline",
+    "tuningDirection": "trend",
+    "latency": "run-b",
+    "tuningAmount": "tap"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  }
+ ],
+ "runs": [
+  {
+   "runId": "graded-01",
+   "condition": "graded",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 871,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-01.trace.json.gz",
+    "sha256": "eb420b33cedf925e29bb61c0dc2f9e5f3d8caf1017b222b7317dff4afe318026",
+    "bytes": 295240,
+    "session": "4efa6f7fa83c8e014f225b8995eb67a0"
+   }
+  },
+  {
+   "runId": "long-01",
+   "condition": "long",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 961,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-01.trace.json.gz",
+    "sha256": "fc7297d71543d95aeae70e4b88e9b121d4d2f57db9c686d47c55fa7148e4c300",
+    "bytes": 564102,
+    "session": "db0013b9d1cc43838230c898b38b1bd0"
+   }
+  },
+  {
+   "runId": "tap-01",
+   "condition": "tap",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 347.2,
+   "wallMs": 569,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-01.trace.json.gz",
+    "sha256": "b3a65587558e40b08698376daebd86080243c1a722224411aabf881d043a2507",
+    "bytes": 373865,
+    "session": "9b6c70fef777294f2293af9f250f096b"
+   }
+  },
+  {
+   "runId": "graded-02",
+   "condition": "graded",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 482,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-02.trace.json.gz",
+    "sha256": "626004a1b126b18739f0110e73aacc0a2a2a290e1c1522fce360693ec057fe8f",
+    "bytes": 295239,
+    "session": "92296cc076b724feee3f499235cbe318"
+   }
+  },
+  {
+   "runId": "long-02",
+   "condition": "long",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 852,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-02.trace.json.gz",
+    "sha256": "ccd8d942ecec867794f8fa12fb08ff29fa9991decb6d2524a40d64b00322f178",
+    "bytes": 564953,
+    "session": "c95985dda7dc6372a019af931610d064"
+   }
+  },
+  {
+   "runId": "tap-02",
+   "condition": "tap",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 346.6,
+   "wallMs": 550,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-02.trace.json.gz",
+    "sha256": "2d030cb5b62b7ba86c30ee48cfca78f0a337626ca755ccf5cbef9e89bb39cd7c",
+    "bytes": 373913,
+    "session": "812eca5f64279b189e95de1fe2885f23"
+   }
+  },
+  {
+   "runId": "graded-03",
+   "condition": "graded",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309,
+   "wallMs": 469,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-03.trace.json.gz",
+    "sha256": "99dd7d9b2f0d9278543b110cf450af4bef6f13b3112597ba5d644d6ded92101f",
+    "bytes": 297167,
+    "session": "c693257a5ec73f8d7b635c37b90c1f1e"
+   }
+  },
+  {
+   "runId": "long-03",
+   "condition": "long",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 785,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-03.trace.json.gz",
+    "sha256": "f24bed381cc23aa1818c5acd099b2c85cf6b1c38069b761956dcaf8c49dd60ea",
+    "bytes": 566157,
+    "session": "485b2ad7a7f1aa9c69e7de4e3f734aed"
+   }
+  },
+  {
+   "runId": "tap-03",
+   "condition": "tap",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 346.7,
+   "wallMs": 539,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-03.trace.json.gz",
+    "sha256": "12c204a71a9c5ee4c4e711e4db0f2d71cc6a44a822e9a9f823f4ff852808be64",
+    "bytes": 375960,
+    "session": "16b9be2673380e7d88bab909f2c7470d"
+   }
+  },
+  {
+   "runId": "graded-04",
+   "condition": "graded",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.6,
+   "wallMs": 461,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-04.trace.json.gz",
+    "sha256": "e171ca5bb6eb8d60d1763cd13ce34e56dfbc12941d8a9ded9d1bcc4b6b75bdf7",
+    "bytes": 296243,
+    "session": "7c3a3659f54ec4e7bff03a20d2b63e7f"
+   }
+  },
+  {
+   "runId": "long-04",
+   "condition": "long",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 816,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-04.trace.json.gz",
+    "sha256": "153d24256e412b5af306bc236b32dae2202aa387d2c006f9eed60877a3c30d25",
+    "bytes": 565103,
+    "session": "cb84cca7ab7c095044dc038adf89f525"
+   }
+  },
+  {
+   "runId": "tap-04",
+   "condition": "tap",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 347,
+   "wallMs": 539,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-04.trace.json.gz",
+    "sha256": "9602da4b6769d96446bc131e118071e19d197a51d050510335ce7ac57ff5d0d7",
+    "bytes": 374967,
+    "session": "391f75189411446cc726bae96ba31e53"
+   }
+  },
+  {
+   "runId": "graded-05",
+   "condition": "graded",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 441,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-05.trace.json.gz",
+    "sha256": "82e79c3a717a41d8a452f53d910825013963a59af9678980736ea2428e3b2a34",
+    "bytes": 295252,
+    "session": "d33455999af7eceef8ebcb3b2f305752"
+   }
+  },
+  {
+   "runId": "long-05",
+   "condition": "long",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 843,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-05.trace.json.gz",
+    "sha256": "45590b3e069cc09340ef648bb182793ba6aab61df3294ec15f816bb2c253b769",
+    "bytes": 564135,
+    "session": "c1bcb6403f2f696bada22c3f974989f2"
+   }
+  },
+  {
+   "runId": "tap-05",
+   "condition": "tap",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 348.2,
+   "wallMs": 533,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-05.trace.json.gz",
+    "sha256": "6b638f7cda5d293ad3c21a518d1767c7f58fe413a4229652d43606d05115844f",
+    "bytes": 373931,
+    "session": "30b747b6be74b92bed3be562678424cb"
+   }
+  },
+  {
+   "runId": "graded-06",
+   "condition": "graded",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 482,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-06.trace.json.gz",
+    "sha256": "35e2912416d155a0f3479e959a87379086380989e3e94e6487f6f80495c13cf4",
+    "bytes": 295195,
+    "session": "79341cb8c9c7459760bed7e12a95c4db"
+   }
+  },
+  {
+   "runId": "long-06",
+   "condition": "long",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 846,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-06.trace.json.gz",
+    "sha256": "ec2689edd878833d84867f0377b134689edf05a940efd3a53aa7c3daeef78b60",
+    "bytes": 563372,
+    "session": "e6c1ad1ad1cba5229e70a588c05e68f8"
+   }
+  },
+  {
+   "runId": "tap-06",
+   "condition": "tap",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 346.5,
+   "wallMs": 614,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-06.trace.json.gz",
+    "sha256": "fc808a92a667b8939a1b2d14217f949c9723570c517aca9aec5ab646470bc3a9",
+    "bytes": 373753,
+    "session": "463b4795be3b0a19082d77684c8d7bd8"
+   }
+  },
+  {
+   "runId": "graded-07",
+   "condition": "graded",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 449,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-07.trace.json.gz",
+    "sha256": "ac4a2071a8dcce9c650dcf90c96a43569779d860aa69844a1a9745425e0b4e76",
+    "bytes": 295093,
+    "session": "3657079aa94c11b28f54fa95d90b18af"
+   }
+  },
+  {
+   "runId": "long-07",
+   "condition": "long",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 907,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-07.trace.json.gz",
+    "sha256": "acedcab3105a39feedd37180c7f09863fa5e78deed7ede297e122ee9aa7f825d",
+    "bytes": 564119,
+    "session": "84d52c0c51fed171d2277379ada126fb"
+   }
+  },
+  {
+   "runId": "tap-07",
+   "condition": "tap",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 346.2,
+   "wallMs": 563,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-07.trace.json.gz",
+    "sha256": "00618058a45a4b4354ca1894b1133c1bd121567c8daf55e56a8b79312cbdb1c1",
+    "bytes": 373823,
+    "session": "a3308c982e557713d320175f3c5e6ed7"
+   }
+  },
+  {
+   "runId": "graded-08",
+   "condition": "graded",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 444,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-08.trace.json.gz",
+    "sha256": "2c2a385d5770a32da954871b92cab7aabfa4e0c49ab0cac4d9ad114364d13589",
+    "bytes": 296205,
+    "session": "ce4342fb90114f34fe0b26a850d81a4f"
+   }
+  },
+  {
+   "runId": "long-08",
+   "condition": "long",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 835,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-08.trace.json.gz",
+    "sha256": "8f2b529c07ca13d78e5d64e25fda6ca0e1453f585988f941cb688bf11db511ce",
+    "bytes": 565214,
+    "session": "525871082d1f07400b150521529c0486"
+   }
+  },
+  {
+   "runId": "tap-08",
+   "condition": "tap",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 346.9,
+   "wallMs": 542,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-08.trace.json.gz",
+    "sha256": "874000e1417fea72a44af3af8f64f55f77de35bcec2afd3f8e4f729f44b3a332",
+    "bytes": 374984,
+    "session": "3ca0d2778ee8cfd8443d49485645df3f"
+   }
+  },
+  {
+   "runId": "graded-09",
+   "condition": "graded",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309.2,
+   "wallMs": 434,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-09.trace.json.gz",
+    "sha256": "51ca1eac40eab0280e06afbe32161ba524029e133086833d2aadfb454530a332",
+    "bytes": 295228,
+    "session": "749848ab3e7f648cfeada0ef655e3ae1"
+   }
+  },
+  {
+   "runId": "long-09",
+   "condition": "long",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 818,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-09.trace.json.gz",
+    "sha256": "230e02ec24817e08911e502804f9b3ff95f3ea7bac8eab46bbe35b61bbcc7159",
+    "bytes": 564108,
+    "session": "47d2766bd5824e264e04be4f181c1a43"
+   }
+  },
+  {
+   "runId": "tap-09",
+   "condition": "tap",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 347,
+   "wallMs": 587,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-09.trace.json.gz",
+    "sha256": "b3ef5da31911a2736309265f925349cf5e122da22da724126b9243adfa2a4d77",
+    "bytes": 373866,
+    "session": "574a47e96ec4453f63c716ee01c4b81f"
+   }
+  },
+  {
+   "runId": "graded-10",
+   "condition": "graded",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 307.8,
+   "wallMs": 462,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/graded-10.trace.json.gz",
+    "sha256": "e52c48cbdd93c902d732aee142c32a21271cffb0ca0b2ad35033462a4941e479",
+    "bytes": 296250,
+    "session": "29cb3e78eb737bba464c673467799bb2"
+   }
+  },
+  {
+   "runId": "long-10",
+   "condition": "long",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "time_budget",
+   "simSeconds": 600,
+   "wallMs": 908,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/long-10.trace.json.gz",
+    "sha256": "75299356735198fa7d2f207f59f066220bc66dd1f12ded46da6950bce45a7193",
+    "bytes": 564280,
+    "session": "2c48ec733b31e204af2539ae5236164f"
+   }
+  },
+  {
+   "runId": "tap-10",
+   "condition": "tap",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 347,
+   "wallMs": 589,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/tap-10.trace.json.gz",
+    "sha256": "a62658ec0f4c6a6949b2532039de8cc7e2ae81d16122331d5937710e0ac0d8e7",
+    "bytes": 374875,
+    "session": "46264c0a802d075c0e1710e4881b1a69"
+   }
+  }
+ ]
+}

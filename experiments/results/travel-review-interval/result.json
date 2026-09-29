@@ -1,0 +1,568 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "travel-review-interval",
+ "title": "Are route reviews every 3 s paying for anything?",
+ "status": "complete",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "travel-review-interval",
+  "title": "Are route reviews every 3 s paying for anything?",
+  "question": "The runtime re-asks the provider every 3 s while it travels. In run B, 79 such reviews changed nothing. Would reviewing every 6 s save calls without changing outcomes?",
+  "hypothesis": "Stretching the travel review from 3 s to 6 s cuts provider requests by at least 20 per journey and changes neither completion, total time (within 5 s) nor the coffee (within 2 points).",
+  "motivation": {
+   "observation": "Run B: 79 of Jev's 212 decisions (37%) were mid-route reviews and 0 of 79 changed the plan. The scripted baseline spends 76 of its 155 calls the same way. NEXT_MODEL.md makes 6 s a tripwire at < 1% plan changes over ≥ 5 live runs; this experiment measures the other half of that trade, what reviews cost and what dropping half of them changes in the world.",
+   "evidence": [
+    "bun run trace docs/traces/jev-after-hours-live-2026-09-27.json: 79 reviews kept the plan, 0 replaced a running action",
+    "docs/NEXT_MODEL.md §4: tripwire, reviews every 6 s"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "task_complete",
+   "maxSimSeconds": 900,
+   "maxCallsPerRun": 400
+  },
+  "independentVariable": "reviewMs",
+  "controlled": {
+   "provider": "baseline",
+   "latency": "run-b"
+  },
+  "conditions": [
+   {
+    "id": "review-3s",
+    "label": "Review every 3 s (product default)",
+    "set": {
+     "reviewMs": 3000
+    }
+   },
+   {
+    "id": "review-6s",
+    "label": "Review every 6 s",
+    "set": {
+     "reviewMs": 6000
+    }
+   }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "providerRequests",
+   "routeReviewsKept",
+   "routeReviewsChanged",
+   "coffeeRemainingPercent",
+   "collisions",
+   "stuckRecoveries",
+   "distanceTraveledM"
+  ],
+  "predictions": [
+   {
+    "metric": "providerRequests",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "decrease",
+    "minEffect": 20
+   },
+   {
+    "metric": "completed",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   {
+    "metric": "goalSeconds",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 5
+   },
+   {
+    "metric": "coffeeRemainingPercent",
+    "from": "review-3s",
+    "to": "review-6s",
+    "direction": "no_change",
+    "minEffect": 2
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "at least 20 fewer requests per journey with no change in completion, time or coffee"
+  ],
+  "falsificationCriteria": [
+   "fewer than 20 requests saved (reviews are not where the calls go)",
+   "completion, time (> 5 s) or coffee (> 2 points) changes: reviews are doing work"
+  ],
+  "limitations": [
+   "The scripted baseline rarely changes its mind, so this measures the cost of reviews and the effect of fewer reviews on the world, not how often a model would use a review to correct itself. The tripwire in NEXT_MODEL.md still needs ≥ 5 live runs for that.",
+   "Does not change the product default: this is evidence for the tripwire, not the tripwire."
+  ],
+  "live": false
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/travel-review-interval.json",
+   "sha256": "487ba9c56372442dc90bef65f354a097db2bb06bd5c608159eb3744864edaa1e"
+  },
+  "git": {
+   "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:37:38.063Z",
+  "finishedAt": "2026-09-29T04:37:50.800Z",
+  "command": "bun run experiment travel-review-interval"
+ },
+ "conditions": [
+  {
+   "id": "review-3s",
+   "label": "Review every 3 s (product default)",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b",
+    "reviewMs": 3000
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "review-6s",
+   "label": "Review every 6 s",
+   "config": {
+    "provider": "baseline",
+    "latency": "run-b",
+    "reviewMs": 6000
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  }
+ ],
+ "runs": [
+  {
+   "runId": "review-3s-01",
+   "condition": "review-3s",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.5,
+   "wallMs": 952,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-01.trace.json.gz",
+    "sha256": "ef9100897b04b53304b5190735368176251d6d7e27d166bc64ca02dbad0042b4",
+    "bytes": 325422,
+    "session": "84d9b0fe23c67f9a3c94a2377b877dc5"
+   }
+  },
+  {
+   "runId": "review-6s-01",
+   "condition": "review-6s",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451.9,
+   "wallMs": 656,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-01.trace.json.gz",
+    "sha256": "015ea4a7357dbc865ed128a5c62c8ef6aefeba358783ba5384d81eb5b9691551",
+    "bytes": 294529,
+    "session": "37b596190a04d680370ff473fab733d1"
+   }
+  },
+  {
+   "runId": "review-3s-02",
+   "condition": "review-3s",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.5,
+   "wallMs": 669,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-02.trace.json.gz",
+    "sha256": "4adfa767c9c238f4f67215e283ce0eef8043871385aac44cd4728a3874f0ff87",
+    "bytes": 325418,
+    "session": "a98cd696e5eaa5a7ed9a898a85d68edc"
+   }
+  },
+  {
+   "runId": "review-6s-02",
+   "condition": "review-6s",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451.6,
+   "wallMs": 599,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-02.trace.json.gz",
+    "sha256": "78e7ce5c3592342396ba307abcb983a7e5c220ad4a021cd4b66b32ecca54db6a",
+    "bytes": 294513,
+    "session": "e88b724e4ca6a3810cbf97601f4df553"
+   }
+  },
+  {
+   "runId": "review-3s-03",
+   "condition": "review-3s",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446.1,
+   "wallMs": 587,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-03.trace.json.gz",
+    "sha256": "fee277ee353d8450c144882e8f3b3401d7331ab42cb8c3f8282e4f9cbedd2560",
+    "bytes": 327314,
+    "session": "eb7dd9fb5924830c97363045bcb586b9"
+   }
+  },
+  {
+   "runId": "review-6s-03",
+   "condition": "review-6s",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 450.9,
+   "wallMs": 546,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-03.trace.json.gz",
+    "sha256": "135e3ec4697139a97d6a45bf15cf06e29d8335e559c9e0838c14f2850af4e949",
+    "bytes": 294557,
+    "session": "00ec3ea9b1c35d91e508e5aed8e516f1"
+   }
+  },
+  {
+   "runId": "review-3s-04",
+   "condition": "review-3s",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446.2,
+   "wallMs": 583,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-04.trace.json.gz",
+    "sha256": "be95ec2fbe1ae94a886ce6139dff0f3e4e69c8d231dc1c062c4a81008a48728c",
+    "bytes": 326491,
+    "session": "ce160871a360fd0b4bc96383e42283c6"
+   }
+  },
+  {
+   "runId": "review-6s-04",
+   "condition": "review-6s",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451,
+   "wallMs": 553,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-04.trace.json.gz",
+    "sha256": "29964719cdebabaaa8fa13b4a0889940334b1db1121f2e7bbceff823d1252c3d",
+    "bytes": 293575,
+    "session": "ea0c5a297d2c966e3f23ffad812ac925"
+   }
+  },
+  {
+   "runId": "review-3s-05",
+   "condition": "review-3s",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 444.9,
+   "wallMs": 687,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-05.trace.json.gz",
+    "sha256": "7246f9f3bf086ac4435fce7420d47c460aa40d3f085831a0a931040896d52f23",
+    "bytes": 323750,
+    "session": "d98d7e749ba8fbebee34fa1d56284e30"
+   }
+  },
+  {
+   "runId": "review-6s-05",
+   "condition": "review-6s",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 452.4,
+   "wallMs": 672,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-05.trace.json.gz",
+    "sha256": "e7ca31cb06ba0d4bdd4288b6cd80af5a61a031a20db622b13e461a603f3c71f0",
+    "bytes": 294604,
+    "session": "c74d107125e8797edf98a1095d6b814c"
+   }
+  },
+  {
+   "runId": "review-3s-06",
+   "condition": "review-3s",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446.2,
+   "wallMs": 615,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-06.trace.json.gz",
+    "sha256": "2669270c191b40e467dee86c1a204d744526ce7cab0980839ddba40ca29778f2",
+    "bytes": 325427,
+    "session": "b9274218ff5551fd1ecca5fc15117987"
+   }
+  },
+  {
+   "runId": "review-6s-06",
+   "condition": "review-6s",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 450.3,
+   "wallMs": 577,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-06.trace.json.gz",
+    "sha256": "4a14df678c4f855dabd48418617873d69e6ba5c5073f1418d63e8df03e56ebf2",
+    "bytes": 293437,
+    "session": "4108ddbaf84f6a0843e439a99b32b31d"
+   }
+  },
+  {
+   "runId": "review-3s-07",
+   "condition": "review-3s",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.9,
+   "wallMs": 599,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-07.trace.json.gz",
+    "sha256": "12ad35584f1239c7be7b52cfe474533ac61f1d900b72b3d9de5dce4c4665ddc5",
+    "bytes": 325314,
+    "session": "84588a187fb978c724f2ccea37278645"
+   }
+  },
+  {
+   "runId": "review-6s-07",
+   "condition": "review-6s",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451.3,
+   "wallMs": 591,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-07.trace.json.gz",
+    "sha256": "483f95bce81cc0af998e842219572ca5a03356b906ab534c88d029238bf2ac35",
+    "bytes": 294525,
+    "session": "18e7c72336510b7c563a33c3f409d556"
+   }
+  },
+  {
+   "runId": "review-3s-08",
+   "condition": "review-3s",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 446.1,
+   "wallMs": 611,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-08.trace.json.gz",
+    "sha256": "1cc9837a275a728e43b08fd07e7f358c2ec38d3ca5e1853703beb804dd07baad",
+    "bytes": 326450,
+    "session": "e2f257916f587f1257a60f17cf392c3a"
+   }
+  },
+  {
+   "runId": "review-6s-08",
+   "condition": "review-6s",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451.3,
+   "wallMs": 583,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-08.trace.json.gz",
+    "sha256": "7e5e988b01c56ac1d6baa8d3b7566bb76f0077d518d97b8e4ca93db41253b12a",
+    "bytes": 294553,
+    "session": "3f9521e5dacd4be97e515ed3547d50b1"
+   }
+  },
+  {
+   "runId": "review-3s-09",
+   "condition": "review-3s",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 445.8,
+   "wallMs": 583,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-09.trace.json.gz",
+    "sha256": "f3638dd77ec84c9fc070f498ce31f90b72e443cb95e61a3aa39f656a47f3699b",
+    "bytes": 323894,
+    "session": "20db940257c9e0da84617c1fb0934d47"
+   }
+  },
+  {
+   "runId": "review-6s-09",
+   "condition": "review-6s",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 452.6,
+   "wallMs": 630,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-09.trace.json.gz",
+    "sha256": "f071d2cfe072d4bca49acf2c122ee209e226a0c0f27013400eaaa3af63765f27",
+    "bytes": 293594,
+    "session": "633bf9ab3e9bf7b438a85a3b86b0ebb9"
+   }
+  },
+  {
+   "runId": "review-3s-10",
+   "condition": "review-3s",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 444.5,
+   "wallMs": 639,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-3s-10.trace.json.gz",
+    "sha256": "7880e4e1574a56b9066a8fc21f0286fe36aa8c5e05c06cffb732c6eb665e9f7b",
+    "bytes": 324944,
+    "session": "f4575160b0ea26d22ebb92b44e76dd93"
+   }
+  },
+  {
+   "runId": "review-6s-10",
+   "condition": "review-6s",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 451.9,
+   "wallMs": 595,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/review-6s-10.trace.json.gz",
+    "sha256": "d67c6014eb87cd8a946c109b2267830de1a8bb6c211d02d07339e03a7afdd1aa",
+    "bytes": 294554,
+    "session": "c85d2491a32dcc6b139bc35732fb2e24"
+   }
+  }
+ ]
+}

@@ -1,0 +1,489 @@
+{
+ "schema": "svs-experiment-summary/v1",
+ "experiment": "coffee-run-human-agent",
+ "status": "partial",
+ "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+ "conditions": [
+  {
+   "id": "baseline",
+   "config": {
+    "provider": "baseline"
+   },
+   "runs": [
+    {
+     "runId": "baseline-01",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-02",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-03",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-04",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-05",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-06",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-07",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-08",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-09",
+     "status": "ok"
+    },
+    {
+     "runId": "baseline-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 10,
+     "rate": 1,
+     "wilson95": [
+      0.722,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 10,
+     "missing": 0,
+     "median": 87,
+     "min": 87,
+     "max": 87,
+     "p95": 87,
+     "mean": 87,
+     "constant": true
+    },
+    "coffeeRemainingPercent": {
+     "n": 10,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeRunDistanceM": {
+     "n": 10,
+     "missing": 0,
+     "median": 583.92,
+     "min": 583.92,
+     "max": 583.92,
+     "p95": 583.92,
+     "mean": 583.92,
+     "constant": true
+    },
+    "coffeeRouteEfficiency": {
+     "n": 10,
+     "missing": 0,
+     "median": 0.931,
+     "min": 0.931,
+     "max": 0.931,
+     "p95": 0.931,
+     "mean": 0.931,
+     "constant": true
+    },
+    "coffeeRunCollisions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "coffeeRunHardBraking": {
+     "n": 10,
+     "missing": 0,
+     "median": 1,
+     "min": 1,
+     "max": 1,
+     "p95": 1,
+     "mean": 1,
+     "constant": true
+    },
+    "coffeeFailures": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "distanceWalkedM": {
+     "n": 10,
+     "missing": 0,
+     "median": 53.16,
+     "min": 53.16,
+     "max": 53.16,
+     "p95": 53.16,
+     "mean": 53.16,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 33,
+     "min": 33,
+     "max": 33,
+     "p95": 33,
+     "mean": 33,
+     "constant": true
+    },
+    "wrongInteractions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    }
+   }
+  },
+  {
+   "id": "random",
+   "config": {
+    "provider": "random"
+   },
+   "runs": [
+    {
+     "runId": "random-01",
+     "status": "ok"
+    },
+    {
+     "runId": "random-02",
+     "status": "ok"
+    },
+    {
+     "runId": "random-03",
+     "status": "ok"
+    },
+    {
+     "runId": "random-04",
+     "status": "ok"
+    },
+    {
+     "runId": "random-05",
+     "status": "ok"
+    },
+    {
+     "runId": "random-06",
+     "status": "ok"
+    },
+    {
+     "runId": "random-07",
+     "status": "ok"
+    },
+    {
+     "runId": "random-08",
+     "status": "ok"
+    },
+    {
+     "runId": "random-09",
+     "status": "ok"
+    },
+    {
+     "runId": "random-10",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 10,
+     "missing": 0,
+     "k": 0,
+     "rate": 0,
+     "wilson95": [
+      0,
+      0.278
+     ]
+    },
+    "goalSeconds": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunDistanceM": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRouteEfficiency": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunCollisions": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunHardBraking": {
+     "n": 0,
+     "missing": 10,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeFailures": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "distanceWalkedM": {
+     "n": 10,
+     "missing": 0,
+     "median": 5.73,
+     "min": 0,
+     "max": 137.55,
+     "p95": 123.078,
+     "mean": 36.042,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 10,
+     "missing": 0,
+     "median": 5.5,
+     "min": 2,
+     "max": 24,
+     "p95": 19.95,
+     "mean": 7.8,
+     "constant": false
+    },
+    "wrongInteractions": {
+     "n": 10,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 1,
+     "p95": 0.55,
+     "mean": 0.1,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "human",
+   "config": {
+    "provider": "human"
+   },
+   "runs": [],
+   "metrics": {
+    "completed": {
+     "n": 0,
+     "missing": 0,
+     "k": 0,
+     "rate": null,
+     "wilson95": null
+    },
+    "goalSeconds": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunDistanceM": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRouteEfficiency": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunCollisions": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeRunHardBraking": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "coffeeFailures": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "distanceWalkedM": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "providerRequests": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    },
+    "wrongInteractions": {
+     "n": 0,
+     "missing": 0,
+     "median": null,
+     "min": null,
+     "max": null,
+     "p95": null,
+     "mean": null,
+     "constant": false
+    }
+   }
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": {
+    "metric": "completed",
+    "from": "baseline",
+    "to": "random",
+    "direction": "decrease",
+    "minEffect": 1
+   },
+   "pairs": 10,
+   "medianChange": -1,
+   "towards": 10,
+   "against": 0,
+   "ties": 0,
+   "signTestP": 0.001,
+   "exact": false,
+   "runIds": [
+    "baseline-01",
+    "random-01",
+    "baseline-02",
+    "random-02",
+    "baseline-03",
+    "random-03",
+    "baseline-04",
+    "random-04",
+    "baseline-05",
+    "random-05",
+    "baseline-06",
+    "random-06",
+    "baseline-07",
+    "random-07",
+    "baseline-08",
+    "random-08",
+    "baseline-09",
+    "random-09",
+    "baseline-10",
+    "random-10"
+   ],
+   "verdict": "SUPPORTED",
+   "reasons": [
+    "median paired change -1 (≥ 1 predicted); 10 of 10 moving pairs in the predicted direction, sign test p = 0.001"
+   ]
+  }
+ ],
+ "excluded": []
+}

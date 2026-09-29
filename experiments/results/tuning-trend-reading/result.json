@@ -1,0 +1,785 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "tuning-trend-reading",
+ "title": "What does the tuning task charge an agent that cannot read the match trend?",
+ "status": "complete",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "tuning-trend-reading",
+  "title": "What does the tuning task charge an agent that cannot read the match trend?",
+  "question": "If an agent cannot infer from the match meter which way the reference lies, how much does terminal tuning cost it, and does it still finish?",
+  "hypothesis": "Reading the trend is worth a lot but is not required: a policy that ignores the match trend (sweeping one way and reversing only at the end of the dial) still locks all four terminals, because graded turns shrink near the reference, but it needs at least 10 more tuning inputs than the trend-reading policy.",
+  "motivation": {
+   "observation": "trend_inference is one of the three assists added after run A. It spells out the conclusion \"the reference lies the other way\". Before asking whether a model still needs it, measure how much the task rewards the underlying skill at all.",
+   "evidence": [
+    "src/server/agent/assists.ts: trend_inference, probes terminal-reverse-after-overshoot and terminal-continue-while-rising",
+    "evals/results/2026-09-27-baseline.json: the baseline itself fails terminal-continue-while-rising cold (it steers from memory)"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "terminals_completed",
+   "maxSimSeconds": 600,
+   "maxCallsPerRun": 400
+  },
+  "independentVariable": "tuningDirection",
+  "controlled": {
+   "provider": "baseline",
+   "tuningAmount": "graded",
+   "latency": "run-b"
+  },
+  "conditions": [
+   {
+    "id": "trend",
+    "label": "Reverses when the match falls",
+    "set": {
+     "tuningDirection": "trend"
+    }
+   },
+   {
+    "id": "sweep",
+    "label": "Cannot read the trend: sweeps to the end of the dial",
+    "set": {
+     "tuningDirection": "sweep"
+    }
+   },
+   {
+    "id": "blind",
+    "label": "Cannot read the trend and ignores where the dial starts: always turns up first",
+    "set": {
+     "tuningDirection": "blind"
+    }
+   }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "terminalsCompleted",
+   "terminalTuningInputs",
+   "terminalOvershoots",
+   "terminalSecondsOpen",
+   "providerRequests"
+  ],
+  "predictions": [
+   {
+    "metric": "completed",
+    "from": "trend",
+    "to": "sweep",
+    "direction": "no_change",
+    "minEffect": 0
+   },
+   {
+    "metric": "terminalTuningInputs",
+    "from": "trend",
+    "to": "sweep",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   {
+    "metric": "terminalTuningInputs",
+    "from": "trend",
+    "to": "blind",
+    "direction": "increase",
+    "minEffect": 10
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "sweep locks all four terminals in every run, at a cost of at least 10 more inputs"
+  ],
+  "falsificationCriteria": [
+   "sweep fails to lock the terminals (the skill is required, not just valuable)",
+   "sweep costs fewer than 10 extra inputs (the skill is barely worth an assist)"
+  ],
+  "limitations": [
+   "A scripted stand-in for a missing skill: a real model without the skill may fail differently (for example by oscillating instead of sweeping).",
+   "Terminal start positions are fixed by the game, so the sweep's cost depends on which side of the reference each dial starts.",
+   "For the four current terminals, 'turn towards the middle' is always the right first direction (src/game/afterhours/puzzle.ts, TuningSession start), so the terminal stage only exercises trend reading after an overshoot."
+  ],
+  "live": false,
+  "notes": "The blind condition and its prediction were added after a 2-run pilot (not committed) in which sweep matched trend exactly: every terminal's dial starts 0.34 from its reference on the side nearer the middle of the dial, so 'turn towards the middle' is right at all four panels and graded turns never overshoot. The original two predictions were left unchanged."
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/tuning-trend-reading.json",
+   "sha256": "14e425a0e14dc7a89f46ef78d56aef1160db7394b445b518be7ddfc5a4f9e70c"
+  },
+  "git": {
+   "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:38:11.297Z",
+  "finishedAt": "2026-09-29T04:38:26.225Z",
+  "command": "bun run experiment tuning-trend-reading"
+ },
+ "conditions": [
+  {
+   "id": "trend",
+   "label": "Reverses when the match falls",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "trend"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "sweep",
+   "label": "Cannot read the trend: sweeps to the end of the dial",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "sweep"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "blind",
+   "label": "Cannot read the trend and ignores where the dial starts: always turns up first",
+   "config": {
+    "provider": "baseline",
+    "tuningAmount": "graded",
+    "latency": "run-b",
+    "tuningDirection": "blind"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  }
+ ],
+ "runs": [
+  {
+   "runId": "trend-01",
+   "condition": "trend",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 805,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-01.trace.json.gz",
+    "sha256": "b742704399c78bcc123570e5b3dfcf8bec47b30119d860d719032c77ef512c1a",
+    "bytes": 295240,
+    "session": "b70e482aece66e8b0ec5203bb368cd72"
+   }
+  },
+  {
+   "runId": "sweep-01",
+   "condition": "sweep",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 520,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-01.trace.json.gz",
+    "sha256": "8cbcb19de5c714442f229244f872a2304c43831ed9e4c510c6ca5cd0725bfd83",
+    "bytes": 295240,
+    "session": "57df9a47a939ff99f8578b4dd973d093"
+   }
+  },
+  {
+   "runId": "blind-01",
+   "condition": "blind",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 320.4,
+   "wallMs": 503,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-01.trace.json.gz",
+    "sha256": "ba4a365638d42c3eb41184dbdd27faab7133646381d02a02982064be590ca15a",
+    "bytes": 302464,
+    "session": "0254e4f75f2549befa9dc41d49aacfce"
+   }
+  },
+  {
+   "runId": "trend-02",
+   "condition": "trend",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 478,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-02.trace.json.gz",
+    "sha256": "88445d4073b813f02945cce57c675e7f3be89d5c30f7355c1d3758554b1c7e7a",
+    "bytes": 295239,
+    "session": "85d9cb97e95fc771c7fec9ecd8ec3f01"
+   }
+  },
+  {
+   "runId": "sweep-02",
+   "condition": "sweep",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 468,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-02.trace.json.gz",
+    "sha256": "31fb6507ef587dabb7e7327ec20643867a6a82ffc730da90fc4c767a1749da61",
+    "bytes": 295239,
+    "session": "84f33dafe4f9ce502044a5a87bec9d1b"
+   }
+  },
+  {
+   "runId": "blind-02",
+   "condition": "blind",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 319,
+   "wallMs": 510,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-02.trace.json.gz",
+    "sha256": "8e5d7491f38a10d33ae33cfed9f3012be3c843ec7c6022c3e96bc642c20290c4",
+    "bytes": 302429,
+    "session": "dbf273aa17d90b71496dc388cd462e9f"
+   }
+  },
+  {
+   "runId": "trend-03",
+   "condition": "trend",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309,
+   "wallMs": 488,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-03.trace.json.gz",
+    "sha256": "d5a935a39379936e95f2b0c28b507f8cd05371798fc59bd4ac3bd3d8c0b03fb8",
+    "bytes": 297167,
+    "session": "9ba12409af08334715491eb74b3e5b3d"
+   }
+  },
+  {
+   "runId": "sweep-03",
+   "condition": "sweep",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309,
+   "wallMs": 491,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-03.trace.json.gz",
+    "sha256": "ca992d0fd9b6cb6ec6c5e4bb3c7be22581766cc3951ef9b23202af2a190c4bdd",
+    "bytes": 297167,
+    "session": "b083cc0054abec01ede18ce66d95f103"
+   }
+  },
+  {
+   "runId": "blind-03",
+   "condition": "blind",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 319.9,
+   "wallMs": 493,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-03.trace.json.gz",
+    "sha256": "954dbc52b7e09e44c8fc7f8acbb250d672e38b223f586f6f4587bcf0ac3168f8",
+    "bytes": 304587,
+    "session": "9a85a419480825a032a319c6f60a4278"
+   }
+  },
+  {
+   "runId": "trend-04",
+   "condition": "trend",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.6,
+   "wallMs": 447,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-04.trace.json.gz",
+    "sha256": "7cc1e6c0f7b5574277ac8b4988834be86f59c5d53c407f816bc8701a9c35fe4f",
+    "bytes": 296243,
+    "session": "eee58c03a87767e4a80beabca2bcf670"
+   }
+  },
+  {
+   "runId": "sweep-04",
+   "condition": "sweep",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.6,
+   "wallMs": 498,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-04.trace.json.gz",
+    "sha256": "e7c4428d59dc21f02242f0d7c8a35e25d948b2b11ade262bb99c25a758ad594d",
+    "bytes": 296243,
+    "session": "6c041990b8304ea05857550d167aa208"
+   }
+  },
+  {
+   "runId": "blind-04",
+   "condition": "blind",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 320,
+   "wallMs": 504,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-04.trace.json.gz",
+    "sha256": "639ad81e4fccd3d8e9693cd0442a5ce3e65d98bb9ee05e8b2238d4ed51c0f3c2",
+    "bytes": 303437,
+    "session": "2bec381e372d76d881e903cf87585003"
+   }
+  },
+  {
+   "runId": "trend-05",
+   "condition": "trend",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 480,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-05.trace.json.gz",
+    "sha256": "1404123dc253f1a387a4ae8d64020fc55003a4d72759abbdcce1015aad78cb81",
+    "bytes": 295252,
+    "session": "d6e931b4e140717bbe43159a3614bd00"
+   }
+  },
+  {
+   "runId": "sweep-05",
+   "condition": "sweep",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.2,
+   "wallMs": 472,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-05.trace.json.gz",
+    "sha256": "20d2ac8698cac39fce1ff6556679ccb8fd50b81e34e47076c6e73349af5dd595",
+    "bytes": 295252,
+    "session": "98905503740af94294996a385632daf1"
+   }
+  },
+  {
+   "runId": "blind-05",
+   "condition": "blind",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 320.4,
+   "wallMs": 494,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-05.trace.json.gz",
+    "sha256": "ddbc69abedfa2356dc08c892732812956d4e09541b03dd89edfdd12aefceb1f5",
+    "bytes": 302471,
+    "session": "b27bb185a17f0eba30e6803c76514181"
+   }
+  },
+  {
+   "runId": "trend-06",
+   "condition": "trend",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 426,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-06.trace.json.gz",
+    "sha256": "fa676936ae0253cfa54f38f3a77f9dc379fef6b5907603122cc10669a71c9f13",
+    "bytes": 295195,
+    "session": "6362f8247414babc38ed22ca3f7ec1fc"
+   }
+  },
+  {
+   "runId": "sweep-06",
+   "condition": "sweep",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.5,
+   "wallMs": 480,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-06.trace.json.gz",
+    "sha256": "ea3bbbe841de3ebc6c458b3cb8896dd5d7c21f367f149a2522d4c92a6517176f",
+    "bytes": 295195,
+    "session": "83eeea932eeaa17b998a9d08d23fbb8e"
+   }
+  },
+  {
+   "runId": "blind-06",
+   "condition": "blind",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 319.6,
+   "wallMs": 511,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-06.trace.json.gz",
+    "sha256": "f81ded33401df28c4a025b8497ff9c603f37714ab53a9c12e43a4f3d466bc1cf",
+    "bytes": 302442,
+    "session": "60880602e6d7c3fa406e24723acc5cf8"
+   }
+  },
+  {
+   "runId": "trend-07",
+   "condition": "trend",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 524,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-07.trace.json.gz",
+    "sha256": "f179495ead0edb7cfb57624674419dc73c2514e5c1b91b2545c2759abf4a67d3",
+    "bytes": 295093,
+    "session": "26058be6203b177f6f4bf4b8891ad63f"
+   }
+  },
+  {
+   "runId": "sweep-07",
+   "condition": "sweep",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 465,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-07.trace.json.gz",
+    "sha256": "f596efeace6701967630067ff6d159846942cbec901a9374dbeb8726070a70e5",
+    "bytes": 295093,
+    "session": "8b561534ae025209f367cd48885e17e8"
+   }
+  },
+  {
+   "runId": "blind-07",
+   "condition": "blind",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 320.1,
+   "wallMs": 461,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-07.trace.json.gz",
+    "sha256": "507ff419b2d6e87a1e40b68f3f55cf38297fff478ef9500414faf687516e09b2",
+    "bytes": 302475,
+    "session": "918ce17db443ea76ba92bf627b131d39"
+   }
+  },
+  {
+   "runId": "trend-08",
+   "condition": "trend",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 480,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-08.trace.json.gz",
+    "sha256": "1e24907ec8353f213573c08449f9c732d792f9239c7677d42fe41fd9281b55b5",
+    "bytes": 296205,
+    "session": "518c760ff661248e0090c70ec16ff0bb"
+   }
+  },
+  {
+   "runId": "sweep-08",
+   "condition": "sweep",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 308.7,
+   "wallMs": 468,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-08.trace.json.gz",
+    "sha256": "97cfab4bc72a8be27ff634d402d208087166aa36e73ac4126d44a56e49b7886a",
+    "bytes": 296205,
+    "session": "1a4a04c646b95ddecb033c6b37d76aa8"
+   }
+  },
+  {
+   "runId": "blind-08",
+   "condition": "blind",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 319.7,
+   "wallMs": 475,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-08.trace.json.gz",
+    "sha256": "4b8d9cd1b62cc36ae305be1c93f022a67fa1bd4e16ced81bb72378b7938ccb56",
+    "bytes": 303668,
+    "session": "a5fe87a707c39d89cf2c3751babf1967"
+   }
+  },
+  {
+   "runId": "trend-09",
+   "condition": "trend",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309.2,
+   "wallMs": 437,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-09.trace.json.gz",
+    "sha256": "85959986b4823a04ec94aca3d97c91533ddb0afb2b81801f2f9ec4035b58faf1",
+    "bytes": 295228,
+    "session": "3b428dcff51b0a788341f420e9758c64"
+   }
+  },
+  {
+   "runId": "sweep-09",
+   "condition": "sweep",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 309.2,
+   "wallMs": 436,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-09.trace.json.gz",
+    "sha256": "f99fce4f761458f20846f1bc3c9ddb397cb3382f9b81c50f5b231d245a0de071",
+    "bytes": 295228,
+    "session": "33561c5f425eb442fd77eba722b384dc"
+   }
+  },
+  {
+   "runId": "blind-09",
+   "condition": "blind",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 320.2,
+   "wallMs": 478,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-09.trace.json.gz",
+    "sha256": "5e32f8e79aa0dac01c5f72ea778f1ed0cf5d5ae646d8cbe631b5fb6b66e44a4b",
+    "bytes": 302561,
+    "session": "61b87c461359cb8bb74792db9740f85c"
+   }
+  },
+  {
+   "runId": "trend-10",
+   "condition": "trend",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 307.8,
+   "wallMs": 433,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/trend-10.trace.json.gz",
+    "sha256": "8fe77c50d3ddf728e4ab5560bfa39cbe2eceec2d0f0d4dde4579a93d33af01ea",
+    "bytes": 296250,
+    "session": "8c09615edc84cad7243d0bdd34a7a95f"
+   }
+  },
+  {
+   "runId": "sweep-10",
+   "condition": "sweep",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 307.8,
+   "wallMs": 441,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/sweep-10.trace.json.gz",
+    "sha256": "bb62af34e8f3182bc718ca95cb76abe97245fa22e29a0e0dfb433efcacdffcf0",
+    "bytes": 296250,
+    "session": "bc9a207ab374f6950cee8928b6107e37"
+   }
+  },
+  {
+   "runId": "blind-10",
+   "condition": "blind",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 319.9,
+   "wallMs": 464,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/blind-10.trace.json.gz",
+    "sha256": "e06f561cf6f66b6ce04f7f008508ed0696925a780a851135a236888dc9927ae2",
+    "bytes": 303559,
+    "session": "d1c8fcbfbeaa72010916b8c44747f6c3"
+   }
+  }
+ ]
+}

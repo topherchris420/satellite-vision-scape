@@ -1,0 +1,560 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "coffee-run-human-agent",
+ "title": "The coffee run: a person, the scripted baseline and the chance floor",
+ "status": "partial",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "coffee-run-human-agent",
+  "title": "The coffee run: a person, the scripted baseline and the chance floor",
+  "question": "How does a person's coffee run compare with an agent's on what the world can measure for both: time, route, collisions and coffee retained?",
+  "hypothesis": "On the coffee run, the scripted baseline (smooth executor driving) retains more coffee than a person, while a person is faster; the random agent almost never delivers. This is a comparison of observable behaviour, not a contest: perception and motor control differ between the columns.",
+  "motivation": {
+   "observation": "The README says no human reference run is committed and that a side-by-side comparison is something you record yourself. Human sessions now record route samples, overshoots and the same windows as agents, so a person's exported trace can be imported into this experiment and compared on shared metrics only.",
+   "evidence": [
+    "README.md: 'No human reference run is committed yet'",
+    "tests/agent-motor.test.ts: smooth vs aggressive driving, 100% vs 11% coffee"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "coffee_delivered",
+   "maxSimSeconds": 300,
+   "maxCallsPerRun": 400
+  },
+  "independentVariable": "provider",
+  "controlled": {},
+  "conditions": [
+   {
+    "id": "baseline",
+    "label": "Scripted baseline (no latency)",
+    "set": {
+     "provider": "baseline"
+    }
+   },
+   {
+    "id": "random",
+    "label": "Seeded random agent (the chance floor)",
+    "set": {
+     "provider": "random"
+    }
+   },
+   {
+    "id": "human",
+    "label": "A person (exported with ?agentHud=1, imported)",
+    "set": {
+     "provider": "human"
+    }
+   }
+  ],
+  "runsPerCondition": 10,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "coffeeRemainingPercent",
+   "coffeeRunDistanceM",
+   "coffeeRouteEfficiency",
+   "coffeeRunCollisions",
+   "coffeeRunHardBraking",
+   "coffeeFailures",
+   "distanceWalkedM",
+   "providerRequests",
+   "wrongInteractions"
+  ],
+  "predictions": [
+   {
+    "metric": "completed",
+    "from": "baseline",
+    "to": "random",
+    "direction": "decrease",
+    "minEffect": 1
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "the random agent delivers far less often than the baseline (the floor is low)"
+  ],
+  "falsificationCriteria": [
+   "the random agent delivers as often as the baseline: the coffee run would not discriminate at all"
+  ],
+  "limitations": [
+   "Human runs are recorded in the browser and imported; their seeds are not controlled, so human comparisons are measurements only, never verdicts.",
+   "A person perceives pixels and audio and steers every frame; agents read text and use the shared executor. Only world-measured metrics are compared.",
+   "The random agent may choose 'hand control back', which ends its run: that is what the random provider does in the product too."
+  ],
+  "live": false
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/coffee-run-human-agent.json",
+   "sha256": "d6ff4a78329f8652481f298209e37f7cbe2cb8d27c30bcafea5420335534f58a"
+  },
+  "git": {
+   "commit": "5d87e56681ecd279fdfe034d5c9c3efc1238b7f6",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:38:26.626Z",
+  "finishedAt": "2026-09-29T04:38:28.962Z",
+  "command": "bun run experiment coffee-run-human-agent"
+ },
+ "conditions": [
+  {
+   "id": "baseline",
+   "label": "Scripted baseline (no latency)",
+   "config": {
+    "provider": "baseline"
+   },
+   "stochastic": false,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "random",
+   "label": "Seeded random agent (the chance floor)",
+   "config": {
+    "provider": "random"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 10,
+   "skipped": null
+  },
+  {
+   "id": "human",
+   "label": "A person (exported with ?agentHud=1, imported)",
+   "config": {
+    "provider": "human"
+   },
+   "stochastic": true,
+   "plannedRuns": 10,
+   "executedRuns": 0,
+   "skipped": "recorded by people in the browser; import with `bun run experiment import`"
+  }
+ ],
+ "runs": [
+  {
+   "runId": "baseline-01",
+   "condition": "baseline",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 382,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-01.trace.json.gz",
+    "sha256": "2f5228a56448269345fd49b5448a4e216a560a91a0b0eee3d47dfe2968e76ec0",
+    "bytes": 133569,
+    "session": "fdadab9ede400bc2749eaa11734a64ec"
+   }
+  },
+  {
+   "runId": "random-01",
+   "condition": "random",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 28.1,
+   "wallMs": 112,
+   "model": "seeded-uniform-1",
+   "error": null,
+   "trace": {
+    "file": "runs/random-01.trace.json.gz",
+    "sha256": "f82f416d281a4662a9bb607fb65c058698dd8c1c8d4162f6b7d6097d5e3905e6",
+    "bytes": 59502,
+    "session": "f705a0feeaaa58fd6b1c8beeb1f0af7d"
+   }
+  },
+  {
+   "runId": "baseline-02",
+   "condition": "baseline",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 162,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-02.trace.json.gz",
+    "sha256": "183de3123d36cc584fc7867354249a90fb8bda4af3fb8e830c83d017750503c3",
+    "bytes": 133569,
+    "session": "12e55037d8bf1879584228ffef58150a"
+   }
+  },
+  {
+   "runId": "random-02",
+   "condition": "random",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 4.1,
+   "wallMs": 15,
+   "model": "seeded-uniform-2",
+   "error": null,
+   "trace": {
+    "file": "runs/random-02.trace.json.gz",
+    "sha256": "975f54c1b6ca645318b705ab7e4660d9b71a72fd621b9c3416daa12b44da7b6e",
+    "bytes": 13089,
+    "session": "598aed29a716ce8036c4a28f49c7f305"
+   }
+  },
+  {
+   "runId": "baseline-03",
+   "condition": "baseline",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 135,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-03.trace.json.gz",
+    "sha256": "8122e259c863b38f4416774dd52760515d27049f223b1f0d3733726073f1f1f2",
+    "bytes": 133569,
+    "session": "9a9b329255391e1c5cb4bf1b707f59c2"
+   }
+  },
+  {
+   "runId": "random-03",
+   "condition": "random",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 2.8,
+   "wallMs": 8,
+   "model": "seeded-uniform-3",
+   "error": null,
+   "trace": {
+    "file": "runs/random-03.trace.json.gz",
+    "sha256": "971f3fb7a8063d3e7163d661a43f859362c630f36194de45b0084ddfbdb979ed",
+    "bytes": 17479,
+    "session": "be9aa03a31e67c9c4f6e69fe84fd07b8"
+   }
+  },
+  {
+   "runId": "baseline-04",
+   "condition": "baseline",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 139,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-04.trace.json.gz",
+    "sha256": "4bf92a8d1d2d524dc92c40de6d1bc40b98921ae978bd085f181b0318dc3be645",
+    "bytes": 133569,
+    "session": "9330e379b6bbcad1dacf09c75c0b7a7c"
+   }
+  },
+  {
+   "runId": "random-04",
+   "condition": "random",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 4.1,
+   "wallMs": 9,
+   "model": "seeded-uniform-4",
+   "error": null,
+   "trace": {
+    "file": "runs/random-04.trace.json.gz",
+    "sha256": "1a20b9694655f9926b23010e874520bc5599c11e09376e30ff0797be9cdb0fb9",
+    "bytes": 13095,
+    "session": "b795089498ae790f9ccec1356d7a72a9"
+   }
+  },
+  {
+   "runId": "baseline-05",
+   "condition": "baseline",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 138,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-05.trace.json.gz",
+    "sha256": "c5e94b43bbd66a9da6fd4936c92e105c2262e844c5b1676fdc14f54c8c0a729d",
+    "bytes": 133569,
+    "session": "fb887c484a8d9923b9cf7458f00a7a01"
+   }
+  },
+  {
+   "runId": "random-05",
+   "condition": "random",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 3.5,
+   "wallMs": 48,
+   "model": "seeded-uniform-5",
+   "error": null,
+   "trace": {
+    "file": "runs/random-05.trace.json.gz",
+    "sha256": "507cd4782fbe4277f74aaf927dec2001c9865891e2461306e25acd4581553c85",
+    "bytes": 21803,
+    "session": "fbf338dff6efe05443e181770cbd970d"
+   }
+  },
+  {
+   "runId": "baseline-06",
+   "condition": "baseline",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 135,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-06.trace.json.gz",
+    "sha256": "9c5e4b442414b17fd6cec0588f2f51a0f62ace0b1b3ea56bd5d138fbb4c9377f",
+    "bytes": 133569,
+    "session": "003da891e1440ca77448aeeff8a3a9cf"
+   }
+  },
+  {
+   "runId": "random-06",
+   "condition": "random",
+   "index": 5,
+   "seed": 6,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 2.6,
+   "wallMs": 44,
+   "model": "seeded-uniform-6",
+   "error": null,
+   "trace": {
+    "file": "runs/random-06.trace.json.gz",
+    "sha256": "104422e505b3536d87181dbdd68178449da59a067540604b9a037d5e4b698864",
+    "bytes": 25603,
+    "session": "d366f9ee0178f9cac40801e7f5f2fdfc"
+   }
+  },
+  {
+   "runId": "baseline-07",
+   "condition": "baseline",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 133,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-07.trace.json.gz",
+    "sha256": "71d4709b1e2809b88716c0161b0d54e850950eb8d0b144b0b282fa11d86c68b6",
+    "bytes": 133569,
+    "session": "b3b63ed3f5e86de0eabbc09a5917cf0d"
+   }
+  },
+  {
+   "runId": "random-07",
+   "condition": "random",
+   "index": 6,
+   "seed": 7,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 1.5,
+   "wallMs": 5,
+   "model": "seeded-uniform-7",
+   "error": null,
+   "trace": {
+    "file": "runs/random-07.trace.json.gz",
+    "sha256": "e75d18768f850dbfc69ef7df6706637297326a5e35c6ce5c66f2021556b71db7",
+    "bytes": 9591,
+    "session": "d533326dcc695bf2259551d687df92ff"
+   }
+  },
+  {
+   "runId": "baseline-08",
+   "condition": "baseline",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 126,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-08.trace.json.gz",
+    "sha256": "ad2283735868baca19b7ad01a466a7d0442c6dc78b494e970fe94980c073d579",
+    "bytes": 133569,
+    "session": "ddb789daa68029b144b41603a80970cf"
+   }
+  },
+  {
+   "runId": "random-08",
+   "condition": "random",
+   "index": 7,
+   "seed": 8,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 18.5,
+   "wallMs": 56,
+   "model": "seeded-uniform-8",
+   "error": null,
+   "trace": {
+    "file": "runs/random-08.trace.json.gz",
+    "sha256": "6d65aebf8591e24a096d13dd5820421c0363485caf375d43f4ca023606533681",
+    "bytes": 30714,
+    "session": "c2ef95f0da101fac369eb6f5d37defbd"
+   }
+  },
+  {
+   "runId": "baseline-09",
+   "condition": "baseline",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 130,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-09.trace.json.gz",
+    "sha256": "7145748d9d1a093624058424aea108d76578b630a14397d3bff11c2b051749d3",
+    "bytes": 133569,
+    "session": "4a2560915fbe1c009e23747fbcb9093b"
+   }
+  },
+  {
+   "runId": "random-09",
+   "condition": "random",
+   "index": 8,
+   "seed": 9,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 32.8,
+   "wallMs": 326,
+   "model": "seeded-uniform-9",
+   "error": null,
+   "trace": {
+    "file": "runs/random-09.trace.json.gz",
+    "sha256": "d76a27bb00be0c05d22c1deca56e2bb3c2c50cb124dcf87bfba73be08683e62f",
+    "bytes": 96477,
+    "session": "d3cd61dc9596499f88043ba2714c5060"
+   }
+  },
+  {
+   "runId": "baseline-10",
+   "condition": "baseline",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 87,
+   "wallMs": 124,
+   "model": "scripted-baseline",
+   "error": null,
+   "trace": {
+    "file": "runs/baseline-10.trace.json.gz",
+    "sha256": "bf0c936748e0002e7fcadbbb35b97d653b18f2963686582cfb8b1f417a2136df",
+    "bytes": 133569,
+    "session": "4353c67bd68b7e0eb7851539f4bc6ceb"
+   }
+  },
+  {
+   "runId": "random-10",
+   "condition": "random",
+   "index": 9,
+   "seed": 10,
+   "paired": true,
+   "status": "ok",
+   "completed": false,
+   "terminatedBy": "handed_back",
+   "simSeconds": 5,
+   "wallMs": 42,
+   "model": "seeded-uniform-10",
+   "error": null,
+   "trace": {
+    "file": "runs/random-10.trace.json.gz",
+    "sha256": "1e4067dd764f97754d5bd88b92479ab56be012c9b0539ba1211513454ebc393c",
+    "bytes": 33679,
+    "session": "862aeb115f194a57b09a0ed56c52e1a1"
+   }
+  }
+ ]
+}
