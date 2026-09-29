@@ -69,6 +69,7 @@ export class ThirdPersonCamera {
   private distance: number = CAMERA.onFoot.distance;
   private desiredDistance: number = CAMERA.onFoot.distance;
   private zoom = 1;
+  private aimBlend = 0;
   private blendProgress = 0;
   private idleLook = 0;
   private fov: number = CAMERA.onFoot.fov;
@@ -223,10 +224,14 @@ export class ThirdPersonCamera {
   update(
     dt: number,
     focus: CameraFocus,
-    look: { x: number; y: number; zoom: number },
+    look: { x: number; y: number; zoom: number; aim?: number },
     camera: THREE.PerspectiveCamera,
   ): void {
     const p = this.resolveProfile(focus, dt);
+    // Aim framing (Free Roam): closer, narrower, over the right shoulder. On foot only.
+    const aimTarget = focus.mode === "foot" && (look.aim ?? 0) > 0 ? 1 : 0;
+    this.aimBlend = damp(this.aimBlend, aimTarget, CAMERA.aim.blendRate, dt);
+    if (this.aimBlend < 1e-3) this.aimBlend = 0;
 
     // --- Orbit input -----------------------------------------------------------
     if (look.x !== 0 || look.y !== 0) {
@@ -273,7 +278,10 @@ export class ThirdPersonCamera {
     }
 
     // --- Collision-limited distance ---------------------------------------------
-    this.desiredDistance = damp(this.desiredDistance, p.distance * this.zoom, 6, dt);
+    // Fully aimed, the distance is the fixed aim distance (the wheel zoom is
+    // presentation and must not move where the crosshair points).
+    const wanted = lerp(p.distance * this.zoom, CAMERA.aim.distance, this.aimBlend);
+    this.desiredDistance = damp(this.desiredDistance, wanted, 6, dt);
     const cp = Math.cos(this.pitch);
     this.dir.set(Math.sin(this.yaw) * cp, -Math.sin(this.pitch), Math.cos(this.yaw) * cp);
     let free = this.collision.raycast(
@@ -295,6 +303,12 @@ export class ThirdPersonCamera {
     this.characterOccluded = focus.mode === "foot" && this.distance < CAMERA.hideCharacterDistance;
 
     const pos = this.targetPosition.copy(this.pivot).addScaledVector(this.dir, -this.distance);
+    if (this.aimBlend > 0) {
+      // Camera right in world XZ is (−cos yaw, sin yaw).
+      const shoulder = CAMERA.aim.shoulder * this.aimBlend;
+      pos.x += -Math.cos(this.yaw) * shoulder;
+      pos.z += Math.sin(this.yaw) * shoulder;
+    }
     const floor = this.ground.heightAt(pos.x, pos.z) + CAMERA.groundClearance;
     if (pos.y < floor) pos.y = floor;
 
@@ -310,7 +324,7 @@ export class ThirdPersonCamera {
 
     this.euler.set(-this.pitch, this.yaw + Math.PI, 0);
     this.targetQuaternion.setFromEuler(this.euler);
-    this.fov = damp(this.fov, p.fov, 4, dt);
+    this.fov = damp(this.fov, lerp(p.fov, CAMERA.aim.fov, this.aimBlend), 6, dt);
 
     this.present(dt, camera);
   }

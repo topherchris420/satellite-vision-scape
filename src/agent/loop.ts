@@ -1,3 +1,4 @@
+import type { AgentIntent } from "./contract";
 import type { WorldObservation } from "./observation";
 import type { AgentProvider, FailureKind, ProviderDecision, ProviderResult } from "./provider";
 
@@ -34,18 +35,18 @@ export interface LoopClock {
   clearTimeout(handle: unknown): void;
 }
 
-export interface LoopContext {
+export interface LoopContext<O = WorldObservation> {
   /** A decision is wanted now. */
   eligible: boolean;
   /** Changes on takeover, mode change and stage change. */
   epoch: number;
   /** Build the observation for `sequence`, or null if it cannot be built. */
-  capture(sequence: number): WorldObservation | null;
+  capture(sequence: number): O | null;
 }
 
-export interface AcceptedDecision extends ProviderDecision {
+export interface AcceptedDecision<O = WorldObservation, I = AgentIntent> extends ProviderDecision<I> {
   sequence: number;
-  observation: WorldObservation;
+  observation: O;
   provider: string;
   /** Wall-clock round trip, milliseconds. */
   latencyMs: number;
@@ -60,22 +61,22 @@ export type LoopEvent =
   | { kind: "failure"; sequence: number; failure: FailureKind; detail: string; retryInMs: number }
   | { kind: "aborted"; sequence: number; reason: string };
 
-export interface LoopOptions {
-  provider: AgentProvider;
+export interface LoopOptions<O = WorldObservation, I = AgentIntent> {
+  provider: AgentProvider<O, I>;
   clock: LoopClock;
   /** Wall clock for latency; defaults to `performance.now`. */
   wallClock?: () => number;
   minIntervalMs?: number;
   timeoutMs?: number;
   maxAgeMs?: number;
-  onDecision: (decision: AcceptedDecision) => void;
+  onDecision: (decision: AcceptedDecision<O, I>) => void;
   onEvent?: (event: LoopEvent) => void;
 }
 
-interface Flight {
+interface Flight<O> {
   sequence: number;
   epoch: number;
-  observation: WorldObservation;
+  observation: O;
   issuedAt: number;
   wallIssuedAt: number;
   controller: AbortController;
@@ -105,25 +106,25 @@ export function backoffFor(
   }
 }
 
-export class DecisionLoop {
-  readonly provider: AgentProvider;
+export class DecisionLoop<O = WorldObservation, I = AgentIntent> {
+  readonly provider: AgentProvider<O, I>;
   private readonly clock: LoopClock;
   private readonly wallClock: () => number;
   private readonly minIntervalMs: number;
   private readonly timeoutMs: number;
   private readonly maxAgeMs: number;
-  private readonly onDecision: (decision: AcceptedDecision) => void;
+  private readonly onDecision: (decision: AcceptedDecision<O, I>) => void;
   private readonly onEvent: (event: LoopEvent) => void;
 
   private sequence = 0;
-  private flight: Flight | null = null;
+  private flight: Flight<O> | null = null;
   private lastIssuedAt = -Infinity;
   private backoffUntil = -Infinity;
   private failureStreak = 0;
   private lastAccepted = 0;
   private stopped = false;
 
-  constructor(options: LoopOptions, firstSequence = 0) {
+  constructor(options: LoopOptions<O, I>, firstSequence = 0) {
     this.provider = options.provider;
     this.clock = options.clock;
     this.wallClock = options.wallClock ?? (() => performance.now());
@@ -159,7 +160,7 @@ export class DecisionLoop {
     return this.clock.now() < this.backoffUntil;
   }
 
-  tick(context: LoopContext): void {
+  tick(context: LoopContext<O>): void {
     if (this.stopped || this.flight || !context.eligible) return;
     const now = this.clock.now();
     if (now < this.backoffUntil || now - this.lastIssuedAt < this.minIntervalMs) return;
@@ -188,7 +189,7 @@ export class DecisionLoop {
     this.stopped = true;
   }
 
-  private issue(context: LoopContext, now: number): void {
+  private issue(context: LoopContext<O>, now: number): void {
     const sequence = ++this.sequence;
     const observation = context.capture(sequence);
     this.lastIssuedAt = now;
@@ -197,7 +198,7 @@ export class DecisionLoop {
       return;
     }
     const controller = new AbortController();
-    const flight: Flight = {
+    const flight: Flight<O> = {
       sequence,
       epoch: context.epoch,
       observation,
@@ -223,7 +224,7 @@ export class DecisionLoop {
     this.flight = flight;
     this.onEvent({ kind: "requested", sequence });
 
-    let promise: Promise<ProviderResult>;
+    let promise: Promise<ProviderResult<I>>;
     try {
       promise = this.provider.decide({
         sequence,
@@ -249,7 +250,7 @@ export class DecisionLoop {
     );
   }
 
-  private settle(flight: Flight, result: ProviderResult, context: LoopContext): void {
+  private settle(flight: Flight<O>, result: ProviderResult<I>, context: LoopContext<O>): void {
     if (flight.settled) {
       // The provider answered after the loop gave up on it, or answered twice.
       if (flight.timedOut)

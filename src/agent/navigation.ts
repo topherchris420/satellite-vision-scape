@@ -27,6 +27,12 @@ export interface RouteOptions {
   tolerance?: number;
   /** Search half-extent around the midpoint of start and goal (metres). */
   extent?: number;
+  /**
+   * Cost multiplier (≥ 1) for stepping onto (x, z): 1 is free-flowing, larger
+   * discourages the step. Lets a driver prefer the road without forbidding
+   * the desert. Never below 1, so the straight-line heuristic stays admissible.
+   */
+  stepCost?: (x: number, z: number) => number;
 }
 
 const NEIGHBOURS: readonly [number, number, number][] = [
@@ -185,9 +191,9 @@ export function findRoute(
       if (Math.abs(nx) > half || Math.abs(nz) > half) continue;
       const nid = toIndex(nx, nz);
       if (closed.has(nid)) continue;
-      const g = g0 + step * cell;
-      if (g >= (cost.get(nid) ?? Infinity)) continue;
       const q = fromIndex(nid);
+      const g = g0 + step * cell * Math.max(1, options.stepCost ? options.stepCost(q.x, q.z) : 1);
+      if (g >= (cost.get(nid) ?? Infinity)) continue;
       if (!clear(p, q, radius)) continue;
       cost.set(nid, g);
       parent.set(nid, id);

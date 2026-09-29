@@ -31,6 +31,21 @@ export class VehicleController {
     forwardSpeed: number,
     out: VehicleControls,
   ): void {
+    this.updateAxes(dt, move, input.isDown("handbrake"), forwardSpeed, out);
+  }
+
+  /**
+   * The same translation from wheel and pedal axes to controls, for a driver
+   * that is not reading an `InputState` (traffic and security AI). Every
+   * driver, human or not, goes through the automatic gearbox logic below.
+   */
+  updateAxes(
+    dt: number,
+    move: { x: number; y: number },
+    handbrake: boolean,
+    forwardSpeed: number,
+    out: VehicleControls,
+  ): void {
     const wantForward = move.y > 0.1;
     const wantBack = move.y < -0.1;
     let targetThrottle = 0;
@@ -61,7 +76,7 @@ export class VehicleController {
     out.throttle = this.throttle;
     out.brake = brake;
     out.steer = this.steer;
-    out.handbrake = input.isDown("handbrake");
+    out.handbrake = handbrake;
     out.reverse = reverse || (targetThrottle === 0 && forwardSpeed < -0.3);
 
     if (reverse || forwardSpeed < -0.3) this.gear = "R";

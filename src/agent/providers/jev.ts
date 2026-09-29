@@ -105,7 +105,7 @@ export class JevProvider implements AgentProvider {
   }
 }
 
-function readError(
+export function readError(
   body: unknown,
 ): { code: string; message: string; retryAfterMs: number | null } | null {
   if (typeof body !== "object" || body === null) return null;
@@ -121,7 +121,7 @@ function readError(
   };
 }
 
-function retryAfterHeader(value: string | null): number | null {
+export function retryAfterHeader(value: string | null): number | null {
   if (value === null) return null;
   const seconds = Number(value);
   return Number.isFinite(seconds) && seconds >= 0 ? Math.min(60_000, seconds * 1000) : null;

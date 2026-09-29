@@ -29,8 +29,14 @@ export type Action =
   | "cancel"
   | "retry"
   | "alteredSignal"
+  // Free Roam: hold to aim, press to fire (mouse buttons or keys)
+  | "aim"
+  | "fire"
   // Agent runtime: hand the character back to the person (H)
-  | "takeover";
+  | "takeover"
+  // Free Roam: let Jev play (J), or have Jev assist (K)
+  | "letJev"
+  | "assist";
 
 export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   forward: ["KeyW", "ArrowUp"],
@@ -41,7 +47,8 @@ export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   walkToggle: ["KeyC"],
   jump: ["Space"],
   handbrake: ["Space"],
-  interact: ["KeyE"],
+  // E everywhere; F as well, for the "press F to enter" grammar of Free Roam.
+  interact: ["KeyE", "KeyF"],
   headlights: ["KeyL"],
   mute: ["KeyM"],
   radioPower: ["KeyR"],
@@ -56,8 +63,16 @@ export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   cancel: ["KeyX"],
   retry: ["KeyY"],
   alteredSignal: ["KeyO"],
+  // "Mouse0" / "Mouse2" are pointer buttons fed in by DomInputBinding as pseudo key codes.
+  aim: ["KeyQ", "Mouse2"],
+  fire: ["KeyZ", "Mouse0"],
   takeover: ["KeyH"],
+  letJev: ["KeyJ"],
+  assist: ["KeyK"],
 };
+
+/** Pseudo key code for a pointer button (0 left, 2 right). */
+export const mouseCode = (button: number): string => `Mouse${button}`;
 
 /** Every code the game consumes, so the DOM layer can prevent browser defaults. */
 export const GAME_KEY_CODES: ReadonlySet<string> = new Set(Object.values(KEY_BINDINGS).flat());

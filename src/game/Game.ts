@@ -1,4 +1,5 @@
 import { AgentSession } from "../agent/session";
+import { FreeRoamSession } from "../agent/freeroam/session";
 import * as THREE from "three";
 import { CAMERA, EFFECTS, INTERACTION, SIMULATION } from "./config";
 import { EventBus } from "./core/EventBus";
@@ -25,6 +26,8 @@ import { PLAYER_SPAWN, VEHICLE_SPAWNS } from "./world/spawns";
 import { DustSystem } from "./effects/DustSystem";
 import { GameAudio } from "./audio/GameAudio";
 import { HudModel } from "./hud/HudModel";
+import { FreeRoam } from "./freeroam/FreeRoam";
+import { FreeRoamVisuals } from "./freeroam/FreeRoamVisuals";
 import { AfterHours } from "./afterhours/AfterHours";
 import { AfterHoursVisuals } from "./afterhours/AfterHoursVisuals";
 import { browserStorage, type CharacterKind, type KeyValueStorage } from "./afterhours/progress";
@@ -86,6 +89,10 @@ export class Game {
   readonly hud = new HudModel();
   /** The fictional After Hours expansion (inactive until started). */
   readonly afterHours: AfterHours;
+  /** The open-world layer: crowd, traffic, security, weapon, challenges (inactive until started). */
+  readonly freeRoam: FreeRoam;
+  /** Who plays Free Roam, how a run is recorded, replayed and compared (inactive until started). */
+  readonly roam: FreeRoamSession;
   /** World point the gameplay is centred on (shadow frustum, telemetry). */
   readonly focusPoint = new THREE.Vector3();
   focusHeading = 0;
@@ -103,7 +110,7 @@ export class Game {
   private readonly focus = createCameraFocus();
   private readonly axes = { x: 0, y: 0 };
   private readonly intent = createMoveIntent();
-  private readonly look = { x: 0, y: 0, zoom: 0 };
+  private readonly look = { x: 0, y: 0, zoom: 0, aim: 0 };
   private readonly sensorPool: GateSensorTarget[] = [];
   private readonly dustCarry = [0, 0];
   private readonly wheelWorld = new THREE.Vector3();
@@ -163,6 +170,53 @@ export class Game {
       options.visuals ? () => new AfterHoursVisuals((x, z) => this.ground.heightAt(x, z)) : null,
     );
     this.agent = new AgentSession(this);
+    this.freeRoam = new FreeRoam({
+      events: this.events,
+      interaction: this.interaction,
+      player: this.player,
+      vehicles: this.vehicles,
+      camera: this.camera,
+      collision: this.collision,
+      ground: this.ground,
+      world: this.world,
+      root: this.root,
+      hud: this.hud,
+      afterHours: this.afterHours,
+      arbiter: this.agent.controls,
+      resetForScenario: (spawn) => this.resetForScenario(spawn),
+      createVisuals: options.visuals ? () => new FreeRoamVisuals() : null,
+    });
+    this.roam = new FreeRoamSession({
+      freeRoam: this.freeRoam,
+      events: this.events,
+      arbiter: this.agent.controls,
+    });
+  }
+
+  /**
+   * Put the site back as it is at the start of a run: the fleet parked where it
+   * was, the gates shut, nothing in progress, and the player at `spawn`. Used
+   * by Free Roam scenarios so two runs of one seed begin identically.
+   */
+  resetForScenario(spawn: { x: number; z: number; yaw: number }): void {
+    this.interaction.reset();
+    this.vehicleController.reset();
+    this.world.reset();
+    this.vehicles.vehicles.forEach((v, i) => {
+      const home = VEHICLE_SPAWNS[i];
+      if (!home) return;
+      v.resetState();
+      v.place(home.x, home.z, home.yaw);
+      this.vehicleController.applyParked(v.controls);
+    });
+    this.player.teleport(spawn.x, spawn.z, spawn.yaw);
+    this.player.interpolate(1);
+    this.accumulator = 0;
+    this.alpha = 1;
+    this.updateFocus();
+    this.camera.snapBehind(this.focus);
+    this.input.releaseAll();
+    this.agent.controls.synthetic.releaseAll();
   }
 
   /** The player's character visual (null headless). */
@@ -322,6 +376,7 @@ export class Game {
   setPaused(paused: boolean): void {
     if (paused) {
       this.agent.runtime.toHuman("paused");
+      this.roam.runtime.toHuman("paused");
       this.audio?.suspend();
       this.input.releaseAll();
     } else {
@@ -333,9 +388,22 @@ export class Game {
   // --- Frame --------------------------------------------------------------------
 
   frame(rawDt: number, options: FrameOptions): void {
-    const dt = Math.min(rawDt, SIMULATION.maxFrameDelta);
+    // A replay releases recorded frames, each with the length it had the first time.
+    const pacer = options.simulate && this.freeRoam.active ? this.freeRoam.control.pacer : null;
+    if (pacer) {
+      pacer.pace(rawDt, (dt) => this.runFrame(dt, options));
+      return;
+    }
+    this.runFrame(Math.min(rawDt, SIMULATION.maxFrameDelta), options);
+  }
+
+  private runFrame(dt: number, options: FrameOptions): void {
+    // The two expansions share the avatar and the controls: only one may be running.
+    if (this.freeRoam.active && this.afterHours.active) this.roam.stop();
     this.agent.beforeFrame(dt, options.simulate);
+    this.roam.beforeFrame(dt, options.simulate);
     if (options.simulate) {
+      this.freeRoam.beginFrame(dt);
       this.handleFrameInput(dt);
       this.accumulator += dt;
       let steps = 0;
@@ -352,6 +420,7 @@ export class Game {
     // (intro glides, the establishing orbit) on real frame time.
     this.present(options.simulate ? dt : 0, dt, options);
     this.agent.afterFrame(dt, options.simulate);
+    this.roam.afterFrame(dt, options.simulate);
     this.agent.controls.synthetic.endFrame();
     this.input.endFrame();
   }
@@ -361,9 +430,11 @@ export class Game {
     if (input.wasPressed("mute") && this.audio) {
       this.hud.update({ muted: this.audio.toggleMute() });
     }
-    const locked = this.movementLocks.size > 0;
+    const dead = this.freeRoam.active && !this.freeRoam.alive;
+    const locked = this.movementLocks.size > 0 || dead;
     this.interaction.update(dt, input, locked);
     this.afterHours.update(dt, input);
+    this.freeRoam.update(dt, input);
 
     const driven = this.interaction.driven;
     if (driven && input.wasPressed("headlights")) {
@@ -389,14 +460,19 @@ export class Game {
       this.intent.dirX = moving ? dx / length : 0;
       this.intent.dirZ = moving ? dz / length : 0;
       this.intent.magnitude = Math.min(1, length);
-      this.intent.sprint = input.isDown("sprint");
-      this.intent.walk = input.walkMode && !this.intent.sprint;
+      const aiming = this.freeRoam.aiming;
+      this.intent.sprint = input.isDown("sprint") && !aiming;
+      // Aiming slows the pace to a walk and turns the body to face the crosshair.
+      this.intent.walk = (input.walkMode && !this.intent.sprint) || aiming;
+      this.intent.aimYaw = aiming ? this.camera.yaw : null;
       if (input.wasPressed("jump")) this.player.requestJump();
     } else {
       this.intent.magnitude = 0;
     }
 
-    if (driven) {
+    if (driven && dead) {
+      this.vehicleController.applyStop(driven.controls);
+    } else if (driven) {
       this.vehicleController.update(
         dt,
         input,
@@ -420,17 +496,19 @@ export class Game {
     }
     this.vehicles.fixedStep(dt);
     this.afterHours.fixedStep(dt);
+    this.freeRoam.fixedStep(dt);
 
     const sensors = this.world.sensors;
     sensors.length = 0;
     this.vehicles.vehicles.forEach((v, i) => {
-      if (!v.driven && !v.physics.awake) return;
+      if (!v.driven && !v.autonomous && !v.physics.awake) return;
       const s = (this.sensorPool[i] ??= { x: 0, z: 0, vx: 0, vz: 0, driven: false });
       s.x = v.physics.x;
       s.z = v.physics.z;
       s.vx = v.physics.vx;
       s.vz = v.physics.vz;
-      s.driven = v.driven;
+      // Traffic and response units raise the barriers for themselves, as a driver does.
+      s.driven = v.driven || v.autonomous;
       sensors.push(s);
     });
     const walker = this.interaction.state === GameplayState.OnFoot ? this.player.position : null;
@@ -457,6 +535,7 @@ export class Game {
         this.look.x = options.simulate ? this.agent.controls.input.lookX : 0;
         this.look.y = options.simulate ? this.agent.controls.input.lookY : 0;
         this.look.zoom = options.simulate ? this.agent.controls.input.zoom : 0;
+        this.look.aim = this.freeRoam.aiming ? 1 : 0;
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
       if (this.characterVisual)
@@ -466,6 +545,7 @@ export class Game {
 
     this.updateAudio();
     this.afterHours.present(dt, options.camera);
+    this.freeRoam.present(dt, this.alpha);
     this.updateHud(dt);
   }
 
@@ -618,6 +698,8 @@ export class Game {
 
   dispose(): void {
     this.agent.dispose();
+    this.roam.dispose();
+    this.freeRoam.dispose();
     this.afterHours.dispose();
     for (const off of this.unsubscribers) off();
     this.unsubscribers.length = 0;

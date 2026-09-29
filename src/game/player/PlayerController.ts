@@ -17,10 +17,15 @@ export interface MoveIntent {
   magnitude: number;
   sprint: boolean;
   walk: boolean;
+  /**
+   * When set (aiming), the body faces this yaw whichever way it moves, so it
+   * strafes instead of turning towards its travel direction.
+   */
+  aimYaw?: number | null;
 }
 
 export function createMoveIntent(): MoveIntent {
-  return { dirX: 0, dirZ: 0, magnitude: 0, sprint: false, walk: false };
+  return { dirX: 0, dirZ: 0, magnitude: 0, sprint: false, walk: false, aimYaw: null };
 }
 
 /**
@@ -146,7 +151,9 @@ export class PlayerController {
 
     // --- Facing -------------------------------------------------------------
     const yawBefore = this.yaw;
-    if (intent.magnitude > 0.05 && (currentSpeed > 0.2 || target > 0)) {
+    if (intent.aimYaw != null) {
+      this.yaw = wrapAngle(dampAngle(this.yaw, intent.aimYaw, PLAYER.aimTurnRate, dt));
+    } else if (intent.magnitude > 0.05 && (currentSpeed > 0.2 || target > 0)) {
       const turn = intent.sprint ? PLAYER.sprintTurnRate : PLAYER.turnRate;
       this.yaw = wrapAngle(dampAngle(this.yaw, Math.atan2(intent.dirX, intent.dirZ), turn, dt));
     }

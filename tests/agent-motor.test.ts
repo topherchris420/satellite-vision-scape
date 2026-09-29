@@ -400,8 +400,11 @@ describe("no hidden physics", () => {
   test("agent modules never write positions, velocities, physics or collision state", () => {
     for (const path of files("src/agent")) {
       const source = readFileSync(path, "utf8");
+      // Sensors hand numbers back by filling a caller-provided scratch copy
+      // (`out.vx = …`); that writes nothing into the game, so the receiver
+      // `out` is the one thing the pattern lets through.
       const writes = source.match(
-        /\.(physics|position|velocity|rotation|quaternion)\.[a-zA-Z]+\s*=[^=]|\.(vx|vz|forwardSpeed|yaw)\s*=[^=]|\.teleport\(|\.place\(|\.position\.(set|copy|add)\(|\.physics\s*=[^=]|collision\.(add|remove)/g,
+        /\.(physics|position|velocity|rotation|quaternion)\.[a-zA-Z]+\s*=[^=]|(?<!\bout)\.(vx|vz|forwardSpeed|yaw)\s*=[^=]|\.teleport\(|\.place\(|\.position\.(set|copy|add)\(|\.physics\s*=[^=]|collision\.(add|remove)/g,
       );
       expect({ path, writes }).toEqual({ path, writes: null });
     }

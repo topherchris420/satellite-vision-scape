@@ -11,7 +11,15 @@ export type GameEvents = {
   doorClose: { vehicleId: string };
   vehicleEnter: { vehicleId: string };
   vehicleExit: { vehicleId: string };
-  impact: { x: number; y: number; z: number; speed: number; vehicleId: string | null };
+  impact: {
+    x: number;
+    y: number;
+    z: number;
+    speed: number;
+    vehicleId: string | null;
+    /** What was struck: another vehicle, or the static world. Absent for landings. */
+    other?: "vehicle" | "world";
+  };
   gateMove: { gateId: string; raising: boolean; x: number; z: number };
   headlights: { on: boolean };
   message: { text: string };

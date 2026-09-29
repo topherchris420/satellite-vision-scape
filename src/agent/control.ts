@@ -54,6 +54,8 @@ export const CONTROL_ACTIONS: readonly Action[] = (
     "tuneDown",
     "cancel",
     "retry",
+    "aim",
+    "fire",
   ] as const
 ).filter((a) => !PRESENTATION_ACTIONS.has(a));
 
@@ -151,6 +153,14 @@ export class SyntheticInput extends InputState {
 export class ControlArbiter {
   readonly synthetic: SyntheticInput;
   private owner: ControlSource = "human";
+  /**
+   * Free Roam: gameplay reads the bus channel (`synthetic`) for every source,
+   * a person's keyboard and mouse included. The person's own `InputState`
+   * keeps recording the raw devices, so takeover detection still works and
+   * the action bus can translate it into actions; it just no longer reaches
+   * gameplay directly. `source` still says who generated the controls.
+   */
+  routed = false;
 
   constructor(readonly human: InputState) {
     this.synthetic = new SyntheticInput(human);
@@ -163,7 +173,7 @@ export class ControlArbiter {
 
   /** The one input gameplay reads. */
   get input(): InputState {
-    return this.owner === "human" ? this.human : this.synthetic;
+    return this.owner === "human" && !this.routed ? this.human : this.synthetic;
   }
 
   /**
