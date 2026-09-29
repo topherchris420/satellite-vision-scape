@@ -169,8 +169,12 @@ function renderAfterHours(
     radio.vehicle
       ? `The vehicle radio is in ${radio.vehicle.toUpperCase()}`
       : "There is no vehicle radio",
+    // A fact, not coaching, so it is in every profile: the game lets a player
+    // work the radio from inside the cab or standing beside the vehicle.
+    // Without it Jev answered the receiver probe by getting into the car
+    // 10/10 in every profile (2026-09-29), tuning only once seated.
     radio.inReach
-      ? "and within your reach."
+      ? "and within your reach: its controls work from where you are, in the cab or standing beside the vehicle, so there is no need to get in to use it."
       : "and out of your reach (get in or stand beside that vehicle).",
     radio.powered
       ? `It is on, showing station ${quote(radio.station)} at dial ${radio.frequency.toFixed(1)}, signal ${radio.signalBars} of 5 bars${radio.signalTrend && radio.signalTrend !== "steady" ? ` (${radio.signalTrend} since your last action)` : ""}.`
