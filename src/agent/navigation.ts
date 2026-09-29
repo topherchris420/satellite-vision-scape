@@ -108,6 +108,19 @@ export function findRoute(
   const tolerance = options.tolerance ?? 0;
   if (clear(start, goal, radius)) return [{ x: goal.x, z: goal.z }];
 
+  // The body is already standing here, but pressed against something (a
+  // vehicle parked at the player's elbow): with the clearance margin the
+  // start itself reads as blocked, so every segment from it would fail and
+  // no route could ever be found. Step out to the nearest clear point first,
+  // as a person would; the physics still decides whether that step works.
+  // (Found by the decision-latency experiment: 211 route_blocked in a row.)
+  if (!clear(start, start, radius)) {
+    const escape = nearestClearPoint(start, clear, radius);
+    if (!escape) return [];
+    const rest = findRoute(escape, goal, clear, options);
+    return rest.length > 0 ? [escape, ...rest] : [];
+  }
+
   const span = Math.hypot(goal.x - start.x, goal.z - start.z);
   const extent = options.extent ?? Math.max(120, span * 0.75 + 80);
   const cx = (start.x + goal.x) / 2;
@@ -194,6 +207,18 @@ export function findRoute(
   raw.reverse();
   if (reachesGoal) raw.push({ x: goal.x, z: goal.z });
   return smooth([start, ...raw], clear, radius).slice(1);
+}
+
+/** The nearest clear point on small rings around `p`, or null. */
+function nearestClearPoint(p: Point, clear: ClearSegment, radius: number): Point | null {
+  for (const r of [0.5, 1, 1.5, 2.5]) {
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2;
+      const q = { x: p.x + Math.sin(a) * r, z: p.z + Math.cos(a) * r };
+      if (clear(q, q, radius)) return q;
+    }
+  }
+  return null;
 }
 
 /** Pull a polyline taut: skip every waypoint the body can bypass in a straight line. */

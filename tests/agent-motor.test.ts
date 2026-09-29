@@ -61,6 +61,32 @@ describe("route planning", () => {
     expect(near.length).toBeGreaterThan(0);
     expect(Math.hypot(near.at(-1)!.x - 50, near.at(-1)!.z)).toBeLessThanOrEqual(9);
   });
+
+  test("a start pressed against an obstacle steps out instead of failing every plan", () => {
+    // A parked vehicle's corner within the clearance margin of where the body
+    // stands (decision-latency, run-b-x10: 211 route_blocked in a row). The
+    // box spans x 0.2…4, |z| < 1; the body stands at the origin with 0.45 m
+    // clearance, so the start itself reads as blocked.
+    const car = (a: Point, b: Point) => {
+      for (let i = 0; i <= 40; i++) {
+        const x = a.x + ((b.x - a.x) * i) / 40;
+        const z = a.z + ((b.z - a.z) * i) / 40;
+        if (x > 0.2 - 0.45 && x < 4.45 && Math.abs(z) < 1.45) return false;
+      }
+      return true;
+    };
+    const goal = { x: 30, z: 0 };
+    const route = findRoute({ x: 0, z: 0 }, goal, car, { radius: 0.45, cell: 3 });
+    expect(route.length).toBeGreaterThan(1);
+    expect(route.at(-1)).toEqual(goal);
+    // The first step leaves the obstacle's margin; every later leg is clear.
+    expect(car(route[0], route[0])).toBe(true);
+    expect(Math.hypot(route[0].x, route[0].z)).toBeLessThanOrEqual(2.5);
+    for (let i = 1; i < route.length; i++) expect(car(route[i - 1], route[i])).toBe(true);
+    // Truly boxed in: still no route, never a teleport.
+    const boxed = (a: Point, b: Point) => Math.hypot(a.x, a.z) > 5 && Math.hypot(b.x, b.z) > 5;
+    expect(findRoute({ x: 0, z: 0 }, goal, boxed, { radius: 0.45, cell: 3 })).toEqual([]);
+  });
 });
 
 /** A minimal world for executor unit tests: the body never moves. */
