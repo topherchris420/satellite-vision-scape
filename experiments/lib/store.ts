@@ -163,16 +163,11 @@ function git(root: string, args: string[]): string | null {
   }
 }
 
+/** Code whose uncommitted changes make a run irreproducible from its recorded commit. */
+export const PROVENANCE_PATHS = ["src", "scripts", "experiments/lib", "package.json", "bun.lock"];
+
 export function provenance(root: string, defPath: string, command: string): Provenance {
-  const status = git(root, [
-    "status",
-    "--porcelain",
-    "--",
-    "src",
-    "scripts",
-    "package.json",
-    "bun.lock",
-  ]);
+  const status = git(root, ["status", "--porcelain", "--", ...PROVENANCE_PATHS]);
   const latencyPath = join(root, LATENCY_SOURCE);
   let latencySource: Provenance["latencySource"] = null;
   if (existsSync(latencyPath)) {
@@ -416,6 +411,14 @@ export function importRun(options: {
       `no result for ${def.id} yet: run \`bun run experiment ${def.id}\` first (it records provenance)`,
     );
   const result = JSON.parse(readFileSync(resultPath, "utf8")) as ExperimentResult;
+  // The runs already recorded were measured against the definition as it was
+  // then; a changed definition (goal, conditions, metrics) would mix
+  // incompatible evidence in one result.
+  const current = sha256(readFileSync(options.defPath));
+  if (result.provenance.definition.sha256 !== current)
+    throw new Error(
+      `the definition of ${def.id} changed since its result was recorded; re-run \`bun run experiment ${def.id}\` before importing`,
+    );
   const index = result.runs.filter((r) => r.condition === cond.id).length;
   const id = runId(cond.id, index);
   const file = `runs/${id}.trace.json.gz`;
@@ -439,6 +442,9 @@ export function importRun(options: {
   result.runs.push(record);
   const c = result.conditions.find((x) => x.id === cond.id);
   if (c) c.executedRuns++;
+  result.status = result.conditions.every((x) => x.executedRuns >= x.plannedRuns)
+    ? "complete"
+    : "partial";
   writeFileSync(resultPath, JSON.stringify(result, null, 1) + "\n");
   return record;
 }

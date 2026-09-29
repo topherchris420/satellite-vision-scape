@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Game } from "../../src/game/Game";
-import type { AgentProvider } from "../../src/agent/provider";
+import type { AgentProvider, ProviderResult } from "../../src/agent/provider";
 import { JevProvider } from "../../src/agent/providers/jev";
 import { MockProvider, RandomProvider } from "../../src/agent/providers/local";
 import { createAfterHoursBaseline } from "../../src/agent/tasks/afterHoursBaseline";
@@ -38,6 +38,8 @@ export interface EpisodeOptions {
   observedLatencyMs: readonly number[];
   /** Required for `jev`: the credential stays in this process. */
   live?: { apiKey: string; model?: string };
+  /** Enforce `maxCalls` for a non-live provider too (tests). */
+  enforceCallBudget?: boolean;
   /** Replaces the provider (tests: failure injection). */
   providerOverride?: AgentProvider;
 }
@@ -123,6 +125,28 @@ export async function runEpisode(options: EpisodeOptions): Promise<EpisodeResult
     const runtime = g.agent.runtime;
     if (typeof options.config.reviewMs === "number") runtime.reviewMs = options.config.reviewMs;
     let provider = buildProvider(options);
+    // The call budget: the last paid request is answered and acted on; the
+    // request after it is never sent (it waits until the run ends), and the
+    // run stops there as \`call_budget\`.
+    const budgeted = live || options.enforceCallBudget === true;
+    let forwarded = 0;
+    let overBudget = false;
+    if (budgeted) {
+      const inner = provider;
+      provider = {
+        id: inner.id,
+        label: inner.label,
+        source: inner.source,
+        decide: (request) => {
+          if (forwarded >= options.maxCalls) {
+            overBudget = true;
+            return new Promise<ProviderResult>(() => undefined);
+          }
+          forwarded++;
+          return inner.decide(request);
+        },
+      };
+    }
     let delayed: DelayedProvider | null = null;
     const latency = options.config.latency;
     if (typeof latency === "string" && latency !== "instant") {
@@ -159,7 +183,9 @@ export async function runEpisode(options: EpisodeOptions): Promise<EpisodeResult
         terminatedBy = "handed_back";
         break;
       }
-      if (live && g.agent.metrics.requests >= options.maxCalls) {
+      // Over budget: no more requests go out, but the last answer's action
+      // (a walk, a drive) runs to its own end before the run stops.
+      if (budgeted && overBudget && !runtime.executor.running) {
         terminatedBy = "call_budget";
         break;
       }

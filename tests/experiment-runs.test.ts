@@ -14,6 +14,7 @@ import { renderReport } from "../experiments/lib/report";
 import { buildProvider, runEpisode } from "../experiments/lib/runner";
 import {
   LiveRunRefused,
+  PROVENANCE_PATHS,
   evidence,
   importRun,
   readTrace,
@@ -393,6 +394,38 @@ describe("people and agents, measured alike", () => {
     expect(md).toContain("n/a");
   }, 30_000);
 
+  test("the last import completes the result; a changed definition refuses imports", async () => {
+    const def = join(dir, "human-one.json");
+    const body = definition({
+      id: "human-one",
+      runsPerCondition: 1,
+      independentVariable: "provider",
+      controlled: {},
+      conditions: [
+        { id: "baseline", label: "Baseline", set: { provider: "baseline" } },
+        { id: "human", label: "A person", set: { provider: "human" } },
+      ],
+      predictions: [],
+    });
+    writeFileSync(def, JSON.stringify(body));
+    const outDir = join(dir, "human-one-out");
+    const r = await runExperiment({ root, defPath: def, outDir, env: {} });
+    expect(r.status).toBe("partial"); // the person's run is still missing
+    importRun({ root, defPath: def, condition: "human", tracePath: humanTrace, outDir });
+    expect(evidence(outDir).result.status).toBe("complete");
+    expect(renderReport(evidence(outDir))).not.toContain("PARTIAL");
+
+    // Edit the definition after the runs: its result no longer describes it.
+    writeFileSync(
+      def,
+      JSON.stringify({ ...body, episode: { until: "receiver_locked", maxSimSeconds: 200 } }),
+    );
+    expect(() =>
+      importRun({ root, defPath: def, condition: "human", tracePath: humanTrace, outDir }),
+    ).toThrow("definition of human-one changed");
+    expect(evidence(outDir).result.runs.length).toBe(2);
+  }, 30_000);
+
   test("comparisons mark agent-only metrics n/a for a person and say what differs", () => {
     const human = JSON.parse(readFileSync(humanTrace, "utf8")) as TraceLike;
     const agent = readTrace(join(out, result.runs[0].trace!.file));
@@ -419,6 +452,52 @@ describe("people and agents, measured alike", () => {
     expect(md).toContain("Not the same channel");
     expect(md).not.toMatch(/overall score:/i);
   });
+});
+
+describe("provenance and budgets", () => {
+  test("uncommitted changes to the experiment code count as a dirty tree", () => {
+    expect(PROVENANCE_PATHS).toContain("experiments/lib");
+    expect(PROVENANCE_PATHS).toContain("src");
+  });
+
+  test("at the call budget, the last answer is acted on and no further request is sent", async () => {
+    let calls = 0;
+    const baseline = buildProvider({
+      config: { provider: "baseline" },
+      seed: 1,
+      until: "coffee_delivered",
+      maxSimSeconds: 1,
+      maxCalls: 1,
+      observedLatencyMs: [],
+    });
+    const counting: AgentProvider = {
+      id: "mock",
+      label: "Counting baseline",
+      source: "test",
+      decide: (r) => {
+        calls++;
+        return baseline.decide(r);
+      },
+    };
+    const r = await runEpisode({
+      config: { provider: "baseline" },
+      seed: 1,
+      until: "coffee_delivered",
+      maxSimSeconds: 120,
+      maxCalls: 1,
+      observedLatencyMs: [],
+      providerOverride: counting,
+      enforceCallBudget: true,
+    });
+    expect(r.terminatedBy).toBe("call_budget");
+    expect(calls).toBe(1);
+    const t = JSON.parse(r.trace!) as TraceLike;
+    expect(t.decisions.length).toBe(1);
+    // The one paid answer was executed to its end, not discarded.
+    expect(t.decisions[0].disposition).toBe("executed");
+    expect(t.decisions[0].outcome).not.toBeNull();
+    expect(t.events.some((e) => e.type === "provider_unavailable")).toBe(false);
+  }, 30_000);
 });
 
 describe("the world's new measurements", () => {
