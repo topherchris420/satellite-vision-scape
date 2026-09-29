@@ -89,6 +89,8 @@ export function renderReport(ev: Evidence): string {
   out.push("## Why we asked", "", def.motivation.observation, "");
   if (def.motivation.evidence.length > 0)
     out.push(...def.motivation.evidence.map((e) => `- ${e}`), "");
+  // Changes to the design after seeing data are disclosed here, not hidden.
+  if (def.notes) out.push("## Notes", "", def.notes, "");
 
   out.push("## Design", "");
   out.push(

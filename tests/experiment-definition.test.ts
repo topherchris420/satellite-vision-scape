@@ -20,7 +20,8 @@ import { diagnose } from "../experiments/lib/diagnose";
 import { DelayedProvider, parseLatency } from "../experiments/lib/latency";
 import { goalReachedAt, measure, type TraceLike } from "../experiments/lib/metrics";
 import { MockProvider } from "../src/agent/providers/local";
-import { parseAssists, resolveAssists } from "../src/server/agent/assists";
+import { ASSISTS, parseAssists, resolveAssists } from "../src/server/agent/assists";
+import { probeById } from "../src/agent/probes/afterHours";
 import { flush } from "./agent-helpers";
 
 /**
@@ -185,6 +186,18 @@ describe("experiment definitions", () => {
     expect(isStochastic({ provider: "baseline", latency: "instant" })).toBe(false);
     expect(isStochastic({ provider: "baseline", latency: "run-b" })).toBe(true);
     expect(isStochastic({ provider: "random" })).toBe(true);
+  });
+
+  test("every assist names the capability it covers, and probes and experiments that exist", () => {
+    const defs = new Set(
+      readdirSync("experiments/definitions").map((f) => f.replace(/\.json$/, "")),
+    );
+    for (const spec of Object.values(ASSISTS)) {
+      expect(spec.covers.length).toBeGreaterThan(10);
+      expect(spec.probes.length).toBeGreaterThan(0);
+      for (const p of spec.probes) expect(probeById(p)).toBeDefined();
+      for (const e of spec.experiments) expect(defs.has(e)).toBe(true);
+    }
   });
 
   test("assist parsing is strict for experiments, forgiving for deployments", () => {

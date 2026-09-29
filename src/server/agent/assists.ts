@@ -35,8 +35,12 @@ export interface AssistSpec {
   adds: string;
   /** The model limitation it covers, and where that was seen. */
   evidence: string;
+  /** The capability it compensates for: what a model would need to manage without it. */
+  covers: string;
   /** Probes that exercise it (ids in `src/agent/probes`). */
   probes: string[];
+  /** Experiments that measure it in the flow of play (ids in `experiments/definitions`). */
+  experiments: string[];
   /** What the question says instead when it is off. */
   without: string;
 }
@@ -47,7 +51,9 @@ export const ASSISTS: Record<AssistId, AssistSpec> = {
     adds: 'Terminal feedback spelled out: "turning up raised the match: the reference lies further up", "you turned past it".',
     evidence:
       "Live run A (2026-09-27): 473 decisions alternating dial up / dial down at the Harmony terminal; the meter trend was in `state` but not acted on.",
+    covers: "Inferring from a meter's before and after which way the reference lies.",
     probes: ["terminal-reverse-after-overshoot", "terminal-continue-while-rising"],
+    experiments: ["tuning-trend-reading"],
     without: "The match before and after the last turn, as numbers. No direction is inferred.",
   },
   hold_still_rule: {
@@ -55,7 +61,9 @@ export const ASSISTS: Record<AssistId, AssistSpec> = {
     adds: '"Keeping the dial completely still (Wait) locks it; turning now can break it" on terminal and receiver holds, plus a Wait rule in the context.',
     evidence:
       "Live run A: at ALIGNED the model kept turning; after this hint, targeted checks chose Wait 4/4.",
+    covers: "Recognising that doing nothing is the right action while a hold meter fills.",
     probes: ["terminal-hold-when-aligned", "receiver-hold-signal"],
+    experiments: ["assist-profiles-journey"],
     without: "The status word and the hold meter only (ALIGNED · lock meter 40%).",
   },
   control_magnitudes: {
@@ -63,7 +71,9 @@ export const ASSISTS: Record<AssistId, AssistSpec> = {
     adds: "How far each control moves a dial (a click ≈ 1%, a short hold ≈ 5%, a long hold ≈ 20%).",
     evidence:
       "Live run A: a short hold was bigger than the aligned zone, so every correction overshot.",
+    covers: "Choosing a control size in proportion to the remaining distance.",
     probes: ["terminal-reverse-after-overshoot", "receiver-tune-toward-clue"],
+    experiments: ["tuning-control-magnitude"],
     without: "Only the control names: one click, a short hold, a long hold.",
   },
   spill_advice: {
@@ -71,7 +81,9 @@ export const ASSISTS: Record<AssistId, AssistSpec> = {
     adds: '"Braking hard, launching, sharp cornering and collisions spill it; speed alone does not", plus "prefer smooth driving" in the context.',
     evidence:
       "Precautionary: added with the first integration, before any failure was seen. The executor already drives smoothly with the coffee aboard.",
+    covers: "Knowing which manoeuvres spill the coffee (the executor already drives smoothly).",
     probes: ["coffee-deliver-while-driving"],
+    experiments: [],
     without: "The coffee meter and timer only.",
   },
   semantic_bearings: {
@@ -79,7 +91,9 @@ export const ASSISTS: Record<AssistId, AssistSpec> = {
     adds: 'Directions in words ("ahead and to the left") instead of signed degrees.',
     evidence:
       "TypeSafe's integration guidance: Jev reads semantic descriptions better than raw numbers and should not invert directions.",
+    covers: "Turning signed degrees into left, right, ahead and behind.",
     probes: ["coffee-deliver-while-driving", "terminal-go-to-terminal"],
+    experiments: ["semantic-bearings-navigation"],
     without: "Signed relative bearings in degrees (+ right, − left) and distances in metres.",
   },
 };

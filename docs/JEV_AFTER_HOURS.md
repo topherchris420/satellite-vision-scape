@@ -126,17 +126,17 @@ Never prefix these with `VITE_`. The browser talks only to `/api/agent/jev/decis
 
 `bun run test:agent` runs 85 tests across eight suites. The end-to-end test plays the whole journey through the real runtime with the scripted baseline — a hand-written policy that reads only the observation, labelled as such and never presented as Jev — using ordinary controls, real collisions and vehicle physics:
 
-| Measurement (scripted baseline, headless)     |                                                                Result |
-| :-------------------------------------------- | --------------------------------------------------------------------: |
-| Completion                                    | coffee → vehicle → delivery → clue → receiver → 4 terminals → concert |
-| Simulated time                                |                                                               ≈ 412 s |
-| Decisions                                     |                                                                   216 |
-| Distance driven / walked                      |                                                     ≈ 1,334 m / 597 m |
-| Coffee delivered                              |                                                         93% in 81.5 s |
-| Collisions · stuck recoveries · interventions |                                                             0 · 0 · 0 |
-| Receiver / terminal tuning inputs             |                                                               10 / 20 |
+| Measurement (scripted baseline, headless, this build) |                                                                Result |
+| :---------------------------------------------------- | --------------------------------------------------------------------: |
+| Completion                                            | coffee → vehicle → delivery → clue → receiver → 4 terminals → concert |
+| Simulated time                                        |                                                               ≈ 426 s |
+| Decisions                                             |                                                                   164 |
+| Distance driven / walked                              |                                                     ≈ 1,340 m / 593 m |
+| Coffee delivered                                      |                                                        100% in 82.2 s |
+| Collisions · stuck recoveries · interventions         |                                                             0 · 0 · 0 |
+| Receiver / terminal tuning inputs                     |                                                               10 / 20 |
 
-The smooth driving profile, compared with an aggressive test profile on the same coffee run: **2 vs 16** abrupt control changes, **100% vs 11%** coffee remaining.
+Earlier builds delivered 93%: the missing 7 points were the game's hard stop when the baseline got out while still rolling, found by the [`travel-review-interval`](../experiments/results/travel-review-interval/report.md) experiment; the executor now stops gently first while the coffee is aboard. The smooth driving profile, compared with an aggressive test profile on the same coffee run: **2 vs 16** abrupt control changes, **100% vs 11%** coffee remaining.
 
 ### Live Jev
 

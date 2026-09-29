@@ -26,6 +26,10 @@ trend_inference is one of the three assists added after run A. It spells out the
 - src/server/agent/assists.ts: trend_inference, probes terminal-reverse-after-overshoot and terminal-continue-while-rising
 - evals/results/2026-09-27-baseline.json: the baseline itself fails terminal-continue-while-rising cold (it steers from memory)
 
+## Notes
+
+The blind condition and its prediction were added after a 2-run pilot (not committed) in which sweep matched trend exactly: every terminal's dial starts 0.34 from its reference on the side nearer the middle of the dial, so 'turn towards the middle' is right at all four panels and graded turns never overshoot. The original two predictions were left unchanged.
+
 ## Design
 
 - **Independent variable:** `tuningDirection`: The baseline's terminal direction rule: `trend` (reverse when the match falls), `sweep` (cannot read the trend; starts towards the middle of the dial) or `blind` (cannot read the trend and always starts up).
