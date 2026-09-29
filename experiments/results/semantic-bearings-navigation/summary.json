@@ -1,0 +1,345 @@
+{
+ "schema": "svs-experiment-summary/v1",
+ "experiment": "semantic-bearings-navigation",
+ "status": "complete",
+ "commit": "ee4cb7d378de67ab4b71ce7c08919d4ffeb84a57",
+ "conditions": [
+  {
+   "id": "full",
+   "config": {
+    "provider": "jev",
+    "assists": "full"
+   },
+   "runs": [
+    {
+     "runId": "full-01",
+     "status": "ok"
+    },
+    {
+     "runId": "full-02",
+     "status": "ok"
+    },
+    {
+     "runId": "full-03",
+     "status": "ok"
+    },
+    {
+     "runId": "full-04",
+     "status": "ok"
+    },
+    {
+     "runId": "full-05",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 5,
+     "missing": 0,
+     "k": 5,
+     "rate": 1,
+     "wilson95": [
+      0.566,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 5,
+     "missing": 0,
+     "median": 90,
+     "min": 89.7,
+     "max": 90.4,
+     "p95": 90.34,
+     "mean": 90.04,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 5,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeRunDistanceM": {
+     "n": 5,
+     "missing": 0,
+     "median": 584.22,
+     "min": 584.21,
+     "max": 584.24,
+     "p95": 584.24,
+     "mean": 584.226,
+     "constant": false
+    },
+    "coffeeRouteEfficiency": {
+     "n": 5,
+     "missing": 0,
+     "median": 0.932,
+     "min": 0.93,
+     "max": 0.932,
+     "p95": 0.932,
+     "mean": 0.931,
+     "constant": false
+    },
+    "distanceWalkedM": {
+     "n": 5,
+     "missing": 0,
+     "median": 49.36,
+     "min": 49.3,
+     "max": 49.37,
+     "p95": 49.368,
+     "mean": 49.338,
+     "constant": false
+    },
+    "rejectedDecisions": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "wrongInteractions": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "routeReviewsChanged": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 5,
+     "missing": 0,
+     "median": 34,
+     "min": 33,
+     "max": 35,
+     "p95": 35,
+     "mean": 34.2,
+     "constant": false
+    },
+    "providerFailures": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "medianDecisionLatencyMs": {
+     "n": 5,
+     "missing": 0,
+     "median": 273.53,
+     "min": 262.48,
+     "max": 291.78,
+     "p95": 291.426,
+     "mean": 277.294,
+     "constant": false
+    }
+   }
+  },
+  {
+   "id": "no-bearings",
+   "config": {
+    "provider": "jev",
+    "assists": "full-semantic_bearings"
+   },
+   "runs": [
+    {
+     "runId": "no-bearings-01",
+     "status": "ok"
+    },
+    {
+     "runId": "no-bearings-02",
+     "status": "ok"
+    },
+    {
+     "runId": "no-bearings-03",
+     "status": "ok"
+    },
+    {
+     "runId": "no-bearings-04",
+     "status": "ok"
+    },
+    {
+     "runId": "no-bearings-05",
+     "status": "ok"
+    }
+   ],
+   "metrics": {
+    "completed": {
+     "n": 5,
+     "missing": 0,
+     "k": 5,
+     "rate": 1,
+     "wilson95": [
+      0.566,
+      1
+     ]
+    },
+    "goalSeconds": {
+     "n": 5,
+     "missing": 0,
+     "median": 89.7,
+     "min": 89.6,
+     "max": 89.8,
+     "p95": 89.78,
+     "mean": 89.7,
+     "constant": false
+    },
+    "coffeeRemainingPercent": {
+     "n": 5,
+     "missing": 0,
+     "median": 100,
+     "min": 100,
+     "max": 100,
+     "p95": 100,
+     "mean": 100,
+     "constant": true
+    },
+    "coffeeRunDistanceM": {
+     "n": 5,
+     "missing": 0,
+     "median": 584.23,
+     "min": 584.21,
+     "max": 584.23,
+     "p95": 584.23,
+     "mean": 584.224,
+     "constant": false
+    },
+    "coffeeRouteEfficiency": {
+     "n": 5,
+     "missing": 0,
+     "median": 0.93,
+     "min": 0.93,
+     "max": 0.932,
+     "p95": 0.932,
+     "mean": 0.93,
+     "constant": false
+    },
+    "distanceWalkedM": {
+     "n": 5,
+     "missing": 0,
+     "median": 49.41,
+     "min": 49.37,
+     "max": 49.42,
+     "p95": 49.42,
+     "mean": 49.406,
+     "constant": false
+    },
+    "rejectedDecisions": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "wrongInteractions": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "routeReviewsChanged": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "providerRequests": {
+     "n": 5,
+     "missing": 0,
+     "median": 33,
+     "min": 33,
+     "max": 33,
+     "p95": 33,
+     "mean": 33,
+     "constant": true
+    },
+    "providerFailures": {
+     "n": 5,
+     "missing": 0,
+     "median": 0,
+     "min": 0,
+     "max": 0,
+     "p95": 0,
+     "mean": 0,
+     "constant": true
+    },
+    "medianDecisionLatencyMs": {
+     "n": 5,
+     "missing": 0,
+     "median": 280.46,
+     "min": 277.32,
+     "max": 281.51,
+     "p95": 281.348,
+     "mean": 279.772,
+     "constant": false
+    }
+   }
+  }
+ ],
+ "predictions": [
+  {
+   "prediction": {
+    "metric": "goalSeconds",
+    "from": "full",
+    "to": "no-bearings",
+    "direction": "increase",
+    "minEffect": 10
+   },
+   "pairs": 5,
+   "medianChange": -0.3,
+   "towards": 0,
+   "against": 4,
+   "ties": 1,
+   "signTestP": 1,
+   "exact": false,
+   "runIds": [
+    "full-01",
+    "no-bearings-01",
+    "full-02",
+    "no-bearings-02",
+    "full-03",
+    "no-bearings-03",
+    "full-04",
+    "no-bearings-04",
+    "full-05",
+    "no-bearings-05"
+   ],
+   "verdict": "NOT SUPPORTED",
+   "reasons": [
+    "median paired change -0.3 is short of the predicted increase of 10 (0 towards, 4 against, 1 ties)"
+   ]
+  }
+ ],
+ "excluded": []
+}

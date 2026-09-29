@@ -2,7 +2,7 @@
  "schema": "svs-experiment-result/v1",
  "experiment": "semantic-bearings-navigation",
  "title": "Does removing semantic bearings make Jev's navigation worse?",
- "status": "partial",
+ "status": "complete",
  "definition": {
   "schema": "svs-experiment/v1",
   "id": "semantic-bearings-navigation",
@@ -113,7 +113,7 @@
    "samples": 213
   },
   "startedAt": "2026-09-29T04:46:21.279Z",
-  "finishedAt": null,
+  "finishedAt": "2026-09-29T05:01:19.933Z",
   "command": "bun run experiment semantic-bearings-navigation --live"
  },
  "conditions": [
@@ -126,7 +126,7 @@
    },
    "stochastic": true,
    "plannedRuns": 5,
-   "executedRuns": 3,
+   "executedRuns": 5,
    "skipped": null
   },
   {
@@ -138,7 +138,7 @@
    },
    "stochastic": true,
    "plannedRuns": 5,
-   "executedRuns": 3,
+   "executedRuns": 5,
    "skipped": null
   }
  ],
@@ -261,6 +261,86 @@
     "sha256": "5f9184b0558f908cbd51e8dc80f44d51275a9ba7a4bffedd12e707148d7ef4a8",
     "bytes": 138210,
     "session": "a75a273abe28e7bd95c63007ffe6c2ea"
+   }
+  },
+  {
+   "runId": "full-04",
+   "condition": "full",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 90,
+   "wallMs": 90010,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/full-04.trace.json.gz",
+    "sha256": "60e013dcc2c7ba05f875a92245a2104a03f941e85fcad42138ec418f57ff4b85",
+    "bytes": 146419,
+    "session": "383fdb1f7fde27379712583675bc158e"
+   }
+  },
+  {
+   "runId": "no-bearings-04",
+   "condition": "no-bearings",
+   "index": 3,
+   "seed": 4,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.7,
+   "wallMs": 89761,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/no-bearings-04.trace.json.gz",
+    "sha256": "ecdc3d86f664b0602a04fd6efabc302d82435cfd8be5b031928d4403f90ad8a3",
+    "bytes": 138271,
+    "session": "682af9bc07990bf8b282d4a633249b42"
+   }
+  },
+  {
+   "runId": "full-05",
+   "condition": "full",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.9,
+   "wallMs": 89959,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/full-05.trace.json.gz",
+    "sha256": "2c2facbb6c36d4b92142dc6cb271e24fe1fbb779cc312415ac44151641629576",
+    "bytes": 142365,
+    "session": "86f9a0aac3650ff4e69592b7497a1d55"
+   }
+  },
+  {
+   "runId": "no-bearings-05",
+   "condition": "no-bearings",
+   "index": 4,
+   "seed": 5,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.6,
+   "wallMs": 89661,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/no-bearings-05.trace.json.gz",
+    "sha256": "5c48641bb1eb90cc0119ab56ef151f4a8418e72a1f45c25c3b7ad3a6f68716b8",
+    "bytes": 138188,
+    "session": "8c3759266df8027b056ca4bea078670a"
    }
   }
  ]

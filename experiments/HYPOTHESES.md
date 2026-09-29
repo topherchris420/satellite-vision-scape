@@ -56,9 +56,10 @@ Probes, [`evals/results/2026-09-29-jev-jev-1.13.0.json`](../evals/results/2026-0
 
 ### Does removing semantic bearings make Jev's navigation worse?
 
-[`semantic-bearings-navigation`](definitions/semantic-bearings-navigation.json) · [report](results/semantic-bearings-navigation/report.md) · live, 5 paired coffee runs per condition
+[`semantic-bearings-navigation`](definitions/semantic-bearings-navigation.json) · [report](results/semantic-bearings-navigation/report.md) · live, 5 paired coffee runs per condition · **observed**
 
-- _Result pending in this entry: see the report._
+- **No measurable difference.** 10/10 runs delivered the coffee; time to goal 90.0 s with the assist, 89.7 s without (median paired change −0.3 s; my "≥ 10 s slower" prediction: **NOT SUPPORTED**). Route, distance (584 m), route efficiency (0.93) and coffee (100%) were identical, and **every run chose the same intents in the same order** in both conditions. 336 live requests.
+- With its 20/20 probes, `semantic_bearings` now has evidence from both a fixed situation and play. **Decision:** eligible for retirement, not yet retired: the coffee run exercises only two navigation choices. The terminal stage (four destinations chosen by distance and direction) is defined and ready: [`semantic-bearings-terminals`](definitions/semantic-bearings-terminals.json) (≈ 1,300 requests). If it agrees, removing the assist from the default question is a one-line change.
 
 ### Is the coffee run a discriminating task at all?
 

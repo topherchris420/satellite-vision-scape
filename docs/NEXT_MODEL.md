@@ -126,7 +126,7 @@ At run B's 289 ms median, that is about 16 s of model time and over a quarter of
 
 ## 5. What we did not do
 
-We did not delete run B's hints because a newer model "probably" doesn't need them. We did not make `lean` the default. We did not write prompts for hypothetical models, or add intents no model has asked for. The live probe matrix for Jev was first run on 2026-09-29 (below). We did not retire the three assists that passed 20/20 without help on the probes: see the caution in §2.
+We did not delete run B's hints because a newer model "probably" doesn't need them. We did not make `lean` the default. We did not write prompts for hypothetical models, or add intents no model has asked for. The live probe matrix for Jev was first run on 2026-09-29 (below). We did not retire the three assists that passed 20/20 without help on the probes: see the caution in §2. For `semantic_bearings` an in-flow experiment has since agreed on the coffee run (5 paired live runs, identical choices, −0.3 s: [report](../experiments/results/semantic-bearings-navigation/report.md)); the terminal stage is next ([`semantic-bearings-terminals`](../experiments/definitions/semantic-bearings-terminals.json)).
 
 ## 6. Ledger
 

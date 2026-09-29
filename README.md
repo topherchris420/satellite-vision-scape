@@ -678,7 +678,7 @@ AGENT_LIVE_TEST=1 bun run probes -- --provider jev --ablate                  # f
 | Screenshots instead of text    | Text probes ≥ 95% at `none`, so the remaining gap is perception                           |
 | Coordinates, exact dial values | Never. It's a design boundary, not a capability gap                                       |
 
-**The live probe matrix has now been run** (`jev-1.13.0`, 600 calls). `hold_still_rule` is still needed: without it Jev fails both hold probes 0/10, so `lean` stays the bet, not the default. `trend_inference`, `spill_advice` and `semantic_bearings` each pass their probes 20/20 without help, which makes them _eligible_ for retirement; because a probe repeats one observation, removal waits for an in-flow experiment to agree. Method, numbers and ledger: [docs/NEXT_MODEL.md](docs/NEXT_MODEL.md).
+**The live probe matrix has now been run** (`jev-1.13.0`, 600 calls). `hold_still_rule` is still needed: without it Jev fails both hold probes 0/10, so `lean` stays the bet, not the default. `trend_inference`, `spill_advice` and `semantic_bearings` each pass their probes 20/20 without help, which makes them _eligible_ for retirement; because a probe repeats one observation, removal waits for an in-flow experiment to agree. The first one has: without `semantic_bearings`, five paired live coffee runs made exactly the same choices as with it (−0.3 s); the terminal stage is next. Method, numbers and ledger: [docs/NEXT_MODEL.md](docs/NEXT_MODEL.md).
 
 ---
 
