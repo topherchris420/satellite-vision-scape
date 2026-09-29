@@ -1,0 +1,267 @@
+{
+ "schema": "svs-experiment-result/v1",
+ "experiment": "semantic-bearings-navigation",
+ "title": "Does removing semantic bearings make Jev's navigation worse?",
+ "status": "partial",
+ "definition": {
+  "schema": "svs-experiment/v1",
+  "id": "semantic-bearings-navigation",
+  "title": "Does removing semantic bearings make Jev's navigation worse?",
+  "question": "Jev is told directions in words (\"ahead and to the left\"). Does it navigate the coffee run worse when told signed degrees instead?",
+  "hypothesis": "Removing semantic_bearings (and nothing else) makes the coffee run worse for Jev: at least 10 s slower to deliver, through more wrong or wasted choices.",
+  "motivation": {
+   "observation": "semantic_bearings was added on TypeSafe's integration guidance, not after an observed failure. It is the one assist with no failure behind it, so it is the cheapest to test and the likeliest to retire. Navigation itself is done by the executor; Jev only picks the destination, so the effect may be small.",
+   "evidence": [
+    "src/server/agent/assists.ts: semantic_bearings, evidence 'TypeSafe integration guidance'",
+    "docs/NEXT_MODEL.md §1: probes coffee-deliver-while-driving, terminal-go-to-terminal"
+   ]
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": {
+   "until": "coffee_delivered",
+   "maxSimSeconds": 300,
+   "maxCallsPerRun": 150
+  },
+  "independentVariable": "assists",
+  "controlled": {
+   "provider": "jev"
+  },
+  "conditions": [
+   {
+    "id": "full",
+    "label": "Every assist (run B's question)",
+    "set": {
+     "assists": "full"
+    }
+   },
+   {
+    "id": "no-bearings",
+    "label": "Every assist but semantic_bearings",
+    "set": {
+     "assists": "full-semantic_bearings"
+    }
+   }
+  ],
+  "runsPerCondition": 5,
+  "seed": 1,
+  "dependentMetrics": [
+   "completed",
+   "goalSeconds",
+   "coffeeRemainingPercent",
+   "coffeeRunDistanceM",
+   "coffeeRouteEfficiency",
+   "distanceWalkedM",
+   "rejectedDecisions",
+   "wrongInteractions",
+   "routeReviewsChanged",
+   "providerRequests",
+   "providerFailures",
+   "medianDecisionLatencyMs"
+  ],
+  "predictions": [
+   {
+    "metric": "goalSeconds",
+    "from": "full",
+    "to": "no-bearings",
+    "direction": "increase",
+    "minEffect": 10
+   }
+  ],
+  "minRunsForVerdict": 5,
+  "successCriteria": [
+   "no-bearings takes at least 10 s longer to deliver in a clear majority of paired runs"
+  ],
+  "falsificationCriteria": [
+   "no-bearings is no more than 10 s slower (median paired change): the assist does not earn its bytes on this run, and its probes decide retirement"
+  ],
+  "limitations": [
+   "Live: Jev's latency and choices vary between runs, and pairing by seed only aligns the order of runs, not the model's randomness.",
+   "Five runs per condition can show a large effect; they cannot rule out a small one.",
+   "The coffee run exercises two navigation choices; the terminal stage (four destinations) is covered by the probes."
+  ],
+  "live": true
+ },
+ "provenance": {
+  "experimentSchema": "svs-experiment/v1",
+  "definition": {
+   "path": "experiments/definitions/semantic-bearings-navigation.json",
+   "sha256": "4d8d1d8328b6b8f94c37a89c6f0e7ec1940fd9440a89faf3c4e476b547328a6e"
+  },
+  "git": {
+   "commit": "ee4cb7d378de67ab4b71ce7c08919d4ffeb84a57",
+   "branch": "claude/admiring-dijkstra-60luwe",
+   "dirty": false
+  },
+  "runtime": {
+   "bun": "1.3.11",
+   "node": "v24.3.0",
+   "platform": "linux",
+   "arch": "x64"
+  },
+  "schemas": {
+   "trace": "svs-agent-trace/v1",
+   "observation": "svs-agent-observation/v1",
+   "action": "svs-agent-action/v1",
+   "evaluation": "svs-agent-evaluation/v1"
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "latencySource": {
+   "file": "docs/traces/jev-after-hours-live-2026-09-27.json",
+   "sha256": "056f88909e0b558feb5b8366dc3d807f460edcd01dd9caa25c950c0a553857f8",
+   "samples": 213
+  },
+  "startedAt": "2026-09-29T04:46:21.279Z",
+  "finishedAt": null,
+  "command": "bun run experiment semantic-bearings-navigation --live"
+ },
+ "conditions": [
+  {
+   "id": "full",
+   "label": "Every assist (run B's question)",
+   "config": {
+    "provider": "jev",
+    "assists": "full"
+   },
+   "stochastic": true,
+   "plannedRuns": 5,
+   "executedRuns": 3,
+   "skipped": null
+  },
+  {
+   "id": "no-bearings",
+   "label": "Every assist but semantic_bearings",
+   "config": {
+    "provider": "jev",
+    "assists": "full-semantic_bearings"
+   },
+   "stochastic": true,
+   "plannedRuns": 5,
+   "executedRuns": 3,
+   "skipped": null
+  }
+ ],
+ "runs": [
+  {
+   "runId": "full-01",
+   "condition": "full",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 90.4,
+   "wallMs": 90528,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/full-01.trace.json.gz",
+    "sha256": "b3893b9f6738fd5800587957e827c70baef9ad24a10bf4fb0c9f6961d1f0361f",
+    "bytes": 146472,
+    "session": "ac3d30f508550567dfc88a0f53e35502"
+   }
+  },
+  {
+   "runId": "no-bearings-01",
+   "condition": "no-bearings",
+   "index": 0,
+   "seed": 1,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.5,
+   "wallMs": 89567,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/no-bearings-01.trace.json.gz",
+    "sha256": "224f784ad543d1558e377eac2c5c5afea6536246c2fd50ed6e1bf0acddd662ac",
+    "bytes": 138159,
+    "session": "a3bc2efb600886d11733ab1c86f58a96"
+   }
+  },
+  {
+   "runId": "full-02",
+   "condition": "full",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.6,
+   "wallMs": 89643,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/full-02.trace.json.gz",
+    "sha256": "41078b095444d949e904779794fe117becef6fcf4ba12ea04f0eadf06e166b6c",
+    "bytes": 138212,
+    "session": "d04e40ccda432ca5074eab6bd489bd79"
+   }
+  },
+  {
+   "runId": "no-bearings-02",
+   "condition": "no-bearings",
+   "index": 1,
+   "seed": 2,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.7,
+   "wallMs": 89692,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/no-bearings-02.trace.json.gz",
+    "sha256": "84a0df01503d6099839bc5ab28e89003eaca1e2f1ca0ac12581e5f84e4e9b348",
+    "bytes": 138204,
+    "session": "ea7f4b9ec0c5e22ed1985d5aaa0500c2"
+   }
+  },
+  {
+   "runId": "full-03",
+   "condition": "full",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 90.1,
+   "wallMs": 90078,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/full-03.trace.json.gz",
+    "sha256": "6f07aa594f2f15e4b7c431062c813563a03760f96f1e22eef776fb1ac31d9997",
+    "bytes": 142321,
+    "session": "d774405607821289165c69ef607c9fdf"
+   }
+  },
+  {
+   "runId": "no-bearings-03",
+   "condition": "no-bearings",
+   "index": 2,
+   "seed": 3,
+   "paired": true,
+   "status": "ok",
+   "completed": true,
+   "terminatedBy": "goal",
+   "simSeconds": 89.7,
+   "wallMs": 89693,
+   "model": "jev-1.13.0",
+   "error": null,
+   "trace": {
+    "file": "runs/no-bearings-03.trace.json.gz",
+    "sha256": "5f9184b0558f908cbd51e8dc80f44d51275a9ba7a4bffedd12e707148d7ef4a8",
+    "bytes": 138210,
+    "session": "a75a273abe28e7bd95c63007ffe6c2ea"
+   }
+  }
+ ]
+}
