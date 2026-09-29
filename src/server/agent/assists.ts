@@ -210,7 +210,11 @@ export function retirementVerdict(
     if (low < RETIREMENT.floor) {
       keep = true;
       reasons.push(
-        `${probe}: ${wo.passes}/${wo.trials} without it (lower bound ${low.toFixed(2)} < ${RETIREMENT.floor})`,
+        `${probe}: ${wo.passes}/${wo.trials} without it (lower bound ${low.toFixed(2)} < ${RETIREMENT.floor})${
+          wo.passes === wo.trials
+            ? "; every trial passed, so more trials, not this result, would decide"
+            : ""
+        }`,
       );
     } else if (drop > RETIREMENT.maxRegression) {
       keep = true;
