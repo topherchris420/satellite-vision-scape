@@ -96,6 +96,29 @@ describe("controller modes", () => {
     expect(g.roam.runtime.mode).toBe("ASSIST");
   });
 
+  test("Reset while Jev plays: the scenario starts again from its first frame, in the person's hands", async () => {
+    const fresh = frGame({ seed: 48291, challenge: "borrowed-wheels" });
+    fresh.roam.restart();
+    const freshHash = fresh.freeRoam.worldHash();
+    const g = frGame({ seed: 48291, challenge: "borrowed-wheels" });
+    g.roam.setController("JEV", new TestProvider("test", (o) => o.legal.find((d) => d.type === "CONTINUE_OBJECTIVE") ?? o.legal[0]));
+    await run(g, 8);
+    const walked = g.player.position.clone();
+    g.roam.restart();
+    expect(g.roam.runtime.mode).toBe("HUMAN");
+    expect(g.freeRoam.control.mode).toBe("HUMAN");
+    expect(g.freeRoam.simTime).toBe(0);
+    expect(g.freeRoam.worldHash()).toBe(freshHash);
+    expect(g.player.position.distanceTo(walked)).toBeGreaterThan(5);
+    // The unfinished attempt is kept as what it was.
+    expect(g.roam.runs.length).toBe(1);
+    expect(g.roam.runs[0].status).toBe("abandoned");
+    g.input.keyDown("KeyW");
+    step(g, 60);
+    g.input.keyUp("KeyW");
+    expect(g.freeRoam.source).toBe("human");
+  });
+
   test("pausing hands the avatar back to the person rather than leaving Jev driving unseen", async () => {
     const g = frGame({ seed: 48291, challenge: "borrowed-wheels" });
     g.roam.setController("JEV", new TestProvider("test", () => ({ type: "WAIT" })));

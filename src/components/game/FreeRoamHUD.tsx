@@ -207,20 +207,26 @@ function Crosshair({ fr }: { fr: FreeRoamSnapshot }) {
 
 /** A red edge on damage: a cue, not a mechanic. */
 function DamageFlash({ health }: { health: number }) {
-  const [flash, setFlash] = useState(0);
+  const [on, setOn] = useState(false);
   const last = useRef(health);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (health < last.current) {
-      setFlash((n) => n + 1);
-      const t = setTimeout(() => setFlash(0), 320);
-      last.current = health;
-      return () => clearTimeout(t);
+      setOn(true);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setOn(false), 320);
     }
     last.current = health;
   }, [health]);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   return (
     <div
-      className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${flash > 0 ? "opacity-100" : "opacity-0"}`}
+      className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${on ? "opacity-100" : "opacity-0"}`}
       style={{ boxShadow: "inset 0 0 120px 20px rgba(220,38,38,.45)" }}
       aria-hidden
     />

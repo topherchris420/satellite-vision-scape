@@ -42,6 +42,7 @@
   <a href="#experiments"><b>Experiments</b></a> ·
   <a href="#try-it-yourself"><b>Try it</b></a> ·
   <a href="#after-hours-the-worked-task"><b>After Hours</b></a> ·
+  <a href="#gta-style-free-roam"><b>Free Roam</b></a> ·
   <a href="#bring-your-own-agent"><b>Bring your own agent</b></a> ·
   <a href="#known-limitations"><b>Limitations</b></a>
 </p>
@@ -478,6 +479,27 @@ Pause (**Esc**) → **After Hours** → _Settings_:
 
 ---
 
+## GTA-Style Free Roam
+
+An optional second environment on the same site: a **third-person open world** in which **a person and Jev play the same game**. Walk, aim and shoot, take any vehicle, drive, keep a crowd and the site's attention in mind, and work through one of fourteen seeded challenges. Press **Let Jev Play** and watch Jev control the *same avatar* (walk, get into a real vehicle, drive, aim through the ordinary sights, react to pedestrians and traffic, evade pursuit); press **H** and it is yours again, instantly. Then reset the seed, play it yourself, and compare the two runs side by side, or replay either.
+
+"GTA-style" describes gameplay grammar only. Nothing here uses any commercial game's assets, names, maps, dialogue or music.
+
+- **One action interface.** A person's keyboard and mouse and Jev's local controllers both produce `GameAction`s (`MOVE LOOK SPRINT JUMP AIM FIRE INTERACT ENTER_VEHICLE EXIT_VEHICLE ACCELERATE BRAKE STEER HANDBRAKE HEADLIGHTS WAIT`) on one bus, to one controller, into the input channel the keyboard always wrote. There is no teleport, no position setter, no AI-only physics, and `FIRE` names no target: the sights turn, the trigger is pulled, and the raycast decides.
+- **Jev is not called per frame.** It sees a bounded observation of what the player could see and hear, and answers with a typed decision from a small, derived set (`CONTINUE_OBJECTIVE`, `ENTER_VEHICLE`, `PURSUE_TARGET`, `ENGAGE_TARGET`, `AVOID_OBSTACLE`…) at a cadence set by its measured latency; local controllers steer, brake, follow the road, aim and fire in between.
+- **If Jev goes away, nothing crashes.** `JEV ACTIVE → API unavailable → safe HOLD → the person may retake control`. The key stays on the server.
+- **Same rules, same measurements.** Modes are `HUMAN`, `JEV` and `ASSIST` (the person plays; Jev advises within hard bounds). Every run is recorded as `svs-freeroam-trace/v1`, keeping *decision*, *action executed* and *outcome* apart, replays exactly without calling anyone, and is measured the same way whoever played it. The comparison prints numbers and their difference, never a winner.
+
+Pick it on the briefing card. Full detail (controls, the observation and decision schemas, cadence, failure behaviour, trace format, tests, limitations): **[docs/FREE_ROAM.md](docs/FREE_ROAM.md)**.
+
+```bash
+bun test tests/freeroam-                 # the Free Roam suites
+# headless, billable, wall-clock-paced, against the real decision service:
+FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --challenge shooting-range
+```
+
+---
+
 ## Pine Gap: the first environment
 
 <p align="center">
@@ -897,7 +919,7 @@ A 35-second motion piece arguing that modern web graphics plus public OSINT can 
 
 **Scope**
 
-- **One environment, one task.** Pine Gap and After Hours. The runtime is designed to take others, but none exists yet, and there is no environment-authoring tool.
+- **One site, two games.** Pine Gap with After Hours (the worked task) and Free Roam (a seeded sandbox with fourteen challenges; its [limitations](docs/FREE_ROAM.md#known-limitations) are listed with it). The runtime is designed to take others, but there is no environment-authoring tool.
 - **One complete live run.** Run B is an existence proof, not a success rate. The live probe matrix and a small live coffee-run experiment have been run; no human reference run is committed.
 - **Probes repeat one situation.** Twenty answers to one captured observation measure consistency, not generality, so probe results make an assist eligible for retirement, never retire it alone.
 
@@ -952,12 +974,14 @@ Nothing consumes that boundary automatically today; export a trace and it is you
 ├── scripts/                # Browser checks, perf, live agent check, probes, experiment / compare / trace CLIs, builders
 ├── src/
 │   ├── game/               # Gameplay: world, player, vehicles, camera, interaction, audio, HUD, After Hours
+│   │   └── freeroam/           # Free Roam: action bus, avatar controller, seeded world, weapon, attention, challenges
 │   ├── agent/              # Agent runtime: contracts, providers, loop, executor, traces, evaluation, probes
+│   │   └── freeroam/           # Free Roam: observation, decisions, pilot, runtime, session, trace, replay, metrics
 │   ├── server/agent/       # Server-side Jev adapter (credential, question, assists, validation, rate limits)
 │   ├── components/game/    # R3F bridge (GameRuntime), play-mode HUD and agent panel
 │   ├── components/site/    # Scene components (terrain, structures, roads, lighting, viewer HUD)
-│   ├── hooks/              # use-play-session (pointer lock lifecycle), use-after-hours, use-mobile
-│   ├── lib/                # Pine Gap manifest, layout traces, fences, terrain, textures, wind
+│   ├── hooks/              # use-play-session (pointer lock lifecycle), use-after-hours, use-free-roam, use-mobile
+│   ├── lib/                # Pine Gap manifest, layout traces, fences, terrain, textures, wind; freeroam/ (shared vocabulary)
 │   └── routes/             # `/` (world), `/thesis` and `/api/agent/jev/decision`
 └── tests/                  # bun:test suites
 ```
@@ -986,6 +1010,8 @@ The briefing card lists these on first load; **Esc** pauses and shows them again
 |    `C`    | Toggle walk                     |    `L`    | Headlights                   |    `N`    | Day / dusk / night           |
 |  `Space`  | Jump                            |    `E`    | Exit vehicle                 |  `1`–`4`  | Play · Explore · Tour · Plan |
 |    `E`    | Enter vehicle · operate barrier |           |                              | `H` / `I` | Shortcuts · asset index      |
+
+**GTA-Style Free Roam** adds `Q`/right mouse (aim), `Z`/left mouse (fire), `F` (enter/exit, like `E`), `J` (let Jev play), `K` (Jev assists) and `H` (take the controls back); see [docs/FREE_ROAM.md](docs/FREE_ROAM.md#controls).
 
 **After Hours** adds `E` (cart, hand-over, terminals, listening point), `A` `D` / `←` `→` (turn a terminal dial), `V` · `X` (concert camera · end), `O` (Altered Signal), `Y` (retry the delivery), plus the [radio keys](#after-hours-the-worked-task). **While an agent is in control, `H` takes it back.**
 

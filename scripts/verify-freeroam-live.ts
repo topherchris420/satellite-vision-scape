@@ -99,10 +99,12 @@ console.log(
   }),
 );
 if (tracePath) {
-  const text = game.roam.exportTrace();
+  // A finished run is filed with the session; a run still going is exported as it stands.
+  const text = game.roam.exportTrace(game.roam.runs[0]?.id) ?? game.roam.exportTrace();
   if (text) {
     writeFileSync(tracePath, text);
     console.log(`Trace written to ${tracePath}`);
   }
 }
 game.dispose();
+process.exit(0);

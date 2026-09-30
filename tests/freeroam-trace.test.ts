@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
 import * as THREE from "three";
 import { Game } from "../src/game/Game";
 import { compareSummaries } from "../src/agent/freeroam/metrics";
@@ -155,6 +156,30 @@ describe("replay", () => {
     expect(asked).toBe(0);
     other.roam.leaveReplay();
     expect(other.roam.isReplaying).toBe(false);
+  });
+
+  test("the committed live run of Jev replays exactly: the same world, frame for frame, with no decision service", () => {
+    const text = readFileSync("docs/traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json", "utf8");
+    const trace = parseTrace(JSON.parse(text))!;
+    expect(trace).not.toBeNull();
+    expect(trace.result.status).toBe("success");
+    expect(trace.segments.some((s) => s.provider === "jev")).toBe(true);
+    // Real decisions from the real service: latencies, confidences and alternatives are on the record.
+    expect(trace.decisions.length).toBeGreaterThan(50);
+    expect(trace.decisions.every((d) => d.provider === "jev" && d.latencyMs > 0)).toBe(true);
+    const g = new Game({ visuals: false, storage: null });
+    g.roam.providerFactory = () => {
+      throw new Error("a replay must not call a decision service");
+    };
+    expect(g.roam.startReplay(text)).toBe(true);
+    const replayer = g.roam.replay!;
+    let guard = 0;
+    while (!replayer.done && guard++ < 20000) g.frame(FRAME, { simulate: true, camera, establishing: false });
+    expect(replayer.done).toBe(true);
+    // No drift from the recording's own world hashes, and it ends where Jev's run ended.
+    expect(replayer.divergence).toBeNull();
+    expect(g.freeRoam.challenge?.status).toBe("success");
+    expect(g.freeRoam.stats.vehiclesStolen).toBe(1);
   });
 
   test("leaving a replay gives the avatar back to the person, wherever the replay had got to", () => {
