@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { GameplayState } from "../src/game/core/GameState";
 import { CollisionLayer } from "../src/game/world/colliders";
+import { createAimSense } from "../src/agent/freeroam/world";
+import { wrapPi } from "../src/lib/freeroam/contracts";
 import { TestProvider, ManualFrProvider, frGame, run, standAtDoor, step, FRAME } from "./freeroam-helpers";
 
 /**
@@ -353,5 +355,113 @@ describe("the driver's own reflexes", () => {
     expect(seen.recentEvents.some((e) => e.type === "stuck")).toBe(true);
     expect(g.roam.runs.length).toBe(0);
     expect(JSON.parse(g.roam.exportTrace()!).events.some((e: { type: string }) => e.type === "reflex")).toBe(true);
+  });
+});
+
+describe("assist: the person plays, Jev helps within hard bounds", () => {
+  const advising = () => new TestProvider("test", (o) => o.legal.find((d) => d.type === "CONTINUE_OBJECTIVE") ?? o.legal[0]);
+
+  test("with the sights up it leans the camera onto the hostile the crosshair is nearest — not the nearest hostile — and can never pull the trigger", async () => {
+    const g = frGame({ seed: 48291, challenge: "shooting-range" });
+    const range = g.freeRoam.targets.all;
+    const p = g.freeRoam.playerPosition();
+    const away = (t: { x: number; z: number }) => Math.hypot(t.x - p.x, t.z - p.z);
+    const target = range[0];
+    // Another drone is (just) nearer to the avatar, and off to the side: going by distance would pick it.
+    const nearest = range.reduce((a, b) => (away(b) < away(a) ? b : a));
+    expect(nearest.id).not.toBe(target.id);
+    const toTarget = Math.atan2(target.x - p.x, target.z - p.z);
+    g.player.teleport(p.x, p.z, toTarget);
+    g.player.interpolate(1);
+    const offset = 0.05; // three degrees off, well inside the assist's cone
+    g.camera.yaw = toTarget - offset;
+    g.camera.pitch = 0;
+    g.roam.setController("ASSIST", advising());
+
+    // Sights down: the assist has nothing to do, and the camera stays where the person left it.
+    step(g, 60);
+    expect(g.roam.assist.nudges).toBe(0);
+    expect(Math.abs(g.camera.yaw - (toTarget - offset))).toBeLessThan(0.001);
+
+    // Sights up: it leans the camera towards the drone in front of the sights, at a rate a person could beat many times over.
+    g.input.keyDown("KeyQ");
+    let peakRate = 0;
+    let last = g.camera.yaw;
+    for (let i = 0; i < 90; i++) {
+      step(g);
+      peakRate = Math.max(peakRate, Math.abs(g.camera.yaw - last) / FRAME);
+      last = g.camera.yaw;
+    }
+    expect(g.roam.assist.info.target).toBe(target.id);
+    // The crosshair, which began a metre off the drone, now rests on it.
+    const sights = g.roam.bridge.aim(createAimSense());
+    g.input.keyUp("KeyQ");
+    expect(sights.onKind).toBe("person");
+    expect(sights.onId).toBe(target.id);
+    expect(g.roam.assist.nudges).toBeGreaterThan(0);
+    expect(peakRate).toBeLessThanOrEqual(1.4 + 0.2);
+    // It leaned; it never fired, and it cannot.
+    expect(g.freeRoam.stats.shotsFired).toBe(0);
+    expect(g.roam.runtime.mode).toBe("ASSIST");
+  });
+
+  test("with the sights nowhere near a hostile it leaves the camera alone", async () => {
+    const g = frGame({ seed: 48291, challenge: "shooting-range" });
+    const p = g.freeRoam.playerPosition();
+    // Facing straight away from the whole range.
+    g.camera.yaw = Math.atan2(g.freeRoam.targets.all[0].x - p.x, g.freeRoam.targets.all[0].z - p.z) + Math.PI;
+    g.camera.pitch = 0;
+    const yaw = g.camera.yaw;
+    g.roam.setController("ASSIST", advising());
+    g.input.keyDown("KeyQ");
+    step(g, 60);
+    g.input.keyUp("KeyQ");
+    expect(g.roam.assist.nudges).toBe(0);
+    expect(g.roam.assist.info.target).toBeNull();
+    expect(Math.abs(wrapPi(g.camera.yaw - yaw))).toBeLessThan(1e-6);
+  });
+
+  test("driving, it nudges the wheel back towards the lane, by no more than a quarter of the stick, and says where the objective lies", async () => {
+    const g = frGame({ seed: 48291, challenge: "borrowed-wheels" });
+    driveAway(g, 4);
+    const car = g.interaction.driven!;
+    g.roam.setController("ASSIST", advising());
+    let maxSteer = 0;
+    g.input.keyDown("KeyW");
+    for (let i = 0; i < 240; i++) {
+      step(g);
+      maxSteer = Math.max(maxSteer, Math.abs(car.controls.steer));
+    }
+    g.input.keyUp("KeyW");
+    // It helped — and whatever it does, it does not steer for the person.
+    expect(g.roam.assist.nudges).toBeGreaterThan(0);
+    expect(maxSteer).toBeGreaterThan(0);
+    expect(maxSteer).toBeLessThanOrEqual(0.26);
+    expect(g.roam.assist.info.hint).toMatch(/^Objective \d+ m/);
+  });
+
+  test("the person's own steering always wins: the assist fades out as the wheel is worked", async () => {
+    const g = frGame({ seed: 48291, challenge: "free-play" });
+    driveAway(g, 4);
+    const car = g.interaction.driven!;
+    g.roam.setController("ASSIST", advising());
+    g.input.keyDown("KeyW");
+    g.input.keyDown("KeyD");
+    step(g, 60);
+    const held = car.controls.steer;
+    g.input.keyUp("KeyD");
+    g.input.keyUp("KeyW");
+    // Full right on the wheel, and the assist's push does not turn it round.
+    expect(held).toBeGreaterThan(0.5);
+  });
+
+  test("it advises in words only: the panel gets an objective hint and the runtime never starts a decision", async () => {
+    const g = frGame({ seed: 48291, challenge: "reach-destination" });
+    g.roam.setController("ASSIST", advising());
+    await run(g, 6);
+    expect(g.roam.assist.info.hint).toMatch(/^Objective \d+ m/);
+    expect(g.roam.runtime.stats.decisions).toBeGreaterThan(0);
+    expect(g.roam.runtime.mode).toBe("ASSIST");
+    expect(g.roam.pilot.idle).toBe(true);
   });
 });

@@ -45,7 +45,7 @@ Jev (server-side) ─▶ typed decision ─▶ Pilot (local behaviours: walk, dr
 ```
 
 - **One action interface.** `GameAction`s (`MOVE LOOK SPRINT JUMP AIM FIRE INTERACT ENTER_VEHICLE EXIT_VEHICLE ACCELERATE BRAKE STEER HANDBRAKE HEADLIGHTS WAIT`, `src/lib/freeroam/contracts.ts`) are the *only* way to move the avatar. There is no `position.set`, no teleport, no AI-only physics, no scripted animation. `FIRE` names no target; nothing names a place. A person's keys are turned into the same actions (`HumanActionSource`), meet Jev's on the `ActionBus`, and reach the world through `AvatarController`, which writes the input channel the keyboard always wrote. Every source is subject to the same limits (turn rate, quantisation).
-- **Controller modes.** `HUMAN`, `JEV`, `ASSIST`, plus the internal `replay`. The bus accepts only the source that is in control; anything else is dropped and counted. `ASSIST` keeps the person primary and lets an assist add only a look nudge (≤ 1.4 rad/s, only while aiming) or a steering correction (≤ 0.25, fading as the person steers harder). Switching is immediate and never resets the world.
+- **Controller modes.** `HUMAN`, `JEV`, `ASSIST`, plus the internal `replay`. The bus accepts only the source that is in control; anything else is dropped and counted. `ASSIST` keeps the person primary and lets an assist add only a look nudge (≤ 1.4 rad/s, only while aiming, only towards a hostile within 14° of the crosshair: the one Jev suggests if it is in view, else the one the sights are nearest, not merely the nearest) or a steering correction (≤ 0.25, fading as the person steers harder). Switching is immediate and never resets the world.
 - **Deterministic world.** A scenario is a seed and a challenge. `buildScenario` is a pure function; nothing in the simulation reads a clock or `Math.random`. A fresh start, a restart and a reset are bit-identical (`worldHash()` proves it), and a run can be replayed exactly.
 - **Jev never sees the game object.** The agent layer reads the world through one read-only bridge, builds a bounded observation from what the player could see and hear, chooses among decisions derived from that observation, and returns controls. `tests/freeroam-authority.test.ts` enforces the import and write boundaries on the source tree.
 
@@ -135,7 +135,7 @@ It contains no credentials and no prompts. **Replay** rebuilds the scenario from
 ## Tests and commands
 
 ```
-bun test                 # 366 tests, 106 of them for Free Roam
+bun test                 # 371 tests, 111 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build
@@ -150,7 +150,7 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
 | `freeroam-actions` | the action contract, bus arbitration and limits, assist bounds, the person's keys as actions, the avatar controller |
 | `freeroam-world` | scenario purity, 14 challenges' criteria, fresh = restart = reset, deterministic replays, wake-on-approach, traffic, pickups, enter/drive/exit by keys and by actions, identical shots for a person and for an agent, objective completion and failure |
 | `freeroam-agent` | observation bounds/visibility/tampering, decision parsing and legality, the local controllers' effect through the ordinary controls, aiming discipline |
-| `freeroam-runtime` | Human → Jev → Human, the takeover within the frame, J/K, assist bounds, cadence, hold on every failure, recovery, malformed and stale answers, the wedged-car reflex |
+| `freeroam-runtime` | Human → Jev → Human, the takeover within the frame, J/K, cadence, hold on every failure, recovery, malformed and stale answers, the wedged-car reflex, and the assist in play (it leans the camera onto the hostile the crosshair is nearest and never fires; steers by at most a quarter of the stick and yields to the person's own steering; speaks in words only) |
 | `freeroam-trace` | recording, separation of decision/action/outcome, exact replay with jittered frame lengths and no provider call, measurement and comparison |
 | `freeroam-server` | the question, the answer validation, request hardening, rate limits, typed upstream errors, the credential never in a response, header or log, the browser client |
 | `freeroam-authority` | import and write boundaries; no clock or random number in the simulation |

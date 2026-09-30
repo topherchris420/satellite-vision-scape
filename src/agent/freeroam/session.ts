@@ -681,7 +681,11 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
         : null,
       decisions: this.stats.decisions,
       interventions: this.stats.interventions,
-      assist: { ...this.assist.info, nudges: this.assist.nudges },
+      assist: {
+        ...this.assist.info,
+        target: this.assist.info.target === null ? null : name(this.assist.info.target),
+        nudges: this.assist.nudges,
+      },
       replay: replay
         ? {
             label: this.replayLabel,

@@ -36,6 +36,8 @@ import {
 export const ASSIST = {
   /** Only help with a target within this angle of the crosshair, degrees. */
   aimCone: 14,
+  /** How many hostiles in view it weighs when choosing the one the sights are nearest. */
+  candidates: 4,
   /** Proportional gain of the nudge. */
   gain: 5,
   /** Steering nudge gain and the speed below which it does nothing, m/s. */
@@ -64,8 +66,11 @@ export class AssistProducer implements ActionProducer {
   /** Frames in which a correction was offered. */
   nudges = 0;
   private readonly body: Body = createBody();
-  private readonly record: Tracked = createTracked();
   private readonly aim: AimSense = createAimSense();
+  private readonly skip = new Set<string>();
+  /** The best candidate so far, and the one being weighed against it (swapped, never copied). */
+  private best: Tracked = createTracked();
+  private probe: Tracked = createTracked();
 
   constructor(
     private readonly world: MotorWorld,
@@ -87,17 +92,17 @@ export class AssistProducer implements ActionProducer {
   private aiming(ctx: FrameContext, b: Body, out: GameAction[]): void {
     // Sights up is the person's decision. Without it there is nothing to help with.
     if (!b.aiming) return;
-    const t = this.pickTarget(b);
-    if (!t) return;
-    this.info.target = t.id;
     const s = this.world.aim(this.aim);
-    const py = t.y + t.height * AIM.torso;
+    const t = this.pickTarget(b, s);
+    if (!t) return;
+    const off = this.offAxisDeg(t, s);
+    // A target the sights are nowhere near is not one the person is going for.
+    if (off > ASSIST.aimCone) return;
+    this.info.target = t.id;
     const dx = t.x - s.cx;
-    const dy = py - s.cy;
+    const dy = t.y + t.height * AIM.torso - s.cy;
     const dz = t.z - s.cz;
     const len = Math.hypot(dx, dy, dz) || 1;
-    const dot = (s.ax * dx + s.ay * dy + s.az * dz) / len;
-    if (Math.acos(clamp(dot, -1, 1)) * RAD > ASSIST.aimCone) return;
     const eYaw = wrapPi(Math.atan2(dx, dz) - b.cameraYaw);
     const ePitch = -Math.asin(clamp(dy / len, -1, 1)) - b.cameraPitch;
     const k = Math.min(1, ASSIST.gain * ctx.dt);
@@ -110,13 +115,44 @@ export class AssistProducer implements ActionProducer {
     this.nudges++;
   }
 
-  private pickTarget(b: Body): Tracked | null {
+  /** How far, in degrees, the target's aim point lies from the crosshair ray. */
+  private offAxisDeg(t: Tracked, s: AimSense): number {
+    const dx = t.x - s.cx;
+    const dy = t.y + t.height * AIM.torso - s.cy;
+    const dz = t.z - s.cz;
+    const len = Math.hypot(dx, dy, dz) || 1;
+    return Math.acos(clamp((s.ax * dx + s.ay * dy + s.az * dz) / len, -1, 1)) * RAD;
+  }
+
+  /**
+   * The target to lean towards: the one Jev suggests if it is in view, else
+   * the hostile in view that the sights are nearest to — which is not always
+   * the nearest hostile, and is the one the person is most likely going for.
+   */
+  private pickTarget(b: Body, s: AimSense): Tracked | null {
     const suggested = this.advice()?.decision;
     if (suggested && "target" in suggested && (suggested.type === "AIM_TARGET" || suggested.type === "ENGAGE_TARGET")) {
-      const t = this.world.track(suggested.target, b, this.record);
+      const t = this.world.track(suggested.target, b, this.best);
       if (t && t.visible && t.alive) return t;
     }
-    return this.world.nearestVisible(b, ["security", "target"], { hostile: true }, this.record);
+    const skip = this.skip;
+    skip.clear();
+    let found: Tracked | null = null;
+    let least = Infinity;
+    for (let i = 0; i < ASSIST.candidates; i++) {
+      const t = this.world.nearestVisible(b, ["security", "target"], { hostile: true }, this.probe, skip);
+      if (!t) break;
+      skip.add(t.id);
+      const off = this.offAxisDeg(t, s);
+      if (off >= least) continue;
+      least = off;
+      found = t;
+      // Keep this one; weigh the next into the other record.
+      const kept = this.probe;
+      this.probe = this.best;
+      this.best = kept;
+    }
+    return found;
   }
 
   private driving(ctx: FrameContext, b: Body, out: GameAction[]): void {

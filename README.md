@@ -23,7 +23,7 @@
 </table>
 
 <p align="center">
-  <a href="#tests-are-evidence"><img alt="257 tests passing" src="https://img.shields.io/badge/tests-257_passing-34d399?style=flat-square" /></a>
+  <a href="#tests-are-evidence"><img alt="371 tests passing" src="https://img.shields.io/badge/tests-371_passing-34d399?style=flat-square" /></a>
   <a href="#inspect-the-trace"><img alt="Trace format svs-agent-trace/v1" src="https://img.shields.io/badge/trace-svs--agent--trace%2Fv1-a78bfa?style=flat-square" /></a>
   <a href="#known-limitations"><img alt="Status: experimental, one environment, one task" src="https://img.shields.io/badge/status-experimental_%C2%B7_1_environment_%C2%B7_1_task-f59e0b?style=flat-square" /></a>
 </p>
@@ -493,7 +493,7 @@ An optional second environment on the same site: a **third-person open world** i
 Pick it on the briefing card. Full detail (controls, the observation and decision schemas, cadence, failure behaviour, trace format, tests, limitations): **[docs/FREE_ROAM.md](docs/FREE_ROAM.md)**.
 
 ```bash
-bun test tests/freeroam-                 # the Free Roam suites
+bun run test:freeroam                    # the Free Roam suites
 # headless, billable, wall-clock-paced, against the real decision service:
 FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --challenge shooting-range
 ```
@@ -709,9 +709,10 @@ AGENT_LIVE_TEST=1 bun run probes -- --provider jev --ablate                  # f
 The claim this project rests on is that **the environment, not the model, determines what happened**. The test suite is where that claim is checked, and it doesn't mock the game. It **plays** it.
 
 ```sh
-bun run test            # 257 tests · 22 suites · 121,629 assertions · ~7 s, headless
+bun run test            # 371 tests · 29 suites · 122,918 assertions · ~16 s, headless
 bun run test:agent      # the 9 agent suites (99 tests)
 bun run test:experiments  # the 2 experiment suites (40 tests), no network
+bun run test:freeroam   # the 7 Free Roam suites (111 tests), no network
 bun run typecheck       # TypeScript
 bun run lint            # ESLint
 bun run build           # production build (bun run preview to serve it)
@@ -742,7 +743,7 @@ Beyond CI: `node scripts/verify-after-hours.mjs` (with the dev server running) c
   <tr>
     <td align="center" width="25%"><h2>&lt;&nbsp;0.05&nbsp;ms</h2><sub>median gameplay update per frame<br />(input, 120 Hz physics, collision, animation, camera, HUD)</sub></td>
     <td align="center" width="25%"><h2>−53%</h2><sub>draw calls on the site overview<br />(1,783 → 846)</sub></td>
-    <td align="center" width="25%"><h2>257</h2><sub>tests across 22 suites<br />121,629 assertions in ~7 s</sub></td>
+    <td align="center" width="25%"><h2>371</h2><sub>tests across 29 suites<br />122,918 assertions in ~16 s</sub></td>
     <td align="center" width="25%"><h2>0</h2><sub>per-frame allocations<br />in gameplay loops</sub></td>
   </tr>
 </table>
