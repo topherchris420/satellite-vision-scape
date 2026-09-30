@@ -409,8 +409,9 @@ export class FreeRoamView {
       const e = this.vehicleEntity(s, v);
       if (e.distance > range + 30) continue;
       const seen = this.canSeeVehicle(s, v, own, range);
-      const noisy = Math.abs(v.physics.speed) > 2;
-      consider(e, seen, noisy ? HEARING.vehicleMoving : HEARING.vehicleIdle, "vehicle");
+      // A moving vehicle is heard from afar; a parked one only if someone is sitting in it with the engine running.
+      const moving = Math.abs(v.physics.speed) > 2;
+      consider(e, seen, moving ? HEARING.vehicleMoving : e.occupied ? HEARING.vehicleIdle : 0, "vehicle");
     }
     for (const p of this.fr.peds.live) {
       const e = this.personEntity(s, p, "pedestrian");
@@ -976,8 +977,9 @@ export class FreeRoamView {
     tz: number,
     exclude: unknown = null,
     prefer: "roads" | "direct" = "direct",
+    within = 0,
   ) {
-    return this.fr.route(mode, fx, fz, tx, tz, exclude, prefer);
+    return this.fr.route(mode, fx, fz, tx, tz, exclude, prefer, within);
   }
 
   /** Nearest points that put an obstacle between the player and a threat. */

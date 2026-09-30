@@ -300,11 +300,12 @@ export class FreeRoamBridge implements MotorWorld {
     kinds: readonly Tracked["kind"][],
     filter: { hostile?: boolean; enterable?: boolean },
     out: Tracked,
+    exclude?: ReadonlySet<string>,
   ): Tracked | null {
     this.perceive();
     let best: EntityView | null = null;
     for (const e of this.visible) {
-      if (!kinds.includes(e.type)) continue;
+      if (!kinds.includes(e.type) || exclude?.has(e.id)) continue;
       if (filter.hostile !== undefined && e.hostile !== filter.hostile) continue;
       if (filter.enterable !== undefined && e.enterable !== filter.enterable) continue;
       if (e.type !== "vehicle" && e.type !== "collectible" && e.healthPct !== null && e.healthPct <= 0) continue;
@@ -324,8 +325,8 @@ export class FreeRoamBridge implements MotorWorld {
     return out;
   }
 
-  route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference): Point[] {
-    return this.fr.view.route(mode, from.x, from.z, to.x, to.z, mode === "vehicle" ? this.fr.driven : null, prefer);
+  route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference, within = 0): Point[] {
+    return this.fr.view.route(mode, from.x, from.z, to.x, to.z, mode === "vehicle" ? this.fr.driven : null, prefer, within);
   }
 
   clearOnFoot(a: Point, b: Point): boolean {

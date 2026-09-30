@@ -419,6 +419,7 @@ export class Pilot {
     const now = ctx.body.time;
     if (run.primary === "supervisor") {
       // A step ended: let the supervisor look again at once, and give up on a strategy that keeps failing.
+      if (run.stepKey) run.supervisor?.stepEnded?.(run.stepKey, outcome, now);
       run.stepKey = null;
       run.stepLabel = null;
       run.nextPlanAt = now;

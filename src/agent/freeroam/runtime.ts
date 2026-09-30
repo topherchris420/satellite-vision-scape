@@ -99,7 +99,17 @@ export const CADENCE = {
   defaultReviewMs: 2000,
   /** An advising provider (assist mode) is asked this often. */
   adviceMs: 4000,
+  /** After a decision fails (blocked, stuck…), wait this long before asking again. */
+  afterFailureMs: 1500,
 } as const;
+
+const FAILED_OUTCOMES: ReadonlySet<DecisionOutcome> = new Set<DecisionOutcome>([
+  "blocked",
+  "stuck",
+  "target_unavailable",
+  "timed_out",
+  "no_effect",
+]);
 
 /** After this many consecutive failures the pilot is told to hold at once. */
 const HOLD_AFTER_FAILURES = 2;
@@ -222,6 +232,7 @@ export class FreeRoamRuntime {
   private urgencySeen = 0;
   private urgent = false;
   private failureStreak = 0;
+  private holdOffUntil = 0;
   /** Decision record awaiting its first executed action, for the control-lag measure. */
   private awaitingFirstAction: { record: FrDecisionRecord; at: number } | null = null;
   private runningRecords: { record: FrDecisionRecord; key: string }[] = [];
@@ -416,6 +427,8 @@ export class FreeRoamRuntime {
         durationS: Math.round((e.endedAt - e.startedAt) * 10) / 10,
       };
       this.urgent = true;
+      // A decision that just failed is not asked for again at once: whatever stopped it needs a moment.
+      if (FAILED_OUTCOMES.has(e.outcome)) this.holdOffUntil = this.now + CADENCE.afterFailureMs;
       this.revision++;
     }
   }
@@ -438,6 +451,7 @@ export class FreeRoamRuntime {
     const b = this.env.sense(this.body);
     // Nothing to choose while dead or in a transition: the only legal thing is to wait.
     if (!b.alive || b.busy) return false;
+    if (this.now < this.holdOffUntil && !this.offlineHold) return false;
     if (this.pilot.idle || this.pilot.holding) return true;
     if (this.urgent) return true;
     return this.now - this.lastDecisionAt >= this.reviewMs;

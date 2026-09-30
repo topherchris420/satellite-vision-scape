@@ -177,7 +177,15 @@ export class PathTracker {
   }
 
   set(start: Point, route: readonly Point[]): void {
-    this.pts = [start, ...route];
+    // Points a hand's breadth apart make segments too short to tell which way the path runs (and a
+    // zero-length one can never be passed): keep one of each.
+    const pts: Point[] = [start];
+    for (const p of route) {
+      const last = pts[pts.length - 1];
+      if (Math.hypot(p.x - last.x, p.z - last.z) >= 0.75) pts.push(p);
+      else if (p === route[route.length - 1] && pts.length > 1) pts[pts.length - 1] = p;
+    }
+    this.pts = pts;
     this.seg = 0;
   }
 
@@ -433,7 +441,7 @@ export class DriveTo implements Behaviour {
     }
 
     if (this.needsPlan && b.time >= this.planAt) {
-      const route = ctx.world.route("vehicle", { x: b.x, z: b.z }, { x: goal.x, z: goal.z }, ctx.prefer);
+      const route = ctx.world.route("vehicle", { x: b.x, z: b.z }, { x: goal.x, z: goal.z }, ctx.prefer, goal.arrive);
       ctx.stats.plans++;
       if (route.length === 0) {
         // Something may be in the way for the moment (a truck across the gap): wait, then look again.
@@ -507,7 +515,14 @@ export class Pursue implements Behaviour {
   private readonly bend = { turn: 0, distance: 1e6 };
   private replan = 0;
   private lostS = 0;
+  private turning = 0;
+  private backing = false;
+  private backingS = 0;
   private readonly record = createTracked();
+  /** Where the target is taken to be this frame: its true place in view, a guess out of it. */
+  private readonly aim = { x: 0, z: 0, mx: 0, mz: 0 };
+  /** The last time it was in view: where it was and how it was moving (m/s along x and z). */
+  private remembered: { x: number; z: number; mx: number; mz: number } | null = null;
 
   constructor(
     readonly targetId: string,
@@ -519,18 +534,43 @@ export class Pursue implements Behaviour {
     const end = notDriving(ctx);
     if (end) return end;
     const b = ctx.body;
-    const t = ctx.world.track(this.targetId, b, this.record);
-    if (!t) return "target_unavailable";
-    if (!t.visible) {
+    const seen = ctx.world.track(this.targetId, b, this.record);
+    if (!seen) return "target_unavailable";
+    const t = this.aim;
+    if (seen.visible) {
+      this.lostS = 0;
+      t.x = seen.x;
+      t.z = seen.z;
+      t.mx = seen.vx;
+      t.mz = seen.vz;
+      this.remembered = { x: seen.x, z: seen.z, mx: seen.vx, mz: seen.vz };
+    } else {
       this.lostS += ctx.dt;
-      if (this.lostS > 6) return "target_lost";
-    } else this.lostS = 0;
-
-    const recovered = this.unstick.step(ctx, false);
-    if (recovered === "stuck") return "stuck";
-    if (recovered) return null;
+      if (this.lostS > 8) return "target_lost";
+      // Out of view: a driver assumes a car that has just gone from sight is still going the way it was.
+      const m = this.remembered ?? { x: seen.x, z: seen.z, mx: 0, mz: 0 };
+      const age = Math.min(seen.ageS, 6);
+      t.x = m.x + m.mx * age;
+      t.z = m.z + m.mz * age;
+      t.mx = m.mx;
+      t.mz = m.mz;
+    }
 
     const d = dist2d(b.x, b.z, t.x, t.z);
+    // Speed: the target's, along the way we are pointing (a car coming at us gives no room to catch up),
+    // corrected by how far off the following distance we are.
+    const ahead = Math.max(0, t.mx * Math.sin(b.heading) + t.mz * Math.cos(b.heading));
+    const want = clamp(ahead + (d - this.gap) * 0.35, 0, FR_PROFILES.escape.cruise);
+    const ob = ctx.world.obstacle(b);
+    // Meant to be moving but not: a wall in the way counts, a vehicle waiting ahead does not.
+    const wanting = want > 1.5 && (ob === null || (ob.kind === "structure" && ob.gap < DRIVE.standoff + 2));
+    const recovered = this.unstick.step(ctx, wanting && !this.unstick.busy);
+    if (recovered === "stuck") return "stuck";
+    if (recovered) {
+      if (!this.unstick.busy) this.replan = 0;
+      return null;
+    }
+
     this.replan -= ctx.dt;
     if (this.replan <= 0 || this.tracker.empty) {
       this.replan = 1.5;
@@ -544,11 +584,38 @@ export class Pursue implements Behaviour {
     this.tracker.nextBend(b.x, b.z, this.bend);
     let headingError = wrapAngle(headingTo(b, this.look) - b.heading);
     // Close behind it, steer for the target itself rather than an old plan.
-    if (d < 30 && t.visible) headingError = wrapAngle(headingTo(b, { x: t.x + t.vx * 0.4, z: t.z + t.vz * 0.4 }) - b.heading);
+    if (d < 30 && seen.visible) headingError = wrapAngle(headingTo(b, { x: t.x + t.mx * 0.4, z: t.z + t.mz * 0.4 }) - b.heading);
 
-    // Speed: the target's own, corrected by how far off the following distance we are.
-    const ahead = Math.hypot(t.vx, t.vz);
-    const want = clamp(ahead + (d - this.gap) * 0.35, 0, FR_PROFILES.escape.cruise);
+    // The target is behind us (it turned round at a dead end and came back): reverse round, as a driver would.
+    if (this.turning <= 0 && Math.abs(headingError) > 1.5 && Math.abs(b.forwardSpeed) < 2.5) this.turning = 4;
+    if (this.turning > 0) {
+      this.turning -= ctx.dt;
+      const behind = b.forwardSpeed < -0.5 && ob !== null && ob.gap < 2.5;
+      if (Math.abs(headingError) > 0.9 && !behind) {
+        pedals(ctx, b.forwardSpeed > 0.9 ? -0.45 : -0.4, Math.sign(headingError) || 1);
+        return null;
+      }
+      this.turning = 0;
+    }
+
+    // Close enough behind a target that has stopped (or is coming the other way): stop too, rather than
+    // creep up on it. Never for a guess at where an unseen one might be.
+    if (seen.visible && want < 0.5 && ahead < 0.6 && d < this.gap + 4) {
+      // Nose to nose with it: back off a little and leave it room to move, as a driver does.
+      if (d < 7 || this.backing) {
+        const blocked = b.forwardSpeed < -0.5 && ob !== null && ob.gap < 2.5;
+        this.backing = d < 9.5 && !blocked && this.backingS < 5;
+        if (this.backing) {
+          this.backingS += ctx.dt;
+          pedals(ctx, b.forwardSpeed > 0.9 ? -0.5 : -0.45, 0);
+          return null;
+        }
+      } else this.backingS = 0;
+      holdStill(ctx);
+      return null;
+    }
+    this.backing = false;
+    this.backingS = 0;
     const profile: DrivingProfile = { ...FR_PROFILES.road, cruise: Math.max(2, want) };
     this.driver.drive(ctx, profile, {
       headingError,
@@ -556,7 +623,7 @@ export class Pursue implements Behaviour {
       distanceToTurn: this.bend.distance,
       distanceToGoal: 1e6,
       stopDistance: 0,
-      ob: ctx.world.obstacle(b),
+      ob,
     });
     return null;
   }

@@ -6,9 +6,17 @@ import {
   type AgentIntent,
 } from "../../agent/contract";
 import { OBSERVATION_SCHEMA, MAX_OBSERVATION_BYTES } from "../../agent/observation";
+import { FR_DECISION_SCHEMA, type FreeRoamDecision } from "../../agent/freeroam/decisions";
+import {
+  FR_OBSERVATION_SCHEMA,
+  isFreeRoamObservation,
+  validateFreeRoamObservation,
+} from "../../agent/freeroam/observation";
+import { ACTION_SCHEMA } from "../../lib/freeroam/contracts";
 import { validateObservation } from "../../agent/tasks/registry";
 import { FULL_ASSISTS, type Assists } from "./assists";
-import { buildQuestion } from "./question";
+import { buildFreeRoamQuestion } from "./freeroamQuestion";
+import { buildQuestion, type SystemOneRequest } from "./question";
 import { DEFAULT_RATE_LIMITS, RateLimiter } from "./rateLimit";
 
 /**
@@ -172,12 +180,12 @@ function isUnit(value: unknown): value is number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1;
 }
 
-export type ParsedAnswer =
+export type ParsedAnswer<T = AgentIntent> =
   | {
       ok: true;
-      intent: AgentIntent;
+      intent: T;
       confidence: number;
-      alternatives: { intent: AgentIntent; probability: number }[];
+      alternatives: { intent: T; probability: number }[];
     }
   | { ok: false; error: string };
 
@@ -187,10 +195,10 @@ export type ParsedAnswer =
  * only offered keys, once each, in [0, 1], summing to 1 within rounding; the
  * choice is (within rounding) the most probable. Nothing is filled in.
  */
-export function parseChoice(
+export function parseChoice<T = AgentIntent>(
   answer: unknown,
-  options: ReadonlyMap<string, AgentIntent>,
-): ParsedAnswer {
+  options: ReadonlyMap<string, T>,
+): ParsedAnswer<T> {
   if (typeof answer !== "object" || answer === null || Array.isArray(answer))
     return { ok: false, error: "answer is not an object" };
   const a = answer as Record<string, unknown>;
@@ -232,6 +240,13 @@ export function parseChoice(
   };
 }
 
+/** A validated request, ready to ask, with the way to answer it. */
+interface Prepared {
+  sequence: number;
+  build: () => { request: SystemOneRequest; options: ReadonlyMap<string, unknown> };
+  respond: (choice: Extract<ParsedAnswer<unknown>, { ok: true }>, model: string, serverLatencyMs: number) => Response;
+}
+
 export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHandler {
   const fetchImpl = config.fetchImpl ?? fetch;
   const limiter = config.limiter ?? new RateLimiter(DEFAULT_RATE_LIMITS);
@@ -253,6 +268,11 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
       assists: assists.profile,
       actionContract: ACTION_CONTRACT,
       observationSchema: OBSERVATION_SCHEMA,
+      freeRoam: {
+        observationSchema: FR_OBSERVATION_SCHEMA,
+        decisionSchema: FR_DECISION_SCHEMA,
+        actionSchema: ACTION_SCHEMA,
+      },
       limits: {
         maxBodyBytes: MAX_BODY_BYTES,
         minIntervalMs: DEFAULT_RATE_LIMITS.sessionMinIntervalMs,
@@ -309,15 +329,68 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
     const session = envelope["session"];
     if (typeof session !== "string" || !SESSION_ID.test(session))
       return errorResponse(400, "invalid_request", "The session id is malformed.");
-    const parsed = validateObservation(envelope["observation"]);
-    if (!parsed.ok)
-      return errorResponse(400, "invalid_request", `Invalid observation: ${parsed.error}`);
-    const observation = parsed.value;
-    const sequence = observation.sequence;
-    if (observation.controller.provider !== "jev")
-      return errorResponse(400, "invalid_request", "The observation is not addressed to Jev.", {
+    // One endpoint, one credential, one set of limits: the observation says which game it is from.
+    const raw = envelope["observation"];
+    let prepared: Prepared;
+    if (isFreeRoamObservation(raw)) {
+      const parsed = validateFreeRoamObservation(raw);
+      if (!parsed.ok)
+        return errorResponse(400, "invalid_request", `Invalid observation: ${parsed.error}`);
+      const observation = parsed.value;
+      if (observation.controller.provider !== "jev")
+        return errorResponse(400, "invalid_request", "The observation is not addressed to Jev.", {
+          sequence: observation.sequence,
+        });
+      const sequence = observation.sequence;
+      prepared = {
         sequence,
-      });
+        build: () => buildFreeRoamQuestion(observation, model),
+        respond: (choice, reply, serverLatencyMs) => {
+          const decision = choice.intent as FreeRoamDecision;
+          return json(200, {
+            schema: FR_DECISION_SCHEMA,
+            sequence,
+            decision,
+            provider: "jev",
+            model: reply,
+            confidence: choice.confidence,
+            alternatives: choice.alternatives.map((a) => ({
+              decision: a.intent as FreeRoamDecision,
+              probability: a.probability,
+            })),
+            serverLatencyMs,
+          });
+        },
+      };
+    } else {
+      const parsed = validateObservation(raw);
+      if (!parsed.ok)
+        return errorResponse(400, "invalid_request", `Invalid observation: ${parsed.error}`);
+      const observation = parsed.value;
+      const sequence = observation.sequence;
+      if (observation.controller.provider !== "jev")
+        return errorResponse(400, "invalid_request", "The observation is not addressed to Jev.", {
+          sequence,
+        });
+      prepared = {
+        sequence,
+        build: () => buildQuestion(observation, model, assists),
+        respond: (choice, reply, serverLatencyMs) => {
+          const decision: AgentDecision = {
+            schema: DECISION_SCHEMA,
+            sequence,
+            intent: choice.intent as AgentIntent,
+            provider: "jev",
+            model: reply,
+            confidence: choice.confidence,
+            alternatives: choice.alternatives as { intent: AgentIntent; probability: number }[],
+            serverLatencyMs,
+          };
+          return json(200, decision);
+        },
+      };
+    }
+    const sequence = prepared.sequence;
 
     const pace = limiter.admitSession(session);
     if (!pace.ok)
@@ -332,7 +405,7 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
         retryAfterMs: slot.retryAfterMs,
       });
 
-    const { request: question, options } = buildQuestion(observation, model, assists);
+    const { request: question, options } = prepared.build();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const disconnect = () => controller.abort();
@@ -439,17 +512,7 @@ export function createJevDecisionHandler(config: JevServerConfig): JevDecisionHa
         },
       );
     }
-    const decision: AgentDecision = {
-      schema: DECISION_SCHEMA,
-      sequence,
-      intent: choice.intent,
-      provider: "jev",
-      model: reply.model,
-      confidence: choice.confidence,
-      alternatives: choice.alternatives,
-      serverLatencyMs,
-    };
-    return json(200, decision);
+    return prepared.respond(choice, reply.model, serverLatencyMs);
   };
 }
 

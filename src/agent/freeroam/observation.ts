@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { PROVIDER_ID, targetIdSchema } from "../contract";
 import { MAX_OBSERVATION_BYTES, observationBytes, text, type Validated } from "../observation";
-import { FreeRoamDecisionSchema, DECISION_OUTCOMES, type FreeRoamDecision } from "./decisions";
+import { FreeRoamDecisionSchema, DECISION_OUTCOMES, decisionKey, type FreeRoamDecision } from "./decisions";
+import { deriveLegal } from "./legal";
 
 /**
  * The Free Roam observation: `svs-freeroam-observation/v1`.
@@ -322,6 +323,13 @@ export function validateFreeRoamObservation(value: unknown): Validated<FreeRoamO
   for (const d of o.legal) {
     if ("target" in d && !known.has(d.target))
       return { ok: false, error: `legal: "${d.type}" names ${d.target}, which is not listed` };
+  }
+  // The legal set is a function of what is in the observation: a request offering
+  // anything the situation does not allow is not a request from this game.
+  const allowed = new Set(deriveLegal(o).map(decisionKey));
+  for (const d of o.legal) {
+    if (!allowed.has(decisionKey(d)))
+      return { ok: false, error: `legal: ${decisionKey(d)} is not allowed in this situation` };
   }
   return { ok: true, value: o };
 }

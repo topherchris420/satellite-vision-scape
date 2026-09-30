@@ -334,6 +334,8 @@ export class FreeRoam {
     runner.hooks = {
       onStageStart: (stage, index) => {
         if (stage.kind === "escape" || stage.kind === "survive") this.raiseAlarm(Number(stage.params["alarm"] ?? 3.4));
+        // The scout pulls out once the player is in a vehicle and the chase is on.
+        if (stage.kind === "follow") this.traffic.depart(String(stage.params["vehicleId"] ?? ""));
         this.events.emit("stage", {
           t: this.simTime,
           challenge: spec.challenge.id,
@@ -387,6 +389,8 @@ export class FreeRoam {
     if (v.wrecked && v.physics.speed > 1) return false;
     const e = this.traffic.entryOf(v);
     if (!e || e.released) return true;
+    // The scout to be followed is not there to be taken.
+    if (e.spec.departsWithStage) return false;
     if (e.spec.role === "response") return v.physics.speed < 1.8 && e.driver.mode === "hold";
     return v.physics.speed < 1.8;
   }
@@ -1053,6 +1057,7 @@ export class FreeRoam {
     tz: number,
     exclude: unknown,
     prefer: "roads" | "direct" = "direct",
+    within = 0,
   ): { x: number; z: number }[] {
     this.pointCaches.clear();
     this.refreshParked(exclude);
@@ -1083,11 +1088,26 @@ export class FreeRoam {
     }
     // Preferring the roads makes leaving them cost more, not impossible.
     const stepCost = mode === "vehicle" && prefer === "roads" ? this.offRoadCost : undefined;
+    // Take the first attempt that actually gets there; if none does, the one that gets nearest.
+    const arrives = Math.max(mode === "foot" ? 1.2 : 5, within);
+    let best: { x: number; z: number }[] = [];
+    let bestGap = Infinity;
     for (const option of attempts) {
-      const route = findRoute(start, goal, clear, { ...option, stepCost });
-      if (route.length > 0) return route;
+      const route = findRoute(start, goal, clear, {
+        ...option,
+        tolerance: Math.max(option.tolerance, within),
+        stepCost,
+      });
+      if (route.length === 0) continue;
+      const end = route[route.length - 1];
+      const gap = Math.hypot(end.x - tx, end.z - tz);
+      if (gap <= arrives) return route;
+      if (gap < bestGap) {
+        best = route;
+        bestGap = gap;
+      }
     }
-    return [];
+    return best;
   }
 
   private readonly roadScratch = { route: 0, segment: 0, x: 0, z: 0, tx: 0, tz: 1, offset: 0, s: 0, halfWidth: 0 };

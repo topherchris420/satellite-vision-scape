@@ -218,9 +218,14 @@ export interface MotorWorld {
     kinds: readonly Tracked["kind"][],
     filter: { hostile?: boolean; enterable?: boolean },
     out: Tracked,
+    exclude?: ReadonlySet<string>,
   ): Tracked | null;
-  /** A route for a walker or a vehicle (waypoints after the start); empty if there is none. */
-  route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference): Point[];
+  /**
+   * A route for a walker or a vehicle (waypoints after the start); empty if
+   * there is none. `within` is how close to the goal counts as there: a
+   * marker several metres wide can be reached without reaching its centre.
+   */
+  route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference, within?: number): Point[];
   /** Can a walker go straight from `a` to `b`? */
   clearOnFoot(a: Point, b: Point): boolean;
   /** The road under the vehicle, if there is one within reach. */

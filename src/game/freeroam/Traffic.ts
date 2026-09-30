@@ -333,6 +333,8 @@ export interface TrafficSpec {
   depot?: { x: number; z: number; yaw: number };
   /** Parked with its driver at `depot` until taken (a vehicle to steal). */
   idle?: boolean;
+  /** Waits on its route, engine running, until a challenge stage sends it off (a scout to follow). */
+  departsWithStage?: boolean;
 }
 
 export interface TrafficEntry {
@@ -342,6 +344,8 @@ export interface TrafficEntry {
   active: boolean;
   /** Taken by the player or wrecked: no longer driving itself. */
   released: boolean;
+  /** Sent off by a challenge: it keeps driving however far the player is. */
+  pinned: boolean;
 }
 
 /** Traffic activates within this many metres of the player, and parks beyond the larger one. */
@@ -365,9 +369,20 @@ export class Traffic {
       const variant = { ...variantFor(spec.kind, 0), callsign: spec.callsign };
       const vehicle = this.vehicles.spawn(FLEET_SPECS[spec.kind], variant, 0, 0, 0);
       const driver = new AiDriver(vehicle, this.roads, spec.cruise);
-      this.entries.push({ spec, vehicle, driver, active: false, released: false });
+      this.entries.push({ spec, vehicle, driver, active: false, released: false, pinned: false });
     }
     this.reset();
+  }
+
+  /** A challenge sends a waiting vehicle off along its route. It drives on however far away the player is. */
+  depart(callsign: string): boolean {
+    const e = this.entries.find((x) => x.spec.callsign.toLowerCase() === callsign.toLowerCase());
+    if (!e || e.released || !e.spec.departsWithStage) return false;
+    e.pinned = true;
+    e.driver.cruise = e.spec.cruise;
+    e.driver.startRoute(e.spec.route, e.spec.s, e.spec.dir);
+    this.wake(e);
+    return true;
   }
 
   /** Every vehicle back at its starting place, repaired, and idle until the player comes near. */
@@ -377,10 +392,11 @@ export class Traffic {
       vehicle.resetState();
       this.place(e);
       driver.reset();
-      if (spec.role === "response" || spec.idle) driver.hold();
+      if (spec.role === "response" || spec.idle || spec.departsWithStage) driver.hold();
       else driver.startRoute(spec.route, spec.s, spec.dir);
       e.active = false;
       e.released = false;
+      e.pinned = false;
       driver.controller.applyParked(vehicle.controls);
       this.setVisible(e, true);
     }
@@ -464,9 +480,11 @@ export class Traffic {
         const sent = e.driver.mode !== "hold";
         if (sent && !e.active) this.wake(e);
         else if (!sent && e.active) this.park(e);
+      } else if (e.spec.departsWithStage && !e.pinned) {
+        // Waiting for its stage: it stays where it is.
       } else if (!e.active && d < TRAFFIC_RADIUS.in) {
         this.wake(e);
-      } else if (e.active && d > TRAFFIC_RADIUS.out) {
+      } else if (e.active && d > TRAFFIC_RADIUS.out && !e.pinned) {
         this.park(e);
       }
       this.setVisible(e, d < HIDE_BEYOND);

@@ -2,8 +2,8 @@ import { AutoFire, Approach, Aim } from "./aim";
 import type { Behaviour, Ctx } from "./behaviour";
 import type { DecisionOutcome } from "./decisions";
 import { Cruise, DriveTo, Escape, ExitVehicle, FR_PROFILES, Pursue } from "./drive";
-import { Enter, Flee, Hold, TakeCover, WalkTo } from "./foot";
-import { createTracked, type ThreatSense } from "./world";
+import { Collect, Enter, Flee, Hold, TakeCover, Turn, WalkTo } from "./foot";
+import { createTracked, type ThreatSense, type Tracked } from "./world";
 
 /**
  * Supervisors: the strategy tier.
@@ -30,7 +30,18 @@ export type Plan = { step: Step } | { outcome: DecisionOutcome };
 export interface Supervisor {
   readonly name: string;
   plan(ctx: Ctx): Plan;
+  /** A step it chose has ended, and how; a supervisor learns what not to try again. */
+  stepEnded?(key: string, outcome: DecisionOutcome, now: number): void;
 }
+
+/** Outcomes that mean "that did not work". */
+const FAILED: ReadonlySet<DecisionOutcome> = new Set<DecisionOutcome>([
+  "blocked",
+  "stuck",
+  "target_unavailable",
+  "timed_out",
+  "no_effect",
+]);
 
 const walk = (id: string, sprint: boolean, label: string): Step => ({
   key: `${sprint ? "sprint" : "walk"}:${id}`,
@@ -66,7 +77,20 @@ const exit: Step = {
 export class ObjectiveSupervisor implements Supervisor {
   readonly name = "objective";
   private readonly evade = new EvadeSupervisor();
+  private readonly roam = new ExploreSupervisor({ far: true, max: 1000, budgetS: 1e9 });
   private readonly record = createTracked();
+  /** Things that could not be reached, and until when (simulated seconds). */
+  private readonly banned = new Map<string, number>();
+
+  stepEnded(key: string, outcome: DecisionOutcome, now: number): void {
+    this.roam.stepEnded(key, outcome, now);
+    if (key.startsWith("look:")) this.spins++;
+    if (FAILED.has(outcome)) this.banned.set(key, now + 90);
+  }
+
+  private ok(key: string, now: number): boolean {
+    return (this.banned.get(key) ?? 0) <= now;
+  }
 
   plan(ctx: Ctx): Plan {
     const world = ctx.world;
@@ -118,11 +142,28 @@ export class ObjectiveSupervisor implements Supervisor {
         }
         return marker ? { step: walk("objective", true, "Head for the targets") } : { step: wait };
       }
-      case "collect":
+      case "collect": {
         if (!marker) return { step: wait };
-        return driving
-          ? { step: driveTo("objective", false, "Drive over the shard") }
-          : { step: walk("objective", true, "Run to the nearest shard") };
+        if (driving) return { step: driveTo("objective", false, "Drive over the shard") };
+        // Shards in view first, nearest first; the marker's own pick if none is seen (or reachable).
+        let best: Tracked | null = null;
+        for (const t of this.visibleShards(ctx)) {
+          if (!this.ok(`collect:${t.id}`, b.time)) continue;
+          if (!best || Math.hypot(t.x - b.x, t.z - b.z) < Math.hypot(best.x - b.x, best.z - b.z)) best = t;
+        }
+        if (best) {
+          const id = best.id;
+          return {
+            step: {
+              key: `collect:${id}`,
+              label: "Run to a shard",
+              make: () => ({ loco: new Collect(id), aim: null, trigger: null }),
+            },
+          };
+        }
+        if (this.ok("sprint:objective", b.time)) return { step: walk("objective", true, "Run to the nearest shard") };
+        return this.roam.plan(ctx);
+      }
       default:
         break;
     }
@@ -130,24 +171,55 @@ export class ObjectiveSupervisor implements Supervisor {
     // reach, stealth_reach, checkpoints, deliver, clean_drive, explore: go to the marker.
     if (!marker && stage.kind !== "clean_drive") return { step: wait };
     if (onFoot) {
-      if (stage.requiresVehicle) {
-        const id =
-          stage.vehicleId ?? world.nearestVisible(b, ["vehicle"], { enterable: true }, this.record)?.id ?? null;
-        if (id) return { step: enter(id) };
-        return marker ? { step: walk("objective", true, "Look for a vehicle") } : { step: wait };
+      // On foot unless a vehicle is needed, or the marker turned out to be unreachable on foot
+      // (behind a fence whose barrier only a vehicle raises).
+      const byFoot = !stage.requiresVehicle && this.ok("sprint:objective", b.time) && this.ok("walk:objective", b.time);
+      if (byFoot || stage.kind === "clean_drive") {
+        if (stage.kind === "clean_drive") return this.needVehicle(ctx, stage.vehicleId);
+        // Stealth is walked; everything else is run.
+        return { step: walk("objective", stage.kind !== "stealth_reach", "Head for the marker") };
       }
-      // Stealth is walked; everything else is run.
-      return { step: walk("objective", stage.kind !== "stealth_reach", "Head for the marker") };
+      return this.needVehicle(ctx, stage.vehicleId);
     }
-    if (stage.kind === "clean_drive")
-      return {
-        step: {
-          key: "cruise",
-          label: "Drive carefully along the road",
-          make: () => ({ loco: new Cruise(false) }),
-        },
-      };
+    // A clean drive is distance without a scratch: go from place to place by the roads.
+    if (stage.kind === "clean_drive") return this.roam.plan(ctx);
     return { step: driveTo("objective", stage.kind === "deliver", "Drive to the marker") };
+  }
+
+  private spins = 0;
+
+  /** Get hold of a vehicle: the named one, else the nearest in view, else look around for one. */
+  private needVehicle(ctx: Ctx, named: string | null): Plan {
+    const b = ctx.body;
+    const id = named ?? ctx.world.nearestVisible(b, ["vehicle"], { enterable: true }, this.record)?.id ?? null;
+    if (id) {
+      this.spins = 0;
+      return { step: enter(id) };
+    }
+    if (this.spins >= 8) return { outcome: "target_unavailable" };
+    const n = this.spins;
+    return {
+      step: {
+        key: `look:${n}`,
+        label: "Look round for a vehicle",
+        make: () => ({ loco: new Turn(1), aim: null, trigger: null }),
+      },
+    };
+  }
+
+  private readonly scratch = createTracked();
+
+  /** Every shard in view, nearest first (the world hands back one at a time). */
+  private visibleShards(ctx: Ctx): Tracked[] {
+    const out: Tracked[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < 6; i++) {
+      const t = ctx.world.nearestVisible(ctx.body, ["collectible"], {}, this.scratch, seen);
+      if (!t) break;
+      seen.add(t.id);
+      out.push({ ...t });
+    }
+    return out;
   }
 }
 
@@ -199,38 +271,57 @@ export class EvadeSupervisor implements Supervisor {
   }
 }
 
-/** Wander the map's named places, nearest first, on foot or by road. */
+/** Wander the map's named places, on foot or by road. */
 export class ExploreSupervisor implements Supervisor {
   readonly name = "explore";
   private readonly visited = new Set<string>();
+  private readonly banned = new Map<string, number>();
   private current: string | null = null;
   private startedAt = NaN;
+  private readonly far: boolean;
+  private readonly max: number;
+  private readonly budgetS: number;
+
+  constructor(options: { far?: boolean; max?: number; budgetS?: number } = {}) {
+    this.far = options.far ?? false;
+    this.max = options.max ?? 4;
+    this.budgetS = options.budgetS ?? 180;
+  }
+
+  stepEnded(key: string, outcome: DecisionOutcome, now: number): void {
+    if (!FAILED.has(outcome)) return;
+    const id = key.split(":")[1];
+    if (id) this.banned.set(id, now + 120);
+  }
 
   plan(ctx: Ctx): Plan {
     const b = ctx.body;
     if (Number.isNaN(this.startedAt)) this.startedAt = b.time;
-    if (b.time - this.startedAt > 180 || this.visited.size >= 4) return { outcome: "done" };
+    if (b.time - this.startedAt > this.budgetS || this.visited.size >= this.max) return { outcome: "done" };
     if (b.locomotion !== "on_foot" && b.locomotion !== "driving") return { step: wait };
     const places = ctx.world.places(b);
     if (this.current) {
       const p = places.find((x) => x.id === this.current);
-      if (!p || Math.hypot(p.x - b.x, p.z - b.z) < 14) {
-        this.visited.add(this.current);
+      if (!p || Math.hypot(p.x - b.x, p.z - b.z) < 14 || (this.banned.get(this.current) ?? 0) > b.time) {
+        if (p && Math.hypot(p.x - b.x, p.z - b.z) < 14) this.visited.add(this.current);
         this.current = null;
       }
     }
     if (!this.current) {
       let best: string | null = null;
-      let bestD = Infinity;
+      let bestScore = -Infinity;
       for (const p of places) {
-        if (this.visited.has(p.id)) continue;
+        if ((this.banned.get(p.id) ?? 0) > b.time) continue;
         const d = Math.hypot(p.x - b.x, p.z - b.z);
+        if (!this.far && this.visited.has(p.id)) continue;
         if (d < 25) {
           this.visited.add(p.id);
           continue;
         }
-        if (d < bestD) {
-          bestD = d;
+        // Exploring goes to the nearest; a long drive goes to a place a good way off, not the farthest.
+        const score = this.far ? -Math.abs(d - 350) : -d;
+        if (score > bestScore) {
+          bestScore = score;
           best = p.id;
         }
       }
@@ -243,4 +334,3 @@ export class ExploreSupervisor implements Supervisor {
       : { step: walk(id, true, `Head for ${id}`) };
   }
 }
-

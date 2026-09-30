@@ -20,12 +20,19 @@ const has = (o: FreeRoamObservation, type: FreeRoamDecision["type"]) => o.legal.
 const find = (o: FreeRoamObservation, d: FreeRoamDecision) =>
   o.legal.find((x) => decisionKey(x) === decisionKey(d)) ?? null;
 
-/** Carry on with the objective; lose a pursuit if there is one; otherwise wait. */
+/** Stages where the danger is the point (the supervisor already handles it) or the shooting draws it. */
+const OWN_DANGER = new Set(["escape", "survive", "shoot"]);
+
+/**
+ * Carry on with the objective; lose a pursuit if it gets serious and the
+ * objective is not itself about danger; otherwise wait. Once evading, keep at
+ * it until the pursuit is over, so the choice does not flip on every review.
+ */
 export const scriptedPolicy: Policy = (o) => {
-  if (o.attention.level >= 3 || o.attention.pursued) {
-    if (has(o, "EVADE_PURSUIT") && (o.objective === null || !["escape", "survive"].includes(o.objective.kind)))
-      return { type: "EVADE_PURSUIT" };
-  }
+  const evading = o.execution?.decisions.some((d) => d.type === "EVADE_PURSUIT") ?? false;
+  const serious = o.attention.level >= 3 || (evading && (o.attention.level >= 1 || o.attention.pursued));
+  if (serious && has(o, "EVADE_PURSUIT") && !(o.objective && OWN_DANGER.has(o.objective.kind)))
+    return { type: "EVADE_PURSUIT" };
   if (has(o, "CONTINUE_OBJECTIVE")) return { type: "CONTINUE_OBJECTIVE" };
   if (has(o, "EXPLORE")) return { type: "EXPLORE" };
   return find(o, { type: "WAIT" }) ?? o.legal[0];

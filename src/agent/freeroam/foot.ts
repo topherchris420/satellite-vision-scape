@@ -62,7 +62,13 @@ export class PathWalker {
     if (toGoal <= this.arrive) return "arrived";
     if (this.needsPlan) {
       this.needsPlan = false;
-      this.route = ctx.world.route("foot", { x: b.x, z: b.z }, { x: this.goalX, z: this.goalZ }, ctx.prefer);
+      this.route = ctx.world.route(
+        "foot",
+        { x: b.x, z: b.z },
+        { x: this.goalX, z: this.goalZ },
+        ctx.prefer,
+        Math.max(0, this.arrive - 0.5),
+      );
       ctx.stats.plans++;
       this.index = 0;
       if (this.route.length === 0) return "blocked";
@@ -95,8 +101,11 @@ export class PathWalker {
       dist2d(b.x, b.z, this.route[this.index].x, this.route[this.index].z) < FOOT.waypointReach
     )
       this.index++;
-    const wp = this.route[this.index];
+    let wp = this.route[this.index];
     const final = this.index === this.route.length - 1;
+    // A plan that stopped a little short of its goal (a tight gap it would not commit to)
+    // ends with a straight walk at the goal itself; the body's own collision has the last word.
+    if (final && dist2d(b.x, b.z, wp.x, wp.z) < FOOT.waypointReach && toGoal > this.arrive) wp = { x: this.goalX, z: this.goalZ };
     const travel = yawTo(b.x, b.z, wp.x, wp.z);
     if (!ctx.cameraOwned) turnCameraTo(ctx, travel);
     const rel = Math.abs(wrapPi(travel - b.cameraYaw));

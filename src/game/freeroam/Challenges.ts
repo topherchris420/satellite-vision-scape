@@ -467,7 +467,9 @@ export class ChallengeRunner {
         if (inRange) {
           rt.a += dt;
           rt.b = 0;
-        } else if (pl.vehicleId !== null && d > num(p, "loseD", 120)) {
+          // Once the target has been caught up with, it can be lost.
+          rt.c = 1;
+        } else if (rt.c === 1 && pl.vehicleId !== null && d > num(p, "loseD", 120)) {
           rt.b += dt;
           if (rt.b > 8) {
             this.finish("failed", "Lost the target", ctx.now);

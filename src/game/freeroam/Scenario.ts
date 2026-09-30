@@ -1,5 +1,7 @@
 import { buildings, parkingLots } from "@/lib/site-layout";
 import { RandomStream, deriveSeed } from "@/lib/freeroam/rng";
+import { wrapPi } from "@/lib/freeroam/contracts";
+import { getFenceLayout } from "@/lib/site-fences";
 import { PLAYER_SPAWN } from "../world/spawns";
 import { CollisionLayer } from "../world/colliders";
 import type { CollisionWorld } from "../world/CollisionWorld";
@@ -193,6 +195,50 @@ function shuffle<T>(items: readonly T[], rng: RandomStream): T[] {
 
 const dist = (ax: number, az: number, bx: number, bz: number) => Math.hypot(ax - bx, az - bz);
 
+/**
+ * Every cell of a 4 m grid that can be walked to from `from` while `free` holds, breadth first in a fixed
+ * order (so the result is the same on every machine). A step is taken only if the cell, the midpoint and the
+ * next cell are all free: with a 1 m radius those three circles cover the whole 4 m segment, so a thin wall
+ * cannot be stepped over. Bounded to ±600 m so an open plain cannot run away.
+ */
+function floodFill(
+  from: { x: number; z: number },
+  free: (x: number, z: number) => boolean,
+): { xs: number[]; zs: number[] } {
+  const CELL = 4;
+  const HALF = 150;
+  const W = HALF * 2 + 1;
+  const seen = new Uint8Array(W * W);
+  const xs: number[] = [];
+  const zs: number[] = [];
+  const queue: number[] = [];
+  const key = (ix: number, iz: number) => (ix + HALF) * W + (iz + HALF);
+  seen[key(0, 0)] = 1;
+  queue.push(0, 0);
+  for (let head = 0; head < queue.length; head += 2) {
+    const ix = queue[head];
+    const iz = queue[head + 1];
+    const cx = from.x + ix * CELL;
+    const cz = from.z + iz * CELL;
+    xs.push(cx);
+    zs.push(cz);
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as const) {
+      const nx = ix + dx;
+      const nz = iz + dz;
+      if (Math.abs(nx) > HALF || Math.abs(nz) > HALF || seen[key(nx, nz)]) continue;
+      const px = from.x + nx * CELL;
+      const pz = from.z + nz * CELL;
+      // A cell is only marked once it has been reached: a wall between one neighbour and it must not
+      // hide it from another.
+      if (free(px, pz) && free((cx + px) / 2, (cz + pz) / 2)) {
+        seen[key(nx, nz)] = 1;
+        queue.push(nx, nz);
+      }
+    }
+  }
+  return { xs, zs };
+}
+
 /** Build the complete description of a scenario. Pure and deterministic. */
 export function buildScenario(seed: number, challengeId: string, ctx: ScenarioContext): ScenarioSpec {
   const info = challengeInfo(challengeId) ?? challengeInfo(DEFAULT_CHALLENGE)!;
@@ -231,6 +277,25 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
       const d = dist(s.x, s.z, cx, cz);
       return d >= min && d <= max;
     });
+  /**
+   * The nearest ground a person can walk to from the spawn. A flood over a 3 m grid on static geometry,
+   * run on first use: some landmark centres sit inside a compound that has no way in, and a marker
+   * there could never be visited by anyone.
+   */
+  let flood: { xs: number[]; zs: number[] } | null = null;
+  const reach = (x: number, z: number, within: number): { x: number; z: number } | null => {
+    if (!flood) flood = floodFill(spawn, (px, pz) => foot(px, pz, 1.0));
+    let best = -1;
+    let bestD = within;
+    for (let i = 0; i < flood.xs.length; i++) {
+      const d = dist(flood.xs[i], flood.zs[i], x, z);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best < 0 ? null : { x: r2(flood.xs[best]), z: r2(flood.zs[best]) };
+  };
 
   // --- Pedestrians -------------------------------------------------------------------
   const pedestrians: PedSpec[] = [];
@@ -472,6 +537,58 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
     }
   }
 
+  // A scout to follow starts a short drive from the start with a long, easy road ahead of it: no gate to stop
+  // at and no hairpin, so the chase is about keeping up rather than about where the road happens to go.
+  if (id === "follow-target") {
+    const RUN = 420;
+    const gates = getFenceLayout().gates;
+    const pt = { x: 0, z: 0, tx: 0, tz: 0 };
+    const easy = (sm: RoadSample, dir: 1 | -1, bend: number, gateGap: number): boolean => {
+      const end = sm.s + dir * RUN;
+      if (end < 0 || end > roads.routes[sm.route].length) return false;
+      const yaws: number[] = [];
+      for (let k = 0; k <= RUN; k += 12) {
+        roads.pointAt(sm.route, sm.s + dir * k, pt);
+        if (gates.some((g) => dist(g.center[0], g.center[1], pt.x, pt.z) < gateGap)) return false;
+        yaws.push(Math.atan2(pt.tx * dir, pt.tz * dir));
+      }
+      for (let i = 3; i < yaws.length; i++) if (Math.abs(wrapPi(yaws[i] - yaws[i - 3])) > bend) return false;
+      return true;
+    };
+    // Strictest first; relax only if this seed's roads offer nothing.
+    const tiers: [number, number, number, number][] = [
+      [70, 200, 0.5, 18],
+      [60, 300, 0.8, 10],
+    ];
+    let lead: { sm: RoadSample; dir: 1 | -1 } | null = null;
+    for (const [min, max, bend, gateGap] of tiers) {
+      for (const sm of shuffle(within(spawn.x, spawn.z, min, max), rng)) {
+        const dir: 1 | -1 | 0 = easy(sm, 1, bend, gateGap) ? 1 : easy(sm, -1, bend, gateGap) ? -1 : 0;
+        if (dir !== 0) {
+          lead = { sm, dir };
+          break;
+        }
+      }
+      if (lead) break;
+    }
+    if (lead) {
+      const spec: TrafficSpec = {
+        id: "civil-lead",
+        callsign: callsign("scout"),
+        kind: "scout",
+        role: "civil",
+        route: lead.sm.route,
+        s: r2(lead.sm.s),
+        dir: lead.dir,
+        cruise: r2(rng.range(11, 12.5)),
+        driverId: null,
+        departsWithStage: true,
+      };
+      addDriver(spec);
+      traffic.push(spec);
+    }
+  }
+
   const challenge = buildChallenge(info, {
     rng,
     spawn,
@@ -482,6 +599,7 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
     landmarks: LANDMARKS,
     car,
     foot,
+    reach,
     roadside,
     within,
   });
@@ -519,6 +637,7 @@ interface BuildCtx {
   landmarks: readonly { id: string; label: string; x: number; z: number }[];
   car: (x: number, z: number) => boolean;
   foot: (x: number, z: number, r?: number) => boolean;
+  reach: (x: number, z: number, within: number) => { x: number; z: number } | null;
   roadside: (sm: RoadSample, side: 1 | -1, extra?: number) => { x: number; z: number };
   within: (cx: number, cz: number, min: number, max: number) => RoadSample[];
 }
@@ -649,7 +768,7 @@ function buildChallenge(info: ChallengeInfo, c: BuildCtx): ChallengeDefinition {
       break;
     }
     case "follow-target": {
-      const lead = loud ?? c.traffic.find((t) => t.role === "civil" && !t.idle);
+      const lead = c.traffic.find((t) => t.id === "civil-lead") ?? loud ?? c.traffic.find((t) => t.role === "civil" && !t.idle);
       stages.push(
         stage("board", "enter_vehicle", "Get a vehicle", "Get into any vehicle you can drive: UV-1 is by the car park", { vehicleId: "UV-1" }),
         stage("follow", "follow", "Follow the scout", `Stay within 6–45 m of ${lead?.callsign ?? "SC-1"} for 40 s`, {
@@ -693,7 +812,12 @@ function buildChallenge(info: ChallengeInfo, c: BuildCtx): ChallengeDefinition {
       break;
     }
     case "exploration": {
-      const pts = c.landmarks.map((l) => [l.x, l.z]);
+      // A landmark inside a walled compound is marked at the nearest ground that can be walked to.
+      const open = c.landmarks.flatMap((l) => {
+        const p = c.reach(l.x, l.z, 90);
+        return p ? [[p.x, p.z]] : [];
+      });
+      const pts = open.length >= 4 ? open : c.landmarks.map((l) => [l.x, l.z]);
       stages.push(stage("visit", "explore", "Visit landmarks", "Visit four of the site's landmarks", { points: pts, radius: 16, count: 4 }));
       timeLimitS = 600;
       break;
