@@ -285,6 +285,9 @@ export class Enter implements Behaviour {
   private atDoorFor = 0;
   private arrivals = 0;
   private readonly record = createTracked();
+  /** Another vehicle whose door is the one on offer at ours (two parked close together): stand clear of it. */
+  private crowdedBy: Point | null = null;
+  private readonly crowd = createTracked();
 
   constructor(
     readonly vehicleId: string,
@@ -312,6 +315,11 @@ export class Enter implements Behaviour {
       }
       return this.elapsed - this.pressedAt > 1 ? "no_effect" : null;
     }
+    // The game is offering some other vehicle's door: remember where that vehicle is, and take ours on the far side.
+    if (prompt !== null && this.crowdedBy === null) {
+      const other = ctx.world.track(prompt, b, this.crowd);
+      if (other) this.crowdedBy = { x: other.x, z: other.z };
+    }
     if (this.pressedAt >= 0) return this.elapsed - this.pressedAt > 0.6 ? "no_effect" : null;
     if (!this.walkFirst) return this.elapsed > 0.5 ? "no_effect" : null;
     if (this.elapsed > 120) return "timed_out";
@@ -322,7 +330,7 @@ export class Enter implements Behaviour {
       const t = ctx.world.track(this.vehicleId, b, this.record);
       if (!t || t.kind !== "vehicle") return "target_unavailable";
       if (t.visible && !t.enterable) return "target_unavailable";
-      const door = t.visible ? ctx.world.doorPoint(this.vehicleId, b) : null;
+      const door = t.visible ? ctx.world.doorPoint(this.vehicleId, b, this.crowdedBy ?? undefined) : null;
       // Out of sight, the marker is all there is to go on; the door comes into view on the way.
       if (door) this.walker.setGoal(door.x, door.z, 0.9);
       else this.walker.setGoal(t.x, t.z, t.visible ? 3 : 8);

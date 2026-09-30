@@ -2,7 +2,7 @@ import { AutoFire, Approach, Aim } from "./aim";
 import type { Behaviour, Ctx } from "./behaviour";
 import type { DecisionOutcome } from "./decisions";
 import { Cruise, DriveTo, Escape, ExitVehicle, FR_PROFILES, Pursue } from "./drive";
-import { Collect, Enter, Flee, Hold, TakeCover, Turn, WalkTo } from "./foot";
+import { Collect, Enter, Flee, Hold, TakeCover, Turn, WalkTo, WalkToPoint } from "./foot";
 import { createTracked, type ThreatSense, type Tracked } from "./world";
 
 /**
@@ -73,23 +73,59 @@ const exit: Step = {
   make: () => ({ loco: new ExitVehicle(), aim: null, trigger: null }),
 };
 
+/**
+ * What has been learned about the stage in hand, kept across the decisions
+ * that carry it out. "Carry on with the objective" is often chosen again and
+ * again; without a memory each choice would walk into the same fence, fail at
+ * once, and be chosen again. A new stage, or a new run (the clock goes back),
+ * starts with a clean slate.
+ */
+export class StageMemory {
+  private stage = -1;
+  private last = -Infinity;
+  /** Steps that did not work, and until when (simulated seconds). */
+  readonly banned = new Map<string, number>();
+  /** On foot: the nearest place not yet seen, then another tour. */
+  readonly foot = new ExploreSupervisor({ far: false, max: 1e9, budgetS: 1e9, tours: true });
+  /** By road: a place a good way off. */
+  readonly road = new ExploreSupervisor({ far: true, max: 1e9, budgetS: 1e9 });
+
+  sync(stage: number, now: number): void {
+    if (stage !== this.stage || now < this.last) {
+      this.stage = stage;
+      this.banned.clear();
+      this.foot.reset();
+      this.road.reset();
+    }
+    this.last = now;
+  }
+
+  stepEnded(key: string, outcome: DecisionOutcome, now: number): void {
+    this.foot.stepEnded(key, outcome, now);
+    this.road.stepEnded(key, outcome, now);
+    if (FAILED.has(outcome)) this.banned.set(key, now + 90);
+  }
+
+  ok(key: string, now: number): boolean {
+    return (this.banned.get(key) ?? 0) <= now;
+  }
+}
+
 /** Carry on with whatever the current stage asks. */
 export class ObjectiveSupervisor implements Supervisor {
   readonly name = "objective";
   private readonly evade = new EvadeSupervisor();
-  private readonly roam = new ExploreSupervisor({ far: true, max: 1000, budgetS: 1e9 });
   private readonly record = createTracked();
-  /** Things that could not be reached, and until when (simulated seconds). */
-  private readonly banned = new Map<string, number>();
+
+  constructor(private readonly memory: StageMemory = new StageMemory()) {}
 
   stepEnded(key: string, outcome: DecisionOutcome, now: number): void {
-    this.roam.stepEnded(key, outcome, now);
+    this.memory.stepEnded(key, outcome, now);
     if (key.startsWith("look:")) this.spins++;
-    if (FAILED.has(outcome)) this.banned.set(key, now + 90);
   }
 
   private ok(key: string, now: number): boolean {
-    return (this.banned.get(key) ?? 0) <= now;
+    return this.memory.ok(key, now);
   }
 
   plan(ctx: Ctx): Plan {
@@ -97,6 +133,7 @@ export class ObjectiveSupervisor implements Supervisor {
     const stage = world.stage();
     if (!stage || !stage.active) return { outcome: "done" };
     const b = ctx.body;
+    this.memory.sync(stage.index, b.time);
     const driving = b.locomotion === "driving";
     const onFoot = b.locomotion === "on_foot";
     if (!driving && !onFoot) return { step: wait };
@@ -162,7 +199,8 @@ export class ObjectiveSupervisor implements Supervisor {
           };
         }
         if (this.ok("sprint:objective", b.time)) return { step: walk("objective", true, "Run to the nearest shard") };
-        return this.roam.plan(ctx);
+        // The marker cannot be reached (behind a fence, say): go and look elsewhere; other shards will come into view.
+        return this.memory.foot.plan(ctx);
       }
       default:
         break;
@@ -182,7 +220,7 @@ export class ObjectiveSupervisor implements Supervisor {
       return this.needVehicle(ctx, stage.vehicleId);
     }
     // A clean drive is distance without a scratch: go from place to place by the roads.
-    if (stage.kind === "clean_drive") return this.roam.plan(ctx);
+    if (stage.kind === "clean_drive") return this.memory.road.plan(ctx);
     return { step: driveTo("objective", stage.kind === "deliver", "Drive to the marker") };
   }
 
@@ -278,14 +316,29 @@ export class ExploreSupervisor implements Supervisor {
   private readonly banned = new Map<string, number>();
   private current: string | null = null;
   private startedAt = NaN;
+  /** The point being struck out for, and how many have been tried (they fan out round the compass). */
+  private striking: { x: number; z: number; n: number } | null = null;
+  private strikes = 0;
   private readonly far: boolean;
   private readonly max: number;
   private readonly budgetS: number;
+  private readonly tours: boolean;
 
-  constructor(options: { far?: boolean; max?: number; budgetS?: number } = {}) {
+  constructor(options: { far?: boolean; max?: number; budgetS?: number; tours?: boolean } = {}) {
     this.far = options.far ?? false;
     this.max = options.max ?? 4;
     this.budgetS = options.budgetS ?? 180;
+    this.tours = options.tours ?? false;
+  }
+
+  /** Forget where it has been and what did not work. */
+  reset(): void {
+    this.visited.clear();
+    this.banned.clear();
+    this.current = null;
+    this.striking = null;
+    this.strikes = 0;
+    this.startedAt = NaN;
   }
 
   stepEnded(key: string, outcome: DecisionOutcome, now: number): void {
@@ -309,28 +362,64 @@ export class ExploreSupervisor implements Supervisor {
     }
     if (!this.current) {
       let best: string | null = null;
-      let bestScore = -Infinity;
-      for (const p of places) {
-        if ((this.banned.get(p.id) ?? 0) > b.time) continue;
-        const d = Math.hypot(p.x - b.x, p.z - b.z);
-        if (!this.far && this.visited.has(p.id)) continue;
-        if (d < 25) {
-          this.visited.add(p.id);
-          continue;
-        }
-        // Exploring goes to the nearest; a long drive goes to a place a good way off, not the farthest.
-        const score = this.far ? -Math.abs(d - 350) : -d;
-        if (score > bestScore) {
-          bestScore = score;
-          best = p.id;
+      // With tours, having been everywhere is the end of one tour, not of the search: begin another.
+      for (let pass = 0; pass < (this.tours ? 2 : 1) && !best; pass++) {
+        if (pass === 1) this.visited.clear();
+        let bestScore = -Infinity;
+        for (const p of places) {
+          if ((this.banned.get(p.id) ?? 0) > b.time) continue;
+          const d = Math.hypot(p.x - b.x, p.z - b.z);
+          if (!this.far && this.visited.has(p.id)) continue;
+          if (d < 25) {
+            this.visited.add(p.id);
+            continue;
+          }
+          // Exploring goes to the nearest; a long drive goes to a place a good way off, not the farthest.
+          const score = this.far ? -Math.abs(d - 350) : -d;
+          if (score > bestScore) {
+            bestScore = score;
+            best = p.id;
+          }
         }
       }
-      if (!best) return { outcome: "done" };
+      if (!best) {
+        // No place on the map can be reached from here (they are inside the compound, and the way in is
+        // shut): on foot, strike out across open ground instead, and see what comes into view.
+        const step = this.tours && b.locomotion === "on_foot" ? this.wander(ctx) : null;
+        return step ? { step } : { outcome: "done" };
+      }
       this.current = best;
+      this.striking = null;
     }
     const id = this.current;
     return b.locomotion === "driving"
       ? { step: driveTo(id, false, `Drive to ${id}`) }
       : { step: walk(id, true, `Head for ${id}`) };
+  }
+
+  private wander(ctx: Ctx): Step | null {
+    const b = ctx.body;
+    const here = this.striking;
+    if (here && Math.hypot(here.x - b.x, here.z - b.z) > 7) return this.strike(here);
+    // Fan out: each strike heads a golden angle round from the last, a good way off, over ground a walker can cross.
+    for (let tries = 0; tries < 10; tries++) {
+      this.strikes++;
+      const a = this.strikes * 2.399963;
+      const r = 70 + ((this.strikes * 37) % 60);
+      const x = b.x + Math.sin(a) * r;
+      const z = b.z + Math.cos(a) * r;
+      if (ctx.world.route("foot", { x: b.x, z: b.z }, { x, z }, ctx.prefer, 6).length === 0) continue;
+      this.striking = { x, z, n: this.strikes };
+      return this.strike(this.striking);
+    }
+    return null;
+  }
+
+  private strike(s: { x: number; z: number; n: number }): Step {
+    return {
+      key: `strike:${s.n}`,
+      label: "Strike out across open ground",
+      make: () => ({ loco: new WalkToPoint(s.x, s.z, 6, true, 60), aim: null, trigger: null }),
+    };
   }
 }

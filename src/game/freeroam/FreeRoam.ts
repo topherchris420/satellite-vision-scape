@@ -1138,6 +1138,16 @@ export class FreeRoam {
     }
     return this.clearSegment(a, b, FOOT_ROUTES[1].radius, ROUTE_FOOT_MASK, null, 1.7);
   }
+
+  /** Can a car (the one being driven excepted) go straight from `a` to `b` right now, with `radius` to spare? */
+  clearForCar(a: Point, b: Point, radius = CAR_LANE_CLEARANCE): boolean {
+    if (this.pointCacheFrame !== this.frameIndex) {
+      this.pointCaches.clear();
+      this.pointCacheFrame = this.frameIndex;
+    }
+    this.refreshParked(this.host.interaction.driven);
+    return this.clearSegment(a, b, radius, ROUTE_CAR_MASK, this.host.interaction.driven, 2.0);
+  }
   private pointCacheFrame = -1;
 
   // --- Challenge glue -----------------------------------------------------------------------------------

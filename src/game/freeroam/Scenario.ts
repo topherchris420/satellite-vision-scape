@@ -403,6 +403,8 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
     const spot = roadside(sm, side, 3.4);
     if (!car(spot.x, spot.z)) continue;
     if (dist(spot.x, spot.z, spawn.x, spawn.z) < 45) continue;
+    // Two parked side by side share a door prompt, and the one wanted may never be the one offered.
+    if (traffic.some((t) => t.idle && t.depot && dist(spot.x, spot.z, t.depot.x, t.depot.z) < 14)) continue;
     const kind: FleetKind = idleWanted === 2 ? "utility" : "scout";
     const spec: TrafficSpec = {
       id: `idle-${3 - idleWanted}`,
@@ -660,7 +662,11 @@ function buildChallenge(info: ChallengeInfo, c: BuildCtx): ChallengeDefinition {
   /** A road point far enough from `from` to be worth the trip. */
   const farPoint = (from: { x: number; z: number }, min: number, max: number) => {
     const pool = c.within(from.x, from.z, min, max);
-    const sm = pool.length > 0 ? pool[Math.floor(rng.float() * pool.length)] : c.samples[0];
+    const draw = () => (pool.length > 0 ? pool[Math.floor(rng.float() * pool.length)] : c.samples[0]);
+    let sm = draw();
+    // The traced roads run under a few buildings; a marker there is one no car can reach. A pick that is fine
+    // is kept as it was, so a seed whose marker was reachable still gets the same one.
+    for (let tries = 0; tries < 40 && !c.car(sm.x, sm.z); tries++) sm = draw();
     return { x: r2(sm.x), z: r2(sm.z) };
   };
 

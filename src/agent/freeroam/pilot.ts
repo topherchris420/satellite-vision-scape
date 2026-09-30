@@ -9,6 +9,7 @@ import {
   EvadeSupervisor,
   ExploreSupervisor,
   ObjectiveSupervisor,
+  StageMemory,
   type Step,
   type Supervisor,
 } from "./supervisors";
@@ -117,6 +118,8 @@ export class Pilot {
   };
   private readonly runs = new Set<Run>();
   prefer: RoutePreference = "roads";
+  /** What the strategies have learned about the stage in hand. */
+  private readonly memory = new StageMemory();
   /** Why the pilot is holding, or null. */
   holding: string | null = null;
   /** Decisions that finished since the last drain, oldest first. */
@@ -313,7 +316,7 @@ export class Pilot {
         break;
       case "CONTINUE_OBJECTIVE":
         run.primary = "supervisor";
-        run.supervisor = new ObjectiveSupervisor();
+        run.supervisor = new ObjectiveSupervisor(this.memory);
         this.clearLayer("loco", "superseded", ctx);
         break;
       case "EVADE_PURSUIT":
@@ -546,11 +549,6 @@ export class Pilot {
   }
 
   /**
-   * A driver whose last manoeuvre has finished does not let go of the wheel:
-   * it keeps the lane at the speed it has, until told otherwise or until the
-   * lease lapses.
-   */
-  /**
    * The driver's own reflex for a car that is going nowhere: still for a few
    * seconds, nose to a wall, while a behaviour that means to move is running.
    * Back away with the wheel turned, then pull forward the other way. It does
@@ -595,8 +593,10 @@ export class Pilot {
       s.z = b.z;
       s.streak = 0;
     }
-    // The pilot means to move if it has been asked to go somewhere lately and is not waiting or getting out.
-    const meaning = b.time - s.intentAt < STUCK.intent && !(loco instanceof Hold) && !(loco instanceof ExitVehicle);
+    // The pilot means to move if it has been asked to go somewhere lately, or is still carrying out a decision
+    // that goes somewhere (a decision that is merely continued is not asked again), and is not waiting or getting out.
+    const asked = b.time - s.intentAt < STUCK.intent || this.goingSomewhere();
+    const meaning = asked && !(loco instanceof Hold) && !(loco instanceof ExitVehicle) && !loco?.holding;
     if (!meaning || Math.abs(b.forwardSpeed) > 0.3 || b.time < s.coolUntil) {
       s.still = 0;
       return;
@@ -621,6 +621,17 @@ export class Pilot {
     this.onReflex?.("backing out");
   }
 
+  /** A decision that means to get somewhere is under way. */
+  private goingSomewhere(): boolean {
+    for (const r of this.runs) if (!STAYS_PUT.has(r.decision.type)) return true;
+    return false;
+  }
+
+  /**
+   * A driver whose last manoeuvre has finished does not let go of the wheel:
+   * it keeps the lane at the speed it has, until told otherwise or until the
+   * lease lapses.
+   */
   private coastIfDriving(ctx: Ctx): void {
     const b = ctx.body;
     const loco = this.slots.loco;

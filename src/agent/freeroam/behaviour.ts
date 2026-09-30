@@ -70,6 +70,11 @@ export interface PilotStats {
 
 export interface Behaviour {
   readonly name: string;
+  /**
+   * The behaviour is standing still on purpose (waiting behind a stopped car, parked at the goal). The stuck
+   * reflex leaves a car alone while this is true: a car that has been told to wait is not wedged.
+   */
+  readonly holding?: boolean;
   /** Called once when the behaviour becomes active. */
   start?(ctx: Ctx): void;
   /** One frame. Returns null while running, else how it ended. */

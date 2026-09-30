@@ -769,15 +769,20 @@ export class FreeRoamView {
     return out;
   }
 
-  namedPlace(id: string): { x: number; z: number } | null {
+  namedPlace(id: string): { x: number; z: number; kind: "landmark" | "service" } | null {
     const l = landmarkById(id);
-    if (l) return { x: l.x, z: l.z };
+    if (l) return { x: l.x, z: l.z, kind: "landmark" };
     const loc = this.fr.locations.items.find((x) => x.id === id);
-    return loc ? { x: loc.x, z: loc.z } : null;
+    return loc ? { x: loc.x, z: loc.z, kind: "service" } : null;
   }
 
   /** The door of a vehicle to stand at to get in, on the side nearer the player. */
-  doorPoint(vehicleId: string, s: { x: number; z: number }): { x: number; z: number } | null {
+  doorPoint(
+    vehicleId: string,
+    s: { x: number; z: number },
+    /** Take the door on the side farther from here (another vehicle close by), whatever the walker's side. */
+    awayFrom?: { x: number; z: number },
+  ): { x: number; z: number } | null {
     const v = this.host.vehicles.vehicles.find((x) => x.id.toLowerCase() === vehicleId);
     if (!v) return null;
     const ph = v.physics;
@@ -789,6 +794,7 @@ export class FreeRoamView {
     const az = ph.z - lx * sn + lz * c;
     const bx = ph.x - lx * c + lz * sn;
     const bz = ph.z + lx * sn + lz * c;
+    if (awayFrom) return Math.hypot(ax - awayFrom.x, az - awayFrom.z) >= Math.hypot(bx - awayFrom.x, bz - awayFrom.z) ? { x: ax, z: az } : { x: bx, z: bz };
     return Math.hypot(ax - s.x, az - s.z) <= Math.hypot(bx - s.x, bz - s.z) ? { x: ax, z: az } : { x: bx, z: bz };
   }
 
@@ -852,7 +858,11 @@ export class FreeRoamView {
       const rz = op.z - ph.z;
       const along = rx * fx + rz * fz;
       if (along < 0 || along > range + half * 2) return;
-      if (Math.abs(rx * fz - rz * fx) > halfW + other.spec.collider.halfWidth) return;
+      // Traffic coming the other way in its own lane is passed, not stopped for: on a narrow road the two
+      // lanes are little more than a car's width apart, and only what would actually be struck counts.
+      const oncoming = Math.sin(op.yaw) * fx + Math.cos(op.yaw) * fz < -0.5;
+      const reach = oncoming ? v.spec.collider.halfWidth + 0.3 : halfW;
+      if (Math.abs(rx * fz - rz * fx) > reach + other.spec.collider.halfWidth) return;
       const gap = along - half - other.spec.collider.halfLength;
       if (gap < best) {
         best = gap;

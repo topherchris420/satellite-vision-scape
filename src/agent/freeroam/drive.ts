@@ -4,7 +4,7 @@ import { headingTo, wrapAngle, type Point } from "../navigation";
 import { clamp, dist2d, type Behaviour, type Ctx } from "./behaviour";
 import type { DecisionOutcome } from "./decisions";
 import { holdStill } from "./foot";
-import { createTracked, type Body, type LaneSense, type ObstacleSense } from "./world";
+import { createTracked, type Body, type LaneSense, type ObstacleSense, type PlaceSense } from "./world";
 
 /**
  * Driving behaviours. They steer and work the pedals through the bus, like a
@@ -134,13 +134,17 @@ export class Driver {
     d.stopDistance = p.stopDistance;
     d.speed = ctx.body.forwardSpeed;
     d.dt = ctx.dt;
-    const limit = obstacleSpeedLimit(ctx.body, p.ob);
+    let limit = obstacleSpeedLimit(ctx.body, p.ob);
+    // A wall ahead that the car is turning away from is not in its way: a driver creeps round it rather than
+    // sitting with the brake on and the wheel over, waiting for the wall to move.
+    const creeping = p.ob !== null && p.ob.kind === "structure" && Math.abs(p.headingError) > 0.3 && p.ob.gap > 1.7 && ctx.body.forwardSpeed < 2;
+    if (creeping) limit = Math.max(limit, Math.min(1.6, 0.5 + (p.ob!.gap - 1.7) * 0.8));
     d.caution = clamp(limit / profile.cruise, 0, 1);
     const cmd = drivingControl(profile, d, this.previous, this.next);
     let pedal = cmd.pedal;
     const steer = cmd.steer;
     const speed = ctx.body.forwardSpeed;
-    const emergency = needsEmergencyBrake(ctx.body, p.ob);
+    const emergency = !creeping && needsEmergencyBrake(ctx.body, p.ob);
     if (emergency) {
       if (!this.emergency) ctx.stats.reflexBrakes++;
       // Below walking pace the brake would select reverse: a crawl needs no emergency stop.
@@ -312,6 +316,94 @@ class Unstick {
   }
 }
 
+/** A planned route that ends this much short of its goal (beyond the arrival radius) does not get there. */
+const PARTIAL_ROUTE_M = 12;
+
+/** How far one stroke of a three-point turn goes, metres. */
+const STROKE_M = 6.5;
+
+/** How many places `Escape` will test for a road to before it says there is nowhere to run. */
+const ESCAPE_TRIES = 5;
+
+/**
+ * Swing the car round in the room there is: a three-point turn. Forward with
+ * the wheel hard over towards where it needs to go, then back with it the
+ * other way, changing stroke when something is close in the direction of
+ * travel (or the stroke has gone on long enough), until the nose points near
+ * enough the right way for ordinary driving to take over. A dead end, a
+ * narrow road, a car park bay and a target that has turned round behind us
+ * are all this manoeuvre.
+ */
+export class UTurn {
+  private stroke: 1 | -1 = 1;
+  private strokeS = 0;
+  private strokeM = 0;
+  private totalS = 0;
+  /** How far round is round enough: a full turn hands over to ordinary driving at about a right angle. */
+  private enough = 0.9;
+  active = false;
+
+  reset(): void {
+    this.active = false;
+    this.strokeS = 0;
+    this.strokeM = 0;
+    this.totalS = 0;
+  }
+
+  /**
+   * Should a turn start? Facing well away from where we need to go and not going anywhere fast; or stopped
+   * with a wall ahead and the way on off to one side, where a forward swing has no room and a stroke back
+   * (then forward) does.
+   */
+  wanted(headingError: number, speed: number, ob: ObstacleSense | null): boolean {
+    const away = Math.abs(headingError);
+    if (away > 1.5 && Math.abs(speed) < 2.5) return true;
+    return away > 0.6 && Math.abs(speed) < 1.2 && ob !== null && ob.kind === "structure" && ob.gap < 5.5;
+  }
+
+  /** One frame of the turn. Returns true while it has the pedals and the wheel. */
+  step(ctx: Ctx, headingError: number, ob: ObstacleSense | null): boolean {
+    const b = ctx.body;
+    if (!this.active) {
+      if (!this.wanted(headingError, b.forwardSpeed, ob)) return false;
+      this.enough = Math.abs(headingError) > 1.5 ? 0.9 : 0.3;
+      this.active = true;
+      this.totalS = 0;
+      this.strokeS = 0;
+      this.strokeM = 0;
+      // Forward first if there is room in front (so the reverse stroke has the whole width of the road behind).
+      this.stroke = ob !== null && ob.gap < 5 ? -1 : 1;
+    }
+    this.totalS += ctx.dt;
+    this.strokeS += ctx.dt;
+    if (Math.abs(headingError) < this.enough || this.totalS > 24) {
+      this.reset();
+      return false;
+    }
+    const speed = b.forwardSpeed;
+    this.strokeM += Math.abs(speed) * ctx.dt;
+    const moving = this.stroke === 1 ? speed > 0.3 : speed < -0.3;
+    const close = ob !== null && ob.gap < 2.6 && moving;
+    // A stroke is a few metres of wheel hard over, not a lap: change when something is close, when it has
+    // gone far enough to have turned the car a good way, or when it is going nowhere.
+    if (close || this.strokeM > STROKE_M || this.strokeS > 4 || (this.strokeS > 1.2 && Math.abs(speed) < 0.2)) {
+      this.stroke = this.stroke === 1 ? -1 : 1;
+      this.strokeS = 0;
+      this.strokeM = 0;
+    }
+    const side = Math.sign(headingError) || 1;
+    if (this.stroke === 1) {
+      // Forward: the wheel towards the target (negative is left, and the error is + when the target is left).
+      pedals(ctx, speed < 3.5 ? 0.5 : 0, -side);
+    } else {
+      // Reversing inverts the wheel: the nose swings the way the wheel is turned away from.
+      pedals(ctx, speed > 0.9 ? -0.5 : -0.45, side);
+    }
+    ctx.out.handbrake = false;
+    return true;
+  }
+}
+
 const notDriving = (ctx: Ctx): DecisionOutcome | null =>
   ctx.body.locomotion === "driving" ? null : "locomotion_changed";
 
@@ -387,8 +479,11 @@ export class DriveTo implements Behaviour {
   private elapsed = 0;
   private maxS = 120;
   private parking = false;
-  private turning = 0;
+  private readonly uturn = new UTurn();
   private readonly record = createTracked();
+  /** How far short of the goal the planned route ends: what the planner could do, when it could not get there. */
+  private shortBy = 0;
+  holding = false;
 
   constructor(
     readonly targetId: string,
@@ -431,8 +526,10 @@ export class DriveTo implements Behaviour {
     const goal = this.goal;
     if (!goal) return null;
     const toGoal = dist2d(b.x, b.z, goal.x, goal.z);
+    this.holding = false;
 
     if (toGoal <= goal.arrive || this.parking) {
+      this.holding = true;
       if (!this.park) return "arrived";
       // Brake to a standstill inside the radius, then report.
       this.parking = true;
@@ -451,10 +548,14 @@ export class DriveTo implements Behaviour {
       } else {
         this.needsPlan = false;
         this.blockedSince = NaN;
+        const end = route[route.length - 1];
+        this.shortBy = dist2d(end.x, end.z, goal.x, goal.z) - goal.arrive;
         this.tracker.set({ x: b.x, z: b.z }, route);
       }
     }
     if (this.tracker.empty) {
+      // Waiting for a way to open is not standing still on purpose: if the car is wedged (no route can start
+      // from where it is) the driver's own reflex is what gets it out, so it is left free to act.
       holdStill(ctx);
       return null;
     }
@@ -470,6 +571,9 @@ export class DriveTo implements Behaviour {
     this.tracker.advance(b.x, b.z);
     this.tracker.lookahead(b.x, b.z, lookAheadFor(b.forwardSpeed), this.look);
     this.tracker.nextBend(b.x, b.z, this.bend);
+    // The route was as far as the planner could get, well short of the goal, and this is the end of it:
+    // there is no way on from here, and driving at the goal through the wall would only find that out slowly.
+    if (this.shortBy > PARTIAL_ROUTE_M && this.look.remaining < 8) return "blocked";
     let headingError = wrapAngle(headingTo(b, this.look) - b.heading);
 
     // On a road but not on a lane path (a cross-country route): keep to the left lane anyway.
@@ -479,18 +583,8 @@ export class DriveTo implements Behaviour {
       headingError = wrapAngle(headingError + bias);
     }
 
-    // The route starts behind the vehicle: reverse round, as a driver would.
-    if (this.turning <= 0 && Math.abs(headingError) > 1.5 && Math.abs(b.forwardSpeed) < 2.5) this.turning = 4;
-    if (this.turning > 0) {
-      this.turning -= ctx.dt;
-      // Stop backing up when something is behind.
-      const behind = b.forwardSpeed < -0.5 && ob !== null && ob.gap < 2.5;
-      if (Math.abs(headingError) > 0.9 && !behind) {
-        pedals(ctx, b.forwardSpeed > 0.9 ? -0.45 : -0.4, Math.sign(headingError) || 1);
-        return null;
-      }
-      this.turning = 0;
-    }
+    // The route starts behind the vehicle: turn round, as a driver would.
+    if (this.uturn.step(ctx, headingError, ob)) return null;
 
     this.driver.drive(ctx, this.profile, {
       headingError,
@@ -515,9 +609,10 @@ export class Pursue implements Behaviour {
   private readonly bend = { turn: 0, distance: 1e6 };
   private replan = 0;
   private lostS = 0;
-  private turning = 0;
+  private readonly uturn = new UTurn();
   private backing = false;
   private backingS = 0;
+  holding = false;
   private readonly record = createTracked();
   /** Where the target is taken to be this frame: its true place in view, a guess out of it. */
   private readonly aim = { x: 0, z: 0, mx: 0, mz: 0 };
@@ -556,6 +651,7 @@ export class Pursue implements Behaviour {
       t.mz = m.mz;
     }
 
+    this.holding = false;
     const d = dist2d(b.x, b.z, t.x, t.z);
     // Speed: the target's, along the way we are pointing (a car coming at us gives no room to catch up),
     // corrected by how far off the following distance we are.
@@ -586,17 +682,8 @@ export class Pursue implements Behaviour {
     // Close behind it, steer for the target itself rather than an old plan.
     if (d < 30 && seen.visible) headingError = wrapAngle(headingTo(b, { x: t.x + t.mx * 0.4, z: t.z + t.mz * 0.4 }) - b.heading);
 
-    // The target is behind us (it turned round at a dead end and came back): reverse round, as a driver would.
-    if (this.turning <= 0 && Math.abs(headingError) > 1.5 && Math.abs(b.forwardSpeed) < 2.5) this.turning = 4;
-    if (this.turning > 0) {
-      this.turning -= ctx.dt;
-      const behind = b.forwardSpeed < -0.5 && ob !== null && ob.gap < 2.5;
-      if (Math.abs(headingError) > 0.9 && !behind) {
-        pedals(ctx, b.forwardSpeed > 0.9 ? -0.45 : -0.4, Math.sign(headingError) || 1);
-        return null;
-      }
-      this.turning = 0;
-    }
+    // The target is behind us (it turned round at a dead end and came back): turn round after it.
+    if (this.uturn.step(ctx, headingError, ob)) return null;
 
     // Close enough behind a target that has stopped (or is coming the other way): stop too, rather than
     // creep up on it. Never for a guess at where an unseen one might be.
@@ -611,6 +698,7 @@ export class Pursue implements Behaviour {
           return null;
         }
       } else this.backingS = 0;
+      this.holding = true;
       holdStill(ctx);
       return null;
     }
@@ -640,12 +728,19 @@ export class Escape implements Behaviour {
   /** Places that turned out unreachable, and until when. */
   private readonly banned = new Map<string, number>();
   private readonly threat = { x: 0, z: 0, active: false, level: 0, pursued: false, lastSeenAgoS: null as number | null };
+  private parked = false;
+
+  /** Standing still on purpose: nowhere to run to, or arrived and looking for the next place. */
+  get holding(): boolean {
+    return this.parked || (this.child !== null && this.child.holding);
+  }
 
   update(ctx: Ctx): DecisionOutcome | null {
     const end = notDriving(ctx);
     if (end) return end;
     const b = ctx.body;
     this.elapsed += ctx.dt;
+    this.parked = false;
     const threat = ctx.world.threat(b, this.threat);
     if (!threat.active) {
       this.calmS += ctx.dt;
@@ -660,6 +755,7 @@ export class Escape implements Behaviour {
         // Nowhere to run to by road: at least don't sit in the open. Try again shortly.
         this.child = null;
         this.replan = 2;
+        this.parked = true;
         holdStill(ctx);
         return this.elapsed > 20 ? "blocked" : null;
       }
@@ -677,6 +773,7 @@ export class Escape implements Behaviour {
       this.child = null;
       this.goalId = null;
       this.replan = 0;
+      this.parked = true;
       return null;
     }
     if (r === "blocked" || r === "target_unavailable" || r === "timed_out" || r === "stuck") {
@@ -689,10 +786,23 @@ export class Escape implements Behaviour {
     return r;
   }
 
-  /** The named place that puts the most distance between us and the threat, within reach. */
+  /** The named place that puts the most distance between us and the threat, that the roads actually reach. */
   private pick(ctx: Ctx, tx: number, tz: number): string | null {
+    // Best first, but somewhere a car can get to: a place inside a fence, or past ground it cannot cross, is
+    // somewhere to sit and wait for the guards, not to run to. One that cannot be reached will not become
+    // reachable soon, so it is set aside for a while rather than tried again.
+    for (let tries = 0; tries < ESCAPE_TRIES; tries++) {
+      const place = this.farthest(ctx, tx, tz);
+      if (!place) return null;
+      if (this.reachable(ctx, place)) return place.id;
+      this.banned.set(place.id, ctx.body.time + 40);
+    }
+    return null;
+  }
+
+  private farthest(ctx: Ctx, tx: number, tz: number): PlaceSense | null {
     const b = ctx.body;
-    let best: string | null = null;
+    let best: PlaceSense | null = null;
     let bestScore = -Infinity;
     for (const p of ctx.world.places(b)) {
       if ((this.banned.get(p.id) ?? 0) > b.time) continue;
@@ -704,10 +814,21 @@ export class Escape implements Behaviour {
       const score = fromThreat - fromUs * 0.35 - Math.max(0, toward) * 0.5;
       if (score > bestScore) {
         bestScore = score;
-        best = p.id;
+        best = p;
       }
     }
     return best;
+  }
+
+  /** Is there a route that ends at the place, as `DriveTo` would judge it? */
+  private reachable(ctx: Ctx, p: PlaceSense): boolean {
+    const b = ctx.body;
+    const arrive = p.kind === "landmark" ? 12 : 6;
+    const route = ctx.world.route("vehicle", { x: b.x, z: b.z }, { x: p.x, z: p.z }, ctx.prefer, arrive);
+    ctx.stats.plans++;
+    if (route.length === 0) return false;
+    const end = route[route.length - 1];
+    return dist2d(end.x, end.z, p.x, p.z) - arrive <= PARTIAL_ROUTE_M;
   }
 }
 

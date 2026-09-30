@@ -1,5 +1,6 @@
 import type { EventBus } from "@/game/core/EventBus";
 import type { GameEvents } from "@/game/core/events";
+import { wrapPi } from "@/lib/freeroam/contracts";
 import type { FreeRoam } from "@/game/freeroam/FreeRoam";
 import type { FreeRoamEvents } from "@/game/freeroam/types";
 import {
@@ -68,6 +69,9 @@ const URGENT: ReadonlySet<FrEventType> = new Set<FrEventType>([
 ]);
 /** Places beyond this range are not offered. */
 const PLACE_RANGE = 700;
+/** How far along a route to look for a place to join it, metres, and the bend allowed at the join, radians. */
+const JOIN_WITHIN = 45;
+const JOIN_BEND = 0.7;
 
 const NEARBY_RANGE = 90;
 
@@ -245,7 +249,9 @@ export class FreeRoamBridge implements MotorWorld {
     const place = this.fr.view.namedPlace(id);
     if (place) {
       fill(out, id, "place", place.x, 0, place.z);
-      out.reach = 2.6;
+      // A service point is used from where it is; a landmark's centre is often inside a building, so being
+      // beside it is being there.
+      out.reach = place.kind === "landmark" ? 9 : 2.6;
       out.label = id;
       return out;
     }
@@ -326,11 +332,38 @@ export class FreeRoamBridge implements MotorWorld {
   }
 
   route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference, within = 0): Point[] {
-    return this.fr.view.route(mode, from.x, from.z, to.x, to.z, mode === "vehicle" ? this.fr.driven : null, prefer, within);
+    const route = this.fr.view.route(mode, from.x, from.z, to.x, to.z, mode === "vehicle" ? this.fr.driven : null, prefer, within);
+    return mode === "vehicle" ? this.joinAhead(from, route) : route;
+  }
+
+  /**
+   * A route to a road begins at the nearest point of its lane, which may be behind a fence or round a corner
+   * the car cannot turn: a driver joins the road further along, on a slant. Take the furthest point of the
+   * route's first stretch that a car can reach in a straight line, and skip what came before it.
+   */
+  private joinAhead(from: Point, route: Point[]): Point[] {
+    let reach = -1;
+    let travelled = 0;
+    for (let i = 0; i < route.length - 1; i++) {
+      const p = route[i];
+      const q = route[i + 1];
+      travelled += Math.hypot(q.x - p.x, q.z - p.z);
+      if (travelled > JOIN_WITHIN) break;
+      // The join must lead on smoothly: no more than a moderate bend between the slant and the route's next leg.
+      const slant = Math.atan2(q.x - from.x, q.z - from.z);
+      const onward = i + 2 < route.length ? Math.atan2(route[i + 2].x - q.x, route[i + 2].z - q.z) : slant;
+      if (Math.abs(wrapPi(onward - slant)) > JOIN_BEND) continue;
+      if (this.fr.clearForCar(from, q)) reach = i + 1;
+    }
+    return reach > 0 ? route.slice(reach) : route;
   }
 
   clearOnFoot(a: Point, b: Point): boolean {
     return this.fr.clearOnFoot(a, b);
+  }
+
+  clearForCar(a: Point, b: Point): boolean {
+    return this.fr.clearForCar(a, b);
   }
 
   private readonly laneOut: LaneSense = { onRoad: false, roadYaw: 0, laneOffset: 0, headingError: 0, upcomingTurn: 0, halfWidth: 3 };
@@ -381,8 +414,8 @@ export class FreeRoamBridge implements MotorWorld {
     return out;
   }
 
-  doorPoint(vehicleId: string, body: Body): Point | null {
-    return this.fr.view.doorPoint(vehicleId, body);
+  doorPoint(vehicleId: string, body: Body, awayFrom?: Point): Point | null {
+    return this.fr.view.doorPoint(vehicleId, body, awayFrom);
   }
 
   promptVehicle(): string | null {

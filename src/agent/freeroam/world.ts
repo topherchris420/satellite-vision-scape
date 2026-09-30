@@ -230,13 +230,15 @@ export interface MotorWorld {
   route(mode: "foot" | "vehicle", from: Point, to: Point, prefer: RoutePreference, within?: number): Point[];
   /** Can a walker go straight from `a` to `b`? */
   clearOnFoot(a: Point, b: Point): boolean;
+  /** Can a car go straight from `a` to `b`, with a metre and a bit to spare on each side? */
+  clearForCar(a: Point, b: Point): boolean;
   /** The road under the vehicle, if there is one within reach. */
   lane(body: Body): LaneSense | null;
   /** The nearest thing in the way of the vehicle. */
   obstacle(body: Body): ObstacleSense | null;
   aim(out: AimSense): AimSense;
   /** Where to stand to get into a vehicle, on the side nearer the walker. */
-  doorPoint(vehicleId: string, body: Body): Point | null;
+  doorPoint(vehicleId: string, body: Body, awayFrom?: Point): Point | null;
   /** The vehicle whose door the interaction prompt is offering, if any. */
   promptVehicle(): string | null;
   /** A point that puts something between the walker and `threat`, or null. */
