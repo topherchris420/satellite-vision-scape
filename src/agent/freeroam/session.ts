@@ -135,6 +135,11 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     this.pilot = new Pilot(this.bridge);
     this.assist = new AssistProducer(this.bridge, () => this.runtime.advice);
     this.runtime = new FreeRoamRuntime({ env: this, pilot: this.pilot, sink: this, stats: this.stats });
+    // A reflex is the driver's own doing: it goes in the trace, and the next observation mentions it.
+    this.pilot.onReflex = (what) => {
+      this.bridge.note("stuck", what);
+      this.log("reflex", { what });
+    };
     this.providerFactory = (kind) => (kind === "baseline" ? new ScriptedBaseline() : new FreeRoamJevProvider(this.sessionId));
 
     const fr = this.fr;
@@ -362,6 +367,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
       controlSeconds: this.seconds,
       decisions: this.stats.summary(),
       reflexBrakes: this.pilot.stats.reflexBrakes,
+      reflexReverses: this.pilot.stats.reflexReverses,
       routePlans: this.pilot.stats.plans,
       assistNudges: this.assist.nudges,
       meanAcquireS: fr.meanAcquireS(),
@@ -413,6 +419,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     this.stats.firstAction.length = 0;
     this.assist.nudges = 0;
     this.pilot.stats.reflexBrakes = 0;
+    this.pilot.stats.reflexReverses = 0;
     this.pilot.stats.plans = 0;
     this.pilot.prefer = "roads";
     this.body.time = 0;
@@ -431,6 +438,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
 
   private onChallenge(status: "success" | "failed", _reason: string): void {
     if (this.replaying) return;
+    this.runtime.finishRun(status === "success");
     this.finalize(status);
   }
 
@@ -590,6 +598,11 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
 
   legal() {
     return deriveLegal(buildSituation(this.bridge, this.pilot.aim));
+  }
+
+  result(): "success" | "failed" | "none" {
+    const status = this.fr.challenge?.status;
+    return status === "success" || status === "failed" ? status : "none";
   }
 
   running(): boolean {

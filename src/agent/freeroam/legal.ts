@@ -102,12 +102,18 @@ export function deriveLegal(o: Situation): FreeRoamDecision[] {
       add({ type: "TAKE_COVER" });
     }
   } else {
-    add({ type: "ACCELERATE" });
-    add({ type: "BRAKE" });
-    add({ type: "REVERSE" });
-    add({ type: "STEER_LEFT" });
-    add({ type: "STEER_RIGHT" });
-    add({ type: "STRAIGHTEN" });
+    // The pedals and the wheel are offered when they would do something: no braking at a standstill,
+    // no steering a car that is not moving, no straightening a car that is already straight.
+    const speed = Math.abs(p.speedMps);
+    const straight = o.driving !== null && o.driving.onRoad && Math.abs(o.driving.headingErrorDeg ?? 0) < 4;
+    if (speed < 22) add({ type: "ACCELERATE" });
+    if (speed > 0.5) add({ type: "BRAKE" });
+    if (speed < 5) add({ type: "REVERSE" });
+    if (speed > 1) {
+      add({ type: "STEER_LEFT" });
+      add({ type: "STEER_RIGHT" });
+      if (!straight) add({ type: "STRAIGHTEN" });
+    }
     if (o.driving?.obstacle) add({ type: "AVOID_OBSTACLE" });
     if (o.driving && o.driving.roadHeadingDeg !== null) add({ type: "FOLLOW_ROAD" });
     for (const v of vehicles.slice(0, LEGAL_LIMITS.vehicles)) add({ type: "PURSUE_TARGET", target: v.id });

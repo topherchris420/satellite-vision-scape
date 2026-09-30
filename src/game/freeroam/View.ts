@@ -178,6 +178,8 @@ export interface AimView {
   crosshairKind: string;
   crosshairHostile: boolean;
   spreadDeg: number;
+  /** Who a bullet would strike first, leaving the muzzle (not the crosshair's ray). */
+  bulletPersonId: string | null;
 }
 
 export interface AttentionView {
@@ -916,6 +918,7 @@ export class FreeRoamView {
     out.crosshairKind = a.kind;
     out.crosshairHostile = this.fr.crosshairHostile;
     out.spreadDeg = Math.round(a.spreadDeg * 10) / 10;
+    out.bulletPersonId = a.bulletPersonId;
     return out;
   }
 

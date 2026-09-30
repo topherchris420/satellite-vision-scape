@@ -58,6 +58,8 @@ export interface FreeRoamEnvironment {
   legal(): FreeRoamDecision[];
   /** The run is going: the challenge is active and free-roam is on. */
   running(): boolean;
+  /** How the challenge ended, once it has. */
+  result(): "success" | "failed" | "none";
   /** Changes when the objective moves on. */
   stage(): string;
   /** Changes whenever something the chooser should hear about at once happens. */
@@ -337,6 +339,18 @@ export class FreeRoamRuntime {
     this.revision++;
   }
 
+  /**
+   * The challenge has ended: whatever was under way ends with it, done if the
+   * objective was met and interrupted if it was lost, so the record that is
+   * about to be filed has an outcome for every decision.
+   */
+  finishRun(success: boolean): void {
+    if (this.mode === "HUMAN") return;
+    this.closeRunning(success ? "done" : "interrupted");
+    this.loop?.abandon("run_over");
+    this.inbox = null;
+  }
+
   // --- Frame -----------------------------------------------------------------------------------
 
   /**
@@ -350,6 +364,8 @@ export class FreeRoamRuntime {
     if (!this.env.running()) {
       // The run is over (or not going): nothing to decide.
       if (this.state !== "COMPLETE") {
+        // What was under way ends with the run: done if the objective was met, interrupted if it was lost.
+        this.closeRunning(this.env.result() === "success" ? "done" : "interrupted");
         this.state = "COMPLETE";
         this.notice = { kind: "complete", at: this.now, provider: this.provider?.id ?? "" };
         this.revision++;

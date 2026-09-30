@@ -3,7 +3,7 @@ import { Aim, AutoFire, Approach, Fire } from "./aim";
 import { createAimState, type AimState, type Behaviour, type Ctx, type PilotStats } from "./behaviour";
 import type { DecisionOutcome, FreeRoamDecision } from "./decisions";
 import { decisionKey } from "./decisions";
-import { Cruise, Escape, ExitVehicle, Manoeuvre, Pursue } from "./drive";
+import { Cruise, Escape, ExitVehicle, Manoeuvre, Pursue, pedals } from "./drive";
 import { Collect, Enter, Flee, Hold, Jump, TakeCover, Turn, WalkTo } from "./foot";
 import {
   EvadeSupervisor,
@@ -43,6 +43,34 @@ export const LEASE = {
 
 /** Seconds between a supervisor's looks at the situation. */
 const PLAN_EVERY = 0.5;
+
+/**
+ * The stuck reflex, in seconds and metres. A driver who finds the car wedged
+ * against a wall backs out and tries again, whatever the passenger is
+ * suggesting; a person waiting behind traffic is given longer.
+ */
+const STUCK = {
+  wall: 2.5,
+  traffic: 7,
+  back: 1.7,
+  forward: 1.1,
+  progress: 3,
+  streak: 5,
+  cooldown: 25,
+  /** How long after being asked to go somewhere the pilot is taken to mean it. */
+  intent: 8,
+} as const;
+
+/** Decisions that ask for no movement: waiting, stopping, getting out, lowering the weapon. */
+const STAYS_PUT: ReadonlySet<FreeRoamDecision["type"]> = new Set<FreeRoamDecision["type"]>([
+  "WAIT",
+  "BRAKE",
+  "EXIT_VEHICLE",
+  "LEAVE_VEHICLE",
+  "DISENGAGE",
+  "AIM_TARGET",
+  "FIRE",
+]);
 
 export type Layer = "aim" | "trigger" | "loco" | "impulse";
 const ORDER: readonly Layer[] = ["aim", "trigger", "loco", "impulse"];
@@ -93,7 +121,21 @@ export class Pilot {
   holding: string | null = null;
   /** Decisions that finished since the last drain, oldest first. */
   readonly ended: EndedDecision[] = [];
-  readonly stats: PilotStats = { reflexBrakes: 0, plans: 0 };
+  readonly stats: PilotStats = { reflexBrakes: 0, reflexReverses: 0, plans: 0 };
+  /** Called when a reflex takes over the pedals, so the world can be told (an event, a trace entry). */
+  onReflex: ((what: string) => void) | null = null;
+  private readonly stuck = {
+    still: 0,
+    phase: "none" as "none" | "back" | "forward",
+    left: 0,
+    side: 1,
+    streak: 0,
+    x: Number.NaN,
+    z: Number.NaN,
+    coolUntil: 0,
+    /** When the pilot was last asked to get somewhere (not to wait, brake or get out). */
+    intentAt: -Infinity,
+  };
   private readonly ctx: Ctx;
   private readonly state: ActionState = createActionState();
   private lastLease = 0;
@@ -170,6 +212,7 @@ export class Pilot {
       return "instant";
     }
 
+    if (!STAYS_PUT.has(decision.type)) this.stuck.intentAt = now;
     const run = this.newRun(decision, now, "loco");
     const set = (layer: Layer, b: Behaviour | null) => this.install(layer, b, run, null, ctx, lease(layer, ctx));
     const clear = (...layers: Layer[]) => layers.forEach((l) => this.clearLayer(l, "superseded", ctx));
@@ -348,6 +391,7 @@ export class Pilot {
       const outcome = slot.behaviour.update(ctx);
       if (outcome !== null) this.layerEnded(layer, outcome, ctx);
     }
+    this.reflexUnstick(ctx);
     this.coastIfDriving(ctx);
     return this.state;
   }
@@ -506,6 +550,77 @@ export class Pilot {
    * it keeps the lane at the speed it has, until told otherwise or until the
    * lease lapses.
    */
+  /**
+   * The driver's own reflex for a car that is going nowhere: still for a few
+   * seconds, nose to a wall, while a behaviour that means to move is running.
+   * Back away with the wheel turned, then pull forward the other way. It does
+   * not ask the decision service and does not wait to be asked; every use is
+   * counted, so a trace shows how much of the recovery was the driver's.
+   */
+  private reflexUnstick(ctx: Ctx): void {
+    const s = this.stuck;
+    const b = ctx.body;
+    const loco = this.slots.loco.behaviour;
+    if (b.locomotion !== "driving" || !b.alive || this.holding) {
+      s.still = 0;
+      s.phase = "none";
+      s.streak = 0;
+      s.x = Number.NaN;
+      return;
+    }
+    if (s.phase !== "none") {
+      s.left -= ctx.dt;
+      if (s.phase === "back") {
+        const ob = ctx.world.obstacle(b);
+        const wedgedBehind = b.forwardSpeed < -0.5 && ob !== null && ob.gap < 1.2;
+        ctx.out.handbrake = false;
+        pedals(ctx, b.forwardSpeed > 0.9 ? -0.6 : -0.55, s.side * 0.8);
+        if (s.left <= 0 || wedgedBehind) {
+          s.phase = "forward";
+          s.left = STUCK.forward;
+        }
+      } else {
+        ctx.out.handbrake = false;
+        pedals(ctx, 0.55, -s.side * 0.8);
+        if (s.left <= 0) {
+          s.phase = "none";
+          s.still = 0;
+        }
+      }
+      return;
+    }
+    // Progress: any real distance from where the streak began clears it.
+    if (Number.isNaN(s.x) || Math.hypot(b.x - s.x, b.z - s.z) > STUCK.progress) {
+      s.x = b.x;
+      s.z = b.z;
+      s.streak = 0;
+    }
+    // The pilot means to move if it has been asked to go somewhere lately and is not waiting or getting out.
+    const meaning = b.time - s.intentAt < STUCK.intent && !(loco instanceof Hold) && !(loco instanceof ExitVehicle);
+    if (!meaning || Math.abs(b.forwardSpeed) > 0.3 || b.time < s.coolUntil) {
+      s.still = 0;
+      return;
+    }
+    s.still += ctx.dt;
+    const ob = ctx.world.obstacle(b);
+    const waiting = ob !== null && ob.kind !== "structure" && ob.gap < 12;
+    if (s.still < (waiting ? STUCK.traffic : STUCK.wall)) return;
+    s.still = 0;
+    if (s.streak >= STUCK.streak) {
+      // Five tries and no way out: leave it to the decisions, and try again later.
+      s.streak = 0;
+      s.coolUntil = b.time + STUCK.cooldown;
+      this.onReflex?.("no way out");
+      return;
+    }
+    s.streak++;
+    s.phase = "back";
+    s.left = STUCK.back;
+    s.side = s.streak % 2 === 1 ? 1 : -1;
+    this.stats.reflexReverses++;
+    this.onReflex?.("backing out");
+  }
+
   private coastIfDriving(ctx: Ctx): void {
     const b = ctx.body;
     const loco = this.slots.loco;

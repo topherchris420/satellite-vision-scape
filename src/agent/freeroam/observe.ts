@@ -263,6 +263,7 @@ export function buildSituation(bridge: FreeRoamBridge, aim: AimState): Situation
         hostile: sense.hostile,
         distanceM: sense.kind === "none" ? null : round(sense.distance, 0),
       },
+      bulletOn: sense.bulletPersonId,
       target,
     },
     attention: {

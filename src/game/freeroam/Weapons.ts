@@ -83,6 +83,14 @@ export interface AimSample {
   hostile: boolean;
   vehicleId: string | null;
   spreadDeg: number;
+  /**
+   * The first person a bullet leaving the muzzle along `d` would strike, if
+   * any. It can differ from what the crosshair rests on: the muzzle is at the
+   * chest, off to one side, so someone standing close to the shooter can be
+   * in the way of a shot that the crosshair clears.
+   */
+  bulletPersonId: string | null;
+  bulletDistance: number;
 }
 
 export function createAimSample(): AimSample {
@@ -106,6 +114,8 @@ export function createAimSample(): AimSample {
     hostile: false,
     vehicleId: null,
     spreadDeg: 0,
+    bulletPersonId: null,
+    bulletDistance: 0,
   };
 }
 
@@ -116,6 +126,7 @@ export type FireOutcome =
 const RAD = Math.PI / 180;
 const scratchHit = createRayHit();
 const chestHit = createRayHit();
+const bulletHit = createRayHit();
 const shortRay = { t: 0, collider: null as import("../world/colliders").Collider | null };
 
 export class Sidearm {
@@ -262,6 +273,10 @@ export class Sidearm {
     out.hostile = scratchHit.person?.hostile ?? false;
     out.vehicleId = scratchHit.vehicle?.id ?? null;
     out.spreadDeg = this.spreadDeg(input);
+    // Where a dead-on bullet would go, from the muzzle: who is in the way of it?
+    const path = castRay(world, mx, my, mz, dx, dy, dz, SIDEARM.range, bulletHit);
+    out.bulletPersonId = path.kind === "person" ? (path.person?.id ?? null) : null;
+    out.bulletDistance = path.t;
     return out;
   }
 

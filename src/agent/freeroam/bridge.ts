@@ -377,6 +377,7 @@ export class FreeRoamBridge implements MotorWorld {
     out.onId = a.personId ?? (a.vehicleId ? a.vehicleId.toLowerCase() : null);
     out.onKind = a.kind === "none" ? "none" : a.kind;
     out.onHostile = a.hostile;
+    out.bulletId = a.bulletPersonId;
     return out;
   }
 

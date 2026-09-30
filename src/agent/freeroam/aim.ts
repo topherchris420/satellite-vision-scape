@@ -98,8 +98,12 @@ export class Aim implements Behaviour {
     a.yawErrorDeg = eYaw * RAD;
     a.pitchErrorDeg = ePitch * RAD;
     const onIntended = s.onKind === "person" && s.onId === this.targetId;
-    a.onTarget = onIntended && t.visible;
+    // The crosshair may clear a bystander that the bullet, leaving from the chest, would not:
+    // whoever is first in the bullet's path other than the target holds the shot.
+    const inTheWay = s.bulletId !== null && s.bulletId !== this.targetId ? s.bulletId : null;
+    a.onTarget = onIntended && t.visible && inTheWay === null;
     if (s.onKind === "person" && s.onId !== null && s.onId !== this.targetId) a.blockedBy = s.onId;
+    else if (inTheWay !== null) a.blockedBy = inTheWay;
     this.alignedS = a.onTarget ? this.alignedS + ctx.dt : 0;
     a.onTargetS = this.alignedS;
     return null;

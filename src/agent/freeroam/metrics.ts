@@ -101,6 +101,7 @@ export interface RunSummary {
     /** Simulated ms from an accepted decision to the first control it produced. */
     meanControlLagMs: number | null;
     reflexBrakes: number;
+    reflexReverses: number;
     routePlans: number;
     assistNudges: number;
   };
@@ -122,6 +123,7 @@ export interface SummaryInput {
   controlSeconds: ControlSeconds;
   decisions: ReturnType<DecisionStats["summary"]>;
   reflexBrakes: number;
+  reflexReverses: number;
   routePlans: number;
   assistNudges: number;
   meanAcquireS: number | null;
@@ -224,6 +226,7 @@ export function summarize(i: SummaryInput): RunSummary {
       p95LatencyMs: i.decisions.p95LatencyMs,
       meanControlLagMs: i.decisions.meanControlLagMs,
       reflexBrakes: i.reflexBrakes,
+      reflexReverses: i.reflexReverses,
       routePlans: i.routePlans,
       assistNudges: i.assistNudges,
     },
@@ -277,6 +280,7 @@ const ROWS: readonly { group: string; label: string; unit: string; get: Getter }
   { group: "Control", label: "Control lag", unit: "ms", get: (s) => s.control.meanControlLagMs },
   { group: "Control", label: "Human interventions", unit: "", get: (s) => s.control.interventions },
   { group: "Control", label: "Reflex brakes", unit: "", get: (s) => s.control.reflexBrakes },
+  { group: "Control", label: "Reflex back-outs", unit: "", get: (s) => s.control.reflexReverses },
 ];
 
 /** Two runs side by side. Values and differences, never a winner. */

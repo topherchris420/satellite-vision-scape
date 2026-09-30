@@ -745,9 +745,13 @@ export class Manoeuvre implements Behaviour {
       return this.elapsed > 0.6 ? "done" : null;
     }
     switch (this.kind) {
-      case "accelerate":
-        pedals(ctx, obstacleSpeedLimit(ctx.body, ob) < b.forwardSpeed + 1 ? 0 : 0.9, steerToHeading());
+      case "accelerate": {
+        const room = obstacleSpeedLimit(ctx.body, ob);
+        pedals(ctx, room < b.forwardSpeed + 1 ? 0 : 0.9, steerToHeading());
+        // Asked to speed up and there is nowhere to go: say so, rather than report it done.
+        if (this.elapsed >= 0.8 && room < 1 && Math.abs(b.forwardSpeed) < 0.5) return "blocked";
         return this.elapsed >= 1.4 ? "done" : null;
+      }
       case "brake":
         pedals(ctx, b.forwardSpeed > 0.9 ? -0.7 : 0, steerToHeading());
         if (Math.abs(b.forwardSpeed) < 0.8) ctx.out.handbrake = true;
@@ -770,6 +774,12 @@ export class Manoeuvre implements Behaviour {
         return this.elapsed >= 1 ? "done" : null;
       }
       case "avoid": {
+        // Already against it: there is nothing to swerve round, so back off with the wheel turned.
+        if (ob && ob.gap < 2.5 && Math.abs(b.forwardSpeed) < 1.5) {
+          const away = ob.bearingDeg >= 0 ? -1 : 1;
+          pedals(ctx, b.forwardSpeed > 0.9 ? -0.6 : -0.55, -away * 0.8);
+          return this.elapsed >= 1.6 ? "done" : null;
+        }
         // Swerve away from whatever is ahead while shedding speed, then straighten.
         const side = ob ? (ob.bearingDeg >= 0 ? -1 : 1) : 1;
         pedals(ctx, b.forwardSpeed > 4 ? -0.4 : 0.1, side * 0.6 * (this.elapsed < 0.8 ? 1 : 0.2));

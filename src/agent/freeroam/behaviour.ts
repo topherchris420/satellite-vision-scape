@@ -62,6 +62,8 @@ export interface Ctx {
 export interface PilotStats {
   /** Emergency brakes applied by the driver's reflex. */
   reflexBrakes: number;
+  /** Times the driver backed out of a spot it was wedged in, on its own. */
+  reflexReverses: number;
   /** Route plans made. */
   plans: number;
 }

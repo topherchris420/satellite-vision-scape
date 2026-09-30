@@ -1243,7 +1243,7 @@ export class FreeRoam {
         ? "none"
         : this.crosshairHostile
           ? "hostile"
-          : this.aim.kind === "person"
+          : this.aim.kind === "person" || this.aim.bulletPersonId !== null
             ? "person"
             : this.aim.kind === "vehicle"
               ? "vehicle"

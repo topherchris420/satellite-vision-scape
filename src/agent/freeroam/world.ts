@@ -174,10 +174,12 @@ export interface AimSense {
   onId: string | null;
   onKind: "none" | "world" | "ground" | "vehicle" | "person";
   onHostile: boolean;
+  /** Who a bullet from the muzzle would strike first (it can differ from the crosshair's), or null. */
+  bulletId: string | null;
 }
 
 export function createAimSense(): AimSense {
-  return { cx: 0, cy: 0, cz: 0, ax: 0, ay: 0, az: 1, spreadDeg: 0, onId: null, onKind: "none", onHostile: false };
+  return { cx: 0, cy: 0, cz: 0, ax: 0, ay: 0, az: 1, spreadDeg: 0, onId: null, onKind: "none", onHostile: false, bulletId: null };
 }
 
 export interface ThreatSense {

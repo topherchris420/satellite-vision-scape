@@ -464,19 +464,14 @@ function ReplayBar({ game, jev }: { game: Game; jev: JevHudSnapshot }) {
 
 // --- Results --------------------------------------------------------------------------------------------------
 
-const CONTROLLER_TEXT: Record<string, string> = { HUMAN: "You", JEV: "Jev", ASSIST: "You + Jev", MIXED: "Mixed", SCRIPTED: "Baseline" };
-
 function runName(r: RunEntry): string {
-  return `${CONTROLLER_TEXT[r.controller] ?? r.controller} · ${r.status === "success" ? "done" : r.status} · ${Math.round(r.summary.outcome.elapsedS)} s`;
+  return `${r.label} · ${r.status === "success" ? "done" : r.status} · ${Math.round(r.summary.outcome.elapsedS)} s`;
 }
 
 function CompareTable({ game, aId, bId }: { game: Game; aId: string; bId: string }) {
   const table = useMemo(() => game.roam.compare(aId, bId), [game, aId, bId]);
   if (!table) return null;
-  const nameOf = (id: string) => {
-    const r = table.a.id === id ? table.a : table.b;
-    return CONTROLLER_TEXT[r.controller] ?? r.controller;
-  };
+  const nameOf = (id: string) => (table.a.id === id ? table.a : table.b).label.replace(/ run$/, "");
   let group = "";
   return (
     <div className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-white/10">
@@ -572,7 +567,7 @@ function Results({
             {won ? "Objective complete" : "Objective failed"} · {fr.challengeTitle} · seed {fr.seed}
           </div>
           <h2 className="mt-1 font-sans text-2xl font-light tracking-tight">
-            {latest ? (CONTROLLER_TEXT[latest.controller] ?? latest.controller) : "Run"} · {formatClock(fr.elapsedS)}
+            {latest ? latest.label : "Run"} · {formatClock(fr.elapsedS)}
           </h2>
           {!won && o.failReason && <p className="mt-1 font-sans text-[12px] text-rose-200/80">{o.failReason}</p>}
 

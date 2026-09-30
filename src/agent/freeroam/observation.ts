@@ -68,6 +68,7 @@ export const EVENT_TYPES = [
   "player_down",
   "respawned",
   "jev_hold",
+  "stuck",
 ] as const;
 export type FrEventType = (typeof EVENT_TYPES)[number];
 
@@ -243,6 +244,8 @@ export function freeRoamObservationSchema() {
               distanceM: metres.nullable(),
             })
             .strict(),
+          /** The person a bullet leaving the muzzle would strike first, which the crosshair may not show. */
+          bulletOn: targetIdSchema.nullable(),
           /** The nearest visible hostile (or the engaged target) and how far off the sights are. */
           target: z
             .object({
