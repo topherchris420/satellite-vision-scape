@@ -100,6 +100,16 @@ export class BarrierGate {
     collision.addDynamic(this.boom);
   }
 
+  /** Lowered, idle and solid again (a scenario reset). */
+  reset(): void {
+    this.angle = 0;
+    this.target = 0;
+    this.clearTimer = 0;
+    this.manualTimer = 0;
+    this.moved = true;
+    this.boom.enabled = true;
+  }
+
   get raised(): boolean {
     return this.target > 0;
   }

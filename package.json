@@ -15,6 +15,7 @@
     "format": "prettier --write .",
     "test:agent": "bun test tests/agent-",
     "test:experiments": "bun test tests/experiment-",
+    "test:freeroam": "bun test tests/freeroam-",
     "agent:live": "bun scripts/verify-agent-live.ts",
     "probes:capture": "bun scripts/capture-probes.ts",
     "probes": "bun scripts/probe-capabilities.ts",

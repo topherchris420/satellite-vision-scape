@@ -15,6 +15,11 @@
 // Play-mode buttons:
 //   action   — held: jump on foot, handbrake while driving
 //   interact — one-shot: enter / exit vehicle, operate a barrier
+// Free Roam buttons:
+//   aim      — one-shot: raise or lower the sights (the latch is the game's input state, which
+//              drops it when the avatar cannot aim or someone else takes the controls)
+//   fire     — held: the trigger, at the weapon's own rate; a press always lasts one frame at least,
+//              so a tap between two slow frames still fires
 export const mobileInput = {
   x: 0,
   y: 0,
@@ -22,6 +27,9 @@ export const mobileInput = {
   boost: false,
   action: false,
   interact: false,
+  aim: false,
+  fire: false,
+  firePulse: false,
 };
 
 // True while any control is actively deflected — lets the movers cancel an
@@ -41,6 +49,20 @@ export function consumeMobileInteract(): boolean {
   return pressed;
 }
 
+/** Whether the trigger is down this frame: held, or pressed and let go since the last one. */
+export function consumeMobileFire(): boolean {
+  const down = mobileInput.fire || mobileInput.firePulse;
+  mobileInput.firePulse = false;
+  return down;
+}
+
+/** Read and clear the one-shot request to raise or lower the sights. */
+export function consumeMobileAim(): boolean {
+  const pressed = mobileInput.aim;
+  mobileInput.aim = false;
+  return pressed;
+}
+
 export function resetMobileInput() {
   mobileInput.x = 0;
   mobileInput.y = 0;
@@ -48,4 +70,7 @@ export function resetMobileInput() {
   mobileInput.boost = false;
   mobileInput.action = false;
   mobileInput.interact = false;
+  mobileInput.aim = false;
+  mobileInput.fire = false;
+  mobileInput.firePulse = false;
 }

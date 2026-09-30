@@ -66,6 +66,11 @@ export class InteractionManager {
   overrideIntent: MoveIntent | null = null;
   /** Additional on-foot interactables, consulted after vehicle doors. */
   readonly providers: InteractableProvider[] = [];
+  /**
+   * Which vehicles may be entered right now (Free Roam: a traffic vehicle only
+   * once it has stopped). Null allows every vehicle, as before.
+   */
+  enterFilter: ((vehicle: Vehicle) => boolean) | null = null;
   /** Scripted character transform (valid when `scripted` is true). */
   scripted = false;
   readonly scriptedPosition = new THREE.Vector3();
@@ -115,6 +120,31 @@ export class InteractionManager {
       events: EventBus<GameEvents>;
     },
   ) {}
+
+  /**
+   * Back to standing on foot with nothing in progress: a scenario reset. This
+   * bypasses the transition table on purpose — it is not gameplay, it is
+   * putting the world back to its starting state.
+   */
+  reset(): void {
+    this.state = GameplayState.OnFoot;
+    this.vehicle = null;
+    this.prompt = null;
+    this.promptTarget = null;
+    this.seatWeight = 0;
+    this.overrideIntent = null;
+    this.scripted = false;
+    this.scriptedSpeed = 0;
+    this.pose = "physics";
+    this.phase = "approach";
+    this.phaseTime = 0;
+    this.climbT = 0;
+    this.climbExiting = false;
+    this.approachPoints = [];
+    this.climbPath = [];
+    this.stopWindow = 0;
+    this.stopWindowSpeed = 0;
+  }
 
   /** Camera framing implied by the current state and phase. */
   get cameraMode(): "foot" | "vehicle" {
@@ -243,7 +273,12 @@ export class InteractionManager {
       if (input.wasPressed("interact")) priority.act();
       return;
     }
-    const vehicle = this.deps.vehicles.nearest(p.position.x, p.position.z, INTERACTION.enterRange);
+    const vehicle = this.deps.vehicles.nearest(
+      p.position.x,
+      p.position.z,
+      INTERACTION.enterRange,
+      this.enterFilter ?? undefined,
+    );
     if (vehicle && Math.abs(vehicle.physics.y - p.position.y) < 1.6) {
       this.prompt = { key: "E", label: "Enter vehicle" };
       this.promptTarget = vehicle.id;

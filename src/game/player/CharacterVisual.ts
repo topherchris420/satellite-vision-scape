@@ -197,6 +197,7 @@ export class CharacterVisual {
   private readonly materials: THREE.MeshStandardMaterial[];
   private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly cup = new THREE.Group();
+  private readonly sidearm = new THREE.Group();
 
   constructor(options: CharacterOptions = {}) {
     this.variant = options.variant ?? "soldier";
@@ -214,6 +215,7 @@ export class CharacterVisual {
       this.build(m);
     }
     this.buildCup();
+    this.buildSidearm();
   }
 
   private geometry<T extends THREE.BufferGeometry>(g: T): T {
@@ -553,6 +555,31 @@ export class CharacterVisual {
 
   setCarrying(carrying: boolean): void {
     this.cup.visible = carrying;
+  }
+
+  /**
+   * A small dark sidearm in the right hand (Free Roam). The barrel runs down
+   * the forearm, so with the arm raised it points where the arm points, and
+   * hanging at the side it points at the ground, as a lowered pistol does.
+   */
+  private buildSidearm(): void {
+    const metal = new THREE.MeshStandardMaterial({ color: "#20242a", roughness: 0.4, metalness: 0.55 });
+    const grip = new THREE.MeshStandardMaterial({ color: "#3a2f28", roughness: 0.8 });
+    this.materials.push(metal, grip);
+    const slide = new THREE.Mesh(this.geometry(new THREE.BoxGeometry(0.034, 0.2, 0.044)), metal);
+    slide.position.set(0, -0.09, 0.016);
+    const handle = new THREE.Mesh(this.geometry(new THREE.BoxGeometry(0.032, 0.05, 0.078)), grip);
+    handle.position.set(0, 0.0, -0.012);
+    handle.rotation.x = -0.18;
+    slide.castShadow = handle.castShadow = true;
+    this.sidearm.add(slide, handle);
+    this.sidearm.position.set(0, -0.3, 0.05);
+    this.sidearm.visible = false;
+    this.elbows[1].add(this.sidearm);
+  }
+
+  setSidearm(drawn: boolean): void {
+    this.sidearm.visible = drawn;
   }
 
   applyPose(pose: CharacterPose): void {

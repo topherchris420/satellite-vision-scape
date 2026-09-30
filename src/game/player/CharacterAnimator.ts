@@ -78,6 +78,10 @@ export interface AnimationParams {
   steer: number;
   /** 0 … 1: right hand holding a cup level in front of the body. */
   carry?: number;
+  /** 0 … 1: arms raised on a target (Free Roam sidearm). */
+  aim?: number;
+  /** Where the sights point, radians (+ up); the raised arms follow. */
+  aimPitch?: number;
   /** Idle style: the technician shifts weight and nods slightly. */
   style?: "soldier" | "technician";
 }
@@ -111,6 +115,7 @@ export class CharacterAnimator {
   private readonly seated = createPose();
   private readonly mix = createPose();
   private carry = 0;
+  private aim = 0;
 
   reset(): void {
     this.phase = 0;
@@ -162,6 +167,20 @@ export class CharacterAnimator {
       p.rArm = p.rArm + (0.45 + p.rArm * 0.15 - p.rArm) * c;
       p.rElbow = p.rElbow + (1.25 - p.rElbow) * c;
       p.rArmOut = p.rArmOut + (-0.16 - p.rArmOut) * c;
+    }
+
+    // Aiming: both hands come up to the line of sight, the right arm straight, the left bent under it.
+    this.aim = damp(this.aim, params.aim ?? 0, 12, dt);
+    const a = this.aim * (1 - params.seatWeight);
+    if (a > 1e-3) {
+      const p = this.pose;
+      const lift = 1.5 + clamp(params.aimPitch ?? 0, -0.7, 0.7) * 0.85;
+      p.rArm += (lift - p.rArm) * a;
+      p.rElbow += (0.06 - p.rElbow) * a;
+      p.rArmOut += (-0.05 - p.rArmOut) * a;
+      p.lArm += (lift - 0.2 - p.lArm) * a;
+      p.lElbow += (0.85 - p.lElbow) * a;
+      p.lArmOut += (0.14 - p.lArmOut) * a;
     }
     return this.pose;
   }

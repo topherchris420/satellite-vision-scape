@@ -19,6 +19,8 @@ export const CollisionLayer = {
   Vehicle: 1 << 3,
   /** Lowered barrier booms. */
   Gate: 1 << 4,
+  /** People on foot (Free Roam): they block each other and the player, not vehicles or the camera. */
+  Person: 1 << 5,
 } as const;
 
 export const CollisionMask = {
@@ -27,7 +29,8 @@ export const CollisionMask = {
     CollisionLayer.Prop |
     CollisionLayer.Fence |
     CollisionLayer.Vehicle |
-    CollisionLayer.Gate,
+    CollisionLayer.Gate |
+    CollisionLayer.Person,
   Vehicle:
     CollisionLayer.Structure |
     CollisionLayer.Prop |
@@ -180,6 +183,15 @@ export function createSphere(o: {
   c.y1 = o.y + o.r;
   updateBounds(c);
   return c;
+}
+
+/** Move a (dynamic) circle collider; bounds are refreshed for the broadphase. */
+export function setCirclePose(c: Collider, x: number, z: number, y0: number, y1: number): void {
+  c.x = x;
+  c.z = z;
+  c.y0 = y0;
+  c.y1 = y1;
+  updateBounds(c);
 }
 
 /** Move a (dynamic) box collider; bounds are refreshed for the broadphase. */

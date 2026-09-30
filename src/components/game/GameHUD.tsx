@@ -19,6 +19,11 @@ import { useAfterHours } from "@/hooks/use-after-hours";
 import { AfterHoursMenu, AfterHoursOverlay, CharacterPicker } from "./AfterHoursHUD";
 import { AgentHUD } from "./AgentHUD";
 import { AgentLaunch } from "./AgentLaunch";
+import { FreeRoamMenu } from "./FreeRoamMenu";
+import { FreeRoamOverlay } from "./FreeRoamHUD";
+import { FreeRoamMapLayer } from "./FreeRoamMapLayer";
+import { useFreeRoam, usePointerLocked } from "@/hooks/use-free-roam";
+import type { FrLaunch, LaunchResult } from "@/lib/freeroam-ui";
 
 const glass =
   "border border-white/10 bg-[#071014]/78 text-white shadow-[0_16px_50px_rgba(0,0,0,.28)] backdrop-blur-xl";
@@ -88,6 +93,27 @@ const AFTER_HOURS_CONTROLS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const FREE_ROAM_CONTROLS: { title: string; rows: [string, string][] }[] = [
+  {
+    title: "Free Roam · fight",
+    rows: [
+      ["Right mouse · Q", "Aim (hold)"],
+      ["Left mouse · Z", "Fire"],
+      ["F · E", "Enter · exit a vehicle"],
+      ["Shift", "Sprint"],
+    ],
+  },
+  {
+    title: "Free Roam · Jev",
+    rows: [
+      ["J", "Let Jev play"],
+      ["K", "Jev assists you"],
+      ["H", "Take the controls back"],
+      ["Hold still", "Jev never overrides a key you press"],
+    ],
+  },
+];
+
 const MOBILE_CONTROLS: { title: string; rows: [string, string][] }[] = [
   {
     title: "Touch",
@@ -101,18 +127,33 @@ const MOBILE_CONTROLS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const MOBILE_FREE_ROAM_CONTROLS: { title: string; rows: [string, string][] }[] = [
+  {
+    title: "Touch · Free Roam",
+    rows: [
+      ["AIM", "Raise or lower the sights"],
+      ["FIRE", "Hold to fire"],
+      ["Drag", "Turn the sights while aiming"],
+    ],
+  },
+];
+
 function ControlsGrid({
   isMobile,
   afterHours = false,
+  freeRoam = false,
 }: {
   isMobile: boolean;
   afterHours?: boolean;
+  freeRoam?: boolean;
 }) {
   const groups = isMobile
-    ? MOBILE_CONTROLS
-    : afterHours
-      ? [...DESKTOP_CONTROLS, ...AFTER_HOURS_CONTROLS]
-      : DESKTOP_CONTROLS;
+    ? [...MOBILE_CONTROLS, ...(freeRoam ? MOBILE_FREE_ROAM_CONTROLS : [])]
+    : [
+        ...DESKTOP_CONTROLS,
+        ...(afterHours ? AFTER_HOURS_CONTROLS : []),
+        ...(freeRoam ? FREE_ROAM_CONTROLS : []),
+      ];
   return (
     <div className={`grid gap-4 ${isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"}`}>
       {groups.map((group) => (
@@ -162,6 +203,10 @@ export function GameHUD({
   status,
   onStart,
   onStartAfterHours,
+  onStartFreeRoam,
+  onReplayTrace,
+  onLeaveFreeRoam,
+  onCapture,
   onResumeUnlocked,
   onReleasePointer,
   onLeaveAfterHours,
@@ -176,6 +221,13 @@ export function GameHUD({
   onStart: () => void;
   /** Begin After Hours at dusk (from a click, so audio may start). */
   onStartAfterHours: (capturePointer?: boolean) => void;
+  /** Begin a Free Roam run with the chosen controller (from a click). */
+  onStartFreeRoam: (launch: FrLaunch) => Promise<LaunchResult>;
+  /** Watch a saved Free Roam trace. */
+  onReplayTrace: (text: string) => LaunchResult;
+  onLeaveFreeRoam: () => void;
+  /** Capture the mouse again (after Jev has played). */
+  onCapture: () => void;
   /** Resume play without capturing the mouse (an agent is taking the controls). */
   onResumeUnlocked: () => void;
   /** Free the mouse without pausing (an agent was started from a query). */
@@ -189,6 +241,8 @@ export function GameHUD({
 }) {
   const hud = useSyncExternalStore(game.hud.subscribe, game.hud.getSnapshot, game.hud.getSnapshot);
   const after = useAfterHours(game);
+  const roam = useFreeRoam(game);
+  const locked = usePointerLocked();
   const waypointRef = useCallback(
     (el: SVGGElement | null) => game.afterHours.hud.bind("waypoint-map", el),
     [game],
@@ -227,7 +281,10 @@ export function GameHUD({
         <>
           {/* Status chip */}
           <div
-            className={`${glass} absolute left-3 top-3 flex items-center gap-3 rounded-xl px-3 py-2 sm:left-5 sm:top-5`}
+            className={`${glass} absolute left-3 top-3 items-center gap-3 rounded-xl px-3 py-2 sm:left-5 sm:top-5 ${
+              // Free Roam's own column takes this corner on a phone; its objective says where you are.
+              isMobile && roam.active ? "hidden" : "flex"
+            }`}
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-300/10 text-amber-300">
               {inVehicle ? <CarFront size={14} /> : <Footprints size={14} />}
@@ -238,9 +295,11 @@ export function GameHUD({
               </div>
               <div className="mt-0.5 max-w-[16rem] truncate font-sans text-[10px] text-white/45">
                 {hud.vehicleLabel ??
-                  (after.active
-                    ? "After Hours · fictional night shift"
-                    : "Pine Gap · exterior reconstruction")}
+                  (roam.active
+                    ? `Free Roam · ${roam.challengeTitle}`
+                    : after.active
+                      ? "After Hours · fictional night shift"
+                      : "Pine Gap · exterior reconstruction")}
               </div>
             </div>
           </div>
@@ -271,7 +330,9 @@ export function GameHUD({
                   vehicleCount={game.vehicles.vehicles.length}
                   waypointRef={waypointRef}
                   className="w-24"
-                />
+                >
+                  <FreeRoamMapLayer game={game} />
+                </Minimap>
               </div>
             )}
           </div>
@@ -296,7 +357,9 @@ export function GameHUD({
             <div className="absolute bottom-5 left-5 flex flex-col gap-2">
               <div className={`${glass} rounded-lg px-3 py-2 font-sans text-[10px] text-white/45`}>
                 {inVehicle ? (
-                  <>W/S throttle · A/D steer · Space handbrake · L lights · E exit</>
+                  <>W/S throttle · A/D steer · Space handbrake · L lights · {roam.active ? "F" : "E"} exit</>
+                ) : roam.active ? (
+                  <>WASD move · Shift sprint · Space jump · RMB aim · LMB fire · F enter</>
                 ) : (
                   <>WASD move · Shift sprint · Space jump · C walk · E interact</>
                 )}
@@ -311,13 +374,23 @@ export function GameHUD({
                   vehicleCount={game.vehicles.vehicles.length}
                   waypointRef={waypointRef}
                   className="w-36"
-                />
+                >
+                  <FreeRoamMapLayer game={game} />
+                </Minimap>
               </div>
             </div>
           )}
 
           <AfterHoursOverlay game={game} isMobile={isMobile} />
           <AgentHUD game={game} isMobile={isMobile} onReleasePointer={onReleasePointer} />
+          <FreeRoamOverlay
+            game={game}
+            isMobile={isMobile}
+            locked={locked}
+            onLeave={onLeaveFreeRoam}
+            onReleasePointer={onReleasePointer}
+            onCapture={onCapture}
+          />
 
           {/* Vehicle instruments */}
           {inVehicle && (
@@ -383,7 +456,8 @@ export function GameHUD({
               </p>
             </div>
           </div>
-          <div className="mt-5 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
+          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} isMobile={isMobile} />
+          <div className="mt-4 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="max-w-md">
                 <div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7fd6d0]">
@@ -433,7 +507,7 @@ export function GameHUD({
             </span>
           </div>
           <div className="mt-7">
-            <ControlsGrid isMobile={isMobile} />
+            <ControlsGrid isMobile={isMobile} freeRoam />
           </div>
         </Card>
       )}
@@ -478,8 +552,19 @@ export function GameHUD({
               </span>
             </div>
           )}
+          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} active={roam.active} isMobile={isMobile} />
+          {roam.active && (
+            <div className="mt-3">
+              <button
+                onClick={onLeaveFreeRoam}
+                className="rounded-lg border border-white/15 px-3 py-2 text-[10px] uppercase tracking-[.16em] text-white/60 transition hover:bg-white/10 hover:text-white"
+              >
+                Leave Free Roam
+              </button>
+            </div>
+          )}
           <div className="mt-6">
-            <ControlsGrid isMobile={isMobile} afterHours={after.active} />
+            <ControlsGrid isMobile={isMobile} afterHours={after.active} freeRoam={roam.active} />
           </div>
         </Card>
       )}

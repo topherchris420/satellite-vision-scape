@@ -29,8 +29,14 @@ export type Action =
   | "cancel"
   | "retry"
   | "alteredSignal"
+  // Free Roam: hold to aim, press to fire (mouse buttons or keys)
+  | "aim"
+  | "fire"
   // Agent runtime: hand the character back to the person (H)
-  | "takeover";
+  | "takeover"
+  // Free Roam: let Jev play (J), or have Jev assist (K)
+  | "letJev"
+  | "assist";
 
 export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   forward: ["KeyW", "ArrowUp"],
@@ -41,7 +47,8 @@ export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   walkToggle: ["KeyC"],
   jump: ["Space"],
   handbrake: ["Space"],
-  interact: ["KeyE"],
+  // E everywhere; F as well, for the "press F to enter" grammar of Free Roam.
+  interact: ["KeyE", "KeyF"],
   headlights: ["KeyL"],
   mute: ["KeyM"],
   radioPower: ["KeyR"],
@@ -56,8 +63,16 @@ export const KEY_BINDINGS: Record<Action, readonly string[]> = {
   cancel: ["KeyX"],
   retry: ["KeyY"],
   alteredSignal: ["KeyO"],
+  // "Mouse0" / "Mouse2" are pointer buttons fed in by DomInputBinding as pseudo key codes.
+  aim: ["KeyQ", "Mouse2"],
+  fire: ["KeyZ", "Mouse0"],
   takeover: ["KeyH"],
+  letJev: ["KeyJ"],
+  assist: ["KeyK"],
 };
+
+/** Pseudo key code for a pointer button (0 left, 2 right). */
+export const mouseCode = (button: number): string => `Mouse${button}`;
 
 /** Every code the game consumes, so the DOM layer can prevent browser defaults. */
 export const GAME_KEY_CODES: ReadonlySet<string> = new Set(Object.values(KEY_BINDINGS).flat());
@@ -74,6 +89,9 @@ export interface VirtualInput {
   tune: number;
   /** Held on-screen terminal dial: −1, 0 or +1. */
   dial: number;
+  /** Free Roam: the on-screen sights are up (a latch), and the on-screen trigger is held. */
+  aim: boolean;
+  fire: boolean;
 }
 
 export class InputState {
@@ -92,6 +110,8 @@ export class InputState {
     interactRequested: false,
     tune: 0,
     dial: 0,
+    aim: false,
+    fire: false,
   };
 
   keyDown(code: string): void {
@@ -125,6 +145,8 @@ export class InputState {
     this.virtual.interactRequested = false;
     this.virtual.tune = 0;
     this.virtual.dial = 0;
+    this.virtual.aim = false;
+    this.virtual.fire = false;
     this.lookAccumX = 0;
     this.lookAccumY = 0;
     this.zoomAccum = 0;
@@ -133,6 +155,8 @@ export class InputState {
   isDown(action: Action): boolean {
     if (action === "sprint" && this.virtual.sprint) return true;
     if ((action === "jump" || action === "handbrake") && this.virtual.action) return true;
+    if (action === "aim" && this.virtual.aim) return true;
+    if (action === "fire" && this.virtual.fire) return true;
     const codes = KEY_BINDINGS[action];
     for (let i = 0; i < codes.length; i++) if (this.down.has(codes[i])) return true;
     return false;

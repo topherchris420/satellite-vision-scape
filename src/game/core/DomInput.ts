@@ -1,5 +1,5 @@
 import { CAMERA } from "../config";
-import { GAME_KEY_CODES, type InputState } from "./Input";
+import { GAME_KEY_CODES, mouseCode, type InputState } from "./Input";
 
 /**
  * Pointer-lock deltas larger than this in one event are browser artefacts
@@ -23,6 +23,8 @@ function isTextEntry(target: EventTarget | null): boolean {
 export class DomInputBinding {
   private enabled = false;
   private dragPointer: number | null = null;
+  /** What the last press came from: a touch is followed by mouse events that are not a click. */
+  private lastPointerType = "mouse";
   private ignoreMoves = 0;
   private wasLocked = false;
   // Drag deltas are derived from client coordinates because touch pointers
@@ -43,6 +45,10 @@ export class DomInputBinding {
     document.addEventListener("visibilitychange", this.onVisibility);
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("pointerlockchange", this.onLockChange);
+    document.addEventListener("pointerdown", this.onAnyPointerDown, true);
+    document.addEventListener("mousedown", this.onMouseDown);
+    document.addEventListener("mouseup", this.onMouseUp);
+    this.element.addEventListener("contextmenu", this.onContextMenu);
     this.element.addEventListener("pointerdown", this.onPointerDown);
     window.addEventListener("pointermove", this.onPointerMove);
     window.addEventListener("pointerup", this.onPointerUp);
@@ -57,6 +63,10 @@ export class DomInputBinding {
     document.removeEventListener("visibilitychange", this.onVisibility);
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("pointerlockchange", this.onLockChange);
+    document.removeEventListener("pointerdown", this.onAnyPointerDown, true);
+    document.removeEventListener("mousedown", this.onMouseDown);
+    document.removeEventListener("mouseup", this.onMouseUp);
+    this.element.removeEventListener("contextmenu", this.onContextMenu);
     this.element.removeEventListener("pointerdown", this.onPointerDown);
     window.removeEventListener("pointermove", this.onPointerMove);
     window.removeEventListener("pointerup", this.onPointerUp);
@@ -107,6 +117,32 @@ export class DomInputBinding {
     }
     if (Math.abs(e.movementX) > MAX_LOOK_DELTA || Math.abs(e.movementY) > MAX_LOOK_DELTA) return;
     this.input.addLook(e.movementX, e.movementY);
+  };
+
+  /**
+   * Pointer buttons become the `fire` (left) and `aim` (right) actions. While
+   * the pointer is free, the left button belongs to drag-look, so it never
+   * fires; the right button always aims when it is pressed on the canvas.
+   */
+  private readonly onAnyPointerDown = (e: PointerEvent) => {
+    this.lastPointerType = e.pointerType;
+  };
+
+  private readonly onMouseDown = (e: MouseEvent) => {
+    // A tap on a touch screen is followed by compatibility mouse events; they are not the fire or aim button.
+    if (this.lastPointerType === "touch") return;
+    if (!this.enabled || (e.button !== 0 && e.button !== 2)) return;
+    if (!this.locked && e.target !== this.element) return;
+    if (e.button === 0 && !this.locked) return;
+    this.input.keyDown(mouseCode(e.button));
+  };
+
+  private readonly onMouseUp = (e: MouseEvent) => {
+    if (e.button === 0 || e.button === 2) this.input.keyUp(mouseCode(e.button));
+  };
+
+  private readonly onContextMenu = (e: Event) => {
+    if (this.enabled) e.preventDefault();
   };
 
   private readonly onPointerDown = (e: PointerEvent) => {

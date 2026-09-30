@@ -51,6 +51,11 @@ export class WorldManager {
     }
   }
 
+  /** Every barrier back to its starting state (a scenario reset). */
+  reset(): void {
+    for (const gate of this.gates) gate.reset();
+  }
+
   frameUpdate(dt: number): void {
     this.visuals?.update(dt);
     for (const gate of this.gates) gate.moved = false;

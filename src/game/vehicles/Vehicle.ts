@@ -44,6 +44,13 @@ export class Vehicle {
   /** Transform used for seat and door anchors (the visual root when present). */
   readonly frame: THREE.Object3D;
   driven = false;
+  /**
+   * Driven by an AI driver (traffic, security) rather than the player. Such a
+   * vehicle is stepped by the same physics as any other and never sleeps.
+   */
+  autonomous = false;
+  /** Structural health, 0…100. A wrecked vehicle keeps its shape but has no engine. */
+  health = 100;
   headlights = false;
   readonly doorOpen: [number, number] = [0, 0];
   private readonly doorTarget: [number, number] = [0, 0];
@@ -105,9 +112,33 @@ export class Vehicle {
   }
 
   fixedStep(dt: number): void {
-    if (!this.driven && !this.physics.awake) return;
-    this.physics.step(dt, this.controls, this.driven);
+    if (!this.driven && !this.autonomous && !this.physics.awake) return;
+    if (this.health <= 0) this.controls.throttle = 0;
+    this.physics.step(dt, this.controls, this.driven || this.autonomous);
     this.syncCollider();
+  }
+
+  /** The engine is gone; the vehicle can only roll and brake. */
+  get wrecked(): boolean {
+    return this.health <= 0;
+  }
+
+  /** Apply structural damage. Returns the health actually removed. */
+  damage(amount: number): number {
+    if (amount <= 0 || this.health <= 0) return 0;
+    const removed = Math.min(this.health, amount);
+    this.health -= removed;
+    return removed;
+  }
+
+  /** Back to a parked, undamaged, closed-up vehicle (a scenario reset). */
+  resetState(): void {
+    this.driven = false;
+    this.autonomous = false;
+    this.health = 100;
+    this.headlights = false;
+    this.doorOpen[0] = this.doorOpen[1] = 0;
+    this.doorTarget[0] = this.doorTarget[1] = 0;
   }
 
   private syncCollider(): void {

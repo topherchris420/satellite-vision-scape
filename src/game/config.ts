@@ -37,6 +37,8 @@ export const PLAYER = {
   /** Exponential rate at which the body turns to face its travel direction. */
   turnRate: 11,
   sprintTurnRate: 7,
+  /** Turn rate while aiming: the body follows the crosshair almost at once. */
+  aimTurnRate: 22,
   /** Speed lost per unit of uphill grade (0.3 grade → 13% slower at 0.45). */
   uphillPenalty: 0.45,
   jumpSpeed: 5.3,
@@ -100,6 +102,18 @@ export const CAMERA = {
     autoCenterMinSpeed: 2.2,
   },
   shake: { impactScale: 0.035, maxAmplitude: 0.35, decay: 5.5 },
+  /**
+   * Over-the-shoulder framing while aiming. The weapon model (Weapons.ts)
+   * uses these same numbers, so the crosshair and the bullet agree when the
+   * blend is complete, whatever the presentation zoom.
+   */
+  aim: {
+    distance: 2.7,
+    fov: 50,
+    /** Camera offset to the character's right, metres. */
+    shoulder: 0.55,
+    blendRate: 10,
+  },
 } as const;
 
 export const INTERACTION = {

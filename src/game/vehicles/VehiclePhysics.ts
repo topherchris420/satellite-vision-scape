@@ -540,6 +540,7 @@ export class VehiclePhysics {
         z: k.pz,
         speed: -vn,
         vehicleId: this.id,
+        other: other ? "vehicle" : "world",
       });
     }
   }

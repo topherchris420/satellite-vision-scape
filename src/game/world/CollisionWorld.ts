@@ -216,4 +216,46 @@ export class CollisionWorld {
     }
     return best;
   }
+
+  /**
+   * `raycast` that also says what it hit: fills `out.t` with the free distance
+   * and `out.collider` with the nearest shape struck (null when the way is
+   * clear). Used for line of sight and for weapons, where the owner of the
+   * shape matters.
+   */
+  raycastHit(
+    ox: number,
+    oy: number,
+    oz: number,
+    dx: number,
+    dy: number,
+    dz: number,
+    maxDistance: number,
+    radius: number,
+    mask: number,
+    exclude: unknown,
+    out: { t: number; collider: Collider | null },
+  ): void {
+    const ex = ox + dx * maxDistance;
+    const ez = oz + dz * maxDistance;
+    const n = this.gather(
+      Math.min(ox, ex) - radius,
+      Math.min(oz, ez) - radius,
+      Math.max(ox, ex) + radius,
+      Math.max(oz, ez) + radius,
+      mask,
+      exclude,
+    );
+    let best = maxDistance;
+    let hit: Collider | null = null;
+    for (let i = 0; i < n; i++) {
+      const t = raycastCollider(this.candidates[i], ox, oy, oz, dx, dy, dz, best, radius);
+      if (t < best) {
+        best = t;
+        hit = this.candidates[i];
+      }
+    }
+    out.t = best;
+    out.collider = hit;
+  }
 }

@@ -87,11 +87,23 @@ export class VehicleManager {
     }
   }
 
-  /** Vehicle whose body is closest to (x, z), within `range` of its outline. */
-  nearest(x: number, z: number, range: number): Vehicle | null {
+  /** Remove and dispose a vehicle (Free Roam's temporary fleet). */
+  despawn(vehicle: Vehicle): void {
+    const i = this.vehicles.indexOf(vehicle);
+    if (i < 0) return;
+    this.vehicles.splice(i, 1);
+    vehicle.dispose();
+  }
+
+  /**
+   * Vehicle whose body is closest to (x, z), within `range` of its outline.
+   * `accept` can exclude vehicles that may not be entered right now.
+   */
+  nearest(x: number, z: number, range: number, accept?: (v: Vehicle) => boolean): Vehicle | null {
     let best: Vehicle | null = null;
     let bestDistance = range;
     for (const v of this.vehicles) {
+      if (accept && !accept(v)) continue;
       const c = v.collider;
       const dx = x - c.x;
       const dz = z - c.z;
