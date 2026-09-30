@@ -304,11 +304,11 @@ export function SiteScene() {
   const replayFreeRoamTrace = useCallback(
     (text: string): LaunchResult => {
       if (!game) return { ok: false, detail: "The game is not ready yet." };
+      if (!game.roam.startReplay(text))
+        return { ok: false, detail: "That file is not a valid Free Roam replay for this scenario version. Choose an exported svs-freeroam-trace/v1 file (up to 32 MiB)." };
       session.startUnlocked();
       game.setPaused(false);
-      return game.roam.startReplay(text)
-        ? { ok: true, detail: "replaying" }
-        : { ok: false, detail: "That file is not a Free Roam trace (svs-freeroam-trace/v1)." };
+      return { ok: true, detail: "replaying" };
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [game, session.startUnlocked],

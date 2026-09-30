@@ -6,6 +6,7 @@ import { compareSummaries } from "../src/agent/freeroam/metrics";
 import { MAX_RUNS } from "../src/agent/freeroam/session";
 import { FR_TRACE_SCHEMA } from "../src/agent/freeroam/records";
 import { parseTrace } from "../src/agent/freeroam/trace";
+import { parseFrames, type EncodedFrames } from "../src/agent/freeroam/replay";
 import { FRAME, frGame, run, step } from "./freeroam-helpers";
 
 /**
@@ -98,6 +99,57 @@ describe("recording", () => {
 });
 
 describe("replay", () => {
+  test("invalid JSON and incompatible scenarios leave the current run and controller intact", () => {
+    const g = frGame({ seed: 48291, challenge: "exploration" });
+    g.input.keyDown("KeyW");
+    step(g, 180);
+    g.input.keyUp("KeyW");
+    g.roam.setController("JEV", "baseline");
+    const valid = JSON.parse(g.roam.exportTrace()!);
+    const before = g.freeRoam.worldHash();
+    const traceBefore = g.roam.exportTrace();
+    const candidates = [
+      "not JSON", "{", "null", "[]",
+      JSON.stringify({ ...valid, seed: -1 }),
+      JSON.stringify({ ...valid, seed: 0.5 }),
+      JSON.stringify({ ...valid, seed: 2 ** 32 }),
+      JSON.stringify({ ...valid, challenge: "missing-challenge" }),
+      JSON.stringify({ ...valid, scenarioVersion: 0 }),
+      JSON.stringify({ ...valid, scenarioVersion: valid.scenarioVersion + 1 }),
+      JSON.stringify({ ...valid, actionContract: "unknown" }),
+      JSON.stringify({ ...valid, observationSchema: "unknown" }),
+      JSON.stringify({ ...valid, decisionSchema: "unknown" }),
+    ];
+    for (const text of candidates) {
+      expect(g.roam.startReplay(text)).toBe(false);
+      expect(g.freeRoam.worldHash()).toBe(before);
+      expect(g.roam.runtime.mode).toBe("JEV");
+      expect(g.roam.isReplaying).toBe(false);
+      expect(g.roam.runs).toHaveLength(0);
+      // The original frame stream is still being recorded.
+      expect(JSON.parse(g.roam.exportTrace()!).frames).toEqual(JSON.parse(traceBefore!).frames);
+    }
+    g.dispose();
+  });
+
+  test("an invalid import leaves an existing replay at the same frame", () => {
+    const g = frGame({ seed: 48291, challenge: "exploration" });
+    g.input.keyDown("KeyW");
+    step(g, 180);
+    g.input.keyUp("KeyW");
+    expect(g.roam.startReplay(g.roam.exportTrace()!)).toBe(true);
+    step(g, 30);
+    const replay = g.roam.replay!;
+    const frame = replay.frame;
+    const hash = g.freeRoam.worldHash();
+    expect(g.roam.startReplay("{")).toBe(false);
+    expect(g.roam.replay).toBe(replay);
+    expect(replay.frame).toBe(frame);
+    expect(g.freeRoam.worldHash()).toBe(hash);
+    expect(g.roam.isReplaying).toBe(true);
+    g.dispose();
+  });
+
   test("a person's run replays exactly, frame lengths and all, without asking anyone anything", () => {
     const g = frGame({ seed: 48291, challenge: "exploration" });
     g.roam.restart();
@@ -200,6 +252,46 @@ describe("replay", () => {
     step(other, 60);
     other.input.keyUp("KeyW");
     expect(other.player.position.distanceTo(p)).toBeGreaterThan(1);
+  });
+});
+
+describe("frame log import", () => {
+  const log = (): EncodedFrames => ({
+    version: 1,
+    frames: 3,
+    dts: [[3, FRAME]],
+    levels: [[0, 0, 0, 0, 0, 0, 0]],
+    looks: [[0, 0.01, 0]],
+    pulses: [[0, ["FIRE"]]],
+    checkpoints: [[0, "hash"]],
+  });
+
+  test("every channel must be ordered, unique and within the recorded frame count", () => {
+    expect(parseFrames(log())).not.toBeNull();
+    for (const channel of ["levels", "looks", "pulses", "checkpoints"] as const) {
+      for (const frames of [[2, 0], [0, 0], [0, 3]]) {
+        const bad = log();
+        const row = bad[channel][0];
+        // Test each channel with the same valid payload, changing only its indices.
+        const rows = frames.map((frame) => [frame, ...row.slice(1)]);
+        expect(parseFrames({ ...bad, [channel]: rows })).toBeNull();
+      }
+    }
+  });
+
+  test("repeated pulses and inconsistent frame lengths are rejected", () => {
+    const bad = log();
+    bad.pulses = [[0, ["FIRE", "FIRE"]]];
+    expect(parseFrames(bad)).toBeNull();
+    const short = log();
+    short.dts = [[2, FRAME]];
+    expect(parseFrames(short)).toBeNull();
+  });
+
+  test("a zero-frame export is valid only when all channels are empty", () => {
+    const empty: EncodedFrames = { version: 1, frames: 0, dts: [], levels: [], looks: [], pulses: [], checkpoints: [] };
+    expect(parseFrames(empty)).not.toBeNull();
+    expect(parseFrames({ ...empty, looks: [[0, 0, 0]] })).toBeNull();
   });
 });
 

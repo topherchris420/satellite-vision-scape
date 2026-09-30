@@ -134,10 +134,12 @@ The driver has reflexes of its own that need no decision: an emergency brake for
 
 It contains no credentials and no prompts. **Replay** rebuilds the scenario from its seed and feeds the recorded controls through the bus at the recorded frame lengths; it verifies the world hash against the recording and never calls the decision service. **Compare** shows two runs side by side (with an optional ghost of the second path drawn in the first's replay) as 33 rows in seven groups: *Result* (objective, objective time, elapsed, stages completed), *Travel* (distance on foot and driven, route efficiency, idle time), *Driving* (average speed, vehicle / pedestrian / world collisions, route deviation, off-road time, hard braking, braking efficiency), *Shooting* (shots fired and hit, accuracy, mean aim error, time to acquire, unnecessary shots), *Combat* (damage caused and received), *Attention* (peak level, pursuit time, time to escape) and *Control* (decisions, median API latency, control lag, human interventions, reflex brakes and back-outs). The summary kept with each run also carries the mean and 95th-percentile latency. It prints numbers and their difference; it never names a winner.
 
+**Import validation:** choose an exported JSON trace up to 32 MiB. Invalid JSON, mismatched action/observation/decision schemas, incompatible scenario versions, unknown challenges and seeds outside the unsigned 32-bit range are rejected before changing the current run or controller. Each frame-log channel must contain unique, increasing indices within its recorded frame count; frame lengths must add up, and pulse names cannot repeat within a frame. A rejected import leaves the briefing, paused run or existing replay in place and displays a message.
+
 ## Tests and commands
 
 ```
-bun test                 # 385 tests, 125 of them for Free Roam (bun run test:freeroam)
+bun test                 # 390 tests, 130 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build
@@ -153,7 +155,7 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
 | `freeroam-world` | scenario purity, 14 challenges' criteria, fresh = restart = reset, deterministic replays, wake-on-approach, traffic, pickups, enter/drive/exit by keys and by actions, identical shots for a person and for an agent, objective completion and failure |
 | `freeroam-agent` | observation bounds/visibility/tampering, decision parsing and legality, the local controllers' effect through the ordinary controls, aiming discipline |
 | `freeroam-runtime` | Human → Jev → Human, the takeover within the frame, J/K, cadence, hold on every failure, recovery, malformed and stale answers, the wedged-car reflex, and the assist in play (it leans the camera onto the hostile the crosshair is nearest and never fires; steers by at most a quarter of the stick and yields to the person's own steering; speaks in words only) |
-| `freeroam-trace` | recording, separation of decision/action/outcome, exact replay with jittered frame lengths and no provider call, measurement and comparison |
+| `freeroam-trace` | recording, separation of decision/action/outcome, exact replay with jittered frame lengths and no provider call, measurement and comparison, malformed/incompatible imports preserving the current run or replay, frame-log ordering and bounds |
 | `freeroam-server` | the question, the answer validation, request hardening, rate limits, typed upstream errors, the credential never in a response, header or log, the browser client |
 | `freeroam-authority` | import and write boundaries; no clock or random number in the simulation |
 

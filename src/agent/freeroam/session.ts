@@ -3,7 +3,7 @@ import type { EventBus } from "@/game/core/EventBus";
 import type { GameEvents } from "@/game/core/events";
 import type { FreeRoam } from "@/game/freeroam/FreeRoam";
 import type { ResolvedFrame } from "@/game/freeroam/ControlStack";
-import { SCENARIO_VERSION } from "@/game/freeroam/Scenario";
+import { CHALLENGES, SCENARIO_VERSION } from "@/game/freeroam/Scenario";
 import { compassOf, type ActionSource, type ControllerMode } from "@/lib/freeroam/contracts";
 import { ghostFromRows } from "@/lib/freeroam/ghost";
 import { round } from "../observation";
@@ -34,7 +34,7 @@ import {
   type RuntimeSink,
 } from "./runtime";
 import { deriveLegal } from "./legal";
-import { FrTraceRecorder, parseTrace, type FrTraceData } from "./trace";
+import { FrTraceRecorder, MAX_TRACE_BYTES, parseTrace, type FrTraceData } from "./trace";
 import type { Body } from "./world";
 import { createBody } from "./world";
 
@@ -287,9 +287,21 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
    * service is called, and nothing moves that was not recorded.
    */
   startReplay(source: FrTraceData | RunRecord | string, label?: string, ghost?: RunRecord | null): boolean {
-    const trace = typeof source === "string" ? parseTrace(JSON.parse(source)) : "trace" in source ? source.trace : source;
-    const data = typeof source === "string" ? trace : parseTrace(trace);
-    if (!data) return false;
+    let trace: unknown;
+    if (typeof source === "string") {
+      if (source.length > MAX_TRACE_BYTES) return false;
+      try {
+        trace = JSON.parse(source);
+      } catch {
+        return false;
+      }
+    } else {
+      trace = "trace" in source ? source.trace : source;
+    }
+    const data = parseTrace(trace);
+    // Reject incompatible scenarios before ending the current run/replay or
+    // handing over control. An unknown challenge otherwise starts a fallback.
+    if (!data || data.scenarioVersion !== SCENARIO_VERSION || !CHALLENGES.some((c) => c.id === data.challenge)) return false;
     this.leaveReplay();
     this.replaying = true;
     this.replayLabel = label ?? (typeof source === "object" && "label" in source ? source.label : "Replay");
@@ -727,4 +739,3 @@ function buildId(): string {
   const id = (import.meta as { env?: Record<string, string | undefined> }).env?.VITE_BUILD_ID;
   return id && /^[A-Za-z0-9._-]{1,64}$/.test(id) ? id : "development";
 }
-
