@@ -571,10 +571,14 @@ export class Game {
       seatWeight: this.interaction.seatWeight,
       steer: vehicle ? vehicle.controls.steer : 0,
       carry: this.carrying ? 1 : 0,
+      aim: this.freeRoam.active && this.freeRoam.aiming ? 1 : 0,
+      aimPitch: -this.camera.pitch,
       style: this.kind,
     });
     const c = this.characterVisual;
     if (!c) return;
+    // Free Roam: the sidearm is in the hand while it is out (on foot only).
+    c.setSidearm(this.freeRoam.active && !vehicle);
     if (scripted) {
       c.root.position.copy(this.interaction.scriptedPosition);
       c.root.quaternion.copy(this.interaction.scriptedQuaternion);

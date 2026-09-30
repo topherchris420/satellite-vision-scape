@@ -42,6 +42,8 @@ import { GameRuntime } from "@/components/game/GameRuntime";
 import { GameHUD } from "@/components/game/GameHUD";
 import { SpectralGrade } from "@/components/game/SpectralGrade";
 import type { AfterHoursSnapshot } from "@/game/afterhours/AfterHoursHud";
+import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
+import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
 
 const noSubscribe = () => () => undefined;
 const noSnapshot = () => null;
@@ -49,6 +51,16 @@ const noSnapshot = () => null;
 /** After Hours' discrete state, or null before the game exists. */
 function useAfterHoursSnapshot(game: Game | null): AfterHoursSnapshot | null {
   const hud = game?.afterHours.hud;
+  return useSyncExternalStore(
+    hud ? hud.subscribe : noSubscribe,
+    hud ? hud.getSnapshot : noSnapshot,
+    hud ? hud.getSnapshot : noSnapshot,
+  );
+}
+
+/** Free Roam's discrete state, or null before the game exists. */
+function useFreeRoamSnapshot(game: Game | null): FreeRoamSnapshot | null {
+  const hud = game?.freeRoam.hud;
   return useSyncExternalStore(
     hud ? hud.subscribe : noSubscribe,
     hud ? hud.getSnapshot : noSnapshot,
@@ -248,6 +260,45 @@ export function SiteScene() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, session.start, session.startUnlocked]);
   const leaveAfterHours = useCallback(() => game?.afterHours.stop(), [game]);
+
+  // Free Roam: the scenario chooses the light; the person's N key is left alone while it runs.
+  const freeRoam = useFreeRoamSnapshot(game);
+  const freeRoamOn = freeRoam?.active ?? false;
+  const freeRoamLight = freeRoam?.timeOfDay ?? "day";
+  const freeRoamRun = freeRoam ? `${freeRoam.challengeId}:${freeRoam.seed}` : "";
+  useEffect(() => {
+    if (freeRoamOn) setTime(freeRoamLight);
+  }, [freeRoamOn, freeRoamLight, freeRoamRun]);
+
+  const startFreeRoam = useCallback(
+    async (launch: FrLaunch): Promise<LaunchResult> => {
+      if (!game) return { ok: false, detail: "The game is not ready yet." };
+      // Audio and pointer lock may only start inside the click that asked.
+      game.unlockAudio();
+      if (launch.controller === "human" || launch.controller === "assist") session.start();
+      const ready = await checkController(launch.controller);
+      if (!ready.ok) return { ok: false, detail: `${ready.detail} You can still play yourself, or use the scripted baseline.` };
+      if (launch.controller !== "human" && launch.controller !== "assist") session.startUnlocked();
+      game.setPaused(false);
+      beginFreeRoam(game, launch);
+      return { ok: true, detail: "started" };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [game, session.start, session.startUnlocked],
+  );
+  const replayFreeRoamTrace = useCallback(
+    (text: string): LaunchResult => {
+      if (!game) return { ok: false, detail: "The game is not ready yet." };
+      session.startUnlocked();
+      game.setPaused(false);
+      return game.roam.startReplay(text)
+        ? { ok: true, detail: "replaying" }
+        : { ok: false, detail: "That file is not a Free Roam trace (svs-freeroam-trace/v1)." };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [game, session.startUnlocked],
+  );
+  const leaveFreeRoam = useCallback(() => game?.roam.stop(), [game]);
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",
     entities: 0,
@@ -297,12 +348,15 @@ export function SiteScene() {
           setMode("overhead");
           break;
         case "KeyN":
+          // A Free Roam scenario sets its own light, the same for everyone who plays it.
+          if (gameRef.current?.freeRoam.active) break;
           setTime((t) => (t === "day" ? "dusk" : t === "dusk" ? "night" : "day"));
           break;
         case "KeyH":
           // While an agent holds the controls, H is "take control" (handled by
           // the game input), not the shortcuts overlay.
           if (gameRef.current?.agent.runtime.mode !== "human") break;
+          if (gameRef.current.freeRoam.active && gameRef.current.roam.hud.getSnapshot().mode !== "HUMAN") break;
           setShowHelp((v) => !v);
           break;
         case "KeyI":
@@ -362,6 +416,10 @@ export function SiteScene() {
           status={session.status}
           onStart={session.start}
           onStartAfterHours={startAfterHours}
+          onStartFreeRoam={startFreeRoam}
+          onReplayTrace={replayFreeRoamTrace}
+          onLeaveFreeRoam={leaveFreeRoam}
+          onCapture={session.start}
           onResumeUnlocked={session.startUnlocked}
           onReleasePointer={session.releasePointer}
           onLeaveAfterHours={leaveAfterHours}

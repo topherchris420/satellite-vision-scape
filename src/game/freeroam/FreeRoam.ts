@@ -2,6 +2,7 @@ import * as THREE from "three";
 import type { ControlArbiter } from "@/agent/control";
 import { findRoute, type Point } from "@/agent/navigation";
 import type { ActionSource } from "@/lib/freeroam/contracts";
+import type { GhostTrack } from "@/lib/freeroam/ghost";
 import { RandomStream, StateHasher, deriveSeed } from "@/lib/freeroam/rng";
 import { EventBus } from "../core/EventBus";
 import type { GameEvents } from "../core/events";
@@ -521,6 +522,16 @@ export class FreeRoam {
   }
 
   /** The player as the world sees them: on foot, or at the wheel. */
+  /** Draw another run's path beside this one (presentation only), or clear it. */
+  setGhost(track: GhostTrack | null): void {
+    this.visuals?.setGhost(track);
+  }
+
+  /** Terrain height at (x, z), for presentation. */
+  heightAt(x: number, z: number): number {
+    return this.host.ground.heightAt(x, z);
+  }
+
   playerPosition(): { x: number; y: number; z: number } {
     const driven = this.host.interaction.driven ?? this.host.interaction.vehicle;
     if (driven && this.host.interaction.cameraMode === "vehicle") {
@@ -1272,6 +1283,7 @@ export class FreeRoam {
       prompt: this.host.interaction.prompt?.label ?? null,
       collected: { count: this.collectibles.collectedCount, total: this.collectibles.items.length },
       elapsedS: Math.floor(this.simTime),
+      timeLimitS: spec.challenge.timeLimitS,
       environment: this.environment.activeIds.map((id) => ENVIRONMENT_INFO[id]),
       message: this.message,
     };

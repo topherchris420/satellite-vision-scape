@@ -5,6 +5,7 @@ import type { FreeRoam } from "@/game/freeroam/FreeRoam";
 import type { ResolvedFrame } from "@/game/freeroam/ControlStack";
 import { SCENARIO_VERSION } from "@/game/freeroam/Scenario";
 import { compassOf, type ActionSource, type ControllerMode } from "@/lib/freeroam/contracts";
+import { ghostFromRows } from "@/lib/freeroam/ghost";
 import { round } from "../observation";
 import { AssistProducer } from "./assist";
 import { FreeRoamBridge } from "./bridge";
@@ -273,7 +274,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
    * recorded controls are fed to the avatar through the bus; no decision
    * service is called, and nothing moves that was not recorded.
    */
-  startReplay(source: FrTraceData | RunRecord | string, label?: string): boolean {
+  startReplay(source: FrTraceData | RunRecord | string, label?: string, ghost?: RunRecord | null): boolean {
     const trace = typeof source === "string" ? parseTrace(JSON.parse(source)) : "trace" in source ? source.trace : source;
     const data = typeof source === "string" ? trace : parseTrace(trace);
     if (!data) return false;
@@ -281,6 +282,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     this.replaying = true;
     this.replayLabel = label ?? (typeof source === "object" && "label" in source ? source.label : "Replay");
     this.fr.start({ seed: data.seed, challenge: data.challenge });
+    this.fr.setGhost(ghost ? ghostFromRows(ghost.trace.samples, ghost.label) : null);
     const replayer = new Replayer(data.frames);
     replayer.onFinish = () => {
       this.log("replay_finished");
@@ -295,11 +297,20 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     return true;
   }
 
+  /** Watch one of this visit's runs, optionally with another run's path drawn beside it. */
+  replayRun(id: string, ghostId?: string): boolean {
+    const run = this.runList.find((r) => r.id === id);
+    if (!run) return false;
+    const ghost = ghostId ? (this.runList.find((r) => r.id === ghostId) ?? null) : null;
+    return this.startReplay(run, run.label, ghost);
+  }
+
   /** Stop watching and give the avatar back to the person, wherever the replay had got to. */
   leaveReplay(): void {
     if (!this.replaying) return;
     this.replaying = false;
     this.replayer = null;
+    this.fr.setGhost(null);
     if (this.fr.active) this.fr.control.endReplay();
     this.publishHud(true);
   }

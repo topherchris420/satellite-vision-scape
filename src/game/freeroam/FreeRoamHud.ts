@@ -37,6 +37,8 @@ export interface FreeRoamSnapshot {
   prompt: string | null;
   collected: { count: number; total: number };
   elapsedS: number;
+  /** Seconds allowed for the challenge, or null for none. */
+  timeLimitS: number | null;
   environment: string[];
   message: string | null;
 }
@@ -59,6 +61,7 @@ const EMPTY: FreeRoamSnapshot = {
   prompt: null,
   collected: { count: 0, total: 0 },
   elapsedS: 0,
+  timeLimitS: null,
   environment: [],
   message: null,
 };

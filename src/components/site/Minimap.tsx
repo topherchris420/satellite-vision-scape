@@ -26,6 +26,7 @@ export function Minimap({
   vehicleCount = 0,
   waypointRef,
   className = "w-40",
+  children,
 }: {
   markerRef: RefObject<SVGGElement | null>;
   onNavigate?: (x: number, z: number) => void;
@@ -35,6 +36,8 @@ export function Minimap({
   /** Objective marker (After Hours), positioned imperatively. */
   waypointRef?: Ref<SVGGElement>;
   className?: string;
+  /** Extra layers drawn over the map (Free Roam's markers). */
+  children?: React.ReactNode;
 }) {
   const handleClick = (e: MouseEvent<SVGSVGElement>) => {
     if (!onNavigate) return;
@@ -189,6 +192,7 @@ export function Minimap({
           <path d="M0,-20 L13,0 L0,20 L-13,0 Z" fill="#7fd6d0" stroke="#000" strokeOpacity={0.5} strokeWidth={3} />
         </g>
       )}
+      {children}
       {/* camera marker — transform driven imperatively by CameraTracker */}
       <g ref={markerRef}>
         <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />
