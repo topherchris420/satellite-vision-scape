@@ -137,7 +137,7 @@ It contains no credentials and no prompts. **Replay** rebuilds the scenario from
 ## Tests and commands
 
 ```
-bun test                 # 374 tests, 114 of them for Free Roam (bun run test:freeroam)
+bun test                 # 375 tests, 115 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build

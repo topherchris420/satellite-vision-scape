@@ -128,6 +128,20 @@ describe("controller modes", () => {
     g.frame(FRAME, { simulate: false, camera: null, establishing: false });
     expect(g.roam.runtime.mode).toBe("HUMAN");
   });
+
+  test("a frame the page has not yet started simulating is a launch catching up, not a person pausing", async () => {
+    const g = frGame({ seed: 48291, challenge: "borrowed-wheels" });
+    g.roam.setController("JEV", new TestProvider("test", () => ({ type: "WAIT" })));
+    // The click that launched Jev and the page's own idea of "running" can disagree for a frame.
+    g.frame(FRAME, { simulate: false, camera: null, establishing: false });
+    g.frame(FRAME, { simulate: false, camera: null, establishing: false });
+    expect(g.roam.runtime.mode).toBe("JEV");
+    await run(g, 1);
+    expect(g.roam.runtime.mode).toBe("JEV");
+    // Once it has played, a pause is a pause.
+    g.frame(FRAME, { simulate: false, camera: null, establishing: false });
+    expect(g.roam.runtime.mode).toBe("HUMAN");
+  });
 });
 
 describe("decision cadence", () => {

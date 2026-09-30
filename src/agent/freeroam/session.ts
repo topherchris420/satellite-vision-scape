@@ -117,6 +117,12 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
   private startedAt = "";
   private seconds: ControlSeconds = { human: 0, jev: 0, assist: 0 };
   private providerKind: ProviderKind = "jev";
+  /**
+   * A frame has been simulated since a controller was last granted the avatar.
+   * A launch and the page's own render can disagree about "running" for a frame
+   * or two; that is not a person pausing, and must not hand the avatar back.
+   */
+  private simulatedSinceGrant = false;
   private runList: RunRecord[] = [];
   private entries: RunEntry[] = [];
   private readonly listeners = new Set<() => void>();
@@ -264,6 +270,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     const kind = typeof provider === "string" ? provider : null;
     if (kind) this.providerKind = kind;
     const chosen = typeof provider === "string" ? this.providerFactory(provider) : provider;
+    this.simulatedSinceGrant = false;
     this.runtime.start(mode, chosen);
   }
 
@@ -486,9 +493,11 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
   beforeFrame(dt: number, simulate: boolean): void {
     if (!this.fr.active) return;
     if (!simulate) {
-      if (this.runtime.mode !== "HUMAN") this.runtime.toHuman("suspended");
+      // Paused (or hidden): Jev is not left playing where nobody is watching.
+      if (this.runtime.mode !== "HUMAN" && this.simulatedSinceGrant) this.runtime.toHuman("suspended");
       return;
     }
+    this.simulatedSinceGrant = true;
     if (this.replaying) return;
     const arbiter = this.host.arbiter;
     const human = arbiter.human;
