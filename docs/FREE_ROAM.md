@@ -28,7 +28,9 @@ In a run, `J` lets Jev play, `K` lets it assist, and `H` (or touching any contro
 | `J` · `K` · `H` | Let Jev play · Jev assists · take the controls back |
 | `Esc` | Pause (hands the avatar back to you, so Jev is never left driving unseen) |
 
-Free Roam sets its own light (`N` is left alone while a scenario runs). The touch interface can walk, drive and enter vehicles, but has no aim/fire buttons yet.
+On a touch screen the stick moves and drives, dragging turns the camera, and the buttons are jump / handbrake, interact, **AIM** (tap to raise or lower the sights) and **FIRE** (hold). They write the same input the mouse buttons do, so a shot from a thumb is judged exactly like a shot from a mouse (there is a test that says so), and touching any of them takes the avatar back from Jev.
+
+Free Roam sets its own light (`N` is left alone while a scenario runs).
 
 ## How it is built
 
@@ -135,7 +137,7 @@ It contains no credentials and no prompts. **Replay** rebuilds the scenario from
 ## Tests and commands
 
 ```
-bun test                 # 371 tests, 111 of them for Free Roam (bun run test:freeroam)
+bun test                 # 374 tests, 114 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build
@@ -164,10 +166,10 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
   - `borrowed-wheels` (walk to a vehicle, take it, drive to a checkpoint, shake the pursuit): success in 104.6 s and in 106.3 s on the two runs made after the fixes below; 92 and 76 decisions, ~300 ms mean latency, no failures, 565–571 m driven with no collisions. The run is committed as [`traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json`](traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json) and replays frame for frame in the test suite.
   - The runs *before* those fixes failed, and instructively: Jev got the car wedged against a wall and kept choosing "accelerate" for five minutes. That produced the driver's own back-out reflex (the driver, not the model, gets a car out of a wall), driving options that are only offered when they would do something, wording that steers the model to phrase-sized decisions (the manual driving options are described as interruptions), and a "blocked" outcome that says so when a manoeuvre could not move the car. Five back-outs happened in the committed run. Two live runs are not a success rate.
 - One weapon, one site, one crowd and one traffic model. Pedestrians do not drive; traffic obeys obstacles, not signals.
-- The touch interface has no aim/fire buttons. There is no Free Roam audio yet (shots, sirens).
+- There is no Free Roam audio yet (shots, sirens). The touch buttons have been exercised in a phone-sized emulation, not on a range of devices.
 - Guards shown on the minimap are those hunting the player. That is a HUD affordance for the person; Jev's observation contains no such thing.
 - Replays are exact for the same build on the same JavaScript engine. Transcendental math can differ in the last bit between engines, and if the game changes, a recorded run reports drift (`divergence`) instead of pretending.
 
 ## Next
 
-Sound (shots, sirens, engine stress); touch aim/fire; a second weapon and melee; passengers and Jev as a co-driver; more traffic behaviours (signals, yielding); challenge authoring from data; a shared, server-attested benchmark board; letting Jev pick among *plans* (routes) rather than steps.
+Sound (shots, sirens, engine stress); a second weapon and melee; passengers and Jev as a co-driver; more traffic behaviours (signals, yielding); challenge authoring from data; a shared, server-attested benchmark board; letting Jev pick among *plans* (routes) rather than steps.

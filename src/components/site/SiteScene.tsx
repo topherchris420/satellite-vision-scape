@@ -42,6 +42,7 @@ import { GameRuntime } from "@/components/game/GameRuntime";
 import { GameHUD } from "@/components/game/GameHUD";
 import { SpectralGrade } from "@/components/game/SpectralGrade";
 import type { AfterHoursSnapshot } from "@/game/afterhours/AfterHoursHud";
+import { GameplayState } from "@/game/core/GameState";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
 
@@ -56,6 +57,17 @@ function useAfterHoursSnapshot(game: Game | null): AfterHoursSnapshot | null {
     hud ? hud.getSnapshot : noSnapshot,
     hud ? hud.getSnapshot : noSnapshot,
   );
+}
+
+/** Whether the avatar is on its feet (the weapon's buttons show only then). */
+function useOnFoot(game: Game | null): boolean {
+  const hud = game?.hud;
+  const snapshot = useSyncExternalStore(
+    hud ? hud.subscribe : noSubscribe,
+    hud ? hud.getSnapshot : noSnapshot,
+    hud ? hud.getSnapshot : noSnapshot,
+  );
+  return snapshot?.state === GameplayState.OnFoot;
 }
 
 /** Free Roam's discrete state, or null before the game exists. */
@@ -264,6 +276,9 @@ export function SiteScene() {
   // Free Roam: the scenario chooses the light; the person's N key is left alone while it runs.
   const freeRoam = useFreeRoamSnapshot(game);
   const freeRoamOn = freeRoam?.active ?? false;
+  // The results card asks for the person's whole attention (and its buttons are where the thumbs would be).
+  const freeRoamDone = freeRoamOn && (freeRoam?.objective?.status === "success" || freeRoam?.objective?.status === "failed");
+  const onFoot = useOnFoot(game);
   const freeRoamLight = freeRoam?.timeOfDay ?? "day";
   const freeRoamRun = freeRoam ? `${freeRoam.challengeId}:${freeRoam.seed}` : "";
   useEffect(() => {
@@ -482,7 +497,9 @@ export function SiteScene() {
         </details>
       </aside>}
 
-      {isMobile && ready && (mode === "fly" || immersive) && <MobileControls mode={mode} />}
+      {isMobile && ready && !freeRoamDone && (mode === "fly" || immersive) && (
+        <MobileControls mode={mode} combat={freeRoamOn && onFoot} aiming={freeRoam?.aiming ?? false} />
+      )}
 
       {alteredVisible && qualityTier === "low" && afterHours && (
         <div

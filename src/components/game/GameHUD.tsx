@@ -127,6 +127,17 @@ const MOBILE_CONTROLS: { title: string; rows: [string, string][] }[] = [
   },
 ];
 
+const MOBILE_FREE_ROAM_CONTROLS: { title: string; rows: [string, string][] }[] = [
+  {
+    title: "Touch · Free Roam",
+    rows: [
+      ["AIM", "Raise or lower the sights"],
+      ["FIRE", "Hold to fire"],
+      ["Drag", "Turn the sights while aiming"],
+    ],
+  },
+];
+
 function ControlsGrid({
   isMobile,
   afterHours = false,
@@ -137,7 +148,7 @@ function ControlsGrid({
   freeRoam?: boolean;
 }) {
   const groups = isMobile
-    ? MOBILE_CONTROLS
+    ? [...MOBILE_CONTROLS, ...(freeRoam ? MOBILE_FREE_ROAM_CONTROLS : [])]
     : [
         ...DESKTOP_CONTROLS,
         ...(afterHours ? AFTER_HOURS_CONTROLS : []),
@@ -270,7 +281,10 @@ export function GameHUD({
         <>
           {/* Status chip */}
           <div
-            className={`${glass} absolute left-3 top-3 flex items-center gap-3 rounded-xl px-3 py-2 sm:left-5 sm:top-5`}
+            className={`${glass} absolute left-3 top-3 items-center gap-3 rounded-xl px-3 py-2 sm:left-5 sm:top-5 ${
+              // Free Roam's own column takes this corner on a phone; its objective says where you are.
+              isMobile && roam.active ? "hidden" : "flex"
+            }`}
           >
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-300/10 text-amber-300">
               {inVehicle ? <CarFront size={14} /> : <Footprints size={14} />}
@@ -442,7 +456,7 @@ export function GameHUD({
               </p>
             </div>
           </div>
-          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} />
+          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} isMobile={isMobile} />
           <div className="mt-4 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="max-w-md">
@@ -538,7 +552,7 @@ export function GameHUD({
               </span>
             </div>
           )}
-          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} active={roam.active} />
+          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} active={roam.active} isMobile={isMobile} />
           {roam.active && (
             <div className="mt-3">
               <button

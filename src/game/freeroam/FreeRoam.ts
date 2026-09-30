@@ -308,6 +308,7 @@ export class FreeRoam {
     this.attention.reset();
     this.weapon.reset(new RandomStream(deriveSeed(spec.seed, "weapon")));
     this.aim.active = false;
+    host.arbiter.human.virtual.aim = false;
     this.stats = createRunStats();
     this.health = PLAYER_HEALTH;
     this.startHealth = PLAYER_HEALTH;
@@ -606,6 +607,9 @@ export class FreeRoam {
 
     // --- Weapon -----------------------------------------------------------------------------
     this.weapon.update(this.simTime, dt);
+    // A touch screen's sights are a latch in the person's input. It comes down when the avatar cannot aim
+    // (in a vehicle, down), so it is not still up when they are next on their feet.
+    if (!onFoot || !this.alive) host.arbiter.human.virtual.aim = false;
     const wantsAim = input.isDown("aim") && onFoot && this.alive && !host.interaction.scripted;
     this.aiming = wantsAim;
     const aimInput = this.aimInput(wantsAim);

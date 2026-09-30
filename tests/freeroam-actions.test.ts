@@ -238,6 +238,22 @@ describe("the person, expressed as actions", () => {
     expect(out).toContainEqual({ type: "FIRE" });
   });
 
+  test("the on-screen sights and trigger are AIM and FIRE like the mouse buttons, and touching them is the person acting", () => {
+    const input = new InputState();
+    input.virtual.aim = true;
+    input.virtual.fire = true;
+    const out = human.poll(input, onFoot);
+    expect(out).toContainEqual({ type: "AIM", active: true });
+    expect(out).toContainEqual({ type: "FIRE" });
+    // A hand on the screen takes the avatar back from Jev, as a key does.
+    const arbiter = new ControlArbiter(input);
+    expect(arbiter.humanActivity()).toBe(true);
+    // A handover clears the latch: sights left up must not read as a takeover on the very next frame.
+    arbiter.grant("agent");
+    expect(input.virtual.aim).toBe(false);
+    expect(arbiter.humanActivity()).toBe(false);
+  });
+
   test("the same keys drive a vehicle: W accelerates, S brakes, A/D steer, Space is the handbrake", () => {
     const driving = { state: GameplayState.Driving, promptIsVehicle: false };
     const press = (...codes: string[]) => {

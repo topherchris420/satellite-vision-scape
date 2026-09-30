@@ -3,7 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import type * as THREE from "three";
 import type { Game, TimeOfDay } from "@/game/Game";
 import type { PlayStatus } from "@/hooks/use-play-session";
-import { consumeMobileInteract, mobileInput } from "@/lib/mobile-input";
+import { consumeMobileAim, consumeMobileFire, consumeMobileInteract, mobileInput } from "@/lib/mobile-input";
 
 /** Field of view the other camera modes expect when control returns to them. */
 const VIEWER_FOV = 55;
@@ -63,6 +63,9 @@ export function GameRuntime({
       v.sprint = mobileInput.boost;
       v.action = mobileInput.action;
       if (consumeMobileInteract()) v.interactRequested = true;
+      // Free Roam: a tap raises or lowers the sights (the latch is the input state's), the trigger is held.
+      if (consumeMobileAim()) v.aim = !v.aim;
+      v.fire = consumeMobileFire();
     }
     game.frame(delta, {
       simulate: active,

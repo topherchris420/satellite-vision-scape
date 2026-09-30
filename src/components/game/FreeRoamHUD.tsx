@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import {
   Bot,
+  ChevronDown,
+  ChevronUp,
   Columns2,
   Download,
   Film,
@@ -53,18 +55,24 @@ function Kbd({ children }: { children: string }) {
 
 // --- Objective ------------------------------------------------------------------------------------
 
-function ObjectiveBanner({ fr }: { fr: FreeRoamSnapshot }) {
+function ObjectiveBanner({ fr, compact = false }: { fr: FreeRoamSnapshot; compact?: boolean }) {
   const o = fr.objective;
   const [open, setOpen] = useState(false);
   if (!o) return null;
   const left = fr.timeLimitS === null ? null : Math.max(0, fr.timeLimitS - fr.elapsedS);
   const arrow = o.bearingDeg;
   return (
-    <div className="pointer-events-auto absolute left-1/2 top-3 w-[min(30rem,92vw)] -translate-x-1/2 sm:top-5">
+    <div
+      className={
+        compact
+          ? "pointer-events-auto relative w-full"
+          : "pointer-events-auto absolute left-1/2 top-3 w-[min(30rem,92vw)] -translate-x-1/2 sm:top-5"
+      }
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`${glass} block w-full rounded-xl px-4 py-2.5 text-left`}
+        className={`${glass} block w-full rounded-xl text-left ${compact ? "px-3 py-2" : "px-4 py-2.5"}`}
         aria-expanded={open}
         aria-label="Objective; press to show the success conditions"
       >
@@ -81,7 +89,7 @@ function ObjectiveBanner({ fr }: { fr: FreeRoamSnapshot }) {
         <div className="mt-1 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="truncate font-sans text-[13px] font-medium text-white">{o.title}</div>
-            <div className="line-clamp-2 font-sans text-[11px] leading-snug text-white/55">{o.hint}</div>
+            {!compact && <div className="line-clamp-2 font-sans text-[11px] leading-snug text-white/55">{o.hint}</div>}
           </div>
           {o.distanceM !== null && (
             <div className="flex shrink-0 items-center gap-1.5 text-[11px] tabular-nums text-amber-200">
@@ -134,11 +142,15 @@ function ObjectiveBanner({ fr }: { fr: FreeRoamSnapshot }) {
 
 const PIP = ["bg-emerald-400", "bg-lime-300", "bg-yellow-300", "bg-orange-400", "bg-red-500"];
 
-function Vitals({ fr }: { fr: FreeRoamSnapshot }) {
+function Vitals({ fr, compact = false }: { fr: FreeRoamSnapshot; compact?: boolean }) {
   const pct = Math.max(0, Math.min(100, (fr.health / fr.maxHealth) * 100));
   const a = fr.attention;
   return (
-    <div className={`${glass} pointer-events-none absolute left-3 top-[4.6rem] w-52 rounded-xl px-3 py-2.5 sm:left-5 sm:top-[5.4rem]`}>
+    <div
+      className={`${glass} pointer-events-none rounded-xl px-3 py-2.5 ${
+        compact ? "relative w-full" : "absolute left-3 top-[4.6rem] w-52 sm:left-5 sm:top-[5.4rem]"
+      }`}
+    >
       <div className="flex items-center gap-2">
         <Heart size={12} className={fr.alive ? "text-rose-300" : "text-white/30"} />
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/10">
@@ -159,7 +171,7 @@ function Vitals({ fr }: { fr: FreeRoamSnapshot }) {
           </span>
           <span className={a.level >= 3 ? "text-red-300" : "text-white/80"}>
             {a.name}
-            {a.pursuing && " · pursuit"}
+            {a.pursuing && !/pursuit/i.test(a.name) && " · pursuit"}
           </span>
         </div>
         <div className="mt-1 flex gap-1" role="meter" aria-valuemin={0} aria-valuemax={5} aria-valuenow={a.level} aria-label="Attention">
@@ -171,7 +183,7 @@ function Vitals({ fr }: { fr: FreeRoamSnapshot }) {
           ))}
         </div>
       </div>
-      {fr.collected.total > 0 && (
+      {fr.collected.total > 0 && !compact && (
         <div className="mt-2 flex items-center justify-between text-[9px] uppercase tracking-[.16em] text-white/45">
           <span>Signal shards</span>
           <span className="tabular-nums text-teal-200">
@@ -262,22 +274,25 @@ const STEPS: { id: JevHudSnapshot["stage"]; label: string }[] = [
   { id: "act", label: "Act" },
 ];
 
-function JevPanel({ jev, onTakeControl }: { jev: JevHudSnapshot; onTakeControl: () => void }) {
+/**
+ * On a phone the panel folds down to its headline (who, what state, the
+ * decision) and opens on a tap; on a larger screen it is always open.
+ */
+function JevPanel({ jev, onTakeControl, compact = false }: { jev: JevHudSnapshot; onTakeControl: () => void; compact?: boolean }) {
+  const [open, setOpen] = useState(false);
   if (jev.mode === "HUMAN" || jev.replaying) return null;
+  const full = !compact || open;
   const assisting = jev.mode === "ASSIST";
   const offline = jev.state === "OFFLINE" || jev.state === "HOLD";
   const tone = offline ? "text-amber-300" : "text-[#7fd6d0]";
   const conf = jev.confidence === null ? null : Math.round(jev.confidence * 100);
-  return (
-    <section
-      className={`${glass} pointer-events-auto absolute right-3 top-[4.6rem] w-72 rounded-xl p-3 sm:right-5 sm:top-[5.4rem]`}
-      aria-label={assisting ? "Jev assist" : "Jev control"}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.24em] ${tone}`}>
-          {offline ? <WifiOff size={12} /> : <Bot size={12} />}
-          {assisting ? "Jev assist" : "Jev control"}
-        </div>
+  const head = (
+    <>
+      <span className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.24em] ${tone}`}>
+        {offline ? <WifiOff size={12} /> : <Bot size={12} />}
+        {assisting ? "Jev assist" : "Jev control"}
+      </span>
+      <span className="flex items-center gap-1.5">
         <span
           className={`rounded-sm px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-[.16em] ${
             offline ? "bg-amber-400/20 text-amber-200" : "bg-[#0B5D63]/70 text-[#c6efec]"
@@ -285,7 +300,24 @@ function JevPanel({ jev, onTakeControl }: { jev: JevHudSnapshot; onTakeControl: 
         >
           {STATE_TEXT[jev.state]}
         </span>
-      </div>
+        {compact && (open ? <ChevronUp size={12} className="text-white/45" /> : <ChevronDown size={12} className="text-white/45" />)}
+      </span>
+    </>
+  );
+  return (
+    <section
+      className={`${glass} pointer-events-auto rounded-xl ${
+        compact ? "relative w-full p-2.5" : "absolute right-3 top-[4.6rem] w-72 p-3 sm:right-5 sm:top-[5.4rem]"
+      }`}
+      aria-label={assisting ? "Jev assist" : "Jev control"}
+    >
+      {compact ? (
+        <button type="button" className="flex w-full items-center justify-between gap-2" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+          {head}
+        </button>
+      ) : (
+        <div className="flex items-center justify-between gap-2">{head}</div>
+      )}
       {jev.provider && jev.provider.id === "baseline" && (
         <div className="mt-1 text-[9px] uppercase tracking-[.16em] text-white/40">Scripted baseline · not Jev</div>
       )}
@@ -308,58 +340,70 @@ function JevPanel({ jev, onTakeControl }: { jev: JevHudSnapshot; onTakeControl: 
       {assisting ? (
         <div className="mt-2">
           <Row label="Advice">{jev.advice ? jev.advice.phrase : "Watching"}</Row>
-          <Row label="Warning">{jev.assist.warning ?? "—"}</Row>
-          <Row label="Hint">{jev.assist.hint ?? "—"}</Row>
-          <Row label="Target">{jev.assist.target ?? "—"}</Row>
-          <Row label="Helped">
-            {jev.assist.nudges} nudge{jev.assist.nudges === 1 ? "" : "s"}
-            {jev.assist.active && <span className="ml-1 text-sky-300">· now</span>}
-          </Row>
-          <Row label="Latency">{jev.latencyMs === null ? "—" : `${jev.latencyMs} ms`}</Row>
+          {full && (
+            <>
+              <Row label="Warning">{jev.assist.warning ?? "—"}</Row>
+              <Row label="Hint">{jev.assist.hint ?? "—"}</Row>
+              <Row label="Target">{jev.assist.target ?? "—"}</Row>
+              <Row label="Helped">
+                {jev.assist.nudges} nudge{jev.assist.nudges === 1 ? "" : "s"}
+                {jev.assist.active && <span className="ml-1 text-sky-300">· now</span>}
+              </Row>
+              <Row label="Latency">{jev.latencyMs === null ? "—" : `${jev.latencyMs} ms`}</Row>
+            </>
+          )}
         </div>
       ) : (
         <div className="mt-2">
-          <Row label="Goal">{jev.goal ?? "—"}</Row>
+          {full && <Row label="Goal">{jev.goal ?? "—"}</Row>}
           <Row label="Decision">
             {jev.decision ?? "Waiting for the first decision"}
             {jev.disposition === "rejected" && <span className="ml-1 text-rose-300">· refused</span>}
           </Row>
-          <Row label="Confidence">
-            {conf === null ? (
-              "—"
-            ) : (
-              <span className="flex items-center gap-2">
-                <span className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
-                  <span className="block h-full bg-[#7fd6d0]" style={{ width: `${conf}%` }} />
-                </span>
-                <span className="tabular-nums">{conf}%</span>
-              </span>
-            )}
-          </Row>
-          <Row label="Next">{jev.next ?? "—"}</Row>
-          <Row label="Latency">
-            {jev.latencyMs === null ? "—" : `${jev.latencyMs} ms`}
-            <span className="ml-1 text-white/40">· every {(jev.cadenceMs / 1000).toFixed(1)} s</span>
-          </Row>
-          {jev.outcome && <Row label="Before">{jev.outcome}</Row>}
-          <div className="mt-2 flex items-center gap-1 text-[8px] font-bold uppercase tracking-[.16em]" aria-label="Observe, decide, act">
-            {STEPS.map((s, i) => (
-              <span key={s.id} className="flex items-center gap-1">
-                {i > 0 && <span className="text-white/25">→</span>}
-                <span
-                  className={`rounded px-1.5 py-0.5 ${jev.stage === s.id ? "bg-[#7fd6d0] text-[#04191b]" : "bg-white/5 text-white/35"}`}
-                >
-                  {s.label}
-                </span>
-              </span>
-            ))}
-            <span className="ml-auto tabular-nums text-white/35">{jev.decisions} decisions</span>
-          </div>
+          {full && (
+            <>
+              <Row label="Confidence">
+                {conf === null ? (
+                  "—"
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <span className="h-1 w-24 overflow-hidden rounded-full bg-white/10">
+                      <span className="block h-full bg-[#7fd6d0]" style={{ width: `${conf}%` }} />
+                    </span>
+                    <span className="tabular-nums">{conf}%</span>
+                  </span>
+                )}
+              </Row>
+              <Row label="Next">{jev.next ?? "—"}</Row>
+              <Row label="Latency">
+                {jev.latencyMs === null ? "—" : `${jev.latencyMs} ms`}
+                <span className="ml-1 text-white/40">· every {(jev.cadenceMs / 1000).toFixed(1)} s</span>
+              </Row>
+              {jev.outcome && <Row label="Before">{jev.outcome}</Row>}
+              <div className="mt-2 flex items-center gap-1 text-[8px] font-bold uppercase tracking-[.16em]" aria-label="Observe, decide, act">
+                {STEPS.map((s, i) => (
+                  <span key={s.id} className="flex items-center gap-1">
+                    {i > 0 && <span className="text-white/25">→</span>}
+                    <span
+                      className={`rounded px-1.5 py-0.5 ${jev.stage === s.id ? "bg-[#7fd6d0] text-[#04191b]" : "bg-white/5 text-white/35"}`}
+                    >
+                      {s.label}
+                    </span>
+                  </span>
+                ))}
+                <span className="ml-auto tabular-nums text-white/35">{jev.decisions} decisions</span>
+              </div>
+            </>
+          )}
         </div>
       )}
-      <div className="mt-3 flex items-center justify-between gap-2">
+      <div className={`flex items-center justify-between gap-2 ${compact ? "mt-2" : "mt-3"}`}>
         <span className="font-sans text-[10px] text-white/40">
-          <Kbd>H</Kbd> take control
+          {compact ? <>Touch any control to take over</> : (
+            <>
+              <Kbd>H</Kbd> take control
+            </>
+          )}
         </span>
         <button className={chip} onClick={onTakeControl}>
           <Hand size={10} className="mr-1 inline" /> Take control
@@ -378,6 +422,7 @@ function ControllerBar({
   onTakeControl,
   onLetJev,
   onAssist,
+  compact = false,
 }: {
   game: Game;
   jev: JevHudSnapshot;
@@ -385,15 +430,24 @@ function ControllerBar({
   onTakeControl: () => void;
   onLetJev: () => void;
   onAssist: () => void;
+  /** A phone: it sits in the top column, out of the thumbs' way, with icon-only Reset and Leave. */
+  compact?: boolean;
 }) {
   if (jev.replaying) return null;
   const item = (active: boolean) =>
-    `flex items-center gap-1.5 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.16em] transition ${
+    `flex items-center gap-1.5 ${compact ? "px-2 tracking-[.1em]" : "px-3 tracking-[.16em]"} py-1.5 text-[9px] font-bold uppercase transition ${
       active ? "bg-sky-400 text-[#04121c]" : "text-white/70 hover:bg-white/10"
     }`;
+  const side = compact ? "rounded-xl p-2" : "rounded-xl px-3 py-2";
   return (
-    <div className="pointer-events-auto absolute bottom-12 left-1/2 flex -translate-x-1/2 items-center gap-2 sm:bottom-14">
-      <div className={`${glass} flex overflow-hidden rounded-xl`} role="group" aria-label="Who is playing">
+    <div
+      className={
+        compact
+          ? "pointer-events-auto flex items-center gap-1.5"
+          : "pointer-events-auto absolute bottom-12 left-1/2 flex -translate-x-1/2 items-center gap-2 sm:bottom-14"
+      }
+    >
+      <div className={`${glass} flex shrink-0 overflow-hidden rounded-xl`} role="group" aria-label="Who is playing">
         <button className={item(jev.mode === "HUMAN")} onClick={onTakeControl} aria-pressed={jev.mode === "HUMAN"}>
           <User size={12} /> You
         </button>
@@ -405,18 +459,20 @@ function ControllerBar({
         </button>
       </div>
       <button
-        className={`${glass} rounded-xl px-3 py-2 text-[9px] font-bold uppercase tracking-[.16em] text-white/75 transition hover:bg-white/10`}
+        className={`${glass} ${side} text-[9px] font-bold uppercase tracking-[.16em] text-white/75 transition hover:bg-white/10`}
         onClick={() => game.roam.restart()}
         title="Start the same scenario again, in your hands"
+        aria-label="Reset"
       >
-        <RotateCcw size={11} className="mr-1 inline" /> Reset
+        <RotateCcw size={11} className={compact ? "" : "mr-1 inline"} /> {!compact && "Reset"}
       </button>
       <button
-        className={`${glass} rounded-xl px-3 py-2 text-[9px] font-bold uppercase tracking-[.16em] text-white/55 transition hover:bg-white/10`}
+        className={`${glass} ${side} text-[9px] font-bold uppercase tracking-[.16em] text-white/55 transition hover:bg-white/10`}
         onClick={onLeave}
         title="Leave Free Roam"
+        aria-label="Leave"
       >
-        <LogOut size={11} className="mr-1 inline" /> Leave
+        <LogOut size={11} className={compact ? "" : "mr-1 inline"} /> {!compact && "Leave"}
       </button>
     </div>
   );
@@ -424,7 +480,7 @@ function ControllerBar({
 
 // --- Replay -----------------------------------------------------------------------------------------------
 
-function ReplayBar({ game, jev }: { game: Game; jev: JevHudSnapshot }) {
+function ReplayBar({ game, jev, compact = false }: { game: Game; jev: JevHudSnapshot; compact?: boolean }) {
   const r = jev.replay;
   if (!jev.replaying || !r) return null;
   const replayer = game.roam.replay;
@@ -432,7 +488,11 @@ function ReplayBar({ game, jev }: { game: Game; jev: JevHudSnapshot }) {
     if (replayer) replayer.speed = s;
   };
   return (
-    <div className={`${glass} pointer-events-auto absolute bottom-12 left-1/2 w-[min(34rem,94vw)] -translate-x-1/2 rounded-xl px-4 py-3 sm:bottom-14`}>
+    <div
+      className={`${glass} pointer-events-auto absolute left-1/2 w-[min(34rem,94vw)] -translate-x-1/2 rounded-xl px-4 py-3 ${
+        compact ? "bottom-[11rem]" : "bottom-12 sm:bottom-14"
+      }`}
+    >
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.2em] text-violet-300">
           <Film size={12} /> Replay · {r.label}
@@ -707,12 +767,36 @@ export function FreeRoamOverlay({
     <>
       <DamageFlash health={fr.health} />
       <Crosshair fr={fr} />
-      <ObjectiveBanner fr={fr} />
-      <Vitals fr={fr} />
-      <JevPanel jev={jev} onTakeControl={takeControl} />
-      <ReplayBar game={game} jev={jev} />
+      {isMobile ? (
+        // A phone: one column at the top left (the minimap and pause own the top right, the thumbs the bottom).
+        <div className="pointer-events-none absolute left-3 right-[7.75rem] top-3 flex flex-col gap-1.5">
+          <ControllerBar
+            game={game}
+            jev={jev}
+            onLeave={onLeave}
+            onTakeControl={takeControl}
+            onLetJev={letJev}
+            onAssist={assist}
+            compact
+          />
+          <ObjectiveBanner fr={fr} compact />
+          <Vitals fr={fr} compact />
+          <JevPanel jev={jev} onTakeControl={takeControl} compact />
+        </div>
+      ) : (
+        <>
+          <ObjectiveBanner fr={fr} />
+          <Vitals fr={fr} />
+          <JevPanel jev={jev} onTakeControl={takeControl} />
+        </>
+      )}
+      <ReplayBar game={game} jev={jev} compact={isMobile} />
       {fr.message && (
-        <div className="pointer-events-none absolute left-1/2 top-[8.6rem] -translate-x-1/2 animate-in fade-in rounded-lg border border-sky-300/30 bg-[#06121a]/85 px-4 py-2 text-[11px] uppercase tracking-[.14em] text-sky-100">
+        <div
+          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 animate-in fade-in rounded-lg border border-sky-300/30 bg-[#06121a]/85 px-4 py-2 text-[11px] uppercase tracking-[.14em] text-sky-100 ${
+            isMobile ? "top-[17rem]" : "top-[8.6rem]"
+          }`}
+        >
           {fr.message}
         </div>
       )}
@@ -729,7 +813,9 @@ export function FreeRoamOverlay({
           Click to capture the mouse
         </button>
       )}
-      <ControllerBar game={game} jev={jev} onLeave={onLeave} onTakeControl={takeControl} onLetJev={letJev} onAssist={assist} />
+      {!isMobile && (
+        <ControllerBar game={game} jev={jev} onLeave={onLeave} onTakeControl={takeControl} onLetJev={letJev} onAssist={assist} />
+      )}
       <Results game={game} fr={fr} runs={runs} onLeave={onLeave} />
     </>
   );

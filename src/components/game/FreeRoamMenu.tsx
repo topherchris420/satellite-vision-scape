@@ -21,6 +21,7 @@ export function FreeRoamMenu({
   onLaunch,
   onReplayText,
   active,
+  isMobile = false,
 }: {
   game: Game;
   onLaunch: (launch: FrLaunch) => Promise<LaunchResult>;
@@ -28,6 +29,8 @@ export function FreeRoamMenu({
   onReplayText: (text: string) => LaunchResult;
   /** A run is in progress: the card offers a fresh start rather than a first one. */
   active?: boolean;
+  /** A touch screen: there is no H key. */
+  isMobile?: boolean;
 }) {
   const [challenge, setChallenge] = useState(DEFAULT_CHALLENGE);
   const [seedText, setSeedText] = useState(String(DEFAULT_SEED));
@@ -67,7 +70,12 @@ export function FreeRoamMenu({
           <p className="mt-1.5 font-sans text-[12px] leading-relaxed text-white/60">
             Walk, aim and shoot, take any vehicle and drive it, keep the crowd out of trouble and the site&apos;s
             attention down. You and Jev play the same game: the same avatar, vehicles, physics and rules. Hand over
-            the controls at any moment; <kbd className="rounded border border-white/20 px-1 font-mono text-[10px]">H</kbd>{" "}
+            the controls at any moment;{" "}
+            {isMobile ? (
+              "touching any control"
+            ) : (
+              <kbd className="rounded border border-white/20 px-1 font-mono text-[10px]">H</kbd>
+            )}{" "}
             takes them back.
           </p>
         </div>
@@ -124,7 +132,7 @@ export function FreeRoamMenu({
           onClick={() => void launch("jev")}
           disabled={busy !== null}
           className={secondary}
-          title="Jev plays the same character with the same controls; press H to take over"
+          title="Jev plays the same character with the same controls; take over at any moment"
         >
           <Bot size={12} /> {busy === "jev" ? "Connecting to Jev…" : "Let Jev Play"}
         </button>

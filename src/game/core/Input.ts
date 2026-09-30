@@ -89,6 +89,9 @@ export interface VirtualInput {
   tune: number;
   /** Held on-screen terminal dial: −1, 0 or +1. */
   dial: number;
+  /** Free Roam: the on-screen sights are up (a latch), and the on-screen trigger is held. */
+  aim: boolean;
+  fire: boolean;
 }
 
 export class InputState {
@@ -107,6 +110,8 @@ export class InputState {
     interactRequested: false,
     tune: 0,
     dial: 0,
+    aim: false,
+    fire: false,
   };
 
   keyDown(code: string): void {
@@ -140,6 +145,8 @@ export class InputState {
     this.virtual.interactRequested = false;
     this.virtual.tune = 0;
     this.virtual.dial = 0;
+    this.virtual.aim = false;
+    this.virtual.fire = false;
     this.lookAccumX = 0;
     this.lookAccumY = 0;
     this.zoomAccum = 0;
@@ -148,6 +155,8 @@ export class InputState {
   isDown(action: Action): boolean {
     if (action === "sprint" && this.virtual.sprint) return true;
     if ((action === "jump" || action === "handbrake") && this.virtual.action) return true;
+    if (action === "aim" && this.virtual.aim) return true;
+    if (action === "fire" && this.virtual.fire) return true;
     const codes = KEY_BINDINGS[action];
     for (let i = 0; i < codes.length; i++) if (this.down.has(codes[i])) return true;
     return false;

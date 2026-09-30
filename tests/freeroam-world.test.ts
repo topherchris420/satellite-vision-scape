@@ -201,7 +201,7 @@ describe("one road for the person and the agent", () => {
 
 describe("shooting is judged the same for everyone", () => {
   /** Aim at the first drone and fire once; returns the shot the world recorded. */
-  function fireOnce(who: "human" | "agent"): { shot: ShotRecord; attention: number } {
+  function fireOnce(who: "human" | "touch" | "agent"): { shot: ShotRecord; attention: number } {
     const g = frGame({ seed: 48291, challenge: "shooting-range" });
     const target = g.freeRoam.targets.all[0];
     const p = g.freeRoam.playerPosition();
@@ -215,16 +215,20 @@ describe("shooting is judged the same for everyone", () => {
     g.freeRoam.events.on("shot", (e) => shots.push(e));
     const agent = new ScriptedAgent();
     if (who === "agent") takeOver(g, agent);
+    // The person's hands: the keys, or the on-screen sights and trigger (what the touch buttons write).
     const hold = () => {
       if (who === "human") g.input.keyDown("KeyQ");
+      else if (who === "touch") g.input.virtual.aim = true;
       else agent.actions = [{ type: "AIM", active: true }];
     };
     hold();
     step(g, 90);
     if (who === "human") g.input.keyDown("KeyZ");
+    else if (who === "touch") g.input.virtual.fire = true;
     else agent.actions = [{ type: "AIM", active: true }, { type: "FIRE" }];
     step(g, 2);
     if (who === "human") g.input.keyUp("KeyZ");
+    else if (who === "touch") g.input.virtual.fire = false;
     else agent.actions = [{ type: "AIM", active: true }];
     step(g, 30);
     expect(shots.length).toBeGreaterThanOrEqual(1);
@@ -240,6 +244,30 @@ describe("shooting is judged the same for everyone", () => {
     expect(agent.shot.source).toBe("agent");
     // And the site takes the same notice of it.
     expect(agent.attention).toBe(person.attention);
+  });
+
+  test("a person on a touch screen fires the same shot as one at a keyboard", () => {
+    const keys = fireOnce("human");
+    const touch = fireOnce("touch");
+    for (const k of ["hit", "targetId", "zone", "distance", "dx", "dy", "dz", "aimErrorDeg", "hadTarget"] as const)
+      expect(touch.shot[k]).toEqual(keys.shot[k]);
+    expect(touch.shot.source).toBe("human");
+    expect(touch.attention).toBe(keys.attention);
+  });
+
+  test("the on-screen sights are a latch that comes down in a vehicle, so they are not up again on the next walk", () => {
+    const g = frGame({ seed: 48291, challenge: "free-play" });
+    g.input.virtual.aim = true;
+    step(g, 5);
+    expect(g.freeRoam.aiming).toBe(true);
+    standAtDoor(g);
+    g.input.keyDown("KeyF");
+    step(g, 2);
+    g.input.keyUp("KeyF");
+    for (let i = 0; i < 400 && g.interaction.state !== GameplayState.Driving; i++) step(g);
+    expect(g.interaction.state).toBe(GameplayState.Driving);
+    expect(g.input.virtual.aim).toBe(false);
+    expect(g.freeRoam.aiming).toBe(false);
   });
 
   test("FIRE names no target: a shot goes where the sights point, whatever an agent believes", () => {
