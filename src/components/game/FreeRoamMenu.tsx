@@ -3,6 +3,7 @@ import { Bot, Car, Dices, FileUp, Play, Users } from "lucide-react";
 import type { Game } from "@/game/Game";
 import { CHALLENGES, DEFAULT_CHALLENGE, DEFAULT_SEED } from "@/game/freeroam/Scenario";
 import { parseSeed, type FrController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
+import { MAX_TRACE_BYTES } from "@/agent/freeroam/trace";
 
 /**
  * "GTA-Style Free Roam" on the briefing and pause cards: pick a challenge and
@@ -52,8 +53,17 @@ export function FreeRoamMenu({
 
   const chooseFile = async (file: File | undefined) => {
     if (!file) return;
-    const result = onReplayText(await file.text());
-    if (!result.ok) setMessage(result.detail);
+    setMessage(null);
+    if (file.size > MAX_TRACE_BYTES) {
+      setMessage("That trace is too large. Choose an exported Free Roam trace up to 32 MiB.");
+      return;
+    }
+    try {
+      const result = onReplayText(await file.text());
+      if (!result.ok) setMessage(result.detail);
+    } catch {
+      setMessage("That trace could not be read. Choose an exported Free Roam JSON file.");
+    }
   };
 
   const secondary =

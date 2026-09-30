@@ -86,7 +86,20 @@ export function parseFrames(value: unknown): EncodedFrames | null {
   if (!parsed.success) return null;
   const f = parsed.data as EncodedFrames;
   const total = f.dts.reduce((n, [c]) => n + c, 0);
-  return total === f.frames ? f : null;
+  if (total !== f.frames) return null;
+  // The replay consumes each channel forwards, once. Unordered, duplicate
+  // or out-of-range entries would silently lose or overwrite controls.
+  for (const rows of [f.levels, f.looks, f.pulses, f.checkpoints]) {
+    let previous = -1;
+    for (const [frame] of rows) {
+      if (frame <= previous || frame >= f.frames) return null;
+      previous = frame;
+    }
+  }
+  for (const [, names] of f.pulses) {
+    if (new Set(names).size !== names.length) return null;
+  }
+  return f;
 }
 
 /** Records the frames of one run. */

@@ -41,6 +41,8 @@ const MAX_SAMPLES = 20_000;
 const MAX_SHOTS = 3000;
 /** Full observations kept (most recent), keyed by hash. */
 const MAX_OBSERVATIONS = 24;
+/** Bound text imports before JSON parsing; the file picker also checks byte size. */
+export const MAX_TRACE_BYTES = 32 * 1024 * 1024;
 /** Seconds between samples. */
 export const SAMPLE_EVERY_S = 0.25;
 
@@ -197,7 +199,9 @@ export function parseTrace(value: unknown): FrTraceData | null {
   if (typeof value !== "object" || value === null) return null;
   const t = value as Partial<FrTraceData>;
   if (t.schema !== FR_TRACE_SCHEMA) return null;
-  if (typeof t.seed !== "number" || !Number.isInteger(t.seed) || t.seed < 0) return null;
+  if (t.observationSchema !== FR_OBSERVATION_SCHEMA || t.decisionSchema !== FR_DECISION_SCHEMA || t.actionContract !== ACTION_SCHEMA) return null;
+  if (typeof t.scenarioVersion !== "number" || !Number.isInteger(t.scenarioVersion) || t.scenarioVersion < 1) return null;
+  if (typeof t.seed !== "number" || !Number.isInteger(t.seed) || t.seed < 0 || t.seed >= 2 ** 32) return null;
   if (typeof t.challenge !== "string" || !/^[a-z0-9][a-z0-9-]{0,47}$/.test(t.challenge)) return null;
   const frames = parseFrames(t.frames);
   if (!frames) return null;
