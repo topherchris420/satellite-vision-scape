@@ -2,22 +2,16 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
-import {
-  EffectComposer,
-  Bloom,
-  N8AO,
-  SMAA,
-  Vignette,
-  ToneMapping,
-} from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
+import { EffectComposer, EffectGroup, Bloom, N8AO, SMAA } from "@react-three/postprocessing";
+import { SMAAPreset } from "postprocessing";
 
 import * as THREE from "three";
 import { Terrain } from "./Terrain";
@@ -26,7 +20,9 @@ import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
 import { Atmosphere } from "./Atmosphere";
 import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
-import { Lighting, LIGHTING, type TimeOfDay } from "./Lighting";
+import { Lighting, type TimeOfDay } from "./Lighting";
+import { getSkyState } from "./sky/presets";
+import { CinematicGrade } from "./sky/CinematicGrade";
 import { HUD } from "./HUD";
 import { MobileControls } from "./MobileControls";
 import { TerrainDebug, TerrainDebugHUD } from "./TerrainDebug";
@@ -81,6 +77,60 @@ function useFreeRoamSnapshot(game: Game | null): FreeRoamSnapshot | null {
 }
 
 export type QualityTier = "low" | "medium" | "high" | "ultra";
+
+/**
+ * Development-only camera handle for the visual capture harness
+ * (scripts/capture-shots.mjs): places the viewer camera exactly.
+ */
+function CaptureCameraBridge() {
+  const camera = useThree((s) => s.camera);
+  const clock = useThree((s) => s.clock);
+  // With ?capture the render clock is held at zero from the first frame, so
+  // time-driven visuals (cloud and dust drift, wind sway, pulses) are the
+  // same in every capture however fast the renderer runs. Gameplay is
+  // stepped explicitly by the harness.
+  const frozen = useMemo(() => new URLSearchParams(window.location.search).has("capture"), []);
+  useLayoutEffect(() => {
+    if (!import.meta.env.DEV || !frozen) return;
+    clock.autoStart = false;
+    clock.stop();
+    clock.elapsedTime = 0;
+  }, [clock, frozen]);
+  useFrame(() => {
+    // Anything that restarts the clock (a frameloop change) is undone.
+    if (frozen && clock.running) {
+      clock.stop();
+      clock.elapsedTime = 0;
+    }
+  });
+  const controls = useThree((s) => s.controls) as unknown as {
+    target: THREE.Vector3;
+    update: () => void;
+  } | null;
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __pineGapCamera?: unknown };
+    w.__pineGapCamera = {
+      camera,
+      set(pos: [number, number, number], target: [number, number, number], fov?: number) {
+        camera.position.set(...pos);
+        if (controls) {
+          controls.target.set(...target);
+          controls.update();
+        }
+        camera.lookAt(...target);
+        if (fov && (camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+          (camera as THREE.PerspectiveCamera).fov = fov;
+          camera.updateProjectionMatrix();
+        }
+      },
+    };
+    return () => {
+      delete w.__pineGapCamera;
+    };
+  }, [camera, controls]);
+  return null;
+}
 
 function ReadyProbe({ onReady }: { onReady: () => void }) {
   const frames = useRef(0);
@@ -242,6 +292,8 @@ export function SiteScene() {
   }, []);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
   const gameRef = useRef<Game | null>(null);
   gameRef.current = game;
   const playing = mode === "play" && gameError === null;
@@ -320,6 +372,34 @@ export function SiteScene() {
   });
   const onContextStatus = useCallback((status: ContextStatus) => setContextStatus(status), []);
 
+  // Development-only switches for the visual capture harness.
+  const [captureClean, setCaptureClean] = useState(false);
+  const sessionStatus = useRef(session.status);
+  sessionStatus.current = session.status;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __pineGapCapture?: unknown };
+    w.__pineGapCapture = {
+      setMode,
+      setTime,
+      setQuality: (q: QualityTier) => {
+        setQualityTier(q);
+        setManualQuality(true);
+      },
+      setClean: setCaptureClean,
+      status: () => ({ status: sessionStatus.current, mode: modeRef.current }),
+      startPlay: () => {
+        setMode("play");
+        sessionRef.current.startUnlocked();
+      },
+    };
+    return () => {
+      delete w.__pineGapCapture;
+    };
+  }, []);
+
   const handleQualityChange = useCallback((q: QualityTier) => {
     setQualityTier(q);
     setManualQuality(true);
@@ -392,15 +472,22 @@ export function SiteScene() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const fogColor = LIGHTING[effectiveTime].fog;
+  const sky = getSkyState(effectiveTime);
+  const fogColor = useMemo(
+    () => new THREE.Color(...sky.solution.horizonSide.map((c) => c * sky.radianceScale) as [number, number, number]),
+    [sky],
+  );
 
-  // Derive DPR and post features from QualityTier
+  // Derive DPR and post features from QualityTier. Low is the phone tier:
+  // no ambient occlusion, a single shadow cascade, the cheap sky.
   const dpr: number | [number, number] =
     qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
-  const enableAO = qualityTier === "high" || qualityTier === "ultra";
+  const enableAO = qualityTier !== "low";
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
+    <div
+      className={`relative h-screen w-screen overflow-hidden bg-slate-900 ${captureClean ? "capture-clean" : ""}`}
+    >
       <HUD
         mode={mode}
         onModeChange={(m) => setMode(m === "play" && gameError ? "fly" : m)}
@@ -535,6 +622,8 @@ export function SiteScene() {
         camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
           antialias: false,
+          powerPreference: "high-performance",
+          stencil: false,
           toneMapping: THREE.NoToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
           preserveDrawingBuffer: true,
@@ -559,10 +648,11 @@ export function SiteScene() {
         <Suspense fallback={null}>
           <Lighting
             time={effectiveTime}
-            highQuality={enableAO}
+            tier={qualityTier}
             shadowFocus={playing && game ? game.focusPoint : null}
+            fogScale={mode === "overhead" ? 0.35 : 1}
           />
-          <Terrain />
+          <Terrain quality={qualityTier} />
           <Roads />
           <Structures onSelect={setSelected} time={effectiveTime} />
           <SiteFeatures />
@@ -570,7 +660,8 @@ export function SiteScene() {
           <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
-          <fog attach="fog" args={[fogColor, mode === 'overhead' ? 2500 : 1100, 5500]} />
+          {/* Enables fog on every material; the shared aerial-perspective chunk does the real work. */}
+          <fog attach="fog" args={[fogColor, 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
           {game && (
             <GameRuntime game={game} playing={playing} status={session.status} time={effectiveTime} />
@@ -578,25 +669,42 @@ export function SiteScene() {
         </Suspense>
 
         {ready && (
-          <EffectComposer multisampling={0}>
-            {enableAO && (
+          <EffectComposer multisampling={0} stencilBuffer={false}>
+            {enableAO ? (
               <N8AO
-                aoRadius={2}
-                intensity={1.1}
-                distanceFalloff={2}
+                aoRadius={qualityTier === "medium" ? 2.2 : 2.6}
+                intensity={qualityTier === "medium" ? 1.6 : 2.1}
+                distanceFalloff={1.4}
+                aoSamples={qualityTier === "ultra" ? 24 : qualityTier === "high" ? 16 : 8}
+                denoiseSamples={qualityTier === "medium" ? 4 : 8}
+                denoiseRadius={10}
+                color={sky.preset.night ? "#05070d" : "#140805"}
                 halfRes={qualityTier !== "ultra"}
+                depthAwareUpsampling
               />
-            )}
-            <Bloom mipmapBlur intensity={0.12} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            {/* Altered Signal grade (fiction, play mode only); low tier uses a CSS fallback. */}
-            {alteredVisible && game && qualityTier !== "low" ? (
-              <SpectralGrade presentation={game.afterHours.presentation} />
             ) : (
               <></>
             )}
-            <SMAA />
-            <Vignette eskil={false} offset={0.22} darkness={0.18} />
+            {/* HDR bloom, tone mapping and grading in one pass; anti-aliasing runs
+                after it on the display-referred image. */}
+            <EffectGroup>
+              <Bloom
+                mipmapBlur
+                intensity={sky.preset.night ? 0.85 : 0.42}
+                luminanceThreshold={sky.preset.night ? 0.55 : 1.15}
+                luminanceSmoothing={0.35}
+                radius={0.78}
+                levels={qualityTier === "low" ? 5 : 8}
+              />
+              <CinematicGrade grade={sky.preset.grade} />
+              {/* Altered Signal grade (fiction, play mode only); low tier uses a CSS fallback. */}
+              {alteredVisible && game && qualityTier !== "low" ? (
+                <SpectralGrade presentation={game.afterHours.presentation} />
+              ) : (
+                <></>
+              )}
+            </EffectGroup>
+            <SMAA preset={qualityTier === "low" ? SMAAPreset.MEDIUM : SMAAPreset.ULTRA} />
           </EffectComposer>
         )}
 
@@ -608,6 +716,7 @@ export function SiteScene() {
           playing={playing}
         />
         <Controls mode={mode} focus={focus} />
+        {import.meta.env.DEV && <CaptureCameraBridge />}
       </Canvas>
     </div>
   );

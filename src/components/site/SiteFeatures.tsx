@@ -5,18 +5,28 @@ import { ReferenceLandscape } from "./ReferenceLandscape";
 import { terrainHeightAt, sampleFootprintGrade } from "@/lib/terrain";
 import { getSiteTextures, setRepeat } from "@/lib/site-textures";
 import { FENCES, getFenceLayout, type Point2 } from "@/lib/site-fences";
+import { chainLinkMat, galvanisedMat, makeAsphalt, makeConcrete, stallPaintMat, wireLineMat, withGround } from "./structures/materials";
+
+const lotAsphaltMat = makeAsphalt({ road: false, tint: "#f4f0e8" });
+const lotPadMat = makeConcrete("#c2bbae");
 
 // Approximate parking, boundary and drainage context; these are deliberately
 // kept separate from the historical antenna manifest.
 function ParkingLots() {
-  const tex = getSiteTextures();
-  const asphaltMap = useMemo(() => setRepeat(tex.asphaltColor, 3, 3), [tex]);
-  const concreteMap = useMemo(() => setRepeat(tex.concreteColor, 2, 2), [tex]);
-
   const lots = useMemo(
     () => parkingLots.map((p) => ({ p, grade: sampleFootprintGrade(p.pos, p.size, p.rotY ?? 0) })),
     [],
   );
+
+  const padGeoms = useMemo(
+    () =>
+      lots.map(({ p, grade }) => {
+        const skirtDepth = Math.max(0.2, grade.elevation - grade.minTerrain + 0.2);
+        return withGround(new THREE.BoxGeometry(p.size[0] + 0.4, skirtDepth, p.size[1] + 0.4), skirtDepth / 2 - 0.02);
+      }),
+    [lots],
+  );
+  useEffect(() => () => padGeoms.forEach((g) => g.dispose()), [padGeoms]);
 
   // Every stall line of every lot is one instance of a single quad, so the
   // markings cost one draw call instead of one per painted line.
@@ -61,14 +71,14 @@ function ParkingLots() {
           >
             {/* Concrete base pad */}
             <mesh position={[0, -skirtDepth / 2 + 0.02, 0]} receiveShadow>
-              <boxGeometry args={[p.size[0] + 0.4, skirtDepth, p.size[1] + 0.4]} />
-              <meshStandardMaterial map={concreteMap} roughness={0.9} />
+              <primitive object={padGeoms[i]} attach="geometry" />
+              <primitive object={lotPadMat} attach="material" />
             </mesh>
 
             {/* Asphalt surface */}
             <mesh position={[0, 0.06, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
               <planeGeometry args={[p.size[0], p.size[1]]} />
-              <meshStandardMaterial map={asphaltMap} color="#d2ccc0" roughness={0.95} />
+              <primitive object={lotAsphaltMat} attach="material" />
             </mesh>
           </group>
         );
@@ -84,7 +94,7 @@ function ParkingLots() {
         receiveShadow
       >
         <planeGeometry args={[1, 1]} />
-        <meshStandardMaterial color="#d8d4c6" roughness={0.9} />
+        <primitive object={stallPaintMat} attach="material" />
       </instancedMesh>
     </group>
   );
@@ -96,6 +106,8 @@ function ParkingLots() {
 const FENCE_HEIGHT = 2.4;
 const FENCE_SAMPLE_SPACING = 3;
 const FENCE_POST_SPACING = 6;
+const BARB_LEVELS = [FENCE_HEIGHT + 0.14, FENCE_HEIGHT + 0.3, FENCE_HEIGHT + 0.46];
+const POST_HEIGHT = FENCE_HEIGHT + 0.5;
 
 /** Resample an open polyline at roughly `spacing`, draped on the terrain. */
 function drapeRun(points: Point2[], spacing: number): [number, number, number][] {
@@ -149,23 +161,22 @@ function Fence({ runs, name }: { runs: Point2[][]; name: string }) {
         const a = run[i];
         const b = run[i + 1];
         const length = Math.hypot(b[0] - a[0], b[2] - a[2]);
-        const cells = Math.max(1, Math.ceil(length / 0.9));
-        for (const level of [0.18, 1.18, 2.32]) {
+        // tension wires, then three barbed strands on the post extensions;
+        // barbs are short kinks every ~0.5 m along the strand
+        for (const level of [0.06, FENCE_HEIGHT - 0.02]) {
           add([a[0], a[1] + level, a[2]], [b[0], b[1] + level, b[2]]);
         }
-        for (let j = 0; j < cells; j++) {
-          const t0 = j / cells;
-          const t1 = (j + 1) / cells;
-          const x0 = a[0] + (b[0] - a[0]) * t0;
-          const z0 = a[2] + (b[2] - a[2]) * t0;
-          const y0 = a[1] + (b[1] - a[1]) * t0;
-          const x1 = a[0] + (b[0] - a[0]) * t1;
-          const z1 = a[2] + (b[2] - a[2]) * t1;
-          const y1 = a[1] + (b[1] - a[1]) * t1;
-          add([x0, y0 + 0.24, z0], [x1, y1 + 1.1, z1]);
-          add([x0, y0 + 1.1, z0], [x1, y1 + 0.24, z1]);
-          add([x0, y0 + 1.32, z0], [x1, y1 + 2.18, z1]);
-          add([x0, y0 + 2.18, z0], [x1, y1 + 1.32, z1]);
+        const barbs = Math.max(1, Math.ceil(length / 0.5));
+        for (const level of BARB_LEVELS) {
+          add([a[0], a[1] + level, a[2]], [b[0], b[1] + level, b[2]]);
+          for (let j = 0; j < barbs; j++) {
+            const t = (j + 0.5) / barbs;
+            const x = a[0] + (b[0] - a[0]) * t;
+            const y = a[1] + (b[1] - a[1]) * t + level;
+            const z = a[2] + (b[2] - a[2]) * t;
+            add([x - 0.03, y - 0.03, z - 0.03], [x + 0.03, y + 0.03, z + 0.03]);
+            add([x - 0.03, y + 0.03, z + 0.03], [x + 0.03, y - 0.03, z - 0.03]);
+          }
         }
       }
 
@@ -216,39 +227,39 @@ function Fence({ runs, name }: { runs: Point2[][]; name: string }) {
 
   return (
     <group name={name}>
-      <mesh geometry={curtain}>
-        <meshStandardMaterial
-          color="#68716e"
-          metalness={0.45}
-          roughness={0.72}
-          side={THREE.DoubleSide}
-          transparent
-          depthWrite={false}
-          opacity={0.09}
-        />
-      </mesh>
-      <lineSegments geometry={wires}>
-        <lineBasicMaterial color="#5d6866" transparent opacity={0.62} depthWrite={false} />
-      </lineSegments>
+      <mesh geometry={curtain} material={chainLinkMat} renderOrder={1} />
+      <lineSegments geometry={wires} material={wireLineMat} />
       <instancedMesh
         args={[undefined, undefined, posts.length]}
         castShadow
-        ref={placePosts(posts, FENCE_HEIGHT / 2)}
+        ref={placePosts(posts, POST_HEIGHT / 2 - 0.1)}
+        material={galvanisedMat}
       >
-        <cylinderGeometry args={[0.08, 0.08, FENCE_HEIGHT, 6]} />
-        <meshStandardMaterial color="#8a8880" metalness={0.65} roughness={0.45} />
+        <cylinderGeometry args={[0.045, 0.045, POST_HEIGHT + 0.2, 8]} />
       </instancedMesh>
       <instancedMesh
         args={[undefined, undefined, terminals.length]}
         castShadow
-        ref={placePosts(terminals, (FENCE_HEIGHT + 0.2) / 2)}
+        ref={placePosts(terminals, (POST_HEIGHT + 0.2) / 2 - 0.1)}
+        material={galvanisedMat}
       >
-        <cylinderGeometry args={[0.11, 0.12, FENCE_HEIGHT + 0.2, 8]} />
-        <meshStandardMaterial color="#7d7b73" metalness={0.65} roughness={0.45} />
+        <cylinderGeometry args={[0.07, 0.07, POST_HEIGHT + 0.4, 10]} />
+      </instancedMesh>
+      {/* concrete footings where the posts enter the ground */}
+      <instancedMesh
+        args={[undefined, undefined, posts.length + terminals.length]}
+        receiveShadow
+        ref={placePosts([...posts, ...terminals], 0.02)}
+        material={footingMat}
+      >
+        <primitive object={footingGeom} attach="geometry" />
       </instancedMesh>
     </group>
   );
 }
+
+const footingMat = makeConcrete("#b7b0a3");
+const footingGeom = withGround(new THREE.CylinderGeometry(0.13, 0.16, 0.16, 10), -0.08 - 0.02);
 
 // ---------------------------------------------------------------------------
 // Drainage channels — terrain-conforming ditches.
