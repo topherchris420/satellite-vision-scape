@@ -67,7 +67,10 @@ await page.waitForTimeout(5000);
 
 const ready = await page.evaluate(async (launch) => {
   const ui = await import("/src/lib/freeroam-ui.ts");
-  const check = await ui.checkController(launch.controller);
+  // The availability probe gives up after 4 s, which a page busy compiling
+  // shaders under software rendering can miss; ask a few times.
+  let check = await ui.checkController(launch.controller);
+  for (let i = 0; i < 4 && !check.ok; i++) check = await ui.checkController(launch.controller);
   if (!check.ok) return check;
   const g = window.__pineGapGame;
   // With ?capture the page's render loop runs at zero time; its frames would
