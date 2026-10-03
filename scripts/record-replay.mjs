@@ -151,8 +151,9 @@ for (let f = 0; f < frameCount; f++) {
   simulated = at;
   if (f % WORKERS !== WORKER) continue;
   await page.evaluate((t) => (window.__pineGapCamera.clock.elapsedTime = t), at);
-  // One rendered frame commits the HUD; the screenshot renders the next.
-  await frames(1);
+  // One rendered frame commits the HUD; the screenshot renders the next. The
+  // last frame waits longer, so the HUD has caught up with how the run ended.
+  await frames(f === frameCount - 1 ? 12 : 1);
   await page.screenshot({ path: join(OUT, `${String(f).padStart(5, "0")}.png`), timeout: 900000 });
   if (f % (WORKERS * 10) === WORKER)
     console.log(
