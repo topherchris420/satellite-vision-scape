@@ -514,7 +514,7 @@ The first world is a playable reconstruction of the Pine Gap site in Australia's
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting view of the whole site on red desert below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting view of the whole site on red desert scattered with desert trees below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
     <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="After Hours begins: the night desk asks for a coffee while the radio starts playing Green Machine." width="100%" /></td>
   </tr>
   <tr>
@@ -523,7 +523,7 @@ The first world is a playable reconstruction of the Pine Gap site in Australia's
   </tr>
   <tr>
     <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4×4 past a radome with the vehicle radio playing Indigo People's Green Machine, the coffee at 100% in the cup holder and 494 m to the north antenna hut." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card with Deploy, After Hours, Jev After Hours and Co-pilot." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card over the desert: Free Roam with a challenge and seed, Play, Let Jev Play and Play with Jev Assist, and Pine Gap: After Hours below it." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Behind the wheel.</b> The coffee rides in the cup holder; smooth braking keeps it there.</sub></td>
