@@ -29,9 +29,9 @@
 </p>
 
 <p align="center">
-  <img src="docs/media/agent-drive.gif" alt="Animated capture: an agent drives the 4×4 out of the car park towards the north antenna hut. The agent panel shows OBSERVE, CHOOSE, ACT and OUTCOME, the coffee stays at 100% in the cup holder and the radio plays Indigo People." width="100%" />
+  <img src="docs/media/jev-free-roam-live.gif" alt="Time-lapse of a live Jev run in Free Roam: the avatar walks to utility vehicle SV-3, boards it, drives the site road to the checkpoint past the radomes, then shakes off the security response. The replay panel reads REPLAY · JEV · LIVE RUN; the speedometer and gear sit bottom right." width="100%" />
   <br />
-  <sub><i>Real capture from this repo. The agent at the wheel gets no teleport, no velocity setter and no "mark delivered" call. It picks an intention; a deterministic executor turns it into the same stick, pedal and E-key input a person produces; the 120&nbsp;Hz vehicle physics decides where the truck actually goes and how much coffee survives the corners. Whatever results (route, collisions, spills, latency, handovers) is what the trace records. This is the labelled scripted baseline (<code>?controller=mock</code>): <a href="https://geotwn.vercel.app/?controller=mock">watch it live</a>. Jev's own run is <a href="#case-study-jev-plays-after-hours">below</a>.</i></sub>
+  <sub><i>Jev at the controls, live. Free Roam's <b>Borrowed Wheels</b> (seed 48291), recorded in the browser through <b>Let Jev Play</b> on 3 October 2026: success in 143.7&nbsp;s, 126 decisions, no failures or holds, 183&nbsp;ms mean decision latency, 1,060&nbsp;m driven, one pedestrian collision. Jev never touches the world: each decision becomes the same <code>GameAction</code>s a keyboard and mouse produce, and the simulation decides what happens. The clip is re-rendered frame by frame from the run's trace with today's graphics, which replays the run exactly without calling Jev again, at 8× speed (<a href="docs/media/jev-free-roam-live.mp4">MP4</a> · <a href="docs/traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json">trace</a>). The After Hours runs are <a href="#case-study-jev-plays-after-hours">below</a>; the scripted baseline driving After Hours is <a href="docs/media/agent-drive.gif">here</a>.</i></sub>
 </p>
 
 <p align="center">
@@ -496,6 +496,10 @@ Pick it on the briefing card. Full detail (controls, the observation and decisio
 bun run test:freeroam                    # the Free Roam suites
 # headless, billable, wall-clock-paced, against the real decision service:
 FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --challenge shooting-range
+# in the browser (dev server with the key), then film the trace frame by frame
+# (Playwright is a dev dependency; fetch its browser once: bunx playwright install chromium):
+node scripts/record-live-freeroam.mjs --out run.json --challenge borrowed-wheels
+node scripts/record-replay.mjs --trace run.json --out frames --fps 8 --speed 8
 ```
 
 ---
