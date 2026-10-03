@@ -496,7 +496,8 @@ Pick it on the briefing card. Full detail (controls, the observation and decisio
 bun run test:freeroam                    # the Free Roam suites
 # headless, billable, wall-clock-paced, against the real decision service:
 FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --challenge shooting-range
-# in the browser (dev server with the key), then film the trace frame by frame:
+# in the browser (dev server with the key), then film the trace frame by frame
+# (Playwright is a dev dependency; fetch its browser once: bunx playwright install chromium):
 node scripts/record-live-freeroam.mjs --out run.json --challenge borrowed-wheels
 node scripts/record-replay.mjs --trace run.json --out frames --fps 8 --speed 8
 ```

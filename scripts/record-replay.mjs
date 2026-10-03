@@ -46,10 +46,18 @@ const QUALITY = args.quality ?? "high";
 const [WORKER, WORKERS] = (args.worker ?? "0/1").split("/").map(Number);
 mkdirSync(OUT, { recursive: true });
 
-const duration = JSON.parse(TRACE).result?.elapsedS ?? 0;
+// The run's length is the sum of its logged frames (the result's elapsedS is
+// rounded to a tenth), so the last frame lands after the final simulated step.
+const dts = JSON.parse(TRACE).frames?.dts ?? [];
+const duration = dts.reduce((sum, [count, seconds]) => sum + count * seconds, 0);
 const TO = Math.min(+(args.to ?? duration), duration || Infinity);
 const step = SPEED / FPS;
-const frameCount = Math.max(1, Math.floor((TO - FROM) / step) + 1);
+// Frame times every `step` seconds, and one at the very end when the last
+// step falls short of it (the run's final moments, the result card).
+const times = [];
+for (let at = FROM; at <= TO + 1e-9; at += step) times.push(at);
+if (times.length === 0 || TO - times[times.length - 1] > 1e-6) times.push(TO);
+const frameCount = times.length;
 
 const browser = await chromium.launch({
   args: [
@@ -137,7 +145,7 @@ const frames = (n) =>
 let simulated = 0;
 const t0 = Date.now();
 for (let f = 0; f < frameCount; f++) {
-  const at = FROM + f * step;
+  const at = times[f];
   // Sky, clouds and wind sway follow the run's clock, not the renderer's.
   if (at > simulated) await advance(at - simulated);
   simulated = at;
