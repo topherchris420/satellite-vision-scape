@@ -2,18 +2,13 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { RADOME, RADOME_SHELL_LIFT } from "@/lib/site-layout";
 import { MeshBatcher } from "@/game/core/MeshBatcher";
+import { dishReflectorMat, makeConcrete } from "./structures/materials";
 
 // Generic exterior reflector geometry. Pose is illustrative and stationary,
 // which is what allows every part to be merged into a handful of meshes.
 
 // Shared materials — single instances reused by every antenna on site.
-const dishMat = new THREE.MeshStandardMaterial({
-  color: "#eceeea",
-  metalness: 0.3,
-  roughness: 0.32,
-  side: THREE.DoubleSide,
-  envMapIntensity: 1.1,
-});
+const dishMat = dishReflectorMat;
 const steelMat = new THREE.MeshStandardMaterial({
   color: "#b4bac1",
   metalness: 0.75,
@@ -29,7 +24,7 @@ const driveMat = new THREE.MeshStandardMaterial({
   metalness: 0.5,
   roughness: 0.5,
 });
-const pedestalMat = new THREE.MeshStandardMaterial({ color: "#a5a094", roughness: 0.95 });
+const pedestalMat = makeConcrete("#b3ad9f", { ground: false });
 const cableMat = new THREE.MeshStandardMaterial({
   color: "#33383c",
   metalness: 0.3,
