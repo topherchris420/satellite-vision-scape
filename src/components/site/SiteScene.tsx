@@ -629,7 +629,7 @@ export function SiteScene() {
             highQuality={enableAO}
             shadowFocus={playing && game ? game.focusPoint : null}
           />
-          <Terrain />
+          <Terrain quality={qualityTier} />
           <Roads />
           <Structures onSelect={setSelected} time={effectiveTime} />
           <SiteFeatures />
