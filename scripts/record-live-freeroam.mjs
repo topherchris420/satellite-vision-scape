@@ -70,10 +70,17 @@ const ready = await page.evaluate(async (launch) => {
   const check = await ui.checkController(launch.controller);
   if (!check.ok) return check;
   const g = window.__pineGapGame;
-  // The play session stays in its briefing: a running session would also
-  // step the run from the page's own (held) render loop, in zero-length
-  // frames a trace cannot hold. This loop is the only clock.
+  // With ?capture the page's render loop runs at zero time; its frames would
+  // reach the run as zero-length frames, which a trace cannot hold. Drop
+  // them, so this recorder's loop is the only clock. (The session still has
+  // to be running: a frame that does not simulate hands the avatar back.)
+  const frame = g.frame.bind(g);
+  g.frame = (dt, options) => {
+    if (options.simulate && !(dt > 0)) return;
+    frame(dt, options);
+  };
   g.setPaused(false);
+  window.__pineGapCapture.startPlay();
   ui.beginFreeRoam(g, launch);
   return check;
 }, launch);
