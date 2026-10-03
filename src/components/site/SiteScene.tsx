@@ -7,7 +7,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import {
   EffectComposer,
@@ -81,6 +81,41 @@ function useFreeRoamSnapshot(game: Game | null): FreeRoamSnapshot | null {
 }
 
 export type QualityTier = "low" | "medium" | "high" | "ultra";
+
+/**
+ * Development-only camera handle for the visual capture harness
+ * (scripts/capture-shots.mjs): places the viewer camera exactly.
+ */
+function CaptureCameraBridge() {
+  const camera = useThree((s) => s.camera);
+  const controls = useThree((s) => s.controls) as unknown as {
+    target: THREE.Vector3;
+    update: () => void;
+  } | null;
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __pineGapCamera?: unknown };
+    w.__pineGapCamera = {
+      camera,
+      set(pos: [number, number, number], target: [number, number, number], fov?: number) {
+        camera.position.set(...pos);
+        if (controls) {
+          controls.target.set(...target);
+          controls.update();
+        }
+        camera.lookAt(...target);
+        if (fov && (camera as THREE.PerspectiveCamera).isPerspectiveCamera) {
+          (camera as THREE.PerspectiveCamera).fov = fov;
+          camera.updateProjectionMatrix();
+        }
+      },
+    };
+    return () => {
+      delete w.__pineGapCamera;
+    };
+  }, [camera, controls]);
+  return null;
+}
 
 function ReadyProbe({ onReady }: { onReady: () => void }) {
   const frames = useRef(0);
@@ -242,6 +277,8 @@ export function SiteScene() {
   }, []);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
   const gameRef = useRef<Game | null>(null);
   gameRef.current = game;
   const playing = mode === "play" && gameError === null;
@@ -319,6 +356,34 @@ export function SiteScene() {
     entities: 0,
   });
   const onContextStatus = useCallback((status: ContextStatus) => setContextStatus(status), []);
+
+  // Development-only switches for the visual capture harness.
+  const [captureClean, setCaptureClean] = useState(false);
+  const sessionStatus = useRef(session.status);
+  sessionStatus.current = session.status;
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __pineGapCapture?: unknown };
+    w.__pineGapCapture = {
+      setMode,
+      setTime,
+      setQuality: (q: QualityTier) => {
+        setQualityTier(q);
+        setManualQuality(true);
+      },
+      setClean: setCaptureClean,
+      status: () => ({ status: sessionStatus.current, mode: modeRef.current }),
+      startPlay: () => {
+        setMode("play");
+        sessionRef.current.startUnlocked();
+      },
+    };
+    return () => {
+      delete w.__pineGapCapture;
+    };
+  }, []);
 
   const handleQualityChange = useCallback((q: QualityTier) => {
     setQualityTier(q);
@@ -400,7 +465,9 @@ export function SiteScene() {
   const enableAO = qualityTier === "high" || qualityTier === "ultra";
 
   return (
-    <div className="relative h-screen w-screen overflow-hidden bg-slate-900">
+    <div
+      className={`relative h-screen w-screen overflow-hidden bg-slate-900 ${captureClean ? "capture-clean" : ""}`}
+    >
       <HUD
         mode={mode}
         onModeChange={(m) => setMode(m === "play" && gameError ? "fly" : m)}
@@ -608,6 +675,7 @@ export function SiteScene() {
           playing={playing}
         />
         <Controls mode={mode} focus={focus} />
+        {import.meta.env.DEV && <CaptureCameraBridge />}
       </Canvas>
     </div>
   );

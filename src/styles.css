@@ -237,3 +237,8 @@
     height: 70%;
   }
 }
+
+/* Development capture harness: hide every overlay so only the canvas shows. */
+.capture-clean > *:not(:has(canvas)) {
+  display: none !important;
+}
