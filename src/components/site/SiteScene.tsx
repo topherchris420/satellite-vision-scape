@@ -652,7 +652,7 @@ export function SiteScene() {
             shadowFocus={playing && game ? game.focusPoint : null}
             fogScale={mode === "overhead" ? 0.35 : 1}
           />
-          <Terrain />
+          <Terrain quality={qualityTier} />
           <Roads />
           <Structures onSelect={setSelected} time={effectiveTime} />
           <SiteFeatures />

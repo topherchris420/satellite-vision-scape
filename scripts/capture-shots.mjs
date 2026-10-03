@@ -103,6 +103,13 @@ async function openPage() {
     window.__pineGapCapture.setClean(true);
   }, QUALITY);
   await page.waitForTimeout(4000);
+  // Streamed assets (texture sets) keep the scene suspended for a while after
+  // load; wait until the canvas shows more than a flat clear colour.
+  for (let i = 0; i < 90; i++) {
+    const png = await page.screenshot({ timeout: 300000 });
+    if (png.length > 30000) break;
+    await page.waitForTimeout(2000);
+  }
 }
 
 const frames = (n) =>
