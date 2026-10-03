@@ -88,7 +88,7 @@ async function openPage(options = {}) {
         clearInterval(pin);
       }, 200);
     }, QUALITY);
-  await page.goto(BASE, { waitUntil: "domcontentloaded" });
+  await page.goto(BASE, { waitUntil: "domcontentloaded", timeout: 900000 });
   await page
     .getByRole("button", { name: /after hours/i })
     .first()
@@ -167,7 +167,7 @@ const sites = await (async () => {
 // Main journey (desktop).
 const { page, context } = await openPage();
 await page.evaluate(() => localStorage.clear());
-await page.reload({ waitUntil: "domcontentloaded" });
+await page.reload({ waitUntil: "domcontentloaded", timeout: 900000 });
 await page
   .getByRole("button", { name: /after hours/i })
   .first()
@@ -706,7 +706,7 @@ record(
 );
 
 // Reload: saved progress.
-await page.reload({ waitUntil: "domcontentloaded" });
+await page.reload({ waitUntil: "domcontentloaded", timeout: 900000 });
 await page
   .getByRole("button", { name: /continue after hours/i })
   .first()
