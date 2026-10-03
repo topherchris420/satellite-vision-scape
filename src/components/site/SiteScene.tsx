@@ -2,6 +2,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -88,6 +89,25 @@ export type QualityTier = "low" | "medium" | "high" | "ultra";
  */
 function CaptureCameraBridge() {
   const camera = useThree((s) => s.camera);
+  const clock = useThree((s) => s.clock);
+  // With ?capture the render clock is held at zero from the first frame, so
+  // time-driven visuals (cloud and dust drift, wind sway, pulses) are the
+  // same in every capture however fast the renderer runs. Gameplay is
+  // stepped explicitly by the harness.
+  const frozen = useMemo(() => new URLSearchParams(window.location.search).has("capture"), []);
+  useLayoutEffect(() => {
+    if (!import.meta.env.DEV || !frozen) return;
+    clock.autoStart = false;
+    clock.stop();
+    clock.elapsedTime = 0;
+  }, [clock, frozen]);
+  useFrame(() => {
+    // Anything that restarts the clock (a frameloop change) is undone.
+    if (frozen && clock.running) {
+      clock.stop();
+      clock.elapsedTime = 0;
+    }
+  });
   const controls = useThree((s) => s.controls) as unknown as {
     target: THREE.Vector3;
     update: () => void;
