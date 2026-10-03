@@ -77,7 +77,7 @@ await page.evaluate((q) => window.__pineGapCapture.setQuality(q), QUALITY);
 await page.waitForTimeout(4000);
 // Streamed texture sets keep the scene suspended for a while after load.
 for (let i = 0; i < 90; i++) {
-  const png = await page.screenshot({ timeout: 300000 });
+  const png = await page.screenshot({ timeout: 900000 });
   if (png.length > 30000) break;
   await page.waitForTimeout(2000);
 }
@@ -145,7 +145,7 @@ for (let f = 0; f < frameCount; f++) {
   await page.evaluate((t) => (window.__pineGapCamera.clock.elapsedTime = t), at);
   // One rendered frame commits the HUD; the screenshot renders the next.
   await frames(1);
-  await page.screenshot({ path: join(OUT, `${String(f).padStart(5, "0")}.png`), timeout: 300000 });
+  await page.screenshot({ path: join(OUT, `${String(f).padStart(5, "0")}.png`), timeout: 900000 });
   if (f % (WORKERS * 10) === WORKER)
     console.log(
       `frame ${f}/${frameCount - 1}  t=${at.toFixed(2)}s  ${((Date.now() - t0) / 1000).toFixed(0)}s elapsed`,
