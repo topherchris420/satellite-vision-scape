@@ -9,18 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as ThesisRouteImport } from './routes/thesis'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ThesisRouteImport } from './routes/thesis'
 import { Route as ApiAgentJevDecisionRouteImport } from './routes/api.agent.jev.decision'
 
-const ThesisRoute = ThesisRouteImport.update({
-  id: '/thesis',
-  path: '/thesis',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ThesisRoute = ThesisRouteImport.update({
+  id: '/thesis',
+  path: '/thesis',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAgentJevDecisionRoute = ApiAgentJevDecisionRouteImport.update({
@@ -61,18 +61,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/thesis': {
-      id: '/thesis'
-      path: '/thesis'
-      fullPath: '/thesis'
-      preLoaderRoute: typeof ThesisRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/thesis': {
+      id: '/thesis'
+      path: '/thesis'
+      fullPath: '/thesis'
+      preLoaderRoute: typeof ThesisRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/agent/jev/decision': {
