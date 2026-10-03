@@ -74,6 +74,8 @@ async function openPage(options = {}) {
     viewport: { width: VIEW_W, height: VIEW_H },
     ...options,
   });
+  // A frame can take a minute at the high tier under software rendering.
+  context.setDefaultTimeout(900000);
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 300)}`));
   page.on("console", (m) => {
