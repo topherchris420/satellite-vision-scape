@@ -70,8 +70,10 @@ const ready = await page.evaluate(async (launch) => {
   const check = await ui.checkController(launch.controller);
   if (!check.ok) return check;
   const g = window.__pineGapGame;
+  // The play session stays in its briefing: a running session would also
+  // step the run from the page's own (held) render loop, in zero-length
+  // frames a trace cannot hold. This loop is the only clock.
   g.setPaused(false);
-  window.__pineGapCapture.startPlay();
   ui.beginFreeRoam(g, launch);
   return check;
 }, launch);
