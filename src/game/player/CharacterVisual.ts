@@ -1,13 +1,18 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import { MeshBatcher } from "../core/MeshBatcher";
 import type { CharacterPose } from "./CharacterAnimator";
 
 /**
- * Stylised characters built from primitives on one shared joint rig, so the
- * procedural animator, seating and collision treat every variant alike:
+ * Procedural characters on one shared joint rig, so the procedural animator,
+ * seating and collision treat every variant alike:
  *
- * - `soldier` — desert uniform, olive plate carrier with pouches, helmet,
- *   gloves, boots and a radio pack with whip antenna.
+ * - `soldier` — smooth lathe-turned body in AMCU-style camouflage (canvas
+ *   colour map plus ripstop normal / roughness maps), sculpted face with
+ *   ballistic glasses and comms headset, covered helmet with NVG shroud,
+ *   plate carrier with cummerbund and pouches, radio with whip, hydration
+ *   carrier, battle belt, knee pads, gloved hands and tan boots with lug
+ *   soles. Each joint's parts are merged per material.
  * - `technician` — the After Hours night-shift audio technician (fictional):
  *   loose overshirt over a hoodie, relaxed trousers, trainers, headphones,
  *   a visitor badge on a lanyard and a cable coil slung over one shoulder.
@@ -31,70 +36,182 @@ export interface CharacterOptions {
 }
 
 type Materials = Record<
-  "uniform" | "vest" | "boots" | "skin" | "gloves" | "helmet" | "pack" | "dark",
+  | "uniform"
+  | "vest"
+  | "boots"
+  | "sole"
+  | "skin"
+  | "gloves"
+  | "helmet"
+  | "pack"
+  | "dark"
+  | "lens"
+  | "lips"
+  | "hair",
   THREE.MeshStandardMaterial
 >;
 
-/** Deterministic desert disruptive-pattern texture (browser only). */
+/** Seeded PRNG so every build of the pattern is identical. */
+function seeded(seed: number): () => number {
+  let s = seed;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+
+/**
+ * Australian AMCU-style multi-tone camouflage (browser only): a pale sand
+ * base under soft tan clouds, olive and red-brown brush blobs, then small
+ * dark-brown and cream flecks, drawn wrapped so the texture tiles. The
+ * shapes lean vertical, as on the real pattern.
+ */
 function createCamoTexture(): THREE.Texture | null {
   if (typeof document === "undefined") return null;
-  const size = 128;
+  const size = 512;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  ctx.fillStyle = "#a49673";
+  ctx.fillStyle = "#b4a584";
   ctx.fillRect(0, 0, size, size);
-  let seed = 7331;
-  const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (const [color, count, scale] of [
-    ["#7d7152", 26, 16],
-    ["#c4b48c", 20, 12],
-    ["#5f5a41", 14, 9],
-  ] as const) {
-    ctx.fillStyle = color;
-    for (let i = 0; i < count; i++) {
-      const x = rand() * size;
-      const y = rand() * size;
-      const rx = scale * (0.6 + rand());
-      const ry = scale * (0.35 + rand() * 0.5);
-      const rotation = rand() * Math.PI;
-      // Blobs are drawn wrapped so the texture tiles seamlessly.
-      for (const [ox, oy] of [
-        [0, 0],
-        [size, 0],
-        [-size, 0],
-        [0, size],
-        [0, -size],
-      ]) {
+  const rand = seeded(7331);
+  const blob = (x: number, y: number, rx: number, ry: number, rot: number) => {
+    for (const ox of [-size, 0, size]) {
+      for (const oy of [-size, 0, size]) {
         ctx.beginPath();
-        ctx.ellipse(x + ox, y + oy, rx, ry, rotation, 0, Math.PI * 2);
+        ctx.ellipse(x + ox, y + oy, rx, ry, rot, 0, Math.PI * 2);
         ctx.fill();
       }
     }
+  };
+  // [colour, clusters, blobs per cluster, scale, blur]
+  const layers: [string, number, number, number, number][] = [
+    ["#a08f6c", 22, 5, 46, 10],
+    ["#c2b593", 14, 4, 30, 6],
+    ["#7a7650", 18, 5, 26, 2],
+    ["#8a6745", 16, 4, 22, 1.5],
+    ["#5a6142", 10, 4, 18, 1],
+    ["#4a3a2a", 26, 3, 9, 0.5],
+    ["#d6cba9", 30, 2, 7, 0.5],
+  ];
+  for (const [color, clusters, per, scale, blur] of layers) {
+    ctx.fillStyle = color;
+    ctx.filter = `blur(${blur}px)`;
+    for (let c = 0; c < clusters; c++) {
+      const cx = rand() * size;
+      const cy = rand() * size;
+      for (let k = 0; k < per; k++) {
+        blob(
+          cx + (rand() - 0.5) * scale * 2,
+          cy + (rand() - 0.5) * scale * 3,
+          scale * (0.35 + rand() * 0.5),
+          scale * (0.6 + rand() * 0.9),
+          (rand() - 0.5) * 0.9,
+        );
+      }
+    }
   }
+  ctx.filter = "none";
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(2, 2);
+  texture.repeat.set(1.5, 1.5);
   texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
   return texture;
+}
+
+/**
+ * Ripstop fabric detail (browser only): a normal map from a height field of
+ * fine weave plus the raised ripstop grid, and a matching roughness map
+ * (threads slightly glossier than the gaps). Tiled densely over the garment.
+ */
+function createFabricMaps(): { normal: THREE.Texture; rough: THREE.Texture } | null {
+  if (typeof document === "undefined") return null;
+  const n = 128;
+  const height = new Float32Array(n * n);
+  const rand = seeded(42);
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const weave = Math.sin((x / n) * Math.PI * 2 * 32) * Math.sin((y / n) * Math.PI * 2 * 32);
+      const rip = x % 32 < 2 || y % 32 < 2 ? 1 : 0;
+      height[y * n + x] = weave * 0.35 + rip * 0.8 + (rand() - 0.5) * 0.25;
+    }
+  }
+  const make = () => {
+    const c = document.createElement("canvas");
+    c.width = c.height = n;
+    return c;
+  };
+  const nc = make();
+  const rc = make();
+  const nctx = nc.getContext("2d");
+  const rctx = rc.getContext("2d");
+  if (!nctx || !rctx) return null;
+  const nimg = nctx.createImageData(n, n);
+  const rimg = rctx.createImageData(n, n);
+  const h = (x: number, y: number) => height[((y + n) % n) * n + ((x + n) % n)];
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      const dx = (h(x + 1, y) - h(x - 1, y)) * 0.9;
+      const dy = (h(x, y + 1) - h(x, y - 1)) * 0.9;
+      const len = Math.hypot(dx, dy, 1);
+      const i = (y * n + x) * 4;
+      nimg.data[i] = ((-dx / len) * 0.5 + 0.5) * 255;
+      nimg.data[i + 1] = ((dy / len) * 0.5 + 0.5) * 255;
+      nimg.data[i + 2] = ((1 / len) * 0.5 + 0.5) * 255;
+      nimg.data[i + 3] = 255;
+      const r = 215 - h(x, y) * 30;
+      rimg.data[i] = rimg.data[i + 1] = rimg.data[i + 2] = r;
+      rimg.data[i + 3] = 255;
+    }
+  }
+  nctx.putImageData(nimg, 0, 0);
+  rctx.putImageData(rimg, 0, 0);
+  const normal = new THREE.CanvasTexture(nc);
+  const rough = new THREE.CanvasTexture(rc);
+  for (const t of [normal, rough]) {
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(6, 6);
+  }
+  return { normal, rough };
 }
 
 function createMaterials(): Materials {
   const camo = createCamoTexture();
+  const fabric = createFabricMaps();
+  const cloth = (color: string, map: THREE.Texture | null, roughness: number) =>
+    new THREE.MeshStandardMaterial({
+      color: map ? "#ffffff" : color,
+      map,
+      roughness,
+      normalMap: fabric?.normal ?? null,
+      normalScale: new THREE.Vector2(0.6, 0.6),
+      roughnessMap: fabric?.rough ?? null,
+    });
+  const helmet = cloth("#8d7f60", camo, 0.95);
+  helmet.color.set(camo ? "#d8d0bf" : "#8d7f60");
   return {
-    uniform: new THREE.MeshStandardMaterial({
-      color: camo ? "#ffffff" : "#a49673",
-      map: camo,
-      roughness: 0.92,
+    uniform: cloth("#a49673", camo, 0.95),
+    vest: cloth("#6e6249", null, 0.95),
+    pack: cloth("#5f5a42", null, 0.95),
+    helmet,
+    boots: new THREE.MeshStandardMaterial({ color: "#8b7356", roughness: 0.9 }),
+    sole: new THREE.MeshStandardMaterial({ color: "#2a2521", roughness: 0.85 }),
+    skin: new THREE.MeshPhysicalMaterial({
+      color: "#b98463",
+      roughness: 0.55,
+      sheen: 0.4,
+      sheenColor: new THREE.Color("#d9826a"),
+      sheenRoughness: 0.6,
     }),
-    vest: new THREE.MeshStandardMaterial({ color: "#5a5d43", roughness: 0.88 }),
-    boots: new THREE.MeshStandardMaterial({ color: "#3a3127", roughness: 0.8 }),
-    skin: new THREE.MeshStandardMaterial({ color: "#b98a6a", roughness: 0.7 }),
-    gloves: new THREE.MeshStandardMaterial({ color: "#4a4234", roughness: 0.85 }),
-    helmet: new THREE.MeshStandardMaterial({ color: "#6b6749", roughness: 0.75 }),
-    pack: new THREE.MeshStandardMaterial({ color: "#545640", roughness: 0.9 }),
-    dark: new THREE.MeshStandardMaterial({ color: "#1d1f22", roughness: 0.35, metalness: 0.4 }),
+    gloves: new THREE.MeshStandardMaterial({ color: "#4f4636", roughness: 0.82 }),
+    dark: new THREE.MeshStandardMaterial({ color: "#1d1f22", roughness: 0.42, metalness: 0.35 }),
+    lens: new THREE.MeshStandardMaterial({
+      color: "#0c0d0e",
+      roughness: 0.06,
+      metalness: 0.6,
+      envMapIntensity: 2,
+    }),
+    lips: new THREE.MeshStandardMaterial({ color: "#8a5546", roughness: 0.6 }),
+    hair: new THREE.MeshStandardMaterial({ color: "#2e231b", roughness: 0.95 }),
   };
 }
 
@@ -239,116 +356,387 @@ export class CharacterVisual {
     return mesh;
   }
 
+  /**
+   * The soldier: smooth lathe-turned body (torso, limbs, boots) under layered
+   * gear — plate carrier with cummerbund, mag / radio / utility pouches,
+   * hydration carrier, battle belt, knee pads, gloves and a covered helmet with
+   * NVG shroud and comms headset. Each joint's parts are merged per material,
+   * so the whole figure is a few dozen draw calls at most.
+   */
   private build(m: Materials): void {
-    const box = (w: number, h: number, d: number, r: number) =>
-      this.geometry(new RoundedBoxGeometry(w, h, d, 2, r));
-    const capsule = (r: number, len: number) =>
-      this.geometry(new THREE.CapsuleGeometry(r, len, 4, 10));
+    const temp: THREE.BufferGeometry[] = [];
+    const t = <T extends THREE.BufferGeometry>(g: T): T => {
+      temp.push(g);
+      return g;
+    };
+    const rbox = (w: number, h: number, d: number, r: number) =>
+      t(new RoundedBoxGeometry(w, h, d, 2, r));
+    const sphere = (r: number, ws = 16, hs = 12) => t(new THREE.SphereGeometry(r, ws, hs));
+    const lathe = (profile: readonly (readonly [number, number])[], seg = 18) =>
+      t(
+        new THREE.LatheGeometry(
+          profile.map(([r, y]) => new THREE.Vector2(r, y)),
+          seg,
+        ),
+      );
+    const batches: [THREE.Object3D, MeshBatcher][] = [];
+    const batch = (parent: THREE.Object3D) => {
+      const b = new MeshBatcher();
+      batches.push([parent, b]);
+      return b;
+    };
 
-    // Pelvis and belt.
-    this.part(this.pelvis, box(0.34, 0.17, 0.21, 0.06), m.uniform, 0, 0, 0);
-    this.part(this.pelvis, box(0.36, 0.05, 0.23, 0.02), m.vest, 0, 0.07, 0);
+    // Pelvis: hips, seat of the trousers, battle belt with pouches.
+    const pb = batch(this.pelvis);
+    pb.add(
+      lathe([
+        [0.001, -0.12],
+        [0.1, -0.115],
+        [0.155, -0.07],
+        [0.172, 0.0],
+        [0.165, 0.09],
+        [0.158, 0.12],
+        [0.001, 0.12],
+      ]),
+      m.uniform,
+      [0, 0, 0],
+      [0, 0, 0],
+      [1, 1, 0.66],
+    );
+    pb.add(
+      lathe(
+        [
+          [0.172, 0.04],
+          [0.178, 0.05],
+          [0.178, 0.1],
+          [0.17, 0.11],
+        ],
+        22,
+      ),
+      m.vest,
+      [0, 0, 0],
+      [0, 0, 0],
+      [1.02, 1, 0.7],
+    );
+    pb.add(rbox(0.06, 0.05, 0.02, 0.008), m.dark, [0, 0.075, 0.125]);
+    for (const [x, z, w] of [
+      [0.15, 0.06, 0.07],
+      [-0.15, 0.06, 0.07],
+      [0.12, -0.09, 0.09],
+      [-0.12, -0.09, 0.09],
+    ] as const)
+      pb.add(rbox(w, 0.1, 0.06, 0.015), m.vest, [x, 0.04, z], [0, Math.atan2(x, z), 0]);
 
-    // Torso, plate carrier, pouches and radio pack.
+    // Torso, plate carrier, pouches, radio and hydration carrier.
     this.spine.position.y = 0.08;
     this.pelvis.add(this.spine);
-    this.part(this.spine, box(0.35, 0.46, 0.21, 0.08), m.uniform, 0, 0.25, 0);
-    this.part(this.spine, box(0.39, 0.34, 0.27, 0.05), m.vest, 0, 0.27, 0.005);
-    const pouch = box(0.085, 0.1, 0.05, 0.015);
-    for (const x of [-0.11, 0, 0.11]) this.part(this.spine, pouch, m.vest, x, 0.16, 0.15);
-    this.part(this.spine, box(0.28, 0.34, 0.14, 0.04), m.pack, 0, 0.3, -0.19);
-    this.part(this.spine, box(0.2, 0.08, 0.1, 0.02), m.dark, 0, 0.5, -0.19);
-    const antenna = this.part(
-      this.spine,
-      this.geometry(new THREE.CylinderGeometry(0.006, 0.009, 0.62, 5)),
-      m.dark,
-      0.09,
-      0.72,
-      -0.21,
+    const sb = batch(this.spine);
+    sb.add(
+      lathe(
+        [
+          [0.001, -0.02],
+          [0.152, -0.02],
+          [0.158, 0.08],
+          [0.172, 0.2],
+          [0.182, 0.32],
+          [0.178, 0.4],
+          [0.15, 0.47],
+          [0.09, 0.51],
+          [0.055, 0.53],
+          [0.001, 0.53],
+        ],
+        22,
+      ),
+      m.uniform,
+      [0, 0, 0],
+      [0, 0, 0],
+      [1.06, 1, 0.66],
     );
-    antenna.rotation.z = -0.12;
+    // Front and back plates, cummerbund and shoulder straps.
+    sb.add(rbox(0.3, 0.33, 0.06, 0.025), m.vest, [0, 0.28, 0.105], [-0.04, 0, 0]);
+    sb.add(rbox(0.3, 0.36, 0.045, 0.02), m.vest, [0, 0.29, -0.095], [0.05, 0, 0]);
+    sb.add(
+      lathe(
+        [
+          [0.18, 0.09],
+          [0.19, 0.1],
+          [0.195, 0.2],
+          [0.188, 0.24],
+        ],
+        22,
+      ),
+      m.vest,
+      [0, 0, 0],
+      [0, 0, 0],
+      [1.08, 1, 0.68],
+    );
+    for (const x of [-0.11, 0.11]) {
+      sb.add(rbox(0.075, 0.05, 0.25, 0.02), m.vest, [x, 0.475, 0.0], [0, 0, x > 0 ? -0.25 : 0.25]);
+    }
+    // Triple mag pouch, admin pouch, radio pouch with radio and whip, IFAK.
+    for (const x of [-0.09, 0, 0.09]) {
+      sb.add(rbox(0.08, 0.12, 0.05, 0.014), m.vest, [x, 0.2, 0.155]);
+      sb.add(rbox(0.082, 0.03, 0.055, 0.01), m.vest, [x, 0.265, 0.157]);
+    }
+    sb.add(rbox(0.16, 0.08, 0.035, 0.012), m.pack, [0, 0.36, 0.148]);
+    sb.add(rbox(0.07, 0.13, 0.06, 0.015), m.vest, [0.175, 0.32, 0.03], [0, 0.5, 0]);
+    sb.add(rbox(0.05, 0.1, 0.035, 0.008), m.dark, [0.18, 0.4, 0.03], [0, 0.5, 0]);
+    sb.add(
+      t(new THREE.CylinderGeometry(0.004, 0.007, 0.42, 5)),
+      m.dark,
+      [0.19, 0.64, 0.02],
+      [0, 0, -0.1],
+    );
+    sb.add(rbox(0.08, 0.1, 0.05, 0.015), m.vest, [-0.17, 0.22, 0.04], [0, -0.5, 0]);
+    sb.add(rbox(0.2, 0.3, 0.055, 0.025), m.pack, [0, 0.3, -0.14]);
+    sb.add(
+      t(new THREE.CylinderGeometry(0.008, 0.008, 0.34, 6)),
+      m.dark,
+      [0.09, 0.42, -0.08],
+      [0.3, 0, -0.5],
+    );
+    // Collar of the shirt.
+    sb.add(
+      t(new THREE.TorusGeometry(0.062, 0.018, 6, 16)),
+      m.uniform,
+      [0, 0.515, -0.004],
+      [Math.PI / 2 + 0.25, 0, 0],
+      [1, 1.1, 1],
+    );
 
-    // Neck and head with helmet and eyewear.
+    // Neck and head: sculpted skull, jaw, nose, brow, ears, mouth; ballistic
+    // glasses, comms headset, covered helmet with NVG shroud and chin strap.
     const neck = new THREE.Group();
     neck.position.y = 0.52;
     this.spine.add(neck);
-    this.part(
-      neck,
-      this.geometry(new THREE.CylinderGeometry(0.052, 0.058, 0.11, 10)),
+    batch(neck).add(
+      lathe(
+        [
+          [0.066, -0.02],
+          [0.058, 0.04],
+          [0.06, 0.1],
+        ],
+        14,
+      ),
       m.skin,
-      0,
-      0.03,
-      0,
+      [0, 0, 0.006],
     );
     this.head.position.y = 0.09;
     neck.add(this.head);
-    const skull = this.part(
-      this.head,
-      this.geometry(new THREE.SphereGeometry(0.105, 16, 12)),
-      m.skin,
-      0,
-      0.075,
-      0.012,
+    const hb = batch(this.head);
+    hb.add(sphere(0.105, 20, 16), m.skin, [0, 0.08, 0.0], [0, 0, 0], [0.9, 1.04, 1.0]);
+    // Close-cropped hair over the back and sides of the skull.
+    hb.add(
+      t(new THREE.SphereGeometry(0.108, 18, 10, Math.PI * 0.95, Math.PI * 1.1, 0, Math.PI * 0.74)),
+      m.hair,
+      [0, 0.08, -0.002],
+      [0, 0, 0],
+      [0.9, 1.04, 1.0],
     );
-    skull.scale.set(0.92, 1.08, 1);
-    this.part(
-      this.head,
-      this.geometry(new THREE.SphereGeometry(0.132, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.52)),
+    hb.add(sphere(0.082, 18, 12), m.skin, [0, 0.02, 0.03], [0, 0, 0], [0.92, 0.82, 1.0]);
+    hb.add(sphere(0.024, 10, 8), m.skin, [0, 0.055, 0.112], [0.25, 0, 0], [0.62, 1.35, 1.0]);
+    hb.add(sphere(0.012, 8, 6), m.skin, [0, 0.03, 0.12], [0, 0, 0], [1.6, 0.8, 1]);
+    hb.add(sphere(0.09, 16, 8), m.skin, [0, 0.1, 0.045], [0, 0, 0], [0.92, 0.22, 0.75]);
+    hb.add(rbox(0.036, 0.007, 0.012, 0.003), m.lips, [0, 0.003, 0.104]);
+    hb.add(sphere(0.03, 10, 8), m.skin, [0, -0.02, 0.085], [0, 0, 0], [1.2, 0.8, 1]);
+    for (const side of [1, -1]) {
+      hb.add(sphere(0.03, 10, 8), m.skin, [side * 0.062, 0.035, 0.07], [0, 0, 0], [1, 0.8, 0.8]);
+    }
+    const glasses = t(new THREE.CylinderGeometry(0.108, 0.104, 0.036, 20, 1, true, -0.95, 1.9));
+    hb.add(glasses, m.lens, [0, 0.083, 0.012], [0, 0, 0], [0.93, 1, 1]);
+    // Headset ear cups and band (worn under the helmet).
+    for (const side of [1, -1]) {
+      hb.add(
+        t(new THREE.CylinderGeometry(0.033, 0.035, 0.03, 16)),
+        m.pack,
+        [side * 0.1, 0.065, 0.0],
+        [0, 0, Math.PI / 2],
+      );
+      hb.add(rbox(0.015, 0.08, 0.02, 0.005), m.dark, [side * 0.122, 0.04, 0.03], [0.6, 0, 0]);
+    }
+    hb.add(
+      t(new THREE.TorusGeometry(0.098, 0.007, 4, 18, Math.PI)),
+      m.dark,
+      [0, 0.07, 0.025],
+      [0, 0, Math.PI],
+    );
+    // Helmet shell with camo cover, rim band, side rails and NVG shroud.
+    hb.add(
+      t(new THREE.SphereGeometry(0.135, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.53)),
       m.helmet,
-      0,
-      0.1,
-      -0.004,
+      [0, 0.1, -0.008],
+      [-0.08, 0, 0],
+      [0.95, 0.92, 1.06],
     );
-    this.part(
-      this.head,
-      this.geometry(new THREE.CylinderGeometry(0.136, 0.136, 0.028, 18)),
+    hb.add(
+      lathe(
+        [
+          [0.131, -0.012],
+          [0.136, 0.0],
+          [0.131, 0.012],
+        ],
+        24,
+      ),
       m.helmet,
-      0,
-      0.098,
-      -0.004,
+      [0, 0.098, -0.008],
+      [-0.08, 0, 0],
+      [0.96, 1, 1.07],
     );
-    this.part(this.head, box(0.16, 0.036, 0.04, 0.012), m.dark, 0, 0.083, 0.098);
+    hb.add(rbox(0.07, 0.04, 0.03, 0.01), m.dark, [0, 0.19, 0.115], [-0.5, 0, 0]);
+    for (const side of [1, -1])
+      hb.add(
+        rbox(0.012, 0.03, 0.12, 0.005),
+        m.dark,
+        [side * 0.127, 0.12, -0.01],
+        [0, 0, side * 0.2],
+      );
+    hb.add(rbox(0.06, 0.03, 0.06, 0.01), m.pack, [0, 0.16, -0.12], [0.6, 0, 0]);
+    hb.add(
+      t(new THREE.TorusGeometry(0.095, 0.005, 4, 16, Math.PI)),
+      m.pack,
+      [0, 0.07, 0.04],
+      [-0.2, 0, Math.PI],
+      [1, 1.1, 1],
+    );
 
-    // Arms: shoulder → elbow → hand. Index 0 is the left (+X) side.
+    // Arms: deltoid, sleeved upper arm, forearm, gloved hand with fingers and thumb.
     for (const side of [0, 1] as const) {
       const sign = side === 0 ? 1 : -1;
       const shoulder = this.shoulders[side];
       shoulder.position.set(0.215 * sign, 0.44, 0);
       this.spine.add(shoulder);
-      this.part(shoulder, box(0.13, 0.1, 0.15, 0.04), m.vest, 0.01 * sign, 0.0, 0);
-      this.part(shoulder, capsule(0.052, 0.19), m.uniform, 0, -0.14, 0);
+      const ab = batch(shoulder);
+      ab.add(sphere(0.066, 14, 10), m.uniform, [0.005 * sign, -0.01, 0], [0, 0, 0], [1, 1.05, 1.1]);
+      ab.add(
+        lathe(
+          [
+            [0.06, -0.02],
+            [0.058, -0.09],
+            [0.052, -0.18],
+            [0.047, -0.25],
+            [0.046, -0.29],
+          ],
+          14,
+        ),
+        m.uniform,
+        [0, 0, 0],
+      );
+      ab.add(rbox(0.012, 0.06, 0.07, 0.004), m.vest, [0.058 * sign, -0.08, 0]);
       const elbow = this.elbows[side];
       elbow.position.y = -0.285;
       shoulder.add(elbow);
-      this.part(elbow, capsule(0.045, 0.17), m.uniform, 0, -0.12, 0);
-      const hand = this.part(
-        elbow,
-        this.geometry(new THREE.SphereGeometry(0.048, 10, 8)),
-        m.gloves,
-        0,
-        -0.265,
-        0.005,
+      const eb = batch(elbow);
+      eb.add(
+        lathe(
+          [
+            [0.046, 0.01],
+            [0.047, -0.05],
+            [0.041, -0.14],
+            [0.034, -0.21],
+            [0.036, -0.235],
+          ],
+          14,
+        ),
+        m.uniform,
+        [0, 0, 0],
       );
-      hand.scale.set(0.85, 1.15, 0.7);
+      eb.add(
+        lathe(
+          [
+            [0.036, -0.215],
+            [0.034, -0.245],
+            [0.031, -0.255],
+          ],
+          12,
+        ),
+        m.gloves,
+        [0, 0, 0],
+      );
+      // Palm, curled fingers and thumb.
+      eb.add(rbox(0.04, 0.085, 0.075, 0.016), m.gloves, [0, -0.29, 0.008]);
+      eb.add(rbox(0.036, 0.06, 0.07, 0.016), m.gloves, [-0.008 * sign, -0.345, 0.02], [0.35, 0, 0]);
+      eb.add(
+        rbox(0.022, 0.055, 0.024, 0.01),
+        m.gloves,
+        [-0.012 * sign, -0.29, 0.05],
+        [0.5, 0, 0.3 * sign],
+      );
     }
 
-    // Legs: hip → knee → ankle → boot.
+    // Legs: thigh with cargo pocket, knee pad, calf, tan boots with soles.
     for (const side of [0, 1] as const) {
       const sign = side === 0 ? 1 : -1;
       const hip = this.hips[side];
       hip.position.set(0.1 * sign, -0.03, 0);
       this.pelvis.add(hip);
-      this.part(hip, capsule(0.072, 0.27), m.uniform, 0, -0.2, 0);
-      this.part(hip, box(0.06, 0.12, 0.09, 0.02), m.vest, 0.07 * sign, -0.16, 0.02);
+      const lb = batch(hip);
+      lb.add(
+        lathe(
+          [
+            [0.084, 0.04],
+            [0.088, -0.05],
+            [0.082, -0.16],
+            [0.071, -0.3],
+            [0.06, -0.4],
+            [0.058, -0.44],
+          ],
+          16,
+        ),
+        m.uniform,
+        [0, 0, 0],
+      );
+      lb.add(rbox(0.04, 0.15, 0.11, 0.015), m.uniform, [0.075 * sign, -0.2, 0.0]);
+      lb.add(rbox(0.042, 0.035, 0.112, 0.01), m.uniform, [0.077 * sign, -0.13, 0.0]);
       const knee = this.knees[side];
       knee.position.y = -0.43;
       hip.add(knee);
-      this.part(knee, capsule(0.058, 0.29), m.uniform, 0, -0.2, 0);
+      const kb = batch(knee);
+      kb.add(
+        lathe(
+          [
+            [0.06, 0.02],
+            [0.058, -0.06],
+            [0.06, -0.14],
+            [0.05, -0.27],
+            [0.046, -0.34],
+            [0.05, -0.38],
+          ],
+          16,
+        ),
+        m.uniform,
+        [0, 0, 0.0],
+      );
+      kb.add(rbox(0.09, 0.12, 0.04, 0.018), m.vest, [0, -0.02, 0.05], [0.1, 0, 0]);
+      kb.add(rbox(0.1, 0.018, 0.1, 0.006), m.vest, [0, -0.06, 0.0]);
       const ankle = this.ankles[side];
       ankle.position.y = -0.44;
       knee.add(ankle);
-      this.part(ankle, box(0.11, 0.11, 0.27, 0.035), m.boots, 0, -0.025, 0.045);
+      const fb = batch(ankle);
+      // Boot shaft, foot with toe cap, heel, lug sole and lacing strip.
+      fb.add(
+        lathe(
+          [
+            [0.054, 0.12],
+            [0.058, 0.06],
+            [0.056, 0.0],
+            [0.052, -0.04],
+          ],
+          16,
+        ),
+        m.boots,
+        [0, 0, -0.004],
+        [0, 0, 0],
+        [1, 1, 1.08],
+      );
+      fb.add(rbox(0.105, 0.08, 0.22, 0.035), m.boots, [0, -0.03, 0.035]);
+      fb.add(sphere(0.054, 14, 10), m.boots, [0, -0.04, 0.13], [0, 0, 0], [1, 0.72, 1.1]);
+      fb.add(rbox(0.116, 0.028, 0.29, 0.012), m.sole, [0, -0.066, 0.045]);
+      fb.add(rbox(0.11, 0.02, 0.08, 0.008), m.sole, [0, -0.046, -0.055]);
+      fb.add(rbox(0.035, 0.12, 0.012, 0.005), m.sole, [0, 0.03, 0.058], [-0.15, 0, 0]);
     }
+
+    for (const [parent, b] of batches) this.geometries.push(...b.build(parent));
+    for (const g of temp) g.dispose();
   }
 
   /**
@@ -563,7 +951,11 @@ export class CharacterVisual {
    * hanging at the side it points at the ground, as a lowered pistol does.
    */
   private buildSidearm(): void {
-    const metal = new THREE.MeshStandardMaterial({ color: "#20242a", roughness: 0.4, metalness: 0.55 });
+    const metal = new THREE.MeshStandardMaterial({
+      color: "#20242a",
+      roughness: 0.4,
+      metalness: 0.55,
+    });
     const grip = new THREE.MeshStandardMaterial({ color: "#3a2f28", roughness: 0.8 });
     this.materials.push(metal, grip);
     const slide = new THREE.Mesh(this.geometry(new THREE.BoxGeometry(0.034, 0.2, 0.044)), metal);
@@ -613,6 +1005,8 @@ export class CharacterVisual {
     for (const g of this.geometries) g.dispose();
     for (const mat of this.materials) {
       mat.map?.dispose();
+      mat.normalMap?.dispose();
+      mat.roughnessMap?.dispose();
       mat.dispose();
     }
     this.root.removeFromParent();

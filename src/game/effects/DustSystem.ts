@@ -19,6 +19,10 @@ export class DustSystem {
   private readonly life: Float32Array;
   private readonly startSize: Float32Array;
   private readonly peakAlpha: Float32Array;
+  /** Per-particle brightness variation, so a plume reads as volume, not a flat tint. */
+  private readonly shade: Float32Array;
+  private readonly seed: Float32Array;
+  private rng = 12345;
   private cursor = 0;
   private alive = 0;
   private readonly tint = new THREE.Color("#dcc4a6");
@@ -35,6 +39,8 @@ export class DustSystem {
     this.life = new Float32Array(capacity).fill(1);
     this.startSize = new Float32Array(capacity);
     this.peakAlpha = new Float32Array(capacity);
+    this.shade = new Float32Array(capacity).fill(1);
+    this.seed = new Float32Array(capacity);
 
     this.geometry = new THREE.BufferGeometry();
     this.geometry.setAttribute(
@@ -86,6 +92,40 @@ export class DustSystem {
     life: number,
     alpha: number,
   ): void {
+    this.spawn(x, y, z, vx, vy, vz, size, life, alpha);
+    // Big tyre puffs also leave a slower, fainter billow that lingers and
+    // spreads behind the vehicle, which gives plumes a body and a tail.
+    if (size >= 0.3) {
+      this.spawn(
+        x,
+        y + size * 0.3,
+        z,
+        vx * 0.35,
+        vy * 0.6 + 0.15,
+        vz * 0.35,
+        size * 1.7,
+        life * 1.6,
+        alpha * 0.45,
+      );
+    }
+  }
+
+  private random(): number {
+    this.rng = (this.rng * 16807) % 2147483647;
+    return this.rng / 2147483647;
+  }
+
+  private spawn(
+    x: number,
+    y: number,
+    z: number,
+    vx: number,
+    vy: number,
+    vz: number,
+    size: number,
+    life: number,
+    alpha: number,
+  ): void {
     const i = this.cursor;
     this.cursor = (this.cursor + 1) % this.capacity;
     if (this.age[i] >= this.life[i]) this.alive++;
@@ -99,6 +139,8 @@ export class DustSystem {
     this.life[i] = life;
     this.startSize[i] = size;
     this.peakAlpha[i] = alpha;
+    this.shade[i] = 0.82 + this.random() * 0.3;
+    this.seed[i] = this.random() * 6.283;
   }
 
   update(dt: number): void {
@@ -117,20 +159,27 @@ export class DustSystem {
       }
       alive++;
       // Drift with the wind, slow down, and rise a little as warm dust.
-      this.velocity[k] = this.velocity[k] * drag + WIND.x * 0.35 * dt;
+      // A little swirl per particle so plumes curl instead of sliding.
+      const swirl = Math.sin(this.age[i] * 2.3 + this.seed[i]) * 0.35 * dt;
+      this.velocity[k] = this.velocity[k] * drag + WIND.x * 0.35 * dt + swirl;
       this.velocity[k + 1] = this.velocity[k + 1] * drag + 0.25 * dt;
-      this.velocity[k + 2] = this.velocity[k + 2] * drag + WIND.z * 0.35 * dt;
+      this.velocity[k + 2] =
+        this.velocity[k + 2] * drag +
+        WIND.z * 0.35 * dt +
+        Math.cos(this.age[i] * 1.9 + this.seed[i]) * 0.35 * dt;
       this.positions[k] += this.velocity[k] * dt;
       this.positions[k + 1] += this.velocity[k + 1] * dt;
       this.positions[k + 2] += this.velocity[k + 2] * dt;
       const t = this.age[i] / this.life[i];
       // Quick fade-in, long fade-out; puffs billow as they age.
       const fade = Math.min(1, t * 8) * (1 - t) * (1 - t);
-      this.colors[c] = this.tint.r;
-      this.colors[c + 1] = this.tint.g;
-      this.colors[c + 2] = this.tint.b;
+      // Fresh dust is denser and darker; it pales as it thins out.
+      const shade = this.shade[i] * (0.86 + t * 0.2);
+      this.colors[c] = this.tint.r * shade;
+      this.colors[c + 1] = this.tint.g * shade;
+      this.colors[c + 2] = this.tint.b * shade;
       this.colors[c + 3] = this.peakAlpha[i] * fade;
-      this.sizes[i] = this.startSize[i] * (1 + t * 2.4);
+      this.sizes[i] = this.startSize[i] * (1 + Math.sqrt(t) * 2.6 + t * 0.6);
     }
     this.alive = alive;
     (this.geometry.getAttribute("position") as THREE.BufferAttribute).needsUpdate = true;
