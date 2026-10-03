@@ -45,6 +45,13 @@ const SHOTS = [
   { name: "08-play-onfoot-day", time: "day", play: "foot" },
   { name: "09-play-vehicle-day", time: "day", play: "vehicle" },
   { name: "10-play-onfoot-dusk", time: "dusk", play: "foot" },
+  // Close-ups, relative to a live anchor: "vehicle" (first parked vehicle),
+  // "player" (the avatar, reset to its spawn) or "dome" (the largest radome).
+  { name: "11-vehicle-closeup-day", time: "day", rel: "vehicle", cam: [[7, 3.2, 6.5], [0, 1.1, 0], 45] },
+  { name: "12-character-closeup-day", time: "day", rel: "player", cam: [[2.6, 3.0, 3.4], [0, 1.0, 0], 40] },
+  { name: "13-radome-closeup-day", time: "day", rel: "dome", cam: [[-34, 6, 42], [0, 14, 0], 55] },
+  { name: "14-overview-night", time: "night", cam: [[-640, 360, 620], [-115, 8, -35], 55] },
+  { name: "15-vehicle-closeup-dusk", time: "dusk", rel: "vehicle", cam: [[-6.5, 3.2, -7], [0, 1.1, 0], 45] },
 ];
 
 const browser = await chromium.launch({
@@ -86,7 +93,27 @@ for (const shot of SHOTS) {
     await page.evaluate(() => window.__pineGapCapture.setMode("fly"));
     await page.waitForFunction(() => window.__pineGapCamera, null, { timeout: 60000 });
     await frames(2);
-    await page.evaluate((c) => window.__pineGapCamera.set(c[0], c[1], c[2]), shot.cam);
+    const anchor = await page.evaluate(async (rel) => {
+      const g = window.__pineGapGame;
+      if (rel === "vehicle") {
+        const p = g.vehicles.vehicles[0].frame.position;
+        return [p.x, p.y, p.z];
+      }
+      if (rel === "player") {
+        g.resetForScenario({ x: -61, z: 175, yaw: Math.PI * 0.8 });
+        const p = g.player.position;
+        return [p.x, p.y, p.z];
+      }
+      if (rel === "dome") {
+        const { domes } = await import("/src/lib/site-layout.ts");
+        const { sampleTerrainFrame } = await import("/src/lib/terrain.ts");
+        const d = [...domes].filter((d) => !d.roofMounted).sort((a, b) => b.radius - a.radius)[0];
+        return [d.pos[0], sampleTerrainFrame(d.pos[0], d.pos[1]).height, d.pos[1]];
+      }
+      return [0, 0, 0];
+    }, shot.rel ?? null);
+    const add = (v) => [v[0] + anchor[0], v[1] + anchor[1], v[2] + anchor[2]];
+    await page.evaluate((c) => window.__pineGapCamera.set(c[0], c[1], c[2]), [add(shot.cam[0]), add(shot.cam[1]), shot.cam[2]]);
     await frames(6);
   } else {
     await page.evaluate(() => window.__pineGapCapture.startPlay());
