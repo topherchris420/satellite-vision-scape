@@ -188,14 +188,22 @@ export class CharacterAnimator {
   private buildIdle(relaxed: boolean): void {
     const t = this.time;
     const p = this.idle;
-    const breathe = Math.sin(t * 1.7);
+    // Breathing: a slow inhale, a quicker exhale and a pause.
+    const cyc = (t * 0.27) % 1;
+    const breathe =
+      cyc < 0.42
+        ? -Math.cos((cyc / 0.42) * Math.PI)
+        : cyc < 0.75
+          ? Math.cos(((cyc - 0.42) / 0.33) * Math.PI)
+          : -1;
     const shift = Math.sin(t * (relaxed ? 0.32 : 0.45));
     p.hipsY = -0.01 + breathe * 0.004;
     p.pelvisYaw = 0;
     p.pelvisRoll = shift * 0.025;
-    p.spinePitch = 0.02 + breathe * 0.012;
-    p.spineYaw = 0;
-    p.headPitch = 0.04 + Math.sin(t * 0.31) * 0.03;
+    p.spinePitch = 0.02 - breathe * 0.014;
+    // Occasional slow scan of the surroundings.
+    p.spineYaw = Math.sin(t * 0.21) * Math.sin(t * 0.077) * 0.12;
+    p.headPitch = 0.04 + Math.sin(t * 0.31) * 0.03 + breathe * 0.01;
     p.lHip = 0.02;
     p.rHip = -0.02;
     p.lHipOut = 0.05;
@@ -206,8 +214,8 @@ export class CharacterAnimator {
     p.rAnkle = -0.06;
     p.lArm = 0.04 + breathe * 0.01;
     p.rArm = 0.04 + breathe * 0.01;
-    p.lArmOut = 0.13;
-    p.rArmOut = -0.13;
+    p.lArmOut = 0.13 + breathe * 0.012;
+    p.rArmOut = -0.13 - breathe * 0.012;
     p.lElbow = 0.22;
     p.rElbow = 0.22;
     if (relaxed) {
@@ -234,12 +242,18 @@ export class CharacterAnimator {
     const hipAmp = lerp(0.42, 0.7, run) + sprint * 0.1;
     const kneeSwing = lerp(0.85, 1.45, run) + sprint * 0.2;
     const kneeBase = lerp(0.08, 0.22, run);
-    const armAmp = lerp(0.32, 0.75, run) + sprint * 0.15;
+    const armAmp = lerp(0.38, 0.78, run) + sprint * 0.15;
+    // Loading response: just after heel strike (phase π/2) the stance knee
+    // gives a little under the body's weight, then straightens through
+    // mid-stance. Visual only; heel-strike timing is unchanged.
+    const load = lerp(0.16, 0.1, run);
     const leg = (phase: number) => {
       const swing = Math.max(0, Math.cos(phase));
       const hip = hipAmp * Math.sin(phase);
-      const knee = kneeBase + kneeSwing * swing * swing;
-      return { hip, knee, ankle: (hip - knee) * 0.55 + 0.08 };
+      const local = (((phase - Math.PI / 2) % TAU) + TAU) % TAU;
+      const give = local < Math.PI / 2 ? Math.sin(local * 2) * load : 0;
+      const knee = kneeBase + kneeSwing * swing * swing + give;
+      return { hip, knee, ankle: (hip - knee) * 0.55 + 0.08 + give * 0.4 };
     };
     const l = leg(ph);
     const r = leg(ph + Math.PI);
@@ -254,9 +268,13 @@ export class CharacterAnimator {
     // Walking peaks at mid-stance, running bottoms out there (compression).
     const bob = lerp(0.028, 0.06, run);
     const cycle2 = Math.cos(2 * ph);
-    p.hipsY = lerp(-0.012 + bob * 0.5 * cycle2, -0.06 - bob * 0.5 * cycle2, run);
+    // A sharper dip at each footfall than a pure sine gives the gait weight.
+    const footfall = Math.pow(Math.abs(Math.sin(ph)), 6);
+    p.hipsY =
+      lerp(-0.012 + bob * 0.5 * cycle2, -0.06 - bob * 0.5 * cycle2, run) -
+      footfall * 0.012 * (1 - run);
     p.pelvisYaw = Math.sin(ph) * lerp(0.1, 0.16, run);
-    p.pelvisRoll = Math.sin(ph) * 0.03 * (1 - run);
+    p.pelvisRoll = Math.sin(ph) * lerp(0.045, 0.02, run);
     p.spineYaw = -p.pelvisYaw * 1.25;
     p.spinePitch = lerp(0.05, 0.2, run) + sprint * 0.1;
     p.headPitch = -p.spinePitch * 0.6 + 0.05;
