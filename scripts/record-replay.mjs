@@ -149,6 +149,10 @@ for (let f = 0; f < frameCount; f++) {
   // Sky, clouds and wind sway follow the run's clock, not the renderer's.
   if (at > simulated) await advance(at - simulated);
   simulated = at;
+  // Step a little past the end on the last frame: the replay stops by itself
+  // once its log runs out, so this only makes sure the final logged frame
+  // (where the run's result lands) has been released.
+  if (f === frameCount - 1 && at >= duration - 1e-6) await advance(0.5);
   if (f % WORKERS !== WORKER) continue;
   await page.evaluate((t) => (window.__pineGapCamera.clock.elapsedTime = t), at);
   // One rendered frame commits the HUD; the screenshot renders the next. The
