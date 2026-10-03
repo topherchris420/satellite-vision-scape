@@ -112,6 +112,8 @@ function CaptureCameraBridge() {
     const w = window as unknown as { __pineGapCamera?: unknown };
     w.__pineGapCamera = {
       camera,
+      // Held at zero under ?capture; a recorder sets elapsedTime per frame.
+      clock,
       set(pos: [number, number, number], target: [number, number, number], fov?: number) {
         camera.position.set(...pos);
         if (controls) {
@@ -128,7 +130,7 @@ function CaptureCameraBridge() {
     return () => {
       delete w.__pineGapCamera;
     };
-  }, [camera, controls]);
+  }, [camera, controls, clock]);
   return null;
 }
 

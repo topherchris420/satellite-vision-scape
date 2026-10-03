@@ -7,7 +7,7 @@
 // the real HTMLAudioElement and Web Audio graph. Prints PASS/FAIL per check.
 //
 // Usage: bun run dev --host 127.0.0.1, then
-//   node scripts/verify-after-hours.mjs [baseUrl] [--shots=dir]
+//   node scripts/verify-after-hours.mjs [baseUrl] [--shots=dir] [--quality=high] [--size=1280x720]
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
 
@@ -16,6 +16,14 @@ const SHOTS = (process.argv.find((a) => a.startsWith("--shots=")) || "--shots=.v
   8,
 );
 mkdirSync(SHOTS, { recursive: true });
+// --quality=high pins the render tier (dev servers only); otherwise the
+// performance monitor settles on whatever software rendering can sustain.
+const QUALITY = (process.argv.find((a) => a.startsWith("--quality=")) || "").slice(10) || null;
+const [VIEW_W, VIEW_H] = (
+  (process.argv.find((a) => a.startsWith("--size=")) || "").slice(7) || "960x540"
+)
+  .split("x")
+  .map(Number);
 
 let chromium;
 try {
@@ -62,18 +70,29 @@ const instrument = () => {
 };
 
 async function openPage(options = {}) {
-  const context = await browser.newContext({ viewport: { width: 960, height: 540 }, ...options });
+  const context = await browser.newContext({
+    viewport: { width: VIEW_W, height: VIEW_H },
+    ...options,
+  });
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 300)}`));
   page.on("console", (m) => {
     if (m.type() === "error") errors.push(m.text().slice(0, 300));
   });
   await page.addInitScript(instrument);
+  if (QUALITY)
+    await page.addInitScript((q) => {
+      const pin = setInterval(() => {
+        if (!window.__pineGapCapture) return;
+        window.__pineGapCapture.setQuality(q);
+        clearInterval(pin);
+      }, 200);
+    }, QUALITY);
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
   await page
     .getByRole("button", { name: /after hours/i })
     .first()
-    .waitFor({ timeout: 120000 });
+    .waitFor({ timeout: 900000 });
   await page.waitForTimeout(1500);
   return { context, page };
 }
@@ -152,7 +171,7 @@ await page.reload({ waitUntil: "domcontentloaded" });
 await page
   .getByRole("button", { name: /after hours/i })
   .first()
-  .waitFor({ timeout: 120000 });
+  .waitFor({ timeout: 900000 });
 const mp3 = [];
 page.on("request", (r) => {
   if (r.url().endsWith(".mp3")) mp3.push(r.url().split("/").pop());
@@ -691,7 +710,7 @@ await page.reload({ waitUntil: "domcontentloaded" });
 await page
   .getByRole("button", { name: /continue after hours/i })
   .first()
-  .waitFor({ timeout: 120000 });
+  .waitFor({ timeout: 900000 });
 const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("pine-gap.after-hours")));
 record(
   "reload keeps progress at a safe checkpoint",
