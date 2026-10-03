@@ -34,6 +34,7 @@ export class GateVisuals {
   private readonly booms: THREE.InstancedMesh;
   private readonly posts: THREE.InstancedMesh;
   private readonly beacons: THREE.InstancedMesh;
+  private readonly footings: THREE.InstancedMesh;
   private readonly disposables: { dispose(): void }[] = [];
   private readonly matrix = new THREE.Matrix4();
   private readonly yawMatrix = new THREE.Matrix4();
@@ -47,11 +48,15 @@ export class GateVisuals {
     const stripes = createStripeTexture();
 
     const housingGeometry = new THREE.BoxGeometry(0.42, GATES.housingHeight, 0.42);
+    // Powder-coated safety-yellow cabinet, slightly worn and dusty.
     const housingMaterial = new THREE.MeshStandardMaterial({
-      color: "#b89434",
-      roughness: 0.6,
-      metalness: 0.3,
+      color: "#c29a2e",
+      roughness: 0.48,
+      metalness: 0.15,
     });
+    // Cast concrete footings under the housing and the boom rest post.
+    const footingGeometry = new THREE.BoxGeometry(0.75, 0.16, 0.75);
+    const footingMaterial = new THREE.MeshStandardMaterial({ color: "#b5ad9f", roughness: 0.92 });
     const boomGeometry = new THREE.BoxGeometry(1, 0.09, 0.07);
     boomGeometry.translate(0.5, 0, 0);
     const boomMaterial = new THREE.MeshStandardMaterial({
@@ -76,6 +81,8 @@ export class GateVisuals {
       postMaterial,
       beaconGeometry,
       beaconMaterial,
+      footingGeometry,
+      footingMaterial,
     );
     if (stripes) this.disposables.push(stripes);
 
@@ -83,6 +90,8 @@ export class GateVisuals {
     this.booms = new THREE.InstancedMesh(boomGeometry, boomMaterial, count);
     this.posts = new THREE.InstancedMesh(postGeometry, postMaterial, count);
     this.beacons = new THREE.InstancedMesh(beaconGeometry, beaconMaterial, count);
+    this.footings = new THREE.InstancedMesh(footingGeometry, footingMaterial, count * 2);
+    this.footings.receiveShadow = true;
     for (const mesh of [this.housings, this.booms, this.posts]) {
       mesh.castShadow = true;
       mesh.receiveShadow = true;
@@ -99,12 +108,16 @@ export class GateVisuals {
       const restZ = g.pivotZ + g.dirZ * g.boomLength;
       this.matrix.makeTranslation(restX, g.baseY + 0.5, restZ);
       this.posts.setMatrixAt(i, this.matrix);
+      this.matrix.makeTranslation(restX, g.baseY + 0.02, restZ).multiply(this.scaleMatrix.makeScale(0.5, 1, 0.5));
+      this.footings.setMatrixAt(i * 2 + 1, this.matrix);
+      this.matrix.makeRotationY(yaw).setPosition(g.pivotX, g.baseY + 0.02, g.pivotZ);
+      this.footings.setMatrixAt(i * 2, this.matrix);
       this.matrix.makeTranslation(g.pivotX, g.baseY + GATES.housingHeight + 0.07, g.pivotZ);
       this.beacons.setMatrixAt(i, this.matrix);
       this.beacons.setColorAt(i, BEACON_IDLE);
       this.writeBoom(i);
     });
-    for (const mesh of [this.housings, this.booms, this.posts, this.beacons]) {
+    for (const mesh of [this.housings, this.booms, this.posts, this.beacons, this.footings]) {
       mesh.instanceMatrix.needsUpdate = true;
       mesh.computeBoundingSphere();
       this.root.add(mesh);
@@ -146,7 +159,7 @@ export class GateVisuals {
 
   dispose(): void {
     for (const d of this.disposables) d.dispose();
-    for (const mesh of [this.housings, this.booms, this.posts, this.beacons]) mesh.dispose();
+    for (const mesh of [this.housings, this.booms, this.posts, this.beacons, this.footings]) mesh.dispose();
     this.root.removeFromParent();
   }
 }
