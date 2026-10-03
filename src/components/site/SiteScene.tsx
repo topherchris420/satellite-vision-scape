@@ -10,15 +10,8 @@ import {
 } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
-import {
-  EffectComposer,
-  Bloom,
-  N8AO,
-  SMAA,
-  Vignette,
-  ToneMapping,
-} from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
+import { EffectComposer, EffectGroup, Bloom, N8AO, SMAA } from "@react-three/postprocessing";
+import { SMAAPreset } from "postprocessing";
 
 import * as THREE from "three";
 import { Terrain } from "./Terrain";
@@ -27,7 +20,9 @@ import { SiteFeatures } from "./SiteFeatures";
 import { Roads } from "./Roads";
 import { Atmosphere } from "./Atmosphere";
 import { Controls, HOME_POSITION, type ControlMode, type FocusRequest } from "./Controls";
-import { Lighting, LIGHTING, type TimeOfDay } from "./Lighting";
+import { Lighting, type TimeOfDay } from "./Lighting";
+import { getSkyState } from "./sky/presets";
+import { CinematicGrade } from "./sky/CinematicGrade";
 import { HUD } from "./HUD";
 import { MobileControls } from "./MobileControls";
 import { TerrainDebug, TerrainDebugHUD } from "./TerrainDebug";
@@ -477,12 +472,17 @@ export function SiteScene() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const fogColor = LIGHTING[effectiveTime].fog;
+  const sky = getSkyState(effectiveTime);
+  const fogColor = useMemo(
+    () => new THREE.Color(...sky.solution.horizonSide.map((c) => c * sky.radianceScale) as [number, number, number]),
+    [sky],
+  );
 
-  // Derive DPR and post features from QualityTier
+  // Derive DPR and post features from QualityTier. Low is the phone tier:
+  // no ambient occlusion, a single shadow cascade, the cheap sky.
   const dpr: number | [number, number] =
     qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
-  const enableAO = qualityTier === "high" || qualityTier === "ultra";
+  const enableAO = qualityTier !== "low";
 
   return (
     <div
@@ -622,6 +622,8 @@ export function SiteScene() {
         camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
           antialias: false,
+          powerPreference: "high-performance",
+          stencil: false,
           toneMapping: THREE.NoToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
           preserveDrawingBuffer: true,
@@ -646,8 +648,9 @@ export function SiteScene() {
         <Suspense fallback={null}>
           <Lighting
             time={effectiveTime}
-            highQuality={enableAO}
+            tier={qualityTier}
             shadowFocus={playing && game ? game.focusPoint : null}
+            fogScale={mode === "overhead" ? 0.35 : 1}
           />
           <Terrain />
           <Roads />
@@ -657,7 +660,8 @@ export function SiteScene() {
           <SpatialContextLayer onStatus={onContextStatus} />
           {selected && <SelectionRing sel={selected} />}
           {showDebug && <TerrainDebug />}
-          <fog attach="fog" args={[fogColor, mode === 'overhead' ? 2500 : 1100, 5500]} />
+          {/* Enables fog on every material; the shared aerial-perspective chunk does the real work. */}
+          <fog attach="fog" args={[fogColor, 1100, 5500]} />
           <ReadyProbe onReady={() => setReady(true)} />
           {game && (
             <GameRuntime game={game} playing={playing} status={session.status} time={effectiveTime} />
@@ -665,25 +669,42 @@ export function SiteScene() {
         </Suspense>
 
         {ready && (
-          <EffectComposer multisampling={0}>
-            {enableAO && (
+          <EffectComposer multisampling={0} stencilBuffer={false}>
+            {enableAO ? (
               <N8AO
-                aoRadius={2}
-                intensity={1.1}
-                distanceFalloff={2}
+                aoRadius={qualityTier === "medium" ? 2.2 : 2.6}
+                intensity={qualityTier === "medium" ? 1.6 : 2.1}
+                distanceFalloff={1.4}
+                aoSamples={qualityTier === "ultra" ? 24 : qualityTier === "high" ? 16 : 8}
+                denoiseSamples={qualityTier === "medium" ? 4 : 8}
+                denoiseRadius={10}
+                color={sky.preset.night ? "#05070d" : "#140805"}
                 halfRes={qualityTier !== "ultra"}
+                depthAwareUpsampling
               />
-            )}
-            <Bloom mipmapBlur intensity={0.12} luminanceThreshold={1.0} luminanceSmoothing={0.25} />
-            <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-            {/* Altered Signal grade (fiction, play mode only); low tier uses a CSS fallback. */}
-            {alteredVisible && game && qualityTier !== "low" ? (
-              <SpectralGrade presentation={game.afterHours.presentation} />
             ) : (
               <></>
             )}
-            <SMAA />
-            <Vignette eskil={false} offset={0.22} darkness={0.18} />
+            {/* HDR bloom, tone mapping and grading in one pass; anti-aliasing runs
+                after it on the display-referred image. */}
+            <EffectGroup>
+              <Bloom
+                mipmapBlur
+                intensity={sky.preset.night ? 0.85 : 0.42}
+                luminanceThreshold={sky.preset.night ? 0.55 : 1.15}
+                luminanceSmoothing={0.35}
+                radius={0.78}
+                levels={qualityTier === "low" ? 5 : 8}
+              />
+              <CinematicGrade grade={sky.preset.grade} />
+              {/* Altered Signal grade (fiction, play mode only); low tier uses a CSS fallback. */}
+              {alteredVisible && game && qualityTier !== "low" ? (
+                <SpectralGrade presentation={game.afterHours.presentation} />
+              ) : (
+                <></>
+              )}
+            </EffectGroup>
+            <SMAA preset={qualityTier === "low" ? SMAAPreset.MEDIUM : SMAAPreset.ULTRA} />
           </EffectComposer>
         )}
 
