@@ -4,7 +4,8 @@
 //
 // The page is opened with ?capture, which holds the render clock at zero, and
 // the game is stepped at a fixed 60 Hz with seeded effect jitter, so a shot
-// comes out the same on every run. After Hours is played through the same
+// comes out the same on every run (the concert, which runs on the audio
+// clock, is the one part paced by wall time). After Hours is played through the same
 // handles the browser checks use (scripts/verify-after-hours.mjs): the real
 // buttons, key presses and sites, fast-forwarded where software rendering is
 // too slow to drive in real time.
@@ -407,21 +408,45 @@ if (afterHoursShots.some(wants)) {
       log(`terminal: ${JSON.stringify(await state())}`);
       await shoot("terminal");
     }
-    let locked = false;
-    for (let i = 0; i < 400 && !locked; i++) {
-      const e = await page.evaluate(
-        () => window.__pineGapGame.afterHours.session?.tuning.error ?? 0,
-      );
-      const dir = e > 0.015 ? -1 : e < -0.015 ? 1 : 0;
-      const key = dir < 0 ? "KeyA" : "KeyD";
-      if (dir !== 0) await page.keyboard.down(key);
-      await advance(0.08);
-      if (dir !== 0) await page.keyboard.up(key);
-      if (dir === 0) await advance(0.2);
-      locked = await page.evaluate(
-        () => window.__pineGapGame.afterHours.session?.tuning.locked ?? true,
-      );
-    }
+    // Turn the dial through the virtual stick axis the touch buttons use,
+    // reading the panel's own error, all inside the page: one call per
+    // terminal instead of a round trip per nudge.
+    await page.evaluate(
+      ({ seed }) => {
+        const g = window.__pineGapGame;
+        const camera = window.__pineGapCamera.camera;
+        const cam = camera.isPerspectiveCamera ? camera : null;
+        const random = Math.random;
+        let s = seed >>> 0;
+        Math.random = () => {
+          // mulberry32
+          s = (s + 0x6d2b79f5) >>> 0;
+          let t = s;
+          t = Math.imul(t ^ (t >>> 15), t | 1);
+          t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+          return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+        };
+        const step = (seconds) => {
+          for (let t = 0; t < seconds - 1e-9; t += 1 / 60)
+            g.frame(1 / 60, { simulate: true, camera: cam, establishing: false });
+        };
+        try {
+          for (let i = 0; i < 400; i++) {
+            const session = g.afterHours.session;
+            if (!session || session.tuning.locked) break;
+            const e = session.tuning.error;
+            const dir = e > 0.015 ? -1 : e < -0.015 ? 1 : 0;
+            g.input.virtual.dial = dir;
+            step(dir === 0 ? 0.28 : 0.08);
+            g.input.virtual.dial = 0;
+          }
+        } finally {
+          g.input.virtual.dial = 0;
+          Math.random = random;
+        }
+      },
+      { seed: 0x5eed + ++steps * 7919 },
+    );
     await advance(1.6);
   };
   for (let n = 0; n < sites.terminals.length; n++) await tune(n);
@@ -443,16 +468,27 @@ if (afterHoursShots.some(wants)) {
     await advance(0.2);
   }
 
-  // The midnight concert, in the optional cinematic view.
+  // The midnight concert, in the optional cinematic view. The score, and the
+  // concert with it, run on the audio clock, so this part keeps wall time:
+  // the simulation is stepped alongside so the camera and HUD follow, and
+  // before each shot the audio context is suspended, which holds the score
+  // and everything driven by it still while the frame renders.
   await teleport(sites.listening.x + 1.5, sites.listening.z, -Math.PI / 2);
   await advance(0.4);
   await press("KeyE");
+  const concertStart = Date.now();
+  const concertClock = () => (Date.now() - concertStart) / 1000;
+  await page.waitForTimeout(2000);
   await advance(2);
   await press("KeyV");
-  let played = 2;
   for (const [i, at] of CONCERT_AT.entries()) {
-    await advance(at - played);
-    played = at;
+    await page.evaluate(() => window.__pineGapGame.audio?.context?.resume());
+    while (concertClock() < at) {
+      await advance(0.5);
+      await page.waitForTimeout(400);
+    }
+    await page.evaluate(() => window.__pineGapGame.audio?.context?.suspend());
+    await advance(0.2);
     log(`concert ${at}s: ${JSON.stringify(await state())}`);
     await shoot(variant("concert", CONCERT_AT, i));
   }
