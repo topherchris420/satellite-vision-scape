@@ -43,6 +43,8 @@ const BASE_URL = args.url ?? "http://127.0.0.1:5173/";
 const OUT = args.out ?? "docs/media/screens";
 const W = +(args.w ?? 1280);
 const H = +(args.h ?? 720);
+// The briefing card alone is filmed taller, so the whole card fits.
+const BRIEFING_H = +(args["briefing-h"] ?? 1000);
 const QUALITY = args.quality ?? "high";
 const JPEG = +(args.jpeg ?? 84);
 const KEEP_PNG = args.png === true;
@@ -74,10 +76,23 @@ const ROUTE = [
   [70, -330],
   [58, -344],
 ];
+// Explore cameras: [pos, target, fov]. Any option below that lists several
+// values (comma-separated) films each, suffixed -a, -b…, to choose from.
+const list = (value, fallback) =>
+  String(value ?? fallback)
+    .split(",")
+    .map(Number);
+const EXPLORE_CAMS = {
+  a: [[-640, 360, 620], [-115, 8, -35], 55],
+  b: [[-500, 250, 470], [-110, 6, -40], 50],
+};
+const EXPLORE = String(args["explore-cam"] ?? "a").split(",");
 // How far into the coffee leg the driving still is taken (simulated seconds).
-const DRIVING_AT = +(args["driving-at"] ?? 36);
+const DRIVING_AT = list(args["driving-at"], 36).sort((x, y) => x - y);
 // How far into the midnight transmission the concert still is taken.
-const CONCERT_AT = +(args["concert-at"] ?? 34);
+const CONCERT_AT = list(args["concert-at"], 34).sort((x, y) => x - y);
+// Free Roam poses: walk (on foot, moving) and aim (sights raised).
+const FREE_ROAM = String(args["free-roam"] ?? "walk").split(",");
 mkdirSync(OUT, { recursive: true });
 
 const wants = (name) => !ONLY || ONLY.has(name);
@@ -223,8 +238,9 @@ const press = async (key) => {
   await advance(0.05);
 };
 
+const variant = (name, items, i) => (items.length > 1 ? `${name}-${"abcdef"[i]}` : name);
 async function shoot(name) {
-  if (!wants(name)) return;
+  if (!wants(name.replace(/-[a-f]$/, ""))) return;
   // One rendered frame commits the HUD; the screenshot renders the next.
   await frames(2);
   const png = join(OUT, `${name}.png`);
@@ -270,17 +286,27 @@ if (afterHoursShots.some(wants)) {
     };
   });
 
-  // The briefing card over the pre-deploy view, as the page opens.
-  await shoot("briefing");
+  // The briefing card over the pre-deploy view, as the page opens. The card
+  // is taller than the play viewport, so this one shot gets a taller page.
+  if (wants("briefing")) {
+    await page.setViewportSize({ width: W, height: BRIEFING_H });
+    await frames(2);
+    await shoot("briefing");
+    await page.setViewportSize({ width: W, height: H });
+    await frames(2);
+  }
 
   // Explore: the factual viewer, orbiting the site in daylight.
   if (wants("explore")) {
     await page.evaluate(() => window.__pineGapCapture.setMode("fly"));
     await page.waitForFunction(() => window.__pineGapCamera, null, { timeout: 900000 });
     await frames(2);
-    await page.evaluate(() => window.__pineGapCamera.set([-640, 360, 620], [-115, 8, -35], 55));
-    await frames(4);
-    await shoot("explore");
+    for (const [i, key] of EXPLORE.entries()) {
+      const cam = EXPLORE_CAMS[key] ?? EXPLORE_CAMS.a;
+      await page.evaluate((c) => window.__pineGapCamera.set(c[0], c[1], c[2]), cam);
+      await frames(4);
+      await shoot(variant("explore", EXPLORE, i));
+    }
   }
 
   // After Hours begins at dusk, from the same spawn every time, without
@@ -324,11 +350,15 @@ if (afterHoursShots.some(wants)) {
   await press("KeyE");
   await advance(4);
   await page.evaluate(() => (window.__routeIndex = 0));
-  await advance(DRIVING_AT, ROUTE);
-  log(`driving: ${JSON.stringify(await state())}`);
-  await shoot("driving");
+  let driven = 0;
+  for (const [i, at] of DRIVING_AT.entries()) {
+    await advance(at - driven, ROUTE);
+    driven = at;
+    log(`driving ${at}s: ${JSON.stringify(await state())}`);
+    await shoot(variant("driving", DRIVING_AT, i));
+  }
   // The rest of the leg, then park and deliver.
-  await advance(200 - DRIVING_AT, ROUTE);
+  await advance(200 - driven, ROUTE);
   await press("KeyE");
   await advance(6);
   await teleport(sites.delivery.x + 1.6, sites.delivery.z, -Math.PI / 2);
@@ -419,9 +449,13 @@ if (afterHoursShots.some(wants)) {
   await press("KeyE");
   await advance(2);
   await press("KeyV");
-  await advance(CONCERT_AT - 2);
-  log(`concert: ${JSON.stringify(await state())}`);
-  await shoot("concert");
+  let played = 2;
+  for (const [i, at] of CONCERT_AT.entries()) {
+    await advance(at - played);
+    played = at;
+    log(`concert ${at}s: ${JSON.stringify(await state())}`);
+    await shoot(variant("concert", CONCERT_AT, i));
+  }
   await page.close();
 }
 
@@ -443,12 +477,20 @@ if (wants("free-roam")) {
   await page.waitForFunction(() => window.__pineGapCamera, null, { timeout: 900000 });
   await frames(2);
   await advance(1.5);
-  await page.keyboard.down("KeyW");
-  await advance(2.5);
-  await page.keyboard.up("KeyW");
-  await advance(0.6);
-  log(`free-roam: ${JSON.stringify(await state())}`);
-  await shoot("free-roam");
+  for (const [i, pose] of FREE_ROAM.entries()) {
+    if (pose === "aim") {
+      await page.keyboard.down("KeyQ");
+      await advance(1.2);
+    } else {
+      await page.keyboard.down("KeyW");
+      await advance(2.5);
+      await page.keyboard.up("KeyW");
+      await advance(0.6);
+    }
+    log(`free-roam ${pose}: ${JSON.stringify(await state())}`);
+    await shoot(variant("free-roam", FREE_ROAM, i));
+    if (pose === "aim") await page.keyboard.up("KeyQ");
+  }
   await page.close();
 }
 
