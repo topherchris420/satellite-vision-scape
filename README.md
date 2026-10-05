@@ -355,7 +355,7 @@ AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts --journe
 
 Never prefix these with `VITE_`. Then compare your `run.json` evaluation block with run B's.
 
-**No GPU needed.** Any WebGL browser will do: every screenshot here was captured in headless Chromium on software rendering. Quality adapts automatically, and touch is supported.
+**No GPU needed.** Any WebGL browser will do: every screenshot here was captured in headless Chromium on software rendering (`node scripts/capture-readme-shots.mjs` refilms them from a dev server). Quality adapts automatically, and touch is supported.
 
 ---
 
@@ -393,8 +393,8 @@ flowchart LR
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/frequency-420.jpg" alt="The radio panel holding the receiver at 419.8 while the hold meter fills; objective reads Tune the receiver to 420 and hold it there." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/terminal.jpg" alt="The Rhythm tuning terminal: reference and player waveforms, a dial, match and lock meters, and glowing signal traces leading across the site." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/frequency-420.jpg" alt="Standing beside the parked 4×4 under a dish antenna at dusk, the radio panel holding the receiver at 419.8 while the hold meter fills; the objective reads Tune the receiver to 420 and hold it there." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/terminal.jpg" alt="The Rhythm tuning terminal beside antenna 11-A: reference and player waveforms, a dial, match and lock meters, the four-terminal list with distances, and glowing signal traces leading away across the site." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Frequency 420.</b> Sweep the dial with <code>[</code> <code>]</code> and hold it still for three seconds.</sub></td>
@@ -514,20 +514,20 @@ The first world is a playable reconstruction of the Pine Gap site in Australia's
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting view of the whole site on red desert below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="After Hours begins: the night desk asks for a coffee while the radio starts playing Green Machine." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting daylight view of the whole site, radomes, roads and sheds on red earth and scrub below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="After Hours begins at dusk in the car park: the night desk asks for a coffee, the objective card points to the canteen cart, the soundtrack credit shows and the vehicle radio starts playing Green Machine." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Explore.</b> Orbit the whole site. The data-confidence panel says what is image-traced, what is surveyed and what is live.</sub></td>
     <td align="center"><sub><b>The shift begins.</b> Objective, captions, minimap and a physical vehicle radio, all live HUD.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4×4 past a radome with the vehicle radio playing Indigo People's Green Machine, the coffee at 100% in the cup holder and 494 m to the north antenna hut." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card with Deploy, After Hours, Jev After Hours and Co-pilot." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4×4 north along the site road at dusk, radomes close on the left and long shadows across the road, with the vehicle radio playing Indigo People's Green Machine, the coffee at 99% in the cup holder and 240 m to the north antenna hut." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card over the car park: GTA-Style Free Roam with a challenge and seed, Play, Let Jev Play and Play with Jev Assist; Pine Gap: After Hours with After Hours, Jev After Hours and Co-pilot; and Deploy." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Behind the wheel.</b> The coffee rides in the cup holder; smooth braking keeps it there.</sub></td>
-    <td align="center"><sub><b>The briefing card.</b> Play yourself, play the mystery, or hand it to Jev.</sub></td>
+    <td align="center"><sub><b>The briefing card.</b> Free Roam or the night shift; play yourself, or hand it to Jev.</sub></td>
   </tr>
 </table>
 
