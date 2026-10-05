@@ -483,6 +483,12 @@ Pause (**Esc**) → **After Hours** → _Settings_:
 
 An optional second environment on the same site: a **third-person open world** in which **a person and Jev play the same game**. Walk, aim and shoot, take any vehicle, drive, keep a crowd and the site's attention in mind, and work through one of fourteen seeded challenges. Press **Let Jev Play** and watch Jev control the *same avatar* (walk, get into a real vehicle, drive, aim through the ordinary sights, react to pedestrians and traffic, evade pursuit); press **H** and it is yours again, instantly. Then reset the seed, play it yourself, and compare the two runs side by side, or replay either.
 
+<p align="center">
+  <img src="docs/media/screens/free-roam.jpg" alt="Free Roam played by a person: the soldier avatar on foot in the car park at the start of Borrowed Wheels, a pedestrian ahead and radomes and sheds beyond. The HUD shows the stage card (Take the vehicle · Get into SV-3, the one at the kerb · 100 m · 0:04 of 15:00), health, sidearm, attention and signal shards, and the You · Jev · Assist · Reset · Leave bar." width="100%" />
+  <br />
+  <sub><b>Borrowed Wheels, stage 1 of 3.</b> The person has the controls. <b>Jev</b> or <b>Assist</b> on the bar hands the same avatar over, and <b>H</b> takes it back.</sub>
+</p>
+
 "GTA-style" describes gameplay grammar only. Nothing here uses any commercial game's assets, names, maps, dialogue or music.
 
 - **One action interface.** A person's keyboard and mouse and Jev's local controllers both produce `GameAction`s (`MOVE LOOK SPRINT JUMP AIM FIRE INTERACT ENTER_VEHICLE EXIT_VEHICLE ACCELERATE BRAKE STEER HANDBRAKE HEADLIGHTS WAIT`) on one bus, to one controller, into the input channel the keyboard always wrote. There is no teleport, no position setter, no AI-only physics, and `FIRE` names no target: the sights turn, the trigger is pulled, and the raycast decides.
