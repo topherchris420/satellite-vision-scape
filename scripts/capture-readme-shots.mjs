@@ -152,8 +152,8 @@ const frames = (n) =>
 // the page waits for the one in progress. While a shot is paced against a
 // real clock, the page's animation loop is held (its next frame request is
 // kept, not dropped) so calls return at once, and released to render.
-const holdRender = () =>
-  page.evaluate(() => {
+const holdRender = async () => {
+  await page.evaluate(() => {
     if (window.__rafHeld) return;
     const raf = window.requestAnimationFrame.bind(window);
     window.__rafHeld = { raf, pending: [] };
@@ -162,6 +162,14 @@ const holdRender = () =>
       return 0;
     };
   });
+  // The frame requested before the hold still runs; the loop is parked once
+  // its next request lands in the stub. (Polled on a timer: the default
+  // polling rides on the very callback that is held.)
+  await page.waitForFunction(() => window.__rafHeld && window.__rafHeld.pending.length > 0, null, {
+    timeout: 900000,
+    polling: 500,
+  });
+};
 const releaseRender = () =>
   page.evaluate(() => {
     const held = window.__rafHeld;
