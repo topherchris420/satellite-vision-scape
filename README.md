@@ -410,9 +410,9 @@ flowchart LR
 The waypoints stop there. The night doesn't, quite.
 
 <p align="center">
-  <img src="docs/media/screens/concert.jpg" alt="The midnight concert in the optional cinematic view: radomes traced in light, teal rings at their bases and a beam rising into a teal night sky." width="100%" />
+  <img src="docs/media/screens/concert.jpg" alt="The midnight concert in the optional cinematic view: the row of radomes lit from below under a starry night sky, a teal ring at the base of the nearest one, and the transmission card reading Melody arrives." width="100%" />
   <br />
-  <sub><b>The midnight concert.</b> Beams, rings and a sky band driven by the score's own musical clock (<code>V</code> for the cinematic view).</sub>
+  <sub><b>The midnight concert.</b> Rings, beams and a sky band driven by the score's own musical clock, here as the melody arrives (<code>V</code> for the cinematic view).</sub>
 </p>
 
 Why this task works as an instrument: each stage has an unambiguous, world-determined outcome (delivered or not, locked or not), the hard parts are _judgement_ (which way to turn, when to stop, when to wait), and the tempting shortcuts (naming the frequency, reading the terminal target) are exactly what the agent contract withholds.

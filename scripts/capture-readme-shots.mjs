@@ -87,11 +87,11 @@ const EXPLORE_CAMS = {
   a: [[-640, 360, 620], [-115, 8, -35], 55],
   b: [[-500, 250, 470], [-110, 6, -40], 50],
 };
-const EXPLORE = String(args["explore-cam"] ?? "a").split(",");
+const EXPLORE = String(args["explore-cam"] ?? "b").split(",");
 // How far into the coffee leg the driving still is taken (simulated seconds).
-const DRIVING_AT = list(args["driving-at"], 36).sort((x, y) => x - y);
+const DRIVING_AT = list(args["driving-at"], 44).sort((x, y) => x - y);
 // How far into the midnight transmission the concert still is taken.
-const CONCERT_AT = list(args["concert-at"], 34).sort((x, y) => x - y);
+const CONCERT_AT = list(args["concert-at"], 56).sort((x, y) => x - y);
 // Free Roam poses: walk (on foot, moving) and aim (sights raised).
 const FREE_ROAM = String(args["free-roam"] ?? "walk").split(",");
 mkdirSync(OUT, { recursive: true });
