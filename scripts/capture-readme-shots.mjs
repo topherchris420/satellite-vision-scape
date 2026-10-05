@@ -5,7 +5,7 @@
 // The page is opened with ?capture, which holds the render clock at zero, and
 // the game is stepped at a fixed 60 Hz with seeded effect jitter, so a shot
 // comes out the same on every run (the concert, which runs on the audio
-// clock, is the one part paced by wall time). After Hours is played through the same
+// clock, is paced by its own position instead). After Hours is played through the same
 // handles the browser checks use (scripts/verify-after-hours.mjs): the real
 // buttons, key presses and sites, fast-forwarded where software rendering is
 // too slow to drive in real time.
@@ -469,27 +469,36 @@ if (afterHoursShots.some(wants)) {
   }
 
   // The midnight concert, in the optional cinematic view. The score, and the
-  // concert with it, run on the audio clock, so this part keeps wall time:
-  // the simulation is stepped alongside so the camera and HUD follow, and
-  // before each shot the audio context is suspended, which holds the score
-  // and everything driven by it still while the frame renders.
+  // concert with it, run on the audio clock (which headless Chromium runs
+  // ahead of wall time), so this part is paced by the concert's own
+  // position: the simulation is stepped alongside so the camera and HUD
+  // follow, and before each shot the audio context is suspended, which
+  // holds the score and everything driven by it still while the frame
+  // renders.
   await teleport(sites.listening.x + 1.5, sites.listening.z, -Math.PI / 2);
   await advance(0.4);
   await press("KeyE");
-  const concertStart = Date.now();
-  const concertClock = () => (Date.now() - concertStart) / 1000;
-  await page.waitForTimeout(2000);
-  await advance(2);
-  await press("KeyV");
-  for (const [i, at] of CONCERT_AT.entries()) {
+  const concertPosition = () =>
+    page.evaluate(() => {
+      const ah = window.__pineGapGame.afterHours;
+      return ah.rig ? Math.max(0, ah.rig.now - ah.concertStartAudio) : ah.concertSimTime;
+    });
+  const playUntil = async (at) => {
     await page.evaluate(() => window.__pineGapGame.audio?.context?.resume());
-    while (concertClock() < at) {
-      await advance(0.5);
-      await page.waitForTimeout(400);
+    while ((await concertPosition()) < at) {
+      await advance(0.25);
+      await page.waitForTimeout(50);
     }
     await page.evaluate(() => window.__pineGapGame.audio?.context?.suspend());
-    await advance(0.2);
-    log(`concert ${at}s: ${JSON.stringify(await state())}`);
+    await advance(0.1);
+  };
+  await playUntil(2);
+  await press("KeyV");
+  for (const [i, at] of CONCERT_AT.entries()) {
+    await playUntil(at);
+    log(
+      `concert ${at}s (position ${(await concertPosition()).toFixed(1)} s): ${JSON.stringify(await state())}`,
+    );
     await shoot(variant("concert", CONCERT_AT, i));
   }
   await page.close();
