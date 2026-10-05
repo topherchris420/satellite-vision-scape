@@ -148,6 +148,29 @@ const frames = (n) =>
     n,
   );
 
+// A rendered frame takes minutes under software WebGL, and every call into
+// the page waits for the one in progress. While a shot is paced against a
+// real clock, the page's animation loop is held (its next frame request is
+// kept, not dropped) so calls return at once, and released to render.
+const holdRender = () =>
+  page.evaluate(() => {
+    if (window.__rafHeld) return;
+    const raf = window.requestAnimationFrame.bind(window);
+    window.__rafHeld = { raf, pending: [] };
+    window.requestAnimationFrame = (cb) => {
+      window.__rafHeld.pending.push(cb);
+      return 0;
+    };
+  });
+const releaseRender = () =>
+  page.evaluate(() => {
+    const held = window.__rafHeld;
+    if (!held) return;
+    window.requestAnimationFrame = held.raf;
+    window.__rafHeld = null;
+    for (const cb of held.pending) held.raf(cb);
+  });
+
 // Software WebGL renders well under 1 fps, so simulated time is stepped
 // directly: the same Game.frame the render loop calls, at 60 Hz, with the
 // play camera following. Effects jitter with Math.random (tyre dust), so each
@@ -469,12 +492,13 @@ if (afterHoursShots.some(wants)) {
   }
 
   // The midnight concert, in the optional cinematic view. The score, and the
-  // concert with it, run on the audio clock (which headless Chromium runs
-  // ahead of wall time), so this part is paced by the concert's own
-  // position: the simulation is stepped alongside so the camera and HUD
-  // follow, and before each shot the audio context is suspended, which
-  // holds the score and everything driven by it still while the frame
-  // renders.
+  // concert with it, run on the audio clock, so this part is paced by the
+  // concert's own position, with the animation loop held so the position
+  // can be read as it passes: the simulation is stepped alongside so the
+  // camera and HUD follow, and before each shot the audio context is
+  // suspended, which holds the score and everything driven by it still
+  // while the frame renders.
+  await holdRender();
   await teleport(sites.listening.x + 1.5, sites.listening.z, -Math.PI / 2);
   await advance(0.4);
   await press("KeyE");
@@ -484,6 +508,7 @@ if (afterHoursShots.some(wants)) {
       return ah.rig ? Math.max(0, ah.rig.now - ah.concertStartAudio) : ah.concertSimTime;
     });
   const playUntil = async (at) => {
+    await holdRender();
     await page.evaluate(() => window.__pineGapGame.audio?.context?.resume());
     while ((await concertPosition()) < at) {
       await advance(0.25);
@@ -491,8 +516,10 @@ if (afterHoursShots.some(wants)) {
     }
     await page.evaluate(() => window.__pineGapGame.audio?.context?.suspend());
     await advance(0.1);
+    await releaseRender();
   };
   await playUntil(2);
+  await holdRender();
   await press("KeyV");
   for (const [i, at] of CONCERT_AT.entries()) {
     await playUntil(at);
