@@ -548,6 +548,15 @@ if (wants("free-roam")) {
   });
   await page.waitForFunction(() => window.__pineGapCamera, null, { timeout: 900000 });
   await frames(2);
+  // A person's session captures the mouse; headless Chromium grants pointer
+  // lock to a real click, which also clears the HUD's capture banner.
+  await page
+    .getByRole("button", { name: /capture the mouse/i })
+    .click({ timeout: 600000 })
+    .catch(() => undefined);
+  await page
+    .waitForFunction(() => document.pointerLockElement !== null, null, { timeout: 60000 })
+    .catch(() => log("pointer lock was not granted; the capture banner stays"));
   await advance(1.5);
   for (const [i, pose] of FREE_ROAM.entries()) {
     if (pose === "aim") {
