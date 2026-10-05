@@ -31,7 +31,7 @@
 <p align="center">
   <img src="docs/media/jev-free-roam-live.gif" alt="Time-lapse of a live Jev run in Free Roam: the avatar walks to utility vehicle SV-3, boards it, drives the site road to the checkpoint past the radomes, then shakes off the security response. The replay panel reads REPLAY · JEV · LIVE RUN; the speedometer and gear sit bottom right." width="100%" />
   <br />
-  <sub><i>Jev at the controls, live. Free Roam's <b>Borrowed Wheels</b> (seed 48291), recorded in the browser through <b>Let Jev Play</b> on 3 October 2026: success in 143.7&nbsp;s, 126 decisions, no failures or holds, 183&nbsp;ms mean decision latency, 1,060&nbsp;m driven, one pedestrian collision. Jev never touches the world: each decision becomes the same <code>GameAction</code>s a keyboard and mouse produce, and the simulation decides what happens. The clip is re-rendered frame by frame from the run's trace with today's graphics, which replays the run exactly without calling Jev again, at 8× speed (<a href="docs/media/jev-free-roam-live.mp4">MP4</a> · <a href="docs/traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json">trace</a>). The After Hours runs are <a href="#case-study-jev-plays-after-hours">below</a>; the scripted baseline driving After Hours is <a href="docs/media/agent-drive.gif">here</a>.</i></sub>
+  <sub><i>Jev at the controls, live. Free Roam's <b>Borrowed Wheels</b> (seed 48291), recorded in the browser through <b>Let Jev Play</b> on 3 October 2026: success in 143.7&nbsp;s, 126 decisions, no failures or holds, 183&nbsp;ms mean decision latency, 1,060&nbsp;m driven, one pedestrian collision. Jev never touches the world: each decision becomes the same <code>GameAction</code>s a keyboard and mouse produce, and the simulation decides what happens. The clip is re-rendered frame by frame from the run's trace with today's graphics, which replays the run exactly without calling Jev again, at 8× speed (<a href="docs/media/jev-free-roam-live.mp4">MP4</a> · <a href="docs/traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json">trace</a>). The After Hours runs are <a href="#case-study-jev-plays-after-hours">below</a>; the scripted baseline driving the After Hours coffee leg, filmed the same way on 5 October 2026 (delivered 100% in 87.5&nbsp;s, at 10× speed), is <a href="docs/media/agent-drive.gif">here</a> (<a href="docs/media/agent-drive.mp4">MP4</a>).</i></sub>
 </p>
 
 <p align="center">
@@ -355,7 +355,7 @@ AGENT_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-agent-live.ts --journe
 
 Never prefix these with `VITE_`. Then compare your `run.json` evaluation block with run B's.
 
-**No GPU needed.** Any WebGL browser will do: every screenshot here was captured in headless Chromium on software rendering. Quality adapts automatically, and touch is supported.
+**No GPU needed.** Any WebGL browser will do: every screenshot here was captured in headless Chromium on software rendering (`node scripts/capture-readme-shots.mjs` refilms them from a dev server). Quality adapts automatically, and touch is supported.
 
 ---
 
@@ -393,8 +393,8 @@ flowchart LR
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/frequency-420.jpg" alt="The radio panel holding the receiver at 419.8 while the hold meter fills; objective reads Tune the receiver to 420 and hold it there." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/terminal.jpg" alt="The Rhythm tuning terminal: reference and player waveforms, a dial, match and lock meters, and glowing signal traces leading across the site." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/frequency-420.jpg" alt="Standing beside the parked 4×4 under a dish antenna at dusk, the radio panel holding the receiver at 419.8 while the hold meter fills; the objective reads Tune the receiver to 420 and hold it there." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/terminal.jpg" alt="The Rhythm tuning terminal beside antenna 11-A: reference and player waveforms, a dial, match and lock meters, the four-terminal list with distances, and glowing signal traces leading away across the site." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Frequency 420.</b> Sweep the dial with <code>[</code> <code>]</code> and hold it still for three seconds.</sub></td>
@@ -410,9 +410,9 @@ flowchart LR
 The waypoints stop there. The night doesn't, quite.
 
 <p align="center">
-  <img src="docs/media/screens/concert.jpg" alt="The midnight concert in the optional cinematic view: radomes traced in light, teal rings at their bases and a beam rising into a teal night sky." width="100%" />
+  <img src="docs/media/screens/concert.jpg" alt="The midnight concert in the optional cinematic view: the row of radomes lit from below under a starry night sky, a teal ring at the base of the nearest one, and the transmission card reading Melody arrives." width="100%" />
   <br />
-  <sub><b>The midnight concert.</b> Beams, rings and a sky band driven by the score's own musical clock (<code>V</code> for the cinematic view).</sub>
+  <sub><b>The midnight concert.</b> Rings, beams and a sky band driven by the score's own musical clock, here as the melody arrives (<code>V</code> for the cinematic view).</sub>
 </p>
 
 Why this task works as an instrument: each stage has an unambiguous, world-determined outcome (delivered or not, locked or not), the hard parts are _judgement_ (which way to turn, when to stop, when to wait), and the tempting shortcuts (naming the frequency, reading the terminal target) are exactly what the agent contract withholds.
@@ -483,6 +483,12 @@ Pause (**Esc**) → **After Hours** → _Settings_:
 
 An optional second environment on the same site: a **third-person open world** in which **a person and Jev play the same game**. Walk, aim and shoot, take any vehicle, drive, keep a crowd and the site's attention in mind, and work through one of fourteen seeded challenges. Press **Let Jev Play** and watch Jev control the *same avatar* (walk, get into a real vehicle, drive, aim through the ordinary sights, react to pedestrians and traffic, evade pursuit); press **H** and it is yours again, instantly. Then reset the seed, play it yourself, and compare the two runs side by side, or replay either.
 
+<p align="center">
+  <img src="docs/media/screens/free-roam.jpg" alt="Free Roam played by a person: the soldier avatar on foot in the car park at the start of Borrowed Wheels, a pedestrian ahead and radomes and sheds beyond. The HUD shows the stage card (Take the vehicle · Get into SV-3, the one at the kerb · 100 m · 0:04 of 15:00), health, sidearm, attention and signal shards, and the You · Jev · Assist · Reset · Leave bar." width="100%" />
+  <br />
+  <sub><b>Borrowed Wheels, stage 1 of 3.</b> The person has the controls. <b>Jev</b> or <b>Assist</b> on the bar hands the same avatar over, and <b>H</b> takes it back.</sub>
+</p>
+
 "GTA-style" describes gameplay grammar only. Nothing here uses any commercial game's assets, names, maps, dialogue or music.
 
 - **One action interface.** A person's keyboard and mouse and Jev's local controllers both produce `GameAction`s (`MOVE LOOK SPRINT JUMP AIM FIRE INTERACT ENTER_VEHICLE EXIT_VEHICLE ACCELERATE BRAKE STEER HANDBRAKE HEADLIGHTS WAIT`) on one bus, to one controller, into the input channel the keyboard always wrote. There is no teleport, no position setter, no AI-only physics, and `FIRE` names no target: the sights turn, the trigger is pulled, and the raycast decides.
@@ -514,20 +520,20 @@ The first world is a playable reconstruction of the Pine Gap site in Australia's
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting view of the whole site on red desert below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="After Hours begins: the night desk asks for a coffee while the radio starts playing Green Machine." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an orbiting daylight view of the whole site, radomes, roads and sheds on red earth and scrub below the ridge line, with the data-confidence panel and the site map." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="After Hours begins at dusk in the car park: the night desk asks for a coffee, the objective card points to the canteen cart, the soundtrack credit shows and the vehicle radio starts playing Green Machine." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Explore.</b> Orbit the whole site. The data-confidence panel says what is image-traced, what is surveyed and what is live.</sub></td>
     <td align="center"><sub><b>The shift begins.</b> Objective, captions, minimap and a physical vehicle radio, all live HUD.</sub></td>
   </tr>
   <tr>
-    <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4×4 past a radome with the vehicle radio playing Indigo People's Green Machine, the coffee at 100% in the cup holder and 494 m to the north antenna hut." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card with Deploy, After Hours, Jev After Hours and Co-pilot." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4×4 north along the site road at dusk, radomes close on the left and long shadows across the road, with the vehicle radio playing Indigo People's Green Machine, the coffee at 99% in the cup holder and 240 m to the north antenna hut." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The briefing card over the car park: GTA-Style Free Roam with a challenge and seed, Play, Let Jev Play and Play with Jev Assist; Pine Gap: After Hours with After Hours, Jev After Hours and Co-pilot; and Deploy." width="100%" /></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Behind the wheel.</b> The coffee rides in the cup holder; smooth braking keeps it there.</sub></td>
-    <td align="center"><sub><b>The briefing card.</b> Play yourself, play the mystery, or hand it to Jev.</sub></td>
+    <td align="center"><sub><b>The briefing card.</b> Free Roam or the night shift; play yourself, or hand it to Jev.</sub></td>
   </tr>
 </table>
 
