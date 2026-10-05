@@ -95,6 +95,39 @@ const frames = (n) =>
     n,
   );
 
+// A rendered frame takes a minute or more under software WebGL, and every
+// call into the page waits for the one in progress. So the page's animation
+// loop is parked (its next frame request is kept, not dropped) and exactly
+// one frame is drawn for each screenshot.
+const holdRender = async () => {
+  await page.evaluate(() => {
+    if (window.__rafHeld) return;
+    const raf = window.requestAnimationFrame.bind(window);
+    window.__rafHeld = { raf, pending: [] };
+    window.requestAnimationFrame = (cb) => {
+      window.__rafHeld.pending.push(cb);
+      return 0;
+    };
+  });
+  // The frame requested before the hold still runs; the loop is parked once
+  // its next request lands in the stub. (Polled on a timer: the default
+  // polling rides on the very callback that is held.)
+  await page.waitForFunction(() => window.__rafHeld && window.__rafHeld.pending.length > 0, null, {
+    timeout: 900000,
+    polling: 500,
+  });
+};
+const renderOneFrame = async () => {
+  await page.evaluate(() => {
+    const held = window.__rafHeld;
+    for (const cb of held.pending.splice(0)) held.raf(cb);
+  });
+  await page.waitForFunction(() => window.__rafHeld && window.__rafHeld.pending.length > 0, null, {
+    timeout: 900000,
+    polling: 500,
+  });
+};
+
 // After Hours begins at dusk from the usual spawn, without capturing the
 // mouse (the page's button, minus pointer lock).
 await page.evaluate((spawn) => {
@@ -116,6 +149,7 @@ await page.waitForFunction(() => window.__pineGapGame.agent.runtime.mode !== "hu
   timeout: 900000,
 });
 console.log("baseline in control");
+await holdRender();
 
 // Simulated time is stepped at 60 Hz with the play camera following. The
 // baseline answers through a promise, so time moves in short runs with a
@@ -178,8 +212,8 @@ for (let f = 0; ; f++) {
   simulated = at;
   // Sky, clouds and wind sway follow the run's clock, not the renderer's.
   await page.evaluate((t) => (window.__pineGapCamera.clock.elapsedTime = t), at);
-  // One rendered frame commits the HUD; the screenshot renders the next.
-  await frames(1);
+  // One frame is drawn, then captured.
+  await renderOneFrame();
   await page.screenshot({ path: join(OUT, `${String(f).padStart(5, "0")}.png`), timeout: 900000 });
   const s = await status();
   if (f % 10 === 0 || s.mission === "completed")
