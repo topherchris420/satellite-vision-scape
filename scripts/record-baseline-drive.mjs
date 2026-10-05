@@ -10,12 +10,14 @@
 // --speed plays the run faster than real time (8 = an 8x time-lapse). The
 // recording ends a moment after the coffee is delivered, or at --to seconds.
 // Then, for the README:
-//   ffmpeg -framerate 8 -i frames/%05d.png -c:v libx264 -pix_fmt yuv420p \
-//          -vf scale=960:-2 -crf 23 docs/media/agent-drive.mp4
-//   ffmpeg -framerate 8 -i frames/%05d.png -vf "scale=800:-1:flags=lanczos,palettegen=max_colors=160:stats_mode=diff" palette.png
+//   ffmpeg -framerate 8 -i frames/%05d.png -c:v libx264 -pix_fmt yuv420p -crf 23 \
+//          -movflags +faststart docs/media/agent-drive.mp4
+//   ffmpeg -framerate 8 -i frames/%05d.png -vf "fps=6,scale=720:-1:flags=lanczos,palettegen=max_colors=128:stats_mode=diff" palette.png
 //   ffmpeg -framerate 8 -i frames/%05d.png -i palette.png -lavfi \
-//          "scale=800:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
+//          "fps=6,scale=720:-1:flags=lanczos[x];[x][1:v]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
 //          docs/media/agent-drive.gif
+// (The photographic ground and vegetation compress poorly as GIF; 720 px at
+// 6 fps keeps the linked file under 5 MB. The MP4 is the better copy.)
 import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
