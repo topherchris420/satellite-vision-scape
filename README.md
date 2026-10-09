@@ -10,6 +10,8 @@
 <br />
 
 > ### The agent chooses what to try. The simulation decides what happens.
+>
+> A pretty victory is not enough. Here, the **controls, physics, failures and trace** must tell the same story.
 
 <br />
 
@@ -49,6 +51,18 @@
 
 ---
 
+## Choose who takes the controls
+
+**You can test the same environment three ways.** None requires you to accept the agent's account of what happened.
+
+| Try | What to do | What you can observe |
+| --- | --- | --- |
+| **Play** | [Open the public world](https://geotwn.vercel.app/) and choose After Hours | The cues and mechanics a human actually receives |
+| **Watch the baseline** | [Open the scripted controller](https://geotwn.vercel.app/?controller=mock) | How a deterministic policy handles the same route without a model key |
+| **Inspect a model run** | [Read the recorded Jev trace](docs/traces/jev-after-hours-live-2026-09-27.json) or [watch the Free Roam replay](docs/media/jev-free-roam-live.mp4) | Decisions, movement, rejections, outcomes and limitations, without generating new model calls |
+
+Live Jev is an **optional, keyed integration** and is not enabled on the public deployment. The homepage GIF shows a re-rendering of a recorded session, not an active model inference stream. In the [Free Roam recorded run](docs/traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json), a pedestrian collision is reported alongside the successful task. That failure matters as much as the completion.
+
 ## Same world. Same controls. Same physics. Every action on record.
 
 It is easy to make an agent look capable: give it an API that teleports it, a peek at the answer, a scorer that takes its word. Satellite Vision Scape does the opposite. A person and an agent enter the same simulation, their controls reach it through the same input path, and **the world, not the agent, says what happened**.
@@ -75,7 +89,7 @@ It is easy to make an agent look capable: give it an API that teleports it, a pe
 The setting is playable, cinematic and a little strange: a night shift at a reconstructed Pine Gap, a coffee run, a numbers station, four signal terminals and a midnight concert. That is deliberate. It makes a long, physical, multi-stage task that a person enjoys and an agent can fail at in instructive ways. But the thing being built is the instrument underneath: **a shared world in which the behaviour of humans and AI agents can be recorded, measured, replayed and compared.**
 
 > [!NOTE]
-> **What exists today:** one environment (Pine Gap), one worked task (After Hours), four agent providers (Jev, a scripted baseline, a seeded random agent and replay), and one complete live Jev run on record. It is not an environment-authoring tool, a multiplayer server, a sandbox for untrusted code or a server-attested benchmark. Details under [Known limitations](#known-limitations).
+> **What exists today:** one Pine Gap environment, two documented task modes (After Hours and Free Roam), and human, scripted, seeded-random, replay and model-controlled runs. A complete live Jev After Hours session and a separate live Jev Borrowed Wheels session are recorded, **not a repeated-trial success rate**. This is not an environment-authoring tool, a multiplayer server, a sandbox for untrusted code or a server-attested benchmark. Details under [Known limitations](#known-limitations).
 
 ---
 
