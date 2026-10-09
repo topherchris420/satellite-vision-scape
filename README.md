@@ -51,6 +51,10 @@
 
 ---
 
+### Mathematical research extension (not yet tested)
+
+**How much apparent agent ability comes from an advantageous route or a permissive environment?** [Examine the proposed experiment, assumptions and negative control](docs/MATH_RESEARCH.md). Candidate `openai/math` references are available through the [shared R.A.I.N. portfolio scout](https://github.com/topherchris420/lop-nur-twin/blob/main/docs/MATH_PORTFOLIO.md), not installed or automatically applied to this runtime.
+
 ## Choose who takes the controls
 
 **You can test the same environment three ways.** None requires you to accept the agent's account of what happened.
