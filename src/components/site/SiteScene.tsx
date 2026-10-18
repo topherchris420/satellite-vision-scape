@@ -285,8 +285,11 @@ export function SiteScene() {
   const [game, setGame] = useState<Game | null>(null);
   const [gameError, setGameError] = useState<string | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  // On portable devices, let the terrain finish loading before constructing
+  // gameplay meshes and collision data. This avoids two peak allocations at once.
+  const canCreateGame = deviceProfile === "desktop" || (deviceProfile === "portable" && ready);
   useEffect(() => {
-    if (!deviceProfile) return;
+    if (!canCreateGame) return;
     let instance: Game;
     try {
       instance = new Game({ visuals: true, dustSprite: getSiteTextures().smokeSprite });
@@ -301,7 +304,7 @@ export function SiteScene() {
     // Development-only handle for debugging and automated browser checks.
     if (import.meta.env.DEV) (window as unknown as { __pineGapGame?: Game }).__pineGapGame = instance;
     return () => instance.dispose();
-  }, [deviceProfile]);
+  }, [canCreateGame]);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
   const modeRef = useRef(mode);
