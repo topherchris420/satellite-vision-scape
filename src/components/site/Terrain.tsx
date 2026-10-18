@@ -77,7 +77,7 @@ export function Terrain({ quality = "high" }: { quality?: QualityTier }) {
   const images = useLoader(THREE.ImageLoader, layerUrls(GROUND_LAYERS));
   // Phones get half-resolution layers; the arrays are packed once per size.
   const layers = useMemo(
-    () => packLayers("ground", images, GROUND_LAYERS.length, level === 0 ? 512 : 1024),
+    () => packLayers("ground", images, GROUND_LAYERS.length, level === 0 ? 256 : 1024),
     [images, level],
   );
   const material = useMemo(() => createGroundMaterial(layers, level), [layers, level]);
