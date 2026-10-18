@@ -253,6 +253,15 @@ function SelectionRing({ sel }: { sel: Selection }) {
 
 export function SiteScene() {
   const isMobile = useIsMobile();
+  // Wait for a client-side hardware profile before mounting WebGL or the game.
+  // SSR starts without this information; mounting at desktop quality first can
+  // exhaust a phone's GPU memory before the mobile media-query effect runs.
+  const [deviceProfile, setDeviceProfile] = useState<"portable" | "desktop" | null>(null);
+  useEffect(() => {
+    const portable = window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches;
+    setQualityTier(portable ? "low" : "high");
+    setDeviceProfile(portable ? "portable" : "desktop");
+  }, []);
   const [mode, setMode] = useState<ControlMode>("play");
   const [time, setTime] = useState<TimeOfDay>("day");
   const [ready, setReady] = useState(false);
@@ -263,7 +272,7 @@ export function SiteScene() {
   const [showDebug, setShowDebug] = useState(false);
 
   // Quality Tier Architecture
-  const [qualityTier, setQualityTier] = useState<QualityTier>(isMobile ? "low" : "high");
+  const [qualityTier, setQualityTier] = useState<QualityTier>("high");
   const [manualQuality, setManualQuality] = useState(false);
 
   const markerRef = useRef<SVGGElement>(null);
@@ -276,7 +285,11 @@ export function SiteScene() {
   const [game, setGame] = useState<Game | null>(null);
   const [gameError, setGameError] = useState<string | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  // On portable devices, let the terrain finish loading before constructing
+  // gameplay meshes and collision data. This avoids two peak allocations at once.
+  const canCreateGame = deviceProfile === "desktop" || (deviceProfile === "portable" && ready);
   useEffect(() => {
+    if (!canCreateGame) return;
     let instance: Game;
     try {
       instance = new Game({ visuals: true, dustSprite: getSiteTextures().smokeSprite });
@@ -291,7 +304,7 @@ export function SiteScene() {
     // Development-only handle for debugging and automated browser checks.
     if (import.meta.env.DEV) (window as unknown as { __pineGapGame?: Game }).__pineGapGame = instance;
     return () => instance.dispose();
-  }, []);
+  }, [canCreateGame]);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
   const modeRef = useRef(mode);
@@ -483,7 +496,7 @@ export function SiteScene() {
   // Derive DPR and post features from QualityTier. Low is the phone tier:
   // no ambient occlusion, a single shadow cascade, the cheap sky.
   const dpr: number | [number, number] =
-    qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
+    deviceProfile === "portable" ? 0.85 : qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
   const enableAO = qualityTier !== "low";
 
   return (
@@ -618,8 +631,8 @@ export function SiteScene() {
         </div>
       </div>
 
-      <Canvas
-        shadows="percentage"
+      {deviceProfile && <Canvas
+        shadows={deviceProfile === "portable" ? false : "percentage"}
         dpr={dpr}
         camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
@@ -628,12 +641,15 @@ export function SiteScene() {
           stencil: false,
           toneMapping: THREE.NoToneMapping,
           outputColorSpace: THREE.SRGBColorSpace,
-          preserveDrawingBuffer: true,
+          // Keeping every frame alive doubles down on WebGL memory pressure.
+          // Retain it only for the development capture harness.
+          preserveDrawingBuffer: import.meta.env.DEV &&
+            typeof window !== "undefined" && new URLSearchParams(window.location.search).has("capture"),
         }}
         onPointerMissed={() => setSelected(null)}
         onCreated={({ gl }) => setCanvas(gl.domElement)}
       >
-        {!manualQuality && (
+        {!manualQuality && deviceProfile !== "portable" && (
           <PerformanceMonitor
             flipflops={4}
             onDecline={() => {
@@ -670,7 +686,7 @@ export function SiteScene() {
           )}
         </Suspense>
 
-        {ready && (
+        {ready && deviceProfile !== "portable" && (
           <EffectComposer multisampling={0} stencilBuffer={false}>
             {enableAO ? (
               <N8AO
@@ -719,7 +735,7 @@ export function SiteScene() {
         />
         <Controls mode={mode} focus={focus} />
         {import.meta.env.DEV && <CaptureCameraBridge />}
-      </Canvas>
+      </Canvas>}
     </div>
   );
 }

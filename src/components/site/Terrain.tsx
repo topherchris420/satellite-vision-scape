@@ -74,11 +74,26 @@ function buildGroundGeometry() {
 
 export function Terrain({ quality = "high" }: { quality?: QualityTier }) {
   const level = QUALITY_LEVEL[quality];
-  const images = useLoader(THREE.ImageLoader, layerUrls(GROUND_LAYERS));
-  // Phones get half-resolution layers; the arrays are packed once per size.
+  // Decode terrain images directly to the texture budget. The old ImageLoader
+  // kept all 18 original-size decoded images resident in browser memory, even
+  // when the shader only needed 256px layers on a phone.
+  const textureSize = level === 0 ? 256 : 1024;
+  const imageUrls = useMemo(
+    () => layerUrls(GROUND_LAYERS).map((url) => `${url}?texture-size=${textureSize}`),
+    [textureSize],
+  );
+  const images = useLoader(THREE.ImageBitmapLoader, imageUrls, (loader) => {
+    loader.setOptions({
+      resizeWidth: textureSize,
+      resizeHeight: textureSize,
+      resizeQuality: "medium",
+      premultiplyAlpha: "none",
+    });
+  });
+  // Distinct URLs prevent loaders from reusing bitmaps decoded at another size.
   const layers = useMemo(
-    () => packLayers("ground", images, GROUND_LAYERS.length, level === 0 ? 512 : 1024),
-    [images, level],
+    () => packLayers("ground", images, GROUND_LAYERS.length, textureSize),
+    [images, textureSize],
   );
   const material = useMemo(() => createGroundMaterial(layers, level), [layers, level]);
   // Painted spinifex footprints take over exactly where the 3D hummocks end.
