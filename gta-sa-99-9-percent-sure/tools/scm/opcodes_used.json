@@ -1,0 +1,5554 @@
+{
+ "note": "Signatures of the commands used by the 99.9% SURE scripts, exported from the Sanny Builder library (sa.json).",
+ "source": "sa.json",
+ "commands": {
+  "0000": {
+   "name": "NOP",
+   "extension": "default",
+   "attrs": {},
+   "params": []
+  },
+  "0001": {
+   "name": "WAIT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0002": {
+   "name": "GOTO",
+   "extension": "default",
+   "attrs": {
+    "is_branch": true,
+    "is_segment": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "label",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0003": {
+   "name": "SHAKE_CAM",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "intensity",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0004": {
+   "name": "SET_VAR_INT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_global",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0006": {
+   "name": "SET_LVAR_INT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0007": {
+   "name": "SET_LVAR_FLOAT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "000A": {
+   "name": "ADD_VAL_TO_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "000B": {
+   "name": "ADD_VAL_TO_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "000E": {
+   "name": "SUB_VAL_FROM_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "000F": {
+   "name": "SUB_VAL_FROM_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0012": {
+   "name": "MULT_INT_LVAR_BY_VAL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0013": {
+   "name": "MULT_FLOAT_LVAR_BY_VAL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0016": {
+   "name": "DIV_INT_LVAR_BY_VAL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0017": {
+   "name": "DIV_FLOAT_LVAR_BY_VAL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0019": {
+   "name": "IS_INT_LVAR_GREATER_THAN_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "001B": {
+   "name": "IS_NUMBER_GREATER_THAN_INT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "001D": {
+   "name": "IS_INT_LVAR_GREATER_THAN_INT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0021": {
+   "name": "IS_FLOAT_LVAR_GREATER_THAN_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0023": {
+   "name": "IS_NUMBER_GREATER_THAN_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0029": {
+   "name": "IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "002B": {
+   "name": "IS_NUMBER_GREATER_OR_EQUAL_TO_INT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "002D": {
+   "name": "IS_INT_LVAR_GREATER_OR_EQUAL_TO_INT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0035": {
+   "name": "IS_FLOAT_LVAR_GREATER_OR_EQUAL_TO_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0038": {
+   "name": "IS_INT_VAR_EQUAL_TO_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_global",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "0039": {
+   "name": "IS_INT_LVAR_EQUAL_TO_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "003B": {
+   "name": "IS_INT_LVAR_EQUAL_TO_INT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0043": {
+   "name": "IS_FLOAT_LVAR_EQUAL_TO_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "literal",
+     "out": false
+    }
+   ]
+  },
+  "004D": {
+   "name": "GOTO_IF_FALSE",
+   "extension": "default",
+   "attrs": {
+    "is_branch": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "label",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "004E": {
+   "name": "TERMINATE_THIS_SCRIPT",
+   "extension": "default",
+   "attrs": {
+    "is_branch": true
+   },
+   "params": []
+  },
+  "0050": {
+   "name": "GOSUB",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "label",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0051": {
+   "name": "RETURN",
+   "extension": "default",
+   "attrs": {},
+   "params": []
+  },
+  "005A": {
+   "name": "ADD_INT_LVAR_TO_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "005B": {
+   "name": "ADD_FLOAT_LVAR_TO_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0062": {
+   "name": "SUB_INT_LVAR_FROM_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0063": {
+   "name": "SUB_FLOAT_LVAR_FROM_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "006B": {
+   "name": "MULT_FLOAT_LVAR_BY_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0073": {
+   "name": "DIV_FLOAT_LVAR_BY_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0085": {
+   "name": "SET_LVAR_INT_TO_LVAR_INT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0087": {
+   "name": "SET_LVAR_FLOAT_TO_LVAR_FLOAT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "008B": {
+   "name": "SET_LVAR_INT_TO_VAR_INT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_global",
+     "out": false
+    }
+   ]
+  },
+  "0092": {
+   "name": "CSET_LVAR_INT_TO_LVAR_FLOAT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0093": {
+   "name": "CSET_LVAR_FLOAT_TO_LVAR_INT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "009A": {
+   "name": "CREATE_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "pedType",
+     "type": "PedType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "modelId",
+     "type": "model_char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "009B": {
+   "name": "DELETE_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_destructor": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00A0": {
+   "name": "GET_CHAR_COORDINATES",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "00A1": {
+   "name": "SET_CHAR_COORDINATES",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00A5": {
+   "name": "CREATE_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_vehicle",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Car",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "00A7": {
+   "name": "CAR_GOTO_COORDINATES",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00A8": {
+   "name": "CAR_WANDER_RANDOMLY",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00A9": {
+   "name": "CAR_SET_IDLE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00AA": {
+   "name": "GET_CAR_COORDINATES",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "00AD": {
+   "name": "SET_CAR_CRUISE_SPEED",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "maxSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00AE": {
+   "name": "SET_CAR_DRIVING_STYLE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drivingStyle",
+     "type": "DrivingMode",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00BA": {
+   "name": "PRINT_BIG",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "style",
+     "type": "TextStyle",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00BC": {
+   "name": "PRINT_NOW",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "flag",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00D6": {
+   "name": "IF",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00D8": {
+   "name": "MISSION_HAS_FINISHED",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "00DB": {
+   "name": "IS_CHAR_IN_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00DF": {
+   "name": "IS_CHAR_IN_ANY_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00E1": {
+   "name": "IS_BUTTON_PRESSED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "pad",
+     "type": "PadId",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "buttonId",
+     "type": "Button",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00E2": {
+   "name": "GET_PAD_STATE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "pad",
+     "type": "PadId",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "buttonId",
+     "type": "Button",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "00F2": {
+   "name": "LOCATE_CHAR_ANY_MEANS_CHAR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "target",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00FE": {
+   "name": "LOCATE_CHAR_ANY_MEANS_3D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00FF": {
+   "name": "LOCATE_CHAR_ON_FOOT_3D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0100": {
+   "name": "LOCATE_CHAR_IN_CAR_3D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0102": {
+   "name": "LOCATE_STOPPED_CHAR_ON_FOOT_3D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0107": {
+   "name": "CREATE_OBJECT",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_object",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Object",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0108": {
+   "name": "DELETE_OBJECT",
+   "extension": "default",
+   "attrs": {
+    "is_destructor": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0109": {
+   "name": "ADD_SCORE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "money",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "010D": {
+   "name": "ALTER_WANTED_LEVEL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "wantedLevel",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0110": {
+   "name": "CLEAR_WANTED_LEVEL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0112": {
+   "name": "HAS_DEATHARREST_BEEN_EXECUTED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": []
+  },
+  "0118": {
+   "name": "IS_CHAR_DEAD",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0119": {
+   "name": "IS_CAR_DEAD",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0129": {
+   "name": "CREATE_CHAR_INSIDE_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "pedType",
+     "type": "PedType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "modelId",
+     "type": "model_char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "015F": {
+   "name": "SET_FIXED_CAMERA_POSITION",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "upVecOffsetX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "upVecOffsetY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "upVecOffsetZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0160": {
+   "name": "POINT_CAMERA_AT_POINT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "switchStyle",
+     "type": "SwitchType",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0164": {
+   "name": "REMOVE_BLIP",
+   "extension": "default",
+   "attrs": {
+    "is_destructor": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Blip",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "016A": {
+   "name": "DO_FADE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "direction",
+     "type": "Fade",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "016B": {
+   "name": "GET_FADING_STATUS",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": []
+  },
+  "0172": {
+   "name": "GET_CHAR_HEADING",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0173": {
+   "name": "SET_CHAR_HEADING",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0175": {
+   "name": "SET_CAR_HEADING",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0177": {
+   "name": "SET_OBJECT_HEADING",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0186": {
+   "name": "ADD_BLIP_FOR_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Blip",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0187": {
+   "name": "ADD_BLIP_FOR_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "char",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Blip",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "018A": {
+   "name": "ADD_BLIP_FOR_COORD",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Blip",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "018B": {
+   "name": "CHANGE_BLIP_DISPLAY",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Blip",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "display",
+     "type": "BlipDisplay",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "018C": {
+   "name": "ADD_ONE_OFF_SOUND",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "soundId",
+     "type": "ScriptSound",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01AD": {
+   "name": "LOCATE_CAR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01B2": {
+   "name": "GIVE_WEAPON_TO_CHAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "weaponType",
+     "type": "WeaponType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "ammo",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01B4": {
+   "name": "SET_PLAYER_CONTROL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01B9": {
+   "name": "SET_CURRENT_CHAR_WEAPON",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "weaponType",
+     "type": "WeaponType",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01BD": {
+   "name": "GET_GAME_TIMER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "time",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "01C0": {
+   "name": "STORE_WANTED_LEVEL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "wantedLevel",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "01C1": {
+   "name": "IS_CAR_STOPPED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01C2": {
+   "name": "MARK_CHAR_AS_NO_LONGER_NEEDED",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01C3": {
+   "name": "MARK_CAR_AS_NO_LONGER_NEEDED",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01C4": {
+   "name": "MARK_OBJECT_AS_NO_LONGER_NEEDED",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01C8": {
+   "name": "CREATE_CHAR_AS_PASSENGER",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "pedType",
+     "type": "PedType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "modelId",
+     "type": "model_char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "seat",
+     "type": "SeatId",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "01E3": {
+   "name": "PRINT_WITH_NUMBER_BIG",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "num",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "duration",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "style",
+     "type": "TextStyle",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01E5": {
+   "name": "PRINT_WITH_NUMBER_NOW",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "num",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "duration",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "flag",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01E8": {
+   "name": "SWITCH_ROADS_OFF",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "leftBottomX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "01F0": {
+   "name": "SET_MAX_WANTED_LEVEL",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "wantedLevel",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0202": {
+   "name": "LOCATE_CHAR_ANY_MEANS_CAR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0209": {
+   "name": "GENERATE_RANDOM_INT_IN_RANGE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "min",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "max",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "result",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "020A": {
+   "name": "LOCK_CAR_DOORS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockStatus",
+     "type": "CarLock",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0223": {
+   "name": "SET_CHAR_HEALTH",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "health",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0224": {
+   "name": "SET_CAR_HEALTH",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "health",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0227": {
+   "name": "GET_CAR_HEALTH",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "health",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0229": {
+   "name": "CHANGE_CAR_COLOUR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "color1",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "color2",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "022B": {
+   "name": "SWITCH_PED_ROADS_OFF",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "leftBottomX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "023C": {
+   "name": "LOAD_SPECIAL_CHARACTER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "slotId",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "modelName",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "023D": {
+   "name": "HAS_SPECIAL_CHARACTER_LOADED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "slotId",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0247": {
+   "name": "REQUEST_MODEL",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0248": {
+   "name": "HAS_MODEL_LOADED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0249": {
+   "name": "MARK_MODEL_AS_NO_LONGER_NEEDED",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0256": {
+   "name": "IS_PLAYER_PLAYING",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0296": {
+   "name": "UNLOAD_SPECIAL_CHARACTER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "slotId",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02A3": {
+   "name": "SWITCH_WIDESCREEN",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02A7": {
+   "name": "ADD_SPRITE_BLIP_FOR_CONTACT_POINT",
+   "extension": "default",
+   "attrs": {
+    "is_constructor": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "sprite",
+     "type": "RadarSprite",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Blip",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "02A9": {
+   "name": "SET_CHAR_ONLY_DAMAGED_BY_PLAYER",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02AA": {
+   "name": "SET_CAR_ONLY_DAMAGED_BY_PLAYER",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02C0": {
+   "name": "GET_CLOSEST_CHAR_NODE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "nodeX",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeY",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeZ",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "02C1": {
+   "name": "GET_CLOSEST_CAR_NODE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "nodeX",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeY",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeZ",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "02C2": {
+   "name": "CAR_GOTO_COORDINATES_ACCURATE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02CE": {
+   "name": "GET_GROUND_Z_FOR_3D_COORD",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "groundZ",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "02E0": {
+   "name": "IS_CHAR_SHOOTING",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02EB": {
+   "name": "RESTORE_CAMERA_JUMPCUT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "02F6": {
+   "name": "SIN",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "angle",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "result",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "02F7": {
+   "name": "COS",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "angle",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "result",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0318": {
+   "name": "REGISTER_MISSION_PASSED",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "033E": {
+   "name": "DISPLAY_TEXT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "offsetLeft",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "offsetTop",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "033F": {
+   "name": "SET_TEXT_SCALE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "widthScale",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heightScale",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0340": {
+   "name": "SET_TEXT_COLOUR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "red",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "green",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blue",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "alpha",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0342": {
+   "name": "SET_TEXT_CENTRE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0343": {
+   "name": "SET_TEXT_WRAPX",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "width",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0348": {
+   "name": "SET_TEXT_PROPORTIONAL",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0349": {
+   "name": "SET_TEXT_FONT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "font",
+     "type": "Font",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0362": {
+   "name": "WARP_CHAR_FROM_CAR_TO_COORD",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "036A": {
+   "name": "WARP_CHAR_INTO_CAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0382": {
+   "name": "SET_OBJECT_COLLISION",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "038D": {
+   "name": "DRAW_SPRITE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "spriteSlot",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "offsetLeft",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "offsetTop",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "width",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "height",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "r",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "g",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "b",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "a",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "038E": {
+   "name": "DRAW_RECT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "width",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "height",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "r",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "g",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "b",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "a",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "038F": {
+   "name": "LOAD_SPRITE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "spriteSlot",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "textureName",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0390": {
+   "name": "LOAD_TEXTURE_DICTIONARY",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0391": {
+   "name": "REMOVE_TEXTURE_DICTIONARY",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "0394": {
+   "name": "PLAY_MISSION_PASSED_TUNE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "soundId",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0395": {
+   "name": "CLEAR_AREA",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "radius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "clearParticles",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0397": {
+   "name": "SWITCH_CAR_SIREN",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "039E": {
+   "name": "SET_CHAR_CANT_BE_DRAGGED_OUT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03A4": {
+   "name": "SCRIPT_NAME",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "name",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03BA": {
+   "name": "CLEAR_AREA_OF_CARS",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "leftBottomX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03BF": {
+   "name": "SET_EVERYONE_IGNORE_PLAYER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "player",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03CA": {
+   "name": "DOES_OBJECT_EXIST",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03CB": {
+   "name": "LOAD_SCENE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03D3": {
+   "name": "GET_CLOSEST_CAR_NODE_WITH_HEADING",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "nodeX",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeY",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "nodeZ",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "angle",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "03E4": {
+   "name": "SET_TEXT_RIGHT_JUSTIFY",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03E5": {
+   "name": "PRINT_HELP",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "03E6": {
+   "name": "CLEAR_HELP",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "03EB": {
+   "name": "CLEAR_SMALL_PRINTS",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "03F0": {
+   "name": "USE_TEXT_COMMANDS",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0430": {
+   "name": "WARP_CHAR_INTO_CAR_AS_PASSENGER",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "seat",
+     "type": "SeatId",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0446": {
+   "name": "SET_CHAR_SUFFERS_CRITICAL_HITS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "044B": {
+   "name": "IS_CHAR_ON_FOOT",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "045A": {
+   "name": "DISPLAY_TEXT_WITH_NUMBER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "offsetLeft",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "offsetTop",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "num",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "045B": {
+   "name": "DISPLAY_TEXT_WITH_2_NUMBERS",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "offsetLeft",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "offsetTop",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "key",
+     "type": "gxt_key",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "num1",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "num2",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0470": {
+   "name": "GET_CURRENT_CHAR_WEAPON",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "weaponType",
+     "type": "WeaponType",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "04BB": {
+   "name": "SET_AREA_VISIBLE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "areaId",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "04C4": {
+   "name": "GET_OFFSET_FROM_CHAR_IN_WORLD_COORDS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "04D3": {
+   "name": "GET_NTH_CLOSEST_CAR_NODE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "fromX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "fromY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "fromZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "n",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "04E4": {
+   "name": "REQUEST_COLLISION",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "04ED": {
+   "name": "REQUEST_ANIMATION",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "04EE": {
+   "name": "HAS_ANIMATION_LOADED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "04EF": {
+   "name": "REMOVE_ANIMATION",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0509": {
+   "name": "GET_DISTANCE_BETWEEN_COORDS_2D",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "fromX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "fromY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "toX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "toZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "distance",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "050A": {
+   "name": "GET_DISTANCE_BETWEEN_COORDS_3D",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "fromX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "fromY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "fromZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "toX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "toY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "toZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "distance",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0550": {
+   "name": "FREEZE_OBJECT_POSITION",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0568": {
+   "name": "SET_CHAR_NEVER_TARGETTED",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "056D": {
+   "name": "DOES_CHAR_EXIST",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05AA": {
+   "name": "SET_LVAR_TEXT_LABEL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "dest",
+     "type": "string",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "src",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05CA": {
+   "name": "TASK_ENTER_CAR_AS_PASSENGER",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "char",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "seat",
+     "type": "SeatId",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05CD": {
+   "name": "TASK_LEAVE_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "char",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05D3": {
+   "name": "TASK_GO_STRAIGHT_TO_COORD",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "speed",
+     "type": "MoveState",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05DE": {
+   "name": "TASK_WANDER_STANDARD",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0604": {
+   "name": "GET_HEADING_FROM_VECTOR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0605": {
+   "name": "TASK_PLAY_ANIM",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blendSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "loop",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockX",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockY",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "keepLastFrame",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0631": {
+   "name": "SET_GROUP_MEMBER",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Group",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0639": {
+   "name": "TASK_TURN_CHAR_TO_FACE_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "char",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "target",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0674": {
+   "name": "CUSTOM_PLATE_FOR_NEXT_CAR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "modelId",
+     "type": "model_vehicle",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "text",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0681": {
+   "name": "ATTACH_OBJECT_TO_CAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Object",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRotation",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRotation",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zRotation",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0687": {
+   "name": "CLEAR_CHAR_TASKS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "06AB": {
+   "name": "HIDE_CHAR_WEAPON_FOR_SCRIPTED_CUTSCENE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "06C9": {
+   "name": "REMOVE_CHAR_FROM_GROUP",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "06E1": {
+   "name": "TASK_CAR_MISSION",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "char",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "vehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "targetVehicle",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "missionId",
+     "type": "CarMission",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "cruiseSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drivingStyle",
+     "type": "DrivingMode",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0729": {
+   "name": "TASK_USE_MOBILE_PHONE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "start",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "077E": {
+   "name": "GET_AREA_VISIBLE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "areaId",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0792": {
+   "name": "CLEAR_CHAR_TASKS_IMMEDIATELY",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "07AF": {
+   "name": "GET_PLAYER_GROUP",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Group",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "07B4": {
+   "name": "SET_PLAYER_GROUP_RECRUITMENT",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Player",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "07E0": {
+   "name": "SET_BLIP_AS_FRIENDLY",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Blip",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0804": {
+   "name": "TASK_CHAR_SLIDE_TO_COORD_AND_PLAY_ANIM",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "heading",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "slideSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blendSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "loop",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockX",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockY",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "keepLastFrame",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0812": {
+   "name": "TASK_PLAY_ANIM_NON_INTERRUPTABLE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blendSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "loop",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockX",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockY",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "keepLastFrame",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "081C": {
+   "name": "SET_TEXT_EDGE",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "size",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "red",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "green",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blue",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "alpha",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0860": {
+   "name": "SET_CHAR_AREA_VISIBLE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "areaId",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "087E": {
+   "name": "SET_CHAR_DROPS_WEAPONS_WHEN_DEAD",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "087F": {
+   "name": "SET_CHAR_NEVER_LEAVES_GROUP",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "091D": {
+   "name": "SWITCH_ROADS_BACK_TO_ORIGINAL",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "leftBottomX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "091E": {
+   "name": "SWITCH_PED_ROADS_BACK_TO_ORIGINAL",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "leftBottomX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "leftBottomZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopX",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopY",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "rightTopZ",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0925": {
+   "name": "CAMERA_RESET_NEW_SCRIPTABLES",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": []
+  },
+  "0967": {
+   "name": "START_CHAR_FACIAL_TALK",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "duration",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0968": {
+   "name": "STOP_CHAR_FACIAL_TALK",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0998": {
+   "name": "AWARD_PLAYER_MISSION_RESPECT",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "value",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "09B5": {
+   "name": "SET_CHAR_SIGNAL_AFTER_KILL",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0A1A": {
+   "name": "TASK_PLAY_ANIM_SECONDARY",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "animationFile",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "blendSpeed",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "loop",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockX",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "lockY",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "keepLastFrame",
+     "type": "bool",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0A94": {
+   "name": "LOAD_AND_LAUNCH_CUSTOM_MISSION",
+   "extension": "CLEO",
+   "attrs": {},
+   "params": [
+    {
+     "name": "scriptFileName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "args",
+     "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0A95": {
+   "name": "SAVE_THIS_CUSTOM_SCRIPT",
+   "extension": "CLEO",
+   "attrs": {},
+   "params": []
+  },
+  "0A99": {
+   "name": "SET_CURRENT_DIRECTORY",
+   "extension": "CLEO",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "path",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0A9A": {
+   "name": "OPEN_FILE",
+   "extension": "CLEO",
+   "attrs": {
+    "is_constructor": true,
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "filePathName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "mode",
+     "type": "FileMode",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "File",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0A9B": {
+   "name": "CLOSE_FILE",
+   "extension": "CLEO",
+   "attrs": {
+    "is_destructor": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "File",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AAB": {
+   "name": "DOES_FILE_EXIST",
+   "extension": "CLEO",
+   "attrs": {
+    "is_static": true,
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "path",
+     "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AAC": {
+   "name": "LOAD_AUDIO_STREAM",
+   "extension": "audio",
+   "attrs": {
+    "is_constructor": true,
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "audioFileName",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "AudioStream",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0AAD": {
+   "name": "SET_AUDIO_STREAM_STATE",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "action",
+     "type": "AudioStreamAction",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AAE": {
+   "name": "REMOVE_AUDIO_STREAM",
+   "extension": "audio",
+   "attrs": {
+    "is_destructor": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AB0": {
+   "name": "IS_KEY_PRESSED",
+   "extension": "CLEO",
+   "attrs": {
+    "is_condition": true,
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "keyCode",
+     "type": "KeyCode",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AB3": {
+   "name": "SET_CLEO_SHARED_VAR",
+   "extension": "CLEO",
+   "attrs": {},
+   "params": [
+    {
+     "name": "index",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "value",
+     "type": "any",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AB4": {
+   "name": "GET_CLEO_SHARED_VAR",
+   "extension": "CLEO",
+   "attrs": {},
+   "params": [
+    {
+     "name": "index",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "result",
+     "type": "any",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0AB9": {
+   "name": "GET_AUDIO_STREAM_STATE",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "AudioStreamState",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0ABC": {
+   "name": "SET_AUDIO_STREAM_VOLUME",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "volume",
+     "type": "float",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AC0": {
+   "name": "SET_AUDIO_STREAM_LOOPED",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "state",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AD1": {
+   "name": "PRINT_FORMATTED_NOW",
+   "extension": "CLEO",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "format",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "args",
+     "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AD3": {
+   "name": "STRING_FORMAT",
+   "extension": "CLEO",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "result",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "format",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "args",
+     "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0AD9": {
+   "name": "WRITE_FORMATTED_STRING_TO_FILE",
+   "extension": "CLEO",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "File",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "format",
+     "type": "string",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "args",
+     "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  }
+ }
+}

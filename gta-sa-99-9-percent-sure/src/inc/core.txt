@@ -1,0 +1,584 @@
+// ============================================================================
+// 99.9% SURE - core systems: frame tick, dialogue, watchdog, helpers
+//
+// Gosub depth budget (the engine allows 8 nested gosubs). Deepest path, as
+// measured by tests/run_mission_tests.py:
+//   MISSION_START(1) > ACT3(2) > SITE(3) > RAIN_DECIDE(4) > SAY / WAIT_MS(5)
+//   > TICK(6) > DLG_UPDATE / HUD_DRAW(7) > DLG_STOP / DLG_START / DRAW_*(8)
+// Level-8 routines must not call anything: DLG_START only calls DLG_STOP when
+// a line is actually playing, which is never the case when DLG_UPDATE starts
+// the next queued line.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// TICK - the only per-frame wait used by interactive code.
+// ---------------------------------------------------------------------------
+:TICK
+wait 0
+iNow = get_game_timer
+gosub @DLG_UPDATE
+gosub @HUD_DRAW
+gosub @WATCHDOG
+if iSkipOk == 1
+then
+    gosub @SKIP_CHECK
+end
+return
+
+// Waits iWaitMs milliseconds (game time) while keeping the frame systems running.
+:WAIT_MS
+iWaitEnd = get_game_timer
+iWaitEnd += iWaitMs
+:WAIT_MS_LOOP
+gosub @TICK
+if iSkipReq == 1
+then
+    return
+end
+if iFail > 0
+then
+    return
+end
+if iWaitEnd > iNow
+then
+    jump @WAIT_MS_LOOP
+end
+return
+
+// ---------------------------------------------------------------------------
+// Cutscene helpers
+// ---------------------------------------------------------------------------
+:CS_BEGIN
+switch_widescreen true
+set_player_control $player1 false
+hide_char_weapon_for_scripted_cutscene $scplayer true
+set_everyone_ignore_player $player1 true
+iInCs = 1
+iSkipOk = 1
+iSkipReq = 0
+iSkipPrev = 1          // ignore a button that is already held down
+return
+
+:CS_END
+iInCs = 0
+iSkipOk = 0
+iSkipReq = 0
+gosub @DLG_CANCEL
+switch_widescreen false
+restore_camera_jumpcut
+camera_reset_new_scriptables
+hide_char_weapon_for_scripted_cutscene $scplayer false
+set_everyone_ignore_player $player1 false
+set_player_control $player1 true
+return
+
+// Skip = ENTER/EXIT button (triangle) or the keyboard Enter key, on a fresh press.
+:SKIP_CHECK
+uBtn = get_pad_state 0 15
+if is_key_pressed 13
+then
+    uBtn = 255
+end
+if uBtn > 0
+then
+    if iSkipPrev == 0
+    then
+        iSkipReq = 1
+        gosub @DLG_STOP
+    end
+    iSkipPrev = 1
+else
+    iSkipPrev = 0
+end
+return
+
+:FADE_OUT
+do_fade 600 0
+while get_fading_status
+    wait 0
+end
+return
+
+:FADE_IN
+do_fade 600 1
+while get_fading_status
+    wait 0
+end
+return
+
+// ---------------------------------------------------------------------------
+// Dialogue. dLine = line id (see dialogue/lines.json).
+//   SAY        play one line and wait for it (cutscenes, phone calls)
+//   SAY_QUEUE  start dLine..dQEnd in the background (driving banter)
+// Audio is optional: if cleo\99sure\audio\V3Dxxxx.mp3 is missing the line is
+// shown as a subtitle for an estimated duration instead.
+// ---------------------------------------------------------------------------
+:SAY
+dQNext = 0
+if iSkipReq == 1
+then
+    return
+end
+gosub @DLG_START
+while dActive == 1
+    gosub @TICK
+    if iSkipReq == 1
+    then
+        break
+    end
+    if iFail > 0
+    then
+        break
+    end
+end
+gosub @DLG_STOP
+return
+
+:SAY_QUEUE
+iTmp = dLine
+gosub @DLG_CANCEL
+dLine = iTmp
+dQNext = dLine
+dQNext += 1
+gosub @DLG_START
+return
+
+:DLG_CANCEL
+dQNext = 0
+gosub @DLG_STOP
+return
+
+:DLG_START
+if or
+    dActive == 1
+    dStream <> 0
+then
+    gosub @DLG_STOP
+end
+{$INCLUDE ../gen/dialogue_data.txt}
+// Optional voice file cleo\99sure\audio\<key>.mp3. The path is built here once
+// instead of per line, which keeps the compiled mission well under the 69,000
+// bytes older CLEO versions copy into the game's mission block.
+string_format dPath "%s.mp3" dKey
+set_current_directory "cleo\99sure\audio"
+if load_audio_stream dPath dStream
+then
+    dHasAudio = 1
+end
+set_current_directory 0
+dLimit = dDur
+if dHasAudio == 1
+then
+    set_audio_stream_state dStream 1
+    dLimit += 9000          // the audio decides; this is only a safety net
+    iTmp = dLimit
+else
+    iTmp = dDur
+end
+iTmp += 500
+print_now dKey iTmp 1
+dT0 = get_game_timer
+dActive = 1
+// which character is speaking?
+dPed = -1
+switch dWho
+    case 1
+        dPed = hPlayer
+    case 2
+        dPed = hChris
+    case 3
+        dPed = hMax
+    case 8
+        dPed = hReporter
+    case 9
+        dPed = hSenior
+    case 10
+        dPed = hDlvDriver
+    case 11
+        dPed = hMother
+    case 13
+        dPed = hDentist
+end
+if dPed <> -1
+then
+    if not is_char_dead dPed
+    then
+        start_char_facial_talk dPed dLimit
+        if dGest > 0
+        then
+            if iAnimsReady == 1
+            then
+                if is_char_on_foot dPed
+                then
+                    {$INCLUDE ../gen/gesture_data.txt}
+                end
+            end
+        end
+    end
+end
+return
+
+:DLG_STOP
+if dStream <> 0
+then
+    set_audio_stream_state dStream 0
+    remove_audio_stream dStream
+    dStream = 0
+end
+if dActive == 1
+then
+    dActive = 0
+    clear_small_prints
+    if dPed <> -1
+    then
+        if not is_char_dead dPed
+        then
+            stop_char_facial_talk dPed
+        end
+    end
+end
+return
+
+:DLG_UPDATE
+if dActive == 1
+then
+    dElapsed = iNow
+    dElapsed -= dT0
+    dDone = 0
+    if dHasAudio == 1
+    then
+        dAudioState = get_audio_stream_state dStream
+        if and
+            dAudioState == -1
+            dElapsed > 400
+        then
+            dDone = 1
+        end
+    end
+    if dElapsed > dLimit
+    then
+        dDone = 1
+    end
+    if dDone == 1
+    then
+        gosub @DLG_STOP
+        dGapT = iNow
+        dGapT += 350
+    end
+else
+    if dQNext > 0
+    then
+        if iNow > dGapT
+        then
+            if dQEnd >= dQNext
+            then
+                dLine = dQNext
+                dQNext += 1
+                gosub @DLG_START
+            else
+                dQNext = 0
+            end
+        end
+    end
+end
+return
+
+// ---------------------------------------------------------------------------
+// Watchdog: failure conditions that apply across acts.
+// ---------------------------------------------------------------------------
+:WATCHDOG
+if iFail > 0
+then
+    return
+end
+if iNeedChris > 0       // 1 = in a scene, 2 = in CJ's group
+then
+    if is_char_dead hChris
+    then
+        iFail = FAIL_CHRIS
+        return
+    end
+end
+if iNeedVan == 1
+then
+    if is_car_dead hVan
+    then
+        iFail = FAIL_VAN
+        return
+    end
+end
+if iNeedChris == 2      // Chris must stay with CJ (group member)
+then
+    if locate_char_any_means_char_2d $scplayer hChris ABANDON_WARN ABANDON_WARN false
+    then
+        if bChris <> -1
+        then
+            remove_blip bChris
+            bChris = -1
+        end
+    else
+        if bChris == -1
+        then
+            bChris = add_blip_for_char hChris
+            set_blip_as_friendly bChris true
+            print_now 'V3O17' 6000 1
+        end
+        if not locate_char_any_means_char_2d $scplayer hChris ABANDON_FAIL ABANDON_FAIL false
+        then
+            iFail = FAIL_ABANDON
+        end
+    end
+end
+return
+
+// ---------------------------------------------------------------------------
+// Shared state for the launcher.
+// ---------------------------------------------------------------------------
+:PUBLISH
+set_cleo_shared_var SV_STATE iState
+set_cleo_shared_var SV_CHECKPOINT iCheckpoint
+set_cleo_shared_var SV_SCORE iScore
+set_cleo_shared_var SV_RIGHT iDecRight
+set_cleo_shared_var SV_TOTAL iDecTotal
+return
+
+// ---------------------------------------------------------------------------
+// Models and animations
+// ---------------------------------------------------------------------------
+:LOAD_MODEL
+request_model iMdl
+while not has_model_loaded iMdl
+    wait 0
+end
+return
+
+:LOAD_ANIMS
+request_animation "GANGS"
+request_animation "COP_AMBIENT"
+request_animation "ON_LOOKERS"
+request_animation "MISC"
+request_animation "INT_OFFICE"
+request_animation "PARK"
+request_animation "CARRY"
+request_animation "DANCING"
+request_animation "CAMERA"
+:LOAD_ANIMS_WAIT
+wait 0
+if or
+    not has_animation_loaded "GANGS"
+    not has_animation_loaded "COP_AMBIENT"
+    not has_animation_loaded "ON_LOOKERS"
+    not has_animation_loaded "MISC"
+then
+    jump @LOAD_ANIMS_WAIT
+end
+if or
+    not has_animation_loaded "INT_OFFICE"
+    not has_animation_loaded "PARK"
+    not has_animation_loaded "CARRY"
+    not has_animation_loaded "DANCING"
+then
+    jump @LOAD_ANIMS_WAIT
+end
+if not has_animation_loaded "CAMERA"
+then
+    jump @LOAD_ANIMS_WAIT
+end
+iAnimsReady = 1
+return
+
+:RELEASE_ANIMS
+if iAnimsReady == 1
+then
+    remove_animation "GANGS"
+    remove_animation "COP_AMBIENT"
+    remove_animation "ON_LOOKERS"
+    remove_animation "MISC"
+    remove_animation "INT_OFFICE"
+    remove_animation "PARK"
+    remove_animation "CARRY"
+    remove_animation "DANCING"
+    remove_animation "CAMERA"
+    iAnimsReady = 0
+end
+return
+
+// ---------------------------------------------------------------------------
+// Christopher. In: fSX fSY fSZ, fHead. Out: hChris.
+// Uses the custom model (special character slot 1, file chrisw.dff/.txd) when
+// installed, otherwise a stock pedestrian so the mission stays playable.
+// ---------------------------------------------------------------------------
+:SPAWN_CHRIS
+if iCustomModel == 1
+then
+    load_special_character 1 'CHRISW'
+    while not has_special_character_loaded 1
+        wait 0
+    end
+    iChrisModel = #SPECIAL01
+else
+    iMdl = MDL_CHRIS_FALLBACK
+    gosub @LOAD_MODEL
+    iChrisModel = MDL_CHRIS_FALLBACK
+end
+hChris = create_char 24 iChrisModel fSX fSY fSZ
+set_char_heading hChris fHead
+set_char_health hChris 400
+set_char_only_damaged_by_player hChris true
+set_char_never_targetted hChris true
+set_char_suffers_critical_hits hChris false
+set_char_cant_be_dragged_out hChris true
+set_char_drops_weapons_when_dead hChris false
+set_char_signal_after_kill hChris false
+iNeedChris = 1
+return
+
+// Chris joins CJ's group: follows him and gets in and out of vehicles with him.
+:CHRIS_JOIN_GROUP
+hGroup = get_player_group $player1
+set_group_member hGroup hChris
+set_char_never_leaves_group hChris true
+set_player_group_recruitment $player1 false
+iNeedChris = 2
+return
+
+:CHRIS_LEAVE_GROUP
+if not is_char_dead hChris
+then
+    remove_char_from_group hChris
+end
+set_player_group_recruitment $player1 true
+if bChris <> -1
+then
+    remove_blip bChris
+    bChris = -1
+end
+iNeedChris = 1
+return
+
+// ---------------------------------------------------------------------------
+// The research van. In: fVanX fVanY fVanZ fVanH. Out: hVan (+ roof dish).
+// Burrito, colours 83 (#1E2E32 charcoal) / 93 (#0F6A89 teal) from carcols.dat.
+// ---------------------------------------------------------------------------
+:SPAWN_VAN
+iMdl = #BURRITO
+gosub @LOAD_MODEL
+iMdl = #SATDISHSML
+gosub @LOAD_MODEL
+hVan = create_car #BURRITO fVanX fVanY fVanZ
+set_car_heading hVan fVanH
+change_car_colour hVan 83 93
+set_car_health hVan 2000
+lock_car_doors hVan 1
+fTmp = fVanZ
+fTmp += 3.0
+hVanDish = create_object #SATDISHSML fVanX fVanY fTmp
+set_object_collision hVanDish false
+attach_object_to_car hVanDish hVan 0.0 -0.85 1.22 0.0 0.0 180.0
+mark_model_as_no_longer_needed #BURRITO
+mark_model_as_no_longer_needed #SATDISHSML
+iNeedVan = 1
+return
+
+// Waits until CJ and Chris are both in the van. Shows the right objective.
+:BOARD_VAN
+iT1 = 0
+:BOARD_VAN_LOOP
+gosub @TICK
+if iFail > 0
+then
+    return
+end
+if not is_char_in_car $scplayer hVan
+then
+    if iT1 <> 1
+    then
+        print_now 'V3O03' 8000 1
+        if bVan == -1
+        then
+            bVan = add_blip_for_car hVan
+            set_blip_as_friendly bVan true
+        end
+        iT1 = 1
+    end
+    jump @BOARD_VAN_LOOP
+end
+if bVan <> -1
+then
+    remove_blip bVan
+    bVan = -1
+end
+if not is_char_in_car hChris hVan
+then
+    if iT1 <> 2
+    then
+        print_now 'V3O04' 5000 1
+        // group members normally follow on their own; this is a nudge
+        task_enter_car_as_passenger hChris hVan 20000 0
+        iT1 = 2
+    end
+    jump @BOARD_VAN_LOOP
+end
+clear_small_prints
+return
+
+// ---------------------------------------------------------------------------
+// Positions
+// ---------------------------------------------------------------------------
+:GET_PLAYER_POS
+fPX, fPY, fPZ = get_char_coordinates $scplayer
+return
+
+// fAH -> fCos, fSin
+:ANCHOR_PREP
+fCos = cos fAH
+fSin = sin fAH
+return
+
+// Local offset (fTmp7 = right, fTmp8 = forward) around the anchor -> fSX fSY.
+// SA headings: 0 = north (+Y), forward = (-sin h, cos h), right = (cos h, sin h).
+:ANCHOR_TO_WORLD
+fSX = fTmp7
+fSX *= fCos
+fTmp = fTmp8
+fTmp *= fSin
+fSX -= fTmp
+fSX += fAX
+fSY = fTmp7
+fSY *= fSin
+fTmp = fTmp8
+fTmp *= fCos
+fSY += fTmp
+fSY += fAY
+return
+
+// Ground height under fSX fSY (searching down from fAZ + 4 m) -> fSZ.
+:GROUND_AT
+fTmp = fAZ
+fTmp += 4.0
+fSZ = get_ground_z_for_3d_coord fSX fSY fTmp
+if fSZ == 0.0
+then
+    fSZ = fAZ          // collision not streamed yet: fall back to the anchor height
+end
+return
+
+// ---------------------------------------------------------------------------
+// Cameras: place the camera relative to hCamFrom (offset fCamOX/OY/OZ, in
+// that ped's local frame) and look at hCamTarget's head (fCamTZ above it).
+// ---------------------------------------------------------------------------
+:CAM_SHOT
+if is_char_dead hCamFrom
+then
+    return
+end
+if is_char_dead hCamTarget
+then
+    return
+end
+fCamX, fCamY, fCamZ = get_offset_from_char_in_world_coords hCamFrom fCamOX fCamOY fCamOZ
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords hCamTarget 0.0 0.0 fCamTZ
+point_camera_at_point fSX fSY fSZ 2
+return

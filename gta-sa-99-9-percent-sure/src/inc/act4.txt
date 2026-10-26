@@ -1,0 +1,413 @@
+// ============================================================================
+// ACT IV - CONFIDENTLY WRONG
+// CERTAIN flags an innocent family's minivan. Reach it before the police, then
+// escort it while R.A.I.N. streams independent observations to dispatch.
+// No harm to anyone is required (or rewarded).
+// ============================================================================
+:ACT4
+iCheckpoint = 3
+iState = ST_RESCUE
+gosub @PUBLISH
+iNeedVan = 0
+uHud = 1
+uTask = 0
+gosub @DLG_CANCEL
+uAlert = 5
+uMode = 3
+add_one_off_sound 0.0 0.0 0.0 1137
+gosub @ACT4_SPAWN
+dLine = 401
+gosub @SAY
+dLine = 402
+gosub @SAY
+uMode = 0
+dLine = 403
+gosub @SAY
+dLine = 404
+gosub @SAY
+dLine = 405
+gosub @SAY
+if iFail <> 0
+then
+    return
+end
+print_now 'V3O12' 7000 1
+// the race: the police are on their way
+uEta = R_ETA_MS
+uTask = 5
+iSaid = 0
+iReached = 0
+iPrevT = iNow
+iT2 = iNow
+dLine = 406
+dQEnd = 410
+gosub @SAY_QUEUE
+:ACT4_RACE
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+uEta -= iDt
+if is_car_dead hMini
+then
+    iFail = FAIL_MINI_DEAD
+    return
+end
+gosub @ACT4_STEER_COPS
+if 25000 > uEta
+then
+    if iSaid == 0
+    then
+        dLine = 422
+        dQEnd = 422
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+if 0 >= uEta
+then
+    iFail = FAIL_LATE
+    return
+end
+if not locate_char_any_means_car_2d $scplayer hMini 28.0 28.0 false
+then
+    jump @ACT4_RACE
+end
+
+// ---- reached the family: escort while uploading -----------------------------------
+uTask = 4
+uTaskVal = 0
+iUpload = 0
+iInRangeT = 0
+iLostT = 0
+iSaid = 0
+iLastWarnT = 0
+iStandDown = 0
+iCopsHeld = 0
+iArrived = 0
+iDestFixed = 0
+print_now 'V3O13' 7000 1
+print_help 'V3H05'
+dLine = 411
+dQEnd = 413
+gosub @SAY_QUEUE
+car_goto_coordinates_accurate hMini fDX fDY fDZ
+set_car_cruise_speed hMini 13.0
+// the police tail the minivan instead of ramming it
+gosub @ACT4_COPS_FOLLOW
+:ACT4_ESCORT
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+if is_car_dead hMini
+then
+    iFail = FAIL_MINI_DEAD
+    return
+end
+// The recital is further away than the path data streamed in when the
+// minivan spawned, so the first lookup may have returned a node short of it.
+// The game streams path data around mission vehicles, so look again once the
+// minivan is close, and keep the new node only if it really is at the recital.
+if iDestFixed == 0
+then
+    fSX, fSY, fSZ = get_car_coordinates hMini
+    fDist = get_distance_between_coords_2d fSX fSY R_DEST_X R_DEST_Y
+    if 220.0 > fDist
+    then
+        fTmp, fTmp2, fTmp3 = get_closest_car_node R_DEST_X R_DEST_Y R_DEST_Z
+        fDist = get_distance_between_coords_2d fTmp fTmp2 R_DEST_X R_DEST_Y
+        if 60.0 > fDist
+        then
+            fDX = fTmp
+            fDY = fTmp2
+            fDZ = fTmp3
+            if iArrived == 0
+            then
+                car_goto_coordinates_accurate hMini fDX fDY fDZ
+            end
+            iDestFixed = 1
+        end
+    end
+end
+if iArrived == 0
+then
+    if locate_car_2d hMini fDX fDY 12.0 12.0 false
+    then
+        car_set_idle hMini
+        iArrived = 1
+    end
+end
+uWarn = 0
+if locate_char_any_means_car_2d $scplayer hMini 40.0 40.0 false
+then
+    uWarn = 3
+    iLostT = 0
+    iInRangeT += iDt
+    if iInRangeT > R_UPLOAD_STEP
+    then
+        iInRangeT -= R_UPLOAD_STEP
+        iUpload += 1
+    end
+else
+    uWarn = 2
+    iTmp = iNow
+    iTmp -= iLastWarnT
+    if iTmp > 12000
+    then
+        iLastWarnT = iNow
+        dLine = 416
+        dQEnd = 416
+        gosub @SAY_QUEUE
+    end
+    if not locate_char_any_means_car_2d $scplayer hMini 180.0 180.0 false
+    then
+        iLostT += iDt
+        if iLostT > 9000
+        then
+            iFail = FAIL_LOST_MINI
+            return
+        end
+    end
+end
+uTaskVal = iUpload
+if iSaid == 0
+then
+    if iUpload >= 50
+    then
+        dLine = 414
+        dQEnd = 414
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+if iSaid == 1
+then
+    if iUpload >= 75
+    then
+        dLine = 415
+        dQEnd = 415
+        gosub @SAY_QUEUE
+        iSaid = 2
+    end
+end
+if 100 > iUpload
+then
+    jump @ACT4_ESCORT
+end
+
+// ---- stand down ---------------------------------------------------------------------
+uWarn = 0
+uTask = 0
+gosub @DLG_CANCEL
+add_one_off_sound 0.0 0.0 0.0 1058
+dLine = 417
+gosub @SAY
+gosub @ACT4_COPS_STAND_DOWN
+dLine = 418
+gosub @SAY
+dLine = 419
+gosub @SAY
+dLine = 420
+gosub @SAY
+dLine = 421
+gosub @SAY
+// the family drives on
+if not is_car_dead hMini
+then
+    car_wander_randomly hMini
+end
+remove_blip bTarget
+bTarget = -1
+mark_car_as_no_longer_needed hMini
+mark_char_as_no_longer_needed hMother
+mark_char_as_no_longer_needed hFather
+hMini = -1
+hMother = -1
+hFather = -1
+return
+
+// ---------------------------------------------------------------------------
+:ACT4_SPAWN
+iMdl = #MOONBEAM
+gosub @LOAD_MODEL
+iMdl = #WFYRI
+gosub @LOAD_MODEL
+iMdl = #HMYRI
+gosub @LOAD_MODEL
+iMdl = #COPCARSF
+gosub @LOAD_MODEL
+iMdl = #SFPD1
+gosub @LOAD_MODEL
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading R_MINI_X R_MINI_Y R_MINI_Z
+if fSX == 0.0
+then
+    fSX = R_MINI_X
+    fSY = R_MINI_Y
+    fSZ = R_MINI_Z
+    fHead = 0.0
+end
+hMini = create_car #MOONBEAM fSX fSY fSZ
+set_car_heading hMini fHead
+change_car_colour hMini 7 1
+set_car_health hMini 1500
+set_car_only_damaged_by_player hMini true
+hMother = create_char_inside_car hMini 5 #WFYRI
+hFather = create_char_as_passenger hMini 4 #HMYRI 0
+set_char_cant_be_dragged_out hMother true
+set_char_cant_be_dragged_out hFather true
+bTarget = add_blip_for_car hMini
+set_blip_as_friendly bTarget true
+fDX, fDY, fDZ = get_closest_car_node R_DEST_X R_DEST_Y R_DEST_Z
+if fDX == 0.0
+then
+    fDX = R_DEST_X
+    fDY = R_DEST_Y
+    fDZ = R_DEST_Z
+end
+// the family is idling at the kerb when the alert comes in
+car_set_idle hMini
+// three patrol cars from different directions
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading R_COP1_X R_COP1_Y R_COP1_Z
+hCopCar1 = create_car #COPCARSF fSX fSY fSZ
+set_car_heading hCopCar1 fHead
+hCop1 = create_char_inside_car hCopCar1 6 #SFPD1
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading R_COP2_X R_COP2_Y R_COP2_Z
+hCopCar2 = create_car #COPCARSF fSX fSY fSZ
+set_car_heading hCopCar2 fHead
+hCop2 = create_char_inside_car hCopCar2 6 #SFPD1
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading R_COP3_X R_COP3_Y R_COP3_Z
+hCopCar3 = create_car #COPCARSF fSX fSY fSZ
+set_car_heading hCopCar3 fHead
+hCop3 = create_char_inside_car hCopCar3 6 #SFPD1
+switch_car_siren hCopCar1 true
+switch_car_siren hCopCar2 true
+switch_car_siren hCopCar3 true
+set_car_cruise_speed hCopCar1 20.0
+set_car_cruise_speed hCopCar2 20.0
+set_car_cruise_speed hCopCar3 20.0
+set_car_driving_style hCopCar1 2
+set_car_driving_style hCopCar2 2
+set_car_driving_style hCopCar3 2
+bCop1 = add_blip_for_car hCopCar1
+bCop2 = add_blip_for_car hCopCar2
+bCop3 = add_blip_for_car hCopCar3
+change_blip_display bCop1 2
+change_blip_display bCop2 2
+change_blip_display bCop3 2
+mark_model_as_no_longer_needed #MOONBEAM
+mark_model_as_no_longer_needed #WFYRI
+mark_model_as_no_longer_needed #HMYRI
+mark_model_as_no_longer_needed #COPCARSF
+mark_model_as_no_longer_needed #SFPD1
+iEtaPrevT = 0
+return
+
+// During the race the patrol cars converge on the minivan but stop 70 m short:
+// the on-screen ETA is the rule, so the race is fair wherever they spawned.
+:ACT4_STEER_COPS
+iTmp = iNow
+iTmp -= iEtaPrevT
+if 2000 > iTmp
+then
+    return
+end
+iEtaPrevT = iNow
+fSX, fSY, fSZ = get_car_coordinates hMini
+if not is_car_dead hCopCar1
+then
+    if locate_car_2d hCopCar1 fSX fSY 70.0 70.0 false
+    then
+        car_set_idle hCopCar1
+    else
+        car_goto_coordinates hCopCar1 fSX fSY fSZ
+    end
+end
+if not is_car_dead hCopCar2
+then
+    if locate_car_2d hCopCar2 fSX fSY 70.0 70.0 false
+    then
+        car_set_idle hCopCar2
+    else
+        car_goto_coordinates hCopCar2 fSX fSY fSZ
+    end
+end
+if not is_car_dead hCopCar3
+then
+    if locate_car_2d hCopCar3 fSX fSY 70.0 70.0 false
+    then
+        car_set_idle hCopCar3
+    else
+        car_goto_coordinates hCopCar3 fSX fSY fSZ
+    end
+end
+return
+
+:ACT4_COPS_FOLLOW
+if not is_char_dead hCop1
+then
+    if not is_car_dead hCopCar1
+    then
+        task_car_mission hCop1 hCopCar1 hMini 52 16.0 2
+    end
+end
+if not is_char_dead hCop2
+then
+    if not is_car_dead hCopCar2
+    then
+        task_car_mission hCop2 hCopCar2 hMini 52 16.0 2
+    end
+end
+if not is_char_dead hCop3
+then
+    if not is_car_dead hCopCar3
+    then
+        task_car_mission hCop3 hCopCar3 hMini 52 16.0 2
+    end
+end
+return
+
+:ACT4_COPS_STAND_DOWN
+if not is_car_dead hCopCar1
+then
+    switch_car_siren hCopCar1 false
+    car_wander_randomly hCopCar1
+end
+if not is_car_dead hCopCar2
+then
+    switch_car_siren hCopCar2 false
+    car_wander_randomly hCopCar2
+end
+if not is_car_dead hCopCar3
+then
+    switch_car_siren hCopCar3 false
+    car_wander_randomly hCopCar3
+end
+remove_blip bCop1
+remove_blip bCop2
+remove_blip bCop3
+bCop1 = -1
+bCop2 = -1
+bCop3 = -1
+mark_char_as_no_longer_needed hCop1
+mark_char_as_no_longer_needed hCop2
+mark_char_as_no_longer_needed hCop3
+mark_car_as_no_longer_needed hCopCar1
+mark_car_as_no_longer_needed hCopCar2
+mark_car_as_no_longer_needed hCopCar3
+hCop1 = -1
+hCop2 = -1
+hCop3 = -1
+hCopCar1 = -1
+hCopCar2 = -1
+hCopCar3 = -1
+iStandDown = 1
+return

@@ -1,0 +1,904 @@
+// ============================================================================
+// 99.9% SURE - R.A.I.N. interface (native SCM text/rectangle/sprite drawing)
+//
+// Screen space is the game's 640 x 448 script space. Every text line sets its
+// own style because the engine resets the style of each script text line.
+// Per frame the engine allows 96 text lines and 128 rectangles/sprites; the
+// busiest panel (the console) uses about 24 text lines and 40 rectangles.
+// Palette: Vers3Dynamics teal #0B5D63 (11,93,99), spectral teal (90,220,210),
+// mint (170,240,220), CERTAIN red (200,30,40), amber (240,170,40).
+// ============================================================================
+
+:HUD_DRAW
+if uMode == 0
+then
+    if uHud == 0
+    then
+        return
+    end
+end
+use_text_commands true
+switch uMode
+    case 2
+        gosub @DRAW_CONSOLE
+    case 3
+        gosub @DRAW_ALERT
+    case 4
+        gosub @DRAW_NEWS
+    case 5
+        gosub @DRAW_TERMINAL
+    case 6
+        gosub @DRAW_FEED
+    case 7
+        gosub @DRAW_PASSED
+end
+if uHud == 1
+then
+    if uMode <> 2
+    then
+        gosub @DRAW_HUD
+    end
+end
+return
+
+// ---------------------------------------------------------------------------
+// Corner HUD: score and the current task meter.
+// ---------------------------------------------------------------------------
+:DRAW_HUD
+draw_rect 556.0 178.0 152.0 72.0 6 20 22 205
+draw_rect 556.0 144.0 152.0 4.0 11 93 99 255
+set_text_font 2
+set_text_scale 0.34 1.30
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 486.0 149.0 'V3U01'
+set_text_font 1
+set_text_scale 0.26 1.04
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text_with_number 486.0 163.0 'V3U19' iScore
+set_text_font 1
+set_text_scale 0.26 1.04
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+switch uTask
+    case 1
+        display_text_with_number 486.0 177.0 'V3U21' uTaskVal
+    case 2
+        display_text_with_number 486.0 177.0 'V3U22' uTaskVal
+    case 3
+        display_text_with_number 486.0 177.0 'V3U23' uTaskVal
+    case 4
+        display_text_with_number 486.0 177.0 'V3U24' uTaskVal
+    case 5
+        // police ETA m:ss
+        uI = uEta
+        uI /= 1000
+        uI2 = uI
+        uI2 /= 60
+        uI3 = uI2
+        uI3 *= 60
+        uI -= uI3
+        if uI < 10
+        then
+            display_text_with_2_numbers 486.0 177.0 'V3U26' uI2 uI
+        else
+            display_text_with_2_numbers 486.0 177.0 'V3U25' uI2 uI
+        end
+    default
+        display_text_with_2_numbers 486.0 177.0 'V3U20' iDecRight iDecTotal
+end
+if uTask == 2
+then
+    gosub @DRAW_HUD_BAR
+end
+if uTask == 4
+then
+    gosub @DRAW_HUD_BAR
+end
+if uWarn > 0
+then
+    set_text_font 2
+    set_text_scale 0.30 1.20
+    set_text_proportional true
+    set_text_edge 1 0 0 0 220
+    switch uWarn
+        case 1
+            set_text_colour 240 170 40 255
+            display_text 486.0 202.0 'V3U29'
+        case 2
+            set_text_colour 240 170 40 255
+            display_text 486.0 202.0 'V3U30'
+        case 3
+            set_text_colour 90 220 210 255
+            display_text 486.0 202.0 'V3U31'
+        case 4
+            set_text_colour 240 170 40 255
+            display_text 486.0 202.0 'V3U32'
+    end
+end
+return
+
+:DRAW_HUD_BAR
+draw_rect 556.0 196.0 136.0 5.0 20 40 44 255
+uW =# uTaskVal
+uW *= 1.36
+uX = uW
+uX /= 2.0
+uX += 488.0
+draw_rect uX 196.0 uW 5.0 90 220 210 255
+return
+
+// ---------------------------------------------------------------------------
+// The validation console (decision screen).
+// ---------------------------------------------------------------------------
+:DRAW_CONSOLE
+draw_rect 320.0 212.0 456.0 296.0 6 20 22 232
+draw_rect 320.0 72.0 456.0 22.0 11 93 99 255
+// header
+set_text_font 2
+set_text_scale 0.42 1.62
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 100.0 64.0 'V3U01'
+set_text_font 2
+set_text_scale 0.30 1.20
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 164.0 67.0 'V3U02'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_right_justify true
+set_text_edge 1 0 0 0 200
+display_text 540.0 67.0 cKeyS
+// live waveform under the header
+uI = 0
+while 24 > uI
+    uF =# uI
+    uF *= 23.0
+    uF2 =# iNow
+    uF2 *= 0.24
+    uF += uF2
+    uF = sin uF
+    if 0.0 > uF
+    then
+        uF *= -1.0
+    end
+    uH = uF
+    uH *= 12.0
+    uH += 2.0
+    uX =# uI
+    uX *= 6.0
+    uX += 392.0
+    draw_rect uX 98.0 4.0 uH 90 220 210 210
+    uI += 1
+end
+// CERTAIN's claim
+draw_rect 320.0 124.0 436.0 38.0 70 12 18 225
+set_text_font 1
+set_text_scale 0.22 0.92
+set_text_colour 255 130 130 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 108.0 'V3U03'
+uI = cConf
+uI /= 10
+uI2 = uI
+uI2 *= 10
+uI3 = cConf
+uI3 -= uI2
+set_text_font 1
+set_text_scale 0.22 0.92
+set_text_colour 255 130 130 255
+set_text_proportional true
+set_text_right_justify true
+set_text_edge 1 0 0 0 200
+display_text_with_2_numbers 534.0 108.0 'V3U04' uI uI3
+set_text_font 2
+set_text_scale 0.36 1.40
+set_text_colour 255 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 120.0 cKeyH
+// independent evidence
+set_text_font 1
+set_text_scale 0.22 0.92
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 150.0 'V3U05'
+set_text_font 1
+set_text_scale 0.27 1.08
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 116.0 163.0 cKey1
+set_text_font 1
+set_text_scale 0.27 1.08
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 116.0 178.0 cKey2
+set_text_font 1
+set_text_scale 0.27 1.08
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 116.0 193.0 cKey3
+set_text_font 1
+set_text_scale 0.27 1.08
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 116.0 208.0 cKey4
+// meters
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 228.0 'V3U06'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 243.0 'V3U07'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 258.0 'V3U08'
+draw_rect 392.0 233.0 280.0 7.0 20 40 44 255
+draw_rect 392.0 248.0 280.0 7.0 20 40 44 255
+draw_rect 392.0 263.0 280.0 7.0 20 40 44 255
+uW =# cSig
+uW *= 2.8
+uX = uW
+uX /= 2.0
+uX += 252.0
+draw_rect uX 233.0 uW 7.0 90 220 210 255
+uW =# cEvi
+uW *= 2.8
+uX = uW
+uX /= 2.0
+uX += 252.0
+draw_rect uX 248.0 uW 7.0 90 220 210 255
+uW =# cUnc
+uW *= 2.8
+uX = uW
+uX /= 2.0
+uX += 252.0
+draw_rect uX 263.0 uW 7.0 240 170 40 255
+// validation status
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 108.0 276.0 'V3U09'
+set_text_font 2
+set_text_scale 0.28 1.12
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+switch uStatus
+    case 1
+        set_text_colour 120 240 150 255
+        display_text 252.0 276.0 'V3U15'
+    case 2
+        set_text_colour 120 240 150 255
+        display_text 252.0 276.0 'V3U16'
+    case 3
+        set_text_colour 120 240 150 255
+        display_text 252.0 276.0 'V3U17'
+    case 4
+        set_text_colour 255 110 110 255
+        display_text 252.0 276.0 'V3U18'
+    default
+        set_text_colour 235 245 245 255
+        display_text 252.0 276.0 'V3U14'
+end
+// the three answers
+uI = 1
+while 3 >= uI
+    uX =# uI
+    uX *= 116.0
+    uX += 88.0
+    if uI == uSel
+    then
+        draw_rect uX 314.0 112.0 32.0 230 255 250 255
+        draw_rect uX 314.0 106.0 26.0 11 93 99 255
+    else
+        draw_rect uX 314.0 106.0 26.0 24 52 56 255
+    end
+    uI += 1
+end
+set_text_font 2
+set_text_scale 0.34 1.30
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+display_text 204.0 307.0 'V3U10'
+set_text_font 2
+set_text_scale 0.34 1.30
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+display_text 320.0 307.0 'V3U11'
+set_text_font 2
+set_text_scale 0.34 1.30
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+display_text 436.0 307.0 'V3U12'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 150 170 170 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+display_text 320.0 336.0 'V3U13'
+// score and the result flash
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text_with_number 108.0 348.0 'V3U19' iScore
+if uFeedback > 0
+then
+    if uFlashT > iNow
+    then
+        set_text_font 3
+        set_text_scale 0.60 2.20
+        set_text_proportional true
+        set_text_right_justify true
+        set_text_edge 2 0 0 0 255
+        if uFeedback == 1
+        then
+            set_text_colour 120 240 150 255
+            display_text 534.0 342.0 'V3U35'
+        else
+            set_text_colour 255 90 90 255
+            display_text 534.0 342.0 'V3U36'
+        end
+    end
+end
+if iDemoStage > 0
+then
+    // LIVE tag during the public demonstration
+    draw_rect 500.0 98.0 40.0 14.0 200 30 40 255
+    set_text_font 2
+    set_text_scale 0.28 1.10
+    set_text_colour 255 255 255 255
+    set_text_proportional true
+    set_text_centre true
+    display_text 500.0 93.0 'V3U34'
+end
+return
+
+// ---------------------------------------------------------------------------
+// CERTAIN predictive alert (red, corporate). uAlert = 1..5.
+// ---------------------------------------------------------------------------
+:DRAW_ALERT
+uF =# iNow
+uF *= 0.6
+uF = sin uF
+uA = 205
+if uF > 0.0
+then
+    uA = 245
+end
+draw_rect 320.0 96.0 392.0 84.0 70 8 12 uA
+draw_rect 320.0 58.0 392.0 8.0 230 30 40 255
+set_text_font 2
+set_text_scale 0.36 1.40
+set_text_colour 255 235 235 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 220
+display_text 320.0 64.0 'V3A00'
+set_text_font 1
+set_text_scale 0.30 1.20
+set_text_colour 255 255 255 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 220
+switch uAlert
+    case 1
+        display_text 320.0 82.0 'V3A11'
+    case 2
+        display_text 320.0 82.0 'V3A21'
+    case 3
+        display_text 320.0 82.0 'V3A31'
+    case 4
+        display_text 320.0 82.0 'V3A41'
+    default
+        display_text 320.0 82.0 'V3A51'
+end
+set_text_font 1
+set_text_scale 0.30 1.20
+set_text_colour 255 120 120 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 220
+switch uAlert
+    case 1
+        display_text 320.0 97.0 'V3A12'
+    case 2
+        display_text 320.0 97.0 'V3A22'
+    case 3
+        display_text 320.0 97.0 'V3A32'
+    case 4
+        display_text 320.0 97.0 'V3A42'
+    default
+        display_text 320.0 97.0 'V3A52'
+end
+switch uAlert
+    case 2
+        uI = 97
+        uI2 = 2
+    case 3
+        uI = 99
+        uI2 = 1
+    case 4
+        uI = 93
+        uI2 = 4
+    default
+        uI = 99
+        uI2 = 9
+end
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 255 255 255 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 220
+display_text_with_2_numbers 320.0 112.0 'V3A02' uI uI2
+set_text_font 1
+set_text_scale 0.22 0.90
+set_text_colour 230 200 200 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 220
+display_text 320.0 128.0 'V3A01'
+return
+
+// ---------------------------------------------------------------------------
+// SFTV news lower third.
+// ---------------------------------------------------------------------------
+:DRAW_NEWS
+// lower third, kept clear of the subtitle zone at the bottom of the screen
+draw_rect 320.0 304.0 640.0 46.0 12 12 18 232
+draw_rect 320.0 282.0 640.0 3.0 240 200 60 255
+draw_rect 62.0 296.0 104.0 20.0 200 25 35 255
+set_text_font 2
+set_text_scale 0.34 1.30
+set_text_colour 255 255 255 255
+set_text_proportional true
+set_text_centre true
+display_text 62.0 289.0 'V3N02'
+set_text_font 2
+set_text_scale 0.30 1.20
+set_text_colour 240 200 60 255
+set_text_proportional true
+display_text 124.0 290.0 'V3N01'
+set_text_font 1
+set_text_scale 0.30 1.20
+set_text_colour 255 255 255 255
+set_text_proportional true
+display_text 16.0 310.0 'V3N03'
+return
+
+// ---------------------------------------------------------------------------
+// Lab terminal (Act II). Lines appear one by one.
+// ---------------------------------------------------------------------------
+:DRAW_TERMINAL
+uI3 = iNow
+uI3 -= uT0
+draw_rect 186.0 214.0 340.0 300.0 6 20 22 232
+draw_rect 186.0 74.0 340.0 20.0 11 93 99 255
+if iSpritesOk == 1
+then
+    draw_sprite 1 330.0 108.0 40.0 40.0 255 255 255 255
+    // the experiment's cymatic pattern (a square Chladni plate, modes 3 and 5)
+    draw_sprite 2 292.0 254.0 96.0 96.0 90 220 210 150
+end
+set_text_font 2
+set_text_scale 0.28 1.10
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 68.0 'V3T01'
+set_text_font 3
+set_text_scale 0.50 1.90
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 90.0 'V3T02'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 112.0 'V3T03'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 132.0 'V3T04'
+// live sensor numbers
+uF =# iNow
+uF *= 0.11
+uF = sin uF
+uF *= 9.0
+uI =# uF
+uI += 42
+uF =# iNow
+uF *= 0.37
+uF = sin uF
+uF *= 4.5
+uI2 =# uF
+if 0 > uI2
+then
+    uI2 *= -1
+end
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text_with_2_numbers 24.0 146.0 'V3T05' uI uI2
+// waveform
+uI = 0
+while 32 > uI
+    uF =# uI
+    uF *= 19.0
+    uF2 =# iNow
+    uF2 *= 0.31
+    uF += uF2
+    uF = sin uF
+    uH = uF
+    uH *= 10.0
+    if 0.0 > uH
+    then
+        uH *= -1.0
+    end
+    uH += 2.0
+    uX =# uI
+    uX *= 9.0
+    uX += 40.0
+    draw_rect uX 172.0 5.0 uH 90 220 210 220
+    uI += 1
+end
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 255 130 130 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 190.0 'V3T06'
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+uI = 31
+display_text_with_number 24.0 204.0 'V3T07' uI
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 240 170 40 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 218.0 'V3T08'
+if uI3 > 1500
+then
+    uI = 3
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 235 245 245 255
+    set_text_proportional true
+    set_text_edge 1 0 0 0 200
+    display_text_with_number 24.0 236.0 'V3T09' uI
+end
+if uI3 > 3000
+then
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 170 240 220 255
+    set_text_proportional true
+    set_text_edge 1 0 0 0 200
+    display_text 24.0 254.0 'V3T10'
+end
+if uI3 > 4500
+then
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 170 240 220 255
+    set_text_proportional true
+    set_text_edge 1 0 0 0 200
+    display_text 24.0 268.0 'V3T11'
+end
+if uI3 > 6000
+then
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 170 240 220 255
+    set_text_proportional true
+    set_text_edge 1 0 0 0 200
+    display_text 24.0 282.0 'V3T12'
+end
+if uI3 > 7500
+then
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 170 240 220 255
+    set_text_proportional true
+    set_text_edge 1 0 0 0 200
+    display_text 24.0 296.0 'V3T13'
+end
+set_text_font 2
+set_text_scale 0.26 1.04
+set_text_colour 240 170 40 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+display_text 24.0 336.0 'V3T14'
+return
+
+// ---------------------------------------------------------------------------
+// SureThing's demo screen (top left). uFeed 1 = live, 2 = no signal.
+// ---------------------------------------------------------------------------
+:DRAW_FEED
+if uFeed == 2
+then
+    draw_rect 120.0 60.0 216.0 70.0 0 0 0 255
+    set_text_font 2
+    set_text_scale 0.36 1.40
+    set_text_colour 160 160 160 255
+    set_text_proportional true
+    set_text_centre true
+    display_text 120.0 54.0 'V3N05'
+    return
+end
+draw_rect 120.0 60.0 216.0 70.0 230 236 240 235
+draw_rect 120.0 30.0 216.0 10.0 200 30 40 255
+set_text_font 2
+set_text_scale 0.26 1.04
+set_text_colour 40 40 48 255
+set_text_proportional true
+set_text_centre true
+display_text 120.0 40.0 'V3N04'
+set_text_font 3
+set_text_scale 0.44 1.70
+set_text_colour 200 30 40 255
+set_text_proportional true
+set_text_centre true
+display_text 120.0 60.0 'V3A01'
+return
+
+// ---------------------------------------------------------------------------
+// Mission passed card (shown under the big MISSION PASSED text).
+// ---------------------------------------------------------------------------
+:DRAW_PASSED
+set_text_font 3
+set_text_scale 0.70 2.60
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 2 0 0 0 255
+display_text 320.0 236.0 'V3P01'
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 255
+display_text 320.0 270.0 'V3P02'
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 240 255 252 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 255
+display_text 320.0 288.0 'V3P03'
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 255
+display_text 320.0 306.0 'V3P04'
+uI = 100
+set_text_font 1
+set_text_scale 0.30 1.20
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 255
+display_text_with_2_numbers 320.0 330.0 'V3P05' iScore uI
+uI3 = iNow
+uI3 -= uT0
+if uI3 > 4000
+then
+    set_text_font 2
+    set_text_scale 0.30 1.20
+    set_text_colour 90 220 210 255
+    set_text_proportional true
+    set_text_centre true
+    set_text_edge 1 0 0 0 255
+    display_text 320.0 362.0 'V3P07'
+    set_text_font 1
+    set_text_scale 0.24 0.98
+    set_text_colour 235 245 245 255
+    set_text_proportional true
+    set_text_centre true
+    set_text_wrapx 600.0
+    set_text_edge 1 0 0 0 255
+    display_text 320.0 378.0 'V3P08'
+    set_text_font 2
+    set_text_scale 0.24 0.98
+    set_text_colour 170 240 220 255
+    set_text_proportional true
+    set_text_centre true
+    set_text_edge 1 0 0 0 255
+    display_text 320.0 394.0 'V3P09'
+end
+return
+
+// ============================================================================
+// RAIN_DECIDE - one R.A.I.N. validation decision.
+// In: cId. Out: cChoice, cCorrect. Scores the decision and plays the reaction.
+// Claims with cRetry = 1 must be answered correctly before moving on.
+// ============================================================================
+:RAIN_LOAD_CLAIM
+{$INCLUDE ../gen/claims_data.txt}
+return
+
+:RAIN_DECIDE
+gosub @RAIN_LOAD_CLAIM
+uPrevMode = uMode
+iSkipSaved = iSkipOk            // the confirm button must not also skip the cutscene
+iSkipOk = 0
+iSkipReq = 0
+iTmp3 = 0                       // attempts
+:RAIN_DECIDE_AGAIN
+set_player_control $player1 false
+uMode = 2
+uSel = 2
+uStatus = 0
+uFeedback = 0
+uStickPrev = 1                  // require the stick to return to centre first
+uBtnPrev = 1
+:RAIN_DECIDE_LOOP
+gosub @TICK
+if iFail > 0
+then
+    uMode = uPrevMode
+    iSkipOk = iSkipSaved
+    return
+end
+uStick = get_pad_state 0 0
+if is_key_pressed 37
+then
+    uStick = -128
+end
+if is_key_pressed 39
+then
+    uStick = 128
+end
+if -60 > uStick
+then
+    if uStickPrev == 0
+    then
+        if uSel > 1
+        then
+            uSel -= 1
+            add_one_off_sound 0.0 0.0 0.0 1028
+        end
+    end
+    uStickPrev = 1
+else
+    if uStick > 60
+    then
+        if uStickPrev == 0
+        then
+            if 3 > uSel
+            then
+                uSel += 1
+                add_one_off_sound 0.0 0.0 0.0 1028
+            end
+        end
+        uStickPrev = 1
+    else
+        uStickPrev = 0
+    end
+end
+uBtn = get_pad_state 0 15
+uConfirm = get_pad_state 0 16
+uBtn += uConfirm
+if is_key_pressed 13
+then
+    uBtn = 255
+end
+if uBtn > 0
+then
+    if uBtnPrev == 0
+    then
+        jump @RAIN_DECIDE_CHOSEN
+    end
+    uBtnPrev = 1
+else
+    uBtnPrev = 0
+end
+jump @RAIN_DECIDE_LOOP
+
+:RAIN_DECIDE_CHOSEN
+clear_help
+cChoice = uSel
+iDecTotal += 1
+iTmp3 += 1
+if cChoice == cAns
+then
+    cCorrect = 1
+    iScore += 10
+    iDecRight += 1
+    uStatus = cChoice
+    uFeedback = 1
+    add_one_off_sound 0.0 0.0 0.0 1029
+else
+    cCorrect = 0
+    iScore -= 5
+    if 0 > iScore
+    then
+        iScore = 0
+    end
+    uStatus = 4
+    uFeedback = 2
+    add_one_off_sound 0.0 0.0 0.0 1030
+end
+uFlashT = iNow
+uFlashT += 2600
+gosub @PUBLISH
+switch cChoice
+    case 1
+        dLine = cLineAcc
+    case 2
+        dLine = cLineRej
+    default
+        dLine = cLineAbs
+end
+gosub @SAY
+if cCorrect == 0
+then
+    if cRetry == 1
+    then
+        if cRetryLine > 0
+        then
+            dLine = cRetryLine
+            gosub @SAY
+        end
+        jump @RAIN_DECIDE_AGAIN
+    end
+end
+iWaitMs = 900
+gosub @WAIT_MS
+uMode = uPrevMode
+uFeedback = 0
+iSkipOk = iSkipSaved
+iSkipPrev = 1
+if iInCs == 0
+then
+    set_player_control $player1 true
+end
+return

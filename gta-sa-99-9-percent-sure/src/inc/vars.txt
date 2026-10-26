@@ -1,0 +1,531 @@
+// ============================================================================
+// 99.9% SURE - local variable map (CLEO custom mission: locals 0@..1023@)
+//
+// Naming: h = entity handle, b = blip, i = integer, f = float, d = dialogue,
+// u = user interface, c = R.A.I.N. claim. Every alias is prefixed so it can
+// never collide with a Sanny Builder class name, command or keyword.
+// 32@ and 33@ are the engine timers (TIMERA / TIMERB) - do not reuse them.
+// 0@..3@ receive the arguments passed by the launcher (0A94).
+// ============================================================================
+
+var
+    0@: int
+    1@: int
+    2@: int
+    3@: int
+    4@: int
+    5@: int
+    6@: int
+    7@: int
+    8@: int
+    9@: int
+    10@: int
+    11@: int
+    12@: int
+    13@: int
+    14@: int
+    15@: int
+    16@: int
+    17@: int
+    18@: int
+    19@: int
+    20@: int
+    21@: int
+    22@: int
+    23@: int
+    24@: float
+    25@: float
+    26@: float
+    27@: float
+    28@: float
+    29@: float
+    30@: float
+    31@: float
+    34@: float
+    35@: float
+    36@: float
+    37@: float
+    38@: float
+    39@: float
+    40@: int
+    41@: int
+    42@: int
+    43@: int
+    44@: int
+    45@: int
+    46@: int
+    47@: int
+    48@: int
+    49@: int
+    50@: int
+    51@: int
+    54@: int
+    55@: int
+    56@: int
+    57@: int
+    58@: int
+    59@: int
+    60@: int
+    61@: int
+    62@: int
+    63@: int
+    64@: int
+    65@: int
+    66@: int
+    67@: int
+    68@: int
+    69@: int
+    70@: int
+    71@: int
+    72@: int
+    73@: int
+    74@: int
+    75@: int
+    76@: int
+    77@: int
+    78@: int
+    79@: int
+    80@: int
+    81@: int
+    82@: int
+    83@: int
+    84@: float
+    85@: float
+    86@: float
+    87@: float
+    88@: float
+    89@: float
+    90@: float
+    91@: int
+    92@: int
+    93@: int
+    94@: int
+    95@: int
+    96@: int
+    97@: int
+    98@: int
+    99@: int
+    100@: int
+    113@: int
+    114@: int
+    115@: int
+    116@: int
+    117@: int
+    118@: int
+    119@: int
+    120@: int
+    121@: int
+    122@: int
+    123@: int
+    124@: int
+    125@: int
+    126@: int
+    127@: int
+    128@: int
+    129@: int
+    130@: int
+    131@: int
+    132@: int
+    133@: int
+    134@: int
+    135@: int
+    136@: int
+    137@: int
+    138@: int
+    139@: int
+    140@: int
+    141@: int
+    142@: int
+    143@: int
+    144@: int
+    145@: int
+    146@: int
+    147@: int
+    148@: int
+    149@: int
+    150@: int
+    151@: int
+    152@: int
+    153@: int
+    154@: int
+    155@: int
+    156@: int
+    157@: int
+    158@: int
+    159@: int
+    160@: float
+    161@: float
+    162@: float
+    163@: float
+    164@: float
+    165@: float
+    166@: float
+    167@: float
+    168@: float
+    169@: float
+    170@: float
+    171@: float
+    172@: float
+    173@: float
+    174@: float
+    175@: float
+    176@: float
+    177@: float
+    178@: float
+    179@: float
+    180@: float
+    181@: float
+    182@: float
+    183@: float
+    184@: float
+    185@: float
+    186@: float
+    187@: float
+    188@: float
+    189@: float
+    190@: float
+    191@: float
+    192@: float
+    193@: float
+    194@: float
+    195@: float
+    196@: float
+    197@: float
+    198@: float
+    199@: float
+end
+
+const
+    // ---- launcher arguments -------------------------------------------------
+    iArgCheckpoint = 0@
+    iArgScore      = 1@
+    iArgRight      = 2@
+    iArgTotal      = 3@
+
+    // ---- mission state ---------------------------------------------------------
+    iState         = 4@     // 1..12, see MISSION_DESIGN.md (published to shared var 950)
+    iFail          = 5@     // failure reason, 0 = none
+    iScore         = 6@     // R.A.I.N. evidence score
+    iDecRight      = 7@
+    iDecTotal      = 8@
+    iCheckpoint    = 9@
+    iCustomModel   = 10@    // 1 = chrisw.dff/txd are installed
+    iSpritesOk     = 11@    // 1 = models\txd\v3drain.txd is installed
+    hChris         = 12@
+    hVan           = 13@
+    hMax           = 14@
+    iChrisModel    = 15@
+    hGroup         = 16@
+    iNeedChris     = 17@    // watchdog: fail if Chris dies
+    iNeedVan       = 18@    // watchdog: fail if the van is wrecked
+    iNow           = 19@    // game timer, refreshed every TICK
+    iMdl           = 20@    // model id argument for LOAD_MODEL
+    iTmp           = 21@
+    iTmp2          = 22@
+    iTmp3          = 23@
+    fTmp           = 24@
+    fTmp2          = 25@
+    fTmp3          = 26@
+    fTmp4          = 27@
+    fTmp5          = 28@
+    fTmp6          = 29@
+    fTmp7          = 30@
+    fTmp8          = 31@
+    fPX            = 34@    // player position (refreshed by GET_PLAYER_POS)
+    fPY            = 35@
+    fPZ            = 36@
+    fSX            = 37@    // generic spawn / target position
+    fSY            = 38@
+    fSZ            = 39@
+
+    // ---- dialogue system ---------------------------------------------------------
+    dLine          = 40@
+    dStream        = 41@
+    dActive        = 42@
+    dT0            = 43@
+    dDur           = 44@
+    dWho           = 45@
+    dGest          = 46@
+    dQNext         = 47@
+    dQEnd          = 48@
+    dHasAudio      = 49@
+    dPed           = 50@
+    dAudioState    = 51@
+    dKey           = 52@s   // 52@ + 53@
+    dGapT          = 54@
+    dElapsed       = 55@
+    dLimit         = 56@
+    dDone          = 57@
+    iSkipOk        = 58@    // cutscene can be skipped
+    iSkipReq       = 59@    // skip was requested
+    iSkipPrev      = 60@
+    iAnimsReady    = 61@
+    iWaitEnd       = 62@
+    iWaitMs        = 63@
+
+    // ---- user interface ------------------------------------------------------------
+    uMode          = 64@    // 0 none, 2 console, 3 CERTAIN alert, 4 news, 5 lab terminal, 6 demo feed, 7 passed
+    uHud           = 65@    // R.A.I.N. HUD in the corner
+    uTask          = 66@    // 0 none, 1 photos, 2 evidence, 3 readings, 4 upload, 5 police ETA
+    uTaskVal       = 67@
+    uAlert         = 68@
+    uT0            = 69@
+    uSel           = 70@
+    uStatus        = 71@
+    uStickPrev     = 72@
+    uBtnPrev       = 73@
+    uFlashT        = 74@
+    uFeedback      = 75@
+    uEta           = 76@    // police ETA in ms
+    uSignal        = 77@
+    uDist          = 78@
+    uFeed          = 79@    // demo screen: 1 live, 2 no signal
+    uI             = 80@
+    uI2            = 81@
+    uI3            = 82@
+    uWarn          = 83@    // 0 none, 1 too close, 2 too far, 3 in range, 4 hold still
+    uX             = 84@
+    uY             = 85@
+    uW             = 86@
+    uH             = 87@
+    uF             = 88@
+    uF2            = 89@
+    uF3            = 90@
+    uR             = 91@
+    uG             = 92@
+    uB             = 93@
+    uA             = 94@
+    uV             = 95@
+    uPrevMode      = 96@
+    uStick         = 97@
+    uBtn           = 98@
+    uConfirm       = 99@
+
+    // ---- R.A.I.N. claim ------------------------------------------------------------
+    cId            = 100@
+    cKeyS          = 101@s  // 101@ + 102@
+    cKeyH          = 103@s  // 103@ + 104@
+    cKey1          = 105@s
+    cKey2          = 107@s
+    cKey3          = 109@s
+    cKey4          = 111@s  // ... 112@
+    cConf          = 113@
+    cSig           = 114@
+    cEvi           = 115@
+    cUnc           = 116@
+    cAns           = 117@
+    cLineAcc       = 118@
+    cLineRej       = 119@
+    cLineAbs       = 120@
+    cRetry         = 121@
+    cRetryLine     = 122@
+    cChoice        = 123@
+    cCorrect       = 124@
+
+    // ---- blips and markers ------------------------------------------------------------
+    bDest          = 125@
+    bChris         = 126@
+    bVan           = 127@
+    bTarget        = 128@
+    bAux1          = 129@
+    bAux2          = 130@
+    bAux3          = 131@
+    bCop1          = 132@
+    bCop2          = 133@
+    bCop3          = 134@
+    hMarker        = 135@   // yellow 3D marker at the lab door
+
+    // ---- misc state ----------------------------------------------------------------------
+    iSub           = 136@   // sub-step inside an act
+    iCount         = 137@
+    iFlags         = 138@
+    iSaid          = 139@   // bit field: one-shot lines already said
+    iT1            = 140@
+    iT2            = 141@
+    iT3            = 142@
+    iProgress      = 143@
+    iLastWarnT     = 144@
+    iLostT         = 145@
+    iHealth0       = 146@
+    iHealth        = 147@
+    iRingStream    = 148@
+    iMusicStream   = 149@
+    iLabSet        = 150@
+    iWanted        = 151@
+    iReward        = 152@
+    iHoldT         = 153@
+    iDone1         = 154@
+    iDone2         = 155@
+    iDone3         = 156@
+    iPoint         = 157@
+    iWeapon        = 158@
+    iNode          = 159@
+
+    // ---- floats: anchors and computed positions --------------------------------------
+    fAX            = 160@   // current scene anchor
+    fAY            = 161@
+    fAZ            = 162@
+    fAH            = 163@   // anchor heading
+    fCos           = 164@
+    fSin           = 165@
+    fLabX          = 166@   // lab exterior marker
+    fLabY          = 167@
+    fLabZ          = 168@
+    fVanX          = 169@   // van parking spot
+    fVanY          = 170@
+    fVanZ          = 171@
+    fVanH          = 172@
+    fM1X           = 173@   // three markers (photos / readings)
+    fM1Y           = 174@
+    fM1Z           = 175@
+    fM2X           = 176@
+    fM2Y           = 177@
+    fM2Z           = 178@
+    fM3X           = 179@
+    fM3Y           = 180@
+    fM3Z           = 181@
+    fDX            = 182@   // destination
+    fDY            = 183@
+    fDZ            = 184@
+    fWX            = 185@   // waypoint
+    fWY            = 186@
+    fWZ            = 187@
+    fDist          = 188@
+    fDist2         = 189@
+    fHead          = 190@
+    fHead2         = 191@
+    fCamX          = 192@
+    fCamY          = 193@
+    fCamZ          = 194@
+    fCamOX         = 195@   // camera offset (relative to a ped)
+    fCamOY         = 196@
+    fCamOZ         = 197@
+    fCamTZ         = 198@   // look-at height above the target ped
+    fSpeed         = 199@
+
+    // ---- scene entity handles (int, declared below) -----------------------------
+    hCopCar        = 200@
+    hCop           = 201@
+    hVanDish       = 202@
+    hDlvVan        = 203@
+    hDlvDriver     = 204@
+    hMini          = 205@
+    hMother        = 206@
+    hFather        = 207@
+    hCopCar1       = 208@
+    hCopCar2       = 209@
+    hCopCar3       = 210@
+    hCop1          = 211@
+    hCop2          = 212@
+    hCop3          = 213@
+    hReporter      = 214@
+    hCameraman     = 215@
+    hDentist       = 216@
+    hGuard         = 217@
+    hLimo          = 218@
+    hNewsVan       = 219@
+    hSenior        = 220@   // the student who tells CJ off
+    hCamTarget     = 221@   // ped the camera helpers aim at
+    hCamFrom       = 222@   // ped the camera helpers are placed relative to
+    iSceneLoaded   = 223@
+    iCrowdLoaded   = 224@
+    iDemoLoaded    = 225@
+    iEtaPrevT      = 226@
+    iUploadT       = 227@
+    iStandDown     = 228@
+    iDemoStage     = 229@
+    iInCs          = 230@   // 1 while a scripted cutscene runs
+    iSkipSaved     = 231@
+    iSite          = 232@
+    iPhotos        = 233@
+    iReads         = 234@
+    iUpload        = 235@
+    iTmp4          = 236@
+    iTmp5          = 237@
+    iObjShown      = 238@
+    iStageT        = 239@
+    // 240@..299@: scene handles, declared in gen/scene_vars.txt
+    iRoadsOff      = 300@
+    iPrevT         = 301@
+    iDt            = 302@
+    iInRangeT      = 303@
+    iLeg           = 304@   // tail / escort leg (waypoints)
+    iSaid2         = 305@
+    iCopsHeld      = 306@
+    iReached       = 307@
+    iArrived       = 308@
+    iCamStep       = 309@
+    fMini2X        = 310@   // reserved floats
+    fMini2Y        = 311@
+    fMini2Z        = 312@
+    fHoldX         = 313@
+    fHoldY         = 314@
+    fHoldZ         = 315@
+    // Local copy of $scplayer. Sanny Builder 4.2 only accepts "x = $global" in
+    // its explicit opcode form (008B:), so it is copied once in :INIT and the
+    // rest of the script assigns from this local instead.
+    hPlayer        = 316@
+    iDestFixed     = 317@   // Act IV: recital node re-checked near the minivan
+    dPath          = 318@v  // 318@..321@: voice file name, e.g. "V3D0101.mp3"
+end
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+    214@: int
+    215@: int
+    216@: int
+    217@: int
+    218@: int
+    219@: int
+    220@: int
+    221@: int
+    222@: int
+    223@: int
+    224@: int
+    225@: int
+    226@: int
+    227@: int
+    228@: int
+    229@: int
+    230@: int
+    231@: int
+    232@: int
+    233@: int
+    234@: int
+    235@: int
+    236@: int
+    237@: int
+    238@: int
+    239@: int
+    300@: int
+    301@: int
+    302@: int
+    303@: int
+    304@: int
+    305@: int
+    306@: int
+    307@: int
+    308@: int
+    309@: int
+    310@: float
+    311@: float
+    312@: float
+    313@: float
+    314@: float
+    315@: float
+    316@: int
+    317@: int
+end

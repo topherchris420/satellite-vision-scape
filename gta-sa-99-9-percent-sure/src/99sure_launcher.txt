@@ -1,0 +1,335 @@
+// ============================================================================
+//  99.9% SURE  -  launcher (CLEO script, runs all the time)
+//
+//  Puts a "?" contact point on the radar at CJ's Doherty garage. Walking into
+//  its marker on foot, with no wanted level and no other mission running,
+//  starts cleo\99sure.cm. After a failure it offers a retry from the last
+//  checkpoint. Checkpoints are kept in the CLEO save (0A95).
+//
+//  CLEO saves this script's 32 locals and instruction pointer but not its
+//  gosub stack, so the script never waits inside a gosub (it has none).
+//  Compile with Sanny Builder 4, edit mode "GTA SA (v1.0 - SBL)".
+// ============================================================================
+{$CLEO .cs}
+{$NOSOURCE}
+{$INCLUDE inc/config.txt}
+
+var
+    0@: int
+    1@: int
+    2@: int
+    3@: int
+    4@: int
+    5@: int
+    6@: int
+    7@: float
+    8@: float
+    9@: float
+    10@: int
+    11@: int
+    12@: int
+    13@: int
+    14@: float
+    15@: float
+    16@: float
+    17@: float
+    18@: float
+    19@: float
+    20@: float
+    21@: float
+    22@: int
+    23@: int
+    24@: int
+    25@: int
+    26@: int
+    27@: int
+end
+
+const
+    lCheckpoint    = 0@     // last checkpoint the mission reached (0..4)
+    lScore         = 1@     // evidence score carried into a checkpoint restart
+    lRight         = 2@
+    lTotal         = 3@
+    lPassed        = 4@     // times the mission was passed
+    lBlip          = 5@
+    lMagic         = 6@     // LAUNCHER_MAGIC once the locals are initialised
+    lMX            = 7@     // marker: the pavement in front of the garage
+    lMY            = 8@
+    lMZ            = 9@
+    lMarkerOk      = 10@    // 1 = marker snapped to a pedestrian path node
+    lWanted        = 11@
+    lResult        = 12@
+    lT0            = 13@
+    lPX            = 14@
+    lPY            = 15@
+    lPZ            = 16@
+    lDist          = 17@
+    lNX            = 18@
+    lNY            = 19@
+    lNZ            = 20@
+    lF             = 21@
+    lTmp           = 22@
+    lWait          = 23@
+    lHint          = 24@    // help text shown for this visit
+    lInside        = 25@    // player is (still) standing in the marker
+    lKeyPrev       = 26@
+    lKey           = 27@
+
+    LAUNCHER_MAGIC = 99901
+    SV_BLIP        = 956    // this launcher's blip handle, kept in the CLEO save
+    SV_BLIP_OK     = 957    // LAUNCHER_MAGIC while SV_BLIP holds a live blip
+    BLIP_QMARK     = 37     // RADAR_SPRITE_QMARK [gta-reversed Radar.h]
+    SNAP_RANGE     = 200.0  // path data around the garage is loaded by now
+    NODE_MAX_OFF   = 60.0   // a node further than this from START is not ours
+    NEAR_RANGE     = 50.0   // check every frame inside this range
+    RETRY_MS       = 10000
+    KEY_Y          = 89     // VK_Y
+    PAD_DPAD_RIGHT = 11     // "Conversation - Yes" (Y) sets DPadRight [ControllerConfigManager.cpp]
+end
+
+nop
+script_name 'V3DLNCH'
+save_this_custom_script
+if lMagic <> LAUNCHER_MAGIC
+then
+    // first run in this savegame (a restored save resumes inside the loop)
+    lCheckpoint = 0
+    lScore = 0
+    lRight = 0
+    lTotal = 0
+    lPassed = 0
+    lMarkerOk = 0
+    lMX = START_X
+    lMY = START_Y
+    lMZ = START_Z
+    lBlip = -1
+    lInside = 0
+    lHint = 0
+    // a blip that a different build of this launcher left in the savegame
+    lTmp = get_cleo_shared_var SV_BLIP_OK
+    if lTmp == LAUNCHER_MAGIC
+    then
+        lTmp = get_cleo_shared_var SV_BLIP
+        remove_blip lTmp
+    end
+    set_cleo_shared_var SV_BLIP_OK 0
+    lMagic = LAUNCHER_MAGIC
+end
+lWait = 500
+
+:L_LOOP
+wait lWait
+if not is_player_playing $player1
+then
+    lWait = 500
+    jump @L_LOOP
+end
+// A contact point: the game itself hides the blip and its marker while any
+// mission is running.
+if lBlip == -1
+then
+    lBlip = add_sprite_blip_for_contact_point lMX lMY lMZ BLIP_QMARK
+    set_cleo_shared_var SV_BLIP lBlip
+    set_cleo_shared_var SV_BLIP_OK LAUNCHER_MAGIC
+end
+lPX, lPY, lPZ = get_char_coordinates $scplayer
+lDist = get_distance_between_coords_2d lPX lPY lMX lMY
+// START is inside the garage, so move the marker to the nearest pavement node.
+// Path data is only loaded around the player, hence the range check.
+if lMarkerOk == 0
+then
+    if SNAP_RANGE > lDist
+    then
+        lNX, lNY, lNZ = get_closest_char_node START_X START_Y START_Z
+        lF = get_distance_between_coords_2d lNX lNY START_X START_Y
+        if NODE_MAX_OFF > lF
+        then
+            lMX = lNX
+            lMY = lNY
+            lMZ = lNZ
+            lMarkerOk = 1
+            remove_blip lBlip
+            lBlip = -1
+            lWait = 0
+            jump @L_LOOP
+        end
+    end
+end
+if lDist > NEAR_RANGE
+then
+    lWait = 500
+    lHint = 0
+    lInside = 0
+    jump @L_LOOP
+end
+lWait = 0
+if $onmission <> 0
+then
+    jump @L_LOOP
+end
+if lHint == 0
+then
+    if lPassed > 0
+    then
+        print_help 'V3L06'
+    else
+        print_help 'V3L01'
+    end
+    lHint = 1
+end
+lF = lMZ
+lF += 1.0
+if not locate_stopped_char_on_foot_3d $scplayer lMX lMY lF 1.2 1.2 2.0 false
+then
+    lInside = 0
+    jump @L_LOOP
+end
+if lInside == 1
+then
+    // still standing in the marker after a refusal or a mission
+    jump @L_LOOP
+end
+lInside = 1
+lWanted = store_wanted_level $player1
+if lWanted > 0
+then
+    print_now 'V3L04' 4000 1
+    jump @L_LOOP
+end
+if not does_file_exist "cleo\99sure.cm"
+then
+    print_now 'V3L05' 6000 1
+    jump @L_LOOP
+end
+
+:L_START
+clear_help
+if lCheckpoint > 0
+then
+    print_with_number_now 'V3L03' lCheckpoint 3000 1
+end
+set_cleo_shared_var SV_STATE ST_INACTIVE
+set_cleo_shared_var SV_RESULT 0
+set_cleo_shared_var SV_CHECKPOINT lCheckpoint
+set_cleo_shared_var SV_SCORE lScore
+set_cleo_shared_var SV_RIGHT lRight
+set_cleo_shared_var SV_TOTAL lTotal
+load_and_launch_custom_mission "99sure" lCheckpoint lScore lRight lTotal
+lT0 = get_game_timer
+
+:L_WAIT_START
+wait 0
+if $onmission == 0
+then
+    lTmp = get_game_timer
+    lTmp -= lT0
+    if 3000 > lTmp
+    then
+        jump @L_WAIT_START
+    end
+    // the mission did not start, e.g. another mission script is loaded (see cleo.log)
+    print_now 'V3L07' 6000 1
+    lWait = 500
+    jump @L_LOOP
+end
+
+:L_RUNNING
+wait 250
+if $onmission <> 0
+then
+    jump @L_RUNNING
+end
+lResult = get_cleo_shared_var SV_RESULT
+set_cleo_shared_var SV_STATE ST_INACTIVE
+lInside = 1
+lHint = 1
+lWait = 500
+if lResult == 1
+then
+    lPassed += 1
+    lCheckpoint = 0
+    lScore = 0
+    lRight = 0
+    lTotal = 0
+    jump @L_LOOP
+end
+// failed, wasted or busted: keep what the mission reached
+lCheckpoint = get_cleo_shared_var SV_CHECKPOINT
+lScore = get_cleo_shared_var SV_SCORE
+lRight = get_cleo_shared_var SV_RIGHT
+lTotal = get_cleo_shared_var SV_TOTAL
+if lCheckpoint <= 0
+then
+    lCheckpoint = 0
+    lScore = 0
+    lRight = 0
+    lTotal = 0
+    jump @L_LOOP
+end
+if lCheckpoint > 4
+then
+    lCheckpoint = 4
+end
+
+// wait until CJ is back in control (after the hospital or police station)
+:L_WAIT_PLAYER
+wait 250
+if not is_player_playing $player1
+then
+    jump @L_WAIT_PLAYER
+end
+lT0 = get_game_timer
+:L_SETTLE
+wait 100
+lTmp = get_game_timer
+lTmp -= lT0
+if 2500 > lTmp
+then
+    jump @L_SETTLE
+end
+if $onmission <> 0
+then
+    jump @L_LOOP
+end
+print_help 'V3L02'
+lT0 = get_game_timer
+lKeyPrev = 1                    // the key must be released first
+
+:L_RETRY
+wait 0
+if $onmission <> 0
+then
+    clear_help
+    jump @L_LOOP
+end
+if not is_player_playing $player1
+then
+    clear_help
+    jump @L_LOOP
+end
+lKey = 0
+if is_key_pressed KEY_Y
+then
+    lKey = 1
+end
+if is_button_pressed 0 PAD_DPAD_RIGHT
+then
+    lKey = 1
+end
+if lKey == 1
+then
+    if lKeyPrev == 0
+    then
+        jump @L_START
+    end
+else
+    lKeyPrev = 0
+end
+lTmp = get_game_timer
+lTmp -= lT0
+if RETRY_MS > lTmp
+then
+    jump @L_RETRY
+end
+clear_help
+jump @L_LOOP

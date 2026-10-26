@@ -1,0 +1,139 @@
+// ============================================================================
+// 99.9% SURE - tunables and world references
+//
+// Coordinates marked [game data] come from GTA SA's own data as published in
+// the Sanny Builder documentation / library (garages, ENEX entrances) or the
+// open.mp interior list. Coordinates marked [approx] are hand-picked points
+// inside a district; the mission never spawns anything there directly - it
+// snaps them at runtime to the nearest car/pedestrian path node and to the
+// ground (GET_CLOSEST_CAR_NODE / GET_CLOSEST_CHAR_NODE / GET_GROUND_Z_FOR_3D_COORD),
+// so they only have to be "somewhere in the right neighbourhood".
+// None of these positions could be checked in-game while building the mod;
+// see docs/CALIBRATION.md for how to adjust them with the debug overlay.
+// ============================================================================
+
+const
+    // ---- shared variables read by the launcher (CLEO 0AB3/0AB4) ------------------
+    SV_STATE       = 950
+    SV_CHECKPOINT  = 951
+    SV_RESULT      = 952    // 0 running, 1 passed, 2 failed
+    SV_SCORE       = 953
+    SV_RIGHT       = 954
+    SV_TOTAL       = 955
+
+    // ---- mission states (as listed in the brief) ----------------------------------
+    ST_INACTIVE    = 1
+    ST_INTRO       = 2
+    ST_CHASE       = 3
+    ST_DRIVE_LAB   = 4
+    ST_LAB         = 5
+    ST_INVESTIGATE = 6
+    ST_RESCUE      = 7
+    ST_DEMO        = 8
+    ST_FINALE      = 9
+    ST_SUCCESS     = 10
+    ST_FAILURE     = 11
+    ST_CLEANUP     = 12
+
+    // ---- failure reasons (FXT keys V3F01..V3F09) -------------------------------------
+    FAIL_CHRIS     = 1
+    FAIL_VAN       = 2
+    FAIL_LOST_DLV  = 3
+    FAIL_HIT_DLV   = 4
+    FAIL_LATE      = 5
+    FAIL_MINI_DEAD = 6
+    FAIL_LOST_MINI = 7
+    FAIL_ABANDON   = 8
+    FAIL_MAX       = 9
+
+    // ---- answers ----------------------------------------------------------------------
+    ANS_ACCEPT     = 1
+    ANS_REJECT     = 2
+    ANS_ABSTAIN    = 3
+
+    // ---- rewards ------------------------------------------------------------------------
+    REWARD_BASE    = 2500   // plus 25 dollars per evidence point
+    RESPECT_AWARD  = 10
+
+    // ---- models -----------------------------------------------------------------------
+    // Christopher: special character slot 1 (model 290 = SPECIAL01), file chrisw.dff/.txd.
+    // Stand-in if the custom model is not installed:
+    MDL_CHRIS_FALLBACK = #SBMYST
+
+    // ---- the Doherty garage (Act I start) [game data: SA-MP interior list,
+    //      "San Fierro Garage" -2041.2334 178.3969 28.8465] -------------------------------
+    START_X        = -2041.2334
+    START_Y        = 178.3969
+    START_Z        = 28.8465
+
+    // ---- the lab: a converted garage in Doherty --------------------------------------
+    // [game data] "Doherty garage #2 right" (garage LCKSFSE, Sanny Builder garage table)
+    LAB_REF_X      = -2043.1
+    LAB_REF_Y      = 118.609
+    LAB_REF_Z      = 27.821
+    // Interior: "Warehouse 1", interior 18 [game data: open.mp interior list]
+    LAB_AREA       = 18
+    LAB_IN_X       = 1290.4106
+    LAB_IN_Y       = 1.9512
+    LAB_IN_Z       = 1001.0201
+    LAB_IN_H       = 0.0
+    LAB_FLOOR_Z    = 1000.02   // fallback only: LAB_ENTER measures the floor with a ground probe
+
+    // ---- Act III, site 1: Downtown gathering [approx, near the Zip store ENEX
+    //      -1883.20 865.47 35.26] ---------------------------------------------------------
+    S1_X           = -1876.0
+    S1_Y           = 872.0
+    S1_Z           = 35.2
+
+    // ---- site 2: Easter Basin delivery van [approx] -------------------------------------
+    S2_X           = -1690.0
+    S2_Y           = 120.0
+    S2_Z           = 4.0
+    S2_WP_X        = -1640.0     // waypoint on the way north
+    S2_WP_Y        = 520.0
+    S2_WP_Z        = 7.0
+    // drop-off near the Secret Valley Diner ENEX [game data: -1887.43 749.59 45.47]
+    S2_DEST_X      = -1880.0
+    S2_DEST_Y      = 740.0
+    S2_DEST_Z      = 45.0
+
+    // ---- site 3: industrial Doherty [approx; south Doherty, cf. the driving school
+    //      ENEX -2026.92 -101.46 35.26] ------------------------------------------------------
+    S3_X           = -2105.0
+    S3_Y           = -225.0
+    S3_Z           = 35.3
+
+    // ---- Act IV: Garcia [approx; Zero's RC shop ENEX is at -2242.01 128.52 35.42] --------
+    R_MINI_X       = -2290.0
+    R_MINI_Y       = 95.0
+    R_MINI_Z       = 35.0
+    R_DEST_X       = -1965.0     // the recital: Downtown [approx]
+    R_DEST_Y       = 840.0
+    R_DEST_Z       = 40.0
+    R_COP1_X       = -1950.0     // police start points [approx]
+    R_COP1_Y       = 380.0
+    R_COP1_Z       = 35.0
+    R_COP2_X       = -2160.0
+    R_COP2_Y       = -320.0
+    R_COP2_Z       = 35.0
+    R_COP3_X       = -2560.0
+    R_COP3_Y       = 260.0
+    R_COP3_Z       = 10.0
+    R_ETA_MS       = 95000       // time to reach the minivan before the police
+    R_UPLOAD_STEP  = 340         // ms per 1% of upload while in range
+
+    // ---- Act V: SureThing demo, Downtown [approx; Cluckin' Bell ENEX -1815.84 618.68 35.30]
+    D_X            = -1822.0
+    D_Y            = 640.0
+    D_Z            = 35.2
+
+    // ---- gameplay tuning ------------------------------------------------------------------
+    TAIL_MIN       = 15.0
+    TAIL_MAX       = 60.0
+    TAIL_LOST      = 140.0
+    TAIL_STEP_MS   = 420         // ms per 1% of evidence while tailing in range
+    READ_HOLD_MS   = 4000        // hold still this long on a measurement point
+    PHOTO_RADIUS   = 9.0         // photo markers around the tai chi class
+    ABANDON_WARN   = 90.0
+    ABANDON_FAIL   = 260.0
+end

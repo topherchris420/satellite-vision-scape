@@ -1,0 +1,479 @@
+// ============================================================================
+// ACT V - THE DEMONSTRATION  and  ACT VI - THE OPEN-SOURCE TWIST
+// SureThing's live demo Downtown. Three public validations (reject, abstain,
+// accept), the final exchange, the feed going dark, the open registry, and
+// the news report.
+// ============================================================================
+:ACT5
+iCheckpoint = 4
+iState = ST_DEMO
+gosub @PUBLISH
+uHud = 1
+uTask = 0
+iNeedVan = 0
+fDX = D_X
+fDY = D_Y
+fDZ = D_Z
+print_now 'V3O14' 7000 1
+dLine = 501
+dQEnd = 503
+gosub @DRIVE_TO_ANY
+if iFail <> 0
+then
+    return
+end
+
+// ---- build the stage ---------------------------------------------------------------
+fAX, fAY, fAZ = get_closest_char_node D_X D_Y D_Z
+if fAX == 0.0
+then
+    fAX = D_X
+    fAY = D_Y
+    fAZ = D_Z
+end
+fSX, fSY, fSZ = get_closest_car_node fAX fAY fAZ
+fTmp = fSX
+fTmp -= fAX
+fTmp2 = fSY
+fTmp2 -= fAY
+fAH = get_heading_from_vector_2d fTmp fTmp2
+gosub @DEMO_ROADS_OFF
+gosub @SCN_DEMO_CREATE
+set_char_only_damaged_by_player hMax true
+set_char_health hMax 300
+set_char_never_targetted hMax true
+task_play_anim hMax "IDLE_chat" "PED" 4.0 true false false false -1
+gosub @ANCHOR_PREP
+fTmp7 = 0.0
+fTmp8 = 4.9
+gosub @ANCHOR_TO_WORLD
+gosub @GROUND_AT
+fM1X = fSX
+fM1Y = fSY
+fM1Z = fSZ
+fM1Z += 1.0
+uFeed = 1
+uMode = 6
+print_now 'V3O15' 7000 1
+:ACT5_APPROACH
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if is_char_dead hMax
+then
+    iFail = FAIL_MAX
+    return
+end
+if not locate_char_on_foot_3d $scplayer fM1X fM1Y fM1Z 1.6 1.6 2.0 true
+then
+    jump @ACT5_APPROACH
+end
+
+// ---- the keynote -----------------------------------------------------------------------
+gosub @CS_BEGIN
+gosub @DLG_CANCEL
+// CJ and Chris at the barrier, facing the stage
+fHead = fAH
+fHead += 180.0
+fTmp7 = -0.8
+fTmp8 = 4.7
+gosub @ANCHOR_TO_WORLD
+gosub @GROUND_AT
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+set_char_heading $scplayer fHead
+if not is_char_dead hChris
+then
+    clear_char_tasks_immediately hChris
+    fTmp7 = 0.6
+    fTmp8 = 4.7
+    gosub @ANCHOR_TO_WORLD
+    gosub @GROUND_AT
+    fSZ += 1.0
+    set_char_coordinates hChris fSX fSY fSZ
+    set_char_heading hChris fHead
+end
+// wide shot over the crowd
+fTmp7 = -6.5
+fTmp8 = 12.0
+fTmp6 = 3.6
+hCamTarget = hMax
+fCamTZ = 0.4
+gosub @CAM_ANCHOR
+dLine = 504
+gosub @SAY
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = 0.3
+fCamOY = 1.6
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 505
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = 0.3
+fCamOY = 1.2
+fCamOZ = 0.64
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 506
+gosub @SAY
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = -0.4
+fCamOY = 2.2
+fCamOZ = 0.5
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 507
+gosub @SAY
+hCamFrom = hReporter
+hCamTarget = hReporter
+fCamOX = 0.4
+fCamOY = 1.3
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 508
+gosub @SAY
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = 0.3
+fCamOY = 1.6
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 509
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.66
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 510
+gosub @SAY
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = 0.3
+fCamOY = 1.6
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 511
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = -0.35
+fCamOY = 1.4
+fCamOZ = 0.6
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 512
+gosub @SAY
+fTmp7 = 5.5
+fTmp8 = 9.0
+fTmp6 = 2.8
+hCamTarget = hMax
+fCamTZ = 0.4
+gosub @CAM_ANCHOR
+dLine = 513
+gosub @SAY
+gosub @SCN_DEMO_REACT_SHOUT
+
+// ---- live validation 1: confidently wrong ------------------------------------------
+iDemoStage = 1
+gosub @DEMO_STAGE_CAM
+dLine = 521
+gosub @SAY
+gosub @SCN_DEMO_REACT_POINT
+hCamFrom = hDentist
+hCamTarget = hDentist
+fCamOX = 0.3
+fCamOY = 1.4
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 522
+gosub @SAY
+gosub @DEMO_STAGE_CAM
+cId = 7
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+gosub @SCN_DEMO_REACT_CHEER
+hCamFrom = hReporter
+hCamTarget = hReporter
+fCamOX = 0.4
+fCamOY = 1.3
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 524
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.22
+fCamOY = 1.05
+fCamOZ = 0.66
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 525
+gosub @SAY
+gosub @SCN_DEMO_REACT_WATCH
+
+// ---- live validation 2: not enough evidence -------------------------------------------
+iDemoStage = 2
+gosub @DEMO_STAGE_CAM
+dLine = 531
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = 0.3
+fCamOY = 1.2
+fCamOZ = 0.64
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 532
+gosub @SAY
+gosub @DEMO_STAGE_CAM
+cId = 8
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+gosub @SCN_DEMO_REACT_WATCH
+
+// ---- live validation 3: supported by evidence ------------------------------------------
+iDemoStage = 3
+gosub @DEMO_STAGE_CAM
+dLine = 541
+gosub @SAY
+cId = 9
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = 0.3
+fCamOY = 1.6
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 543
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.4
+fCamOY = 1.5
+fCamOZ = 0.6
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 544
+gosub @SAY
+gosub @SCN_DEMO_REACT_CHEER
+iDemoStage = 0
+
+// ---- the final exchange (word for word from the brief) ---------------------------------
+dLine = 551
+:ACT5_FINAL
+switch dLine
+    case 551, 553, 555
+        hCamFrom = hMax
+        hCamTarget = hMax
+        fCamOX = 0.3
+        fCamOY = 1.5
+        fCamOZ = 0.55
+        fCamTZ = 0.6
+    case 557
+        hCamFrom = hPlayer
+        hCamTarget = hPlayer
+        fCamOX = 0.3
+        fCamOY = 1.2
+        fCamOZ = 0.64
+        fCamTZ = 0.62
+    default
+        hCamFrom = hChris
+        hCamTarget = hChris
+        fCamOX = 0.22
+        fCamOY = 1.05
+        fCamOZ = 0.66
+        fCamTZ = 0.64
+end
+gosub @CAM_SHOT
+gosub @SAY
+dLine += 1
+if 557 >= dLine
+then
+    jump @ACT5_FINAL
+end
+
+// ============================================================================
+// ACT VI - THE OPEN-SOURCE TWIST
+// ============================================================================
+hCamFrom = hMax
+hCamTarget = hMax
+fCamOX = -0.4
+fCamOY = 2.2
+fCamOZ = 0.5
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 601
+gosub @SAY
+uFeed = 2
+shake_cam 60
+add_one_off_sound 0.0 0.0 0.0 1030
+gosub @SCN_DEMO_REACT_SHOUT
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = 0.6
+fCamOY = -1.2
+fCamOZ = 0.75
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 602
+gosub @SAY
+// Christopher calmly closes his laptop
+if iSkipReq == 0
+then
+    if not is_char_dead hChris
+    then
+        task_play_anim hChris "putdwn05" "CARRY" 4.0 false false false false -1
+    end
+end
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.22
+fCamOY = 1.05
+fCamOZ = 0.66
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 603
+:ACT6_TALK
+gosub @SAY
+dLine += 1
+if 611 >= dLine
+then
+    switch dLine
+        case 604, 606, 608, 610
+            hCamFrom = hPlayer
+            hCamTarget = hPlayer
+            fCamOX = 0.3
+            fCamOY = 1.2
+            fCamOZ = 0.64
+            fCamTZ = 0.62
+        default
+            hCamFrom = hChris
+            hCamTarget = hChris
+            fCamOX = 0.22
+            fCamOY = 1.05
+            fCamOZ = 0.66
+            fCamTZ = 0.64
+    end
+    gosub @CAM_SHOT
+    jump @ACT6_TALK
+end
+// the news report
+uMode = 4
+fTmp7 = 7.5
+fTmp8 = 14.0
+fTmp6 = 5.5
+hCamTarget = hMax
+fCamTZ = 0.0
+gosub @CAM_ANCHOR
+dLine = 612
+:ACT6_NEWS
+gosub @SAY
+dLine += 1
+if 615 >= dLine
+then
+    jump @ACT6_NEWS
+end
+uMode = 0
+gosub @CS_END
+// SureThing packs up; the crowd drifts off
+gosub @SCN_DEMO_DELETE
+hMax = -1
+gosub @DEMO_ROADS_ON
+iState = ST_FINALE
+gosub @PUBLISH
+return
+
+// Like DRIVE_TO but any vehicle (or on foot) will do.
+:DRIVE_TO_ANY
+bDest = add_blip_for_coord fDX fDY fDZ
+iSaid = 0
+:DRIVE_TO_ANY_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    remove_blip bDest
+    bDest = -1
+    return
+end
+if iSaid == 0
+then
+    gosub @SAY_QUEUE
+    iSaid = 1
+end
+if not locate_char_any_means_3d $scplayer fDX fDY fDZ 70.0 70.0 60.0 false
+then
+    jump @DRIVE_TO_ANY_LOOP
+end
+remove_blip bDest
+bDest = -1
+return
+
+// Wide shot of the stage used while the console is open.
+:DEMO_STAGE_CAM
+fTmp7 = 4.5
+fTmp8 = 10.0
+fTmp6 = 3.0
+hCamTarget = hMax
+fCamTZ = 0.3
+gosub @CAM_ANCHOR
+return
+
+:DEMO_ROADS_OFF
+fTmp = fAX
+fTmp -= 45.0
+fTmp2 = fAY
+fTmp2 -= 45.0
+fTmp3 = fAZ
+fTmp3 -= 15.0
+fTmp4 = fAX
+fTmp4 += 45.0
+fTmp5 = fAY
+fTmp5 += 45.0
+fTmp6 = fAZ
+fTmp6 += 15.0
+fHoldX = fTmp
+fHoldY = fTmp2
+fHoldZ = fTmp3
+fMini2X = fTmp4
+fMini2Y = fTmp5
+fMini2Z = fTmp6
+switch_roads_off fTmp fTmp2 fTmp3 fTmp4 fTmp5 fTmp6
+switch_ped_roads_off fTmp fTmp2 fTmp3 fTmp4 fTmp5 fTmp6
+clear_area_of_cars fTmp fTmp2 fTmp3 fTmp4 fTmp5 fTmp6
+iRoadsOff = 1
+return
+
+:DEMO_ROADS_ON
+if iRoadsOff == 1
+then
+    switch_roads_back_to_original fHoldX fHoldY fHoldZ fMini2X fMini2Y fMini2Z
+    switch_ped_roads_back_to_original fHoldX fHoldY fHoldZ fMini2X fMini2Y fMini2Z
+    iRoadsOff = 0
+end
+return

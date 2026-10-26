@@ -1,0 +1,864 @@
+// ============================================================================
+// ACT III - THE RESONANCE RUN
+// Three flagged sites, three ways of collecting independent evidence:
+//   1 Downtown      photograph a "paramilitary cell" (a tai chi class)
+//   2 Easter Basin  tail an "explosives van" without touching it
+//   3 Doherty       park the van on three measurement points and hold still
+// Each site ends with two R.A.I.N. decisions.
+// ============================================================================
+:ACT3
+iCheckpoint = 2
+iState = ST_INVESTIGATE
+gosub @PUBLISH
+uHud = 1
+uTask = 0
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+iNeedVan = 1
+gosub @SITE1
+if iFail <> 0
+then
+    return
+end
+gosub @SITE2
+if iFail <> 0
+then
+    return
+end
+gosub @SITE3
+return
+
+// Drives the van towards fDX/fDY/fDZ with a blip; plays banter dLine..dQEnd.
+// Returns when CJ is within 70 m (any means). Re-shows "get back in the van".
+:DRIVE_TO
+bDest = add_blip_for_coord fDX fDY fDZ
+iSaid = 0
+iObjShown = 0
+:DRIVE_TO_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    remove_blip bDest
+    bDest = -1
+    return
+end
+if iSaid == 0
+then
+    if is_char_in_car $scplayer hVan
+    then
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+if not is_char_in_car $scplayer hVan
+then
+    if iObjShown == 0
+    then
+        print_now 'V3O18' 5000 1
+        iObjShown = 1
+    end
+else
+    iObjShown = 0
+end
+if not locate_char_any_means_3d $scplayer fDX fDY fDZ 70.0 70.0 60.0 false
+then
+    jump @DRIVE_TO_LOOP
+end
+remove_blip bDest
+bDest = -1
+return
+
+// ============================================================================
+// SITE 1 - Downtown. "Paramilitary training cell" (a tai chi class).
+// ============================================================================
+:SITE1
+iSite = 1
+fDX = S1_X
+fDY = S1_Y
+fDZ = S1_Z
+print_now 'V3O05' 7000 1
+dLine = 301
+dQEnd = 309
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+// anchor: pavement node, facing away from the road
+fAX, fAY, fAZ = get_closest_char_node S1_X S1_Y S1_Z
+if fAX == 0.0
+then
+    fAX = S1_X
+    fAY = S1_Y
+    fAZ = S1_Z
+end
+fSX, fSY, fSZ = get_closest_car_node fAX fAY fAZ
+fTmp = fAX
+fTmp -= fSX
+fTmp2 = fAY
+fTmp2 -= fSY
+fAH = get_heading_from_vector_2d fTmp fTmp2
+clear_area fAX fAY fAZ 6.0 false
+gosub @SCN_TAICHI_CREATE
+bTarget = add_blip_for_coord fAX fAY fAZ
+// the photo markers: 120 degrees apart around the class
+gosub @ANCHOR_PREP
+fTmp7 = 0.0
+fTmp8 = PHOTO_RADIUS
+gosub @ANCHOR_TO_WORLD
+gosub @GROUND_AT
+fM1X = fSX
+fM1Y = fSY
+fM1Z = fSZ
+fM1Z += 1.0
+fTmp7 = PHOTO_RADIUS
+fTmp7 *= 0.866
+fTmp8 = PHOTO_RADIUS
+fTmp8 *= -0.5
+gosub @ANCHOR_TO_WORLD
+gosub @GROUND_AT
+fM2X = fSX
+fM2Y = fSY
+fM2Z = fSZ
+fM2Z += 1.0
+fTmp7 *= -1.0
+gosub @ANCHOR_TO_WORLD
+gosub @GROUND_AT
+fM3X = fSX
+fM3Y = fSY
+fM3Z = fSZ
+fM3Z += 1.0
+// wait until CJ is close
+:SITE1_APPROACH
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if not locate_char_any_means_3d $scplayer fAX fAY fAZ 30.0 30.0 20.0 false
+then
+    jump @SITE1_APPROACH
+end
+gosub @DLG_CANCEL
+uAlert = 2
+uMode = 3
+add_one_off_sound 0.0 0.0 0.0 1137
+dLine = 311
+gosub @SAY
+uMode = 0
+dLine = 312
+gosub @SAY
+dLine = 313
+gosub @SAY
+// the camera
+iMdl = #CAMERA
+gosub @LOAD_MODEL
+give_weapon_to_char $scplayer 43 36
+set_current_char_weapon $scplayer 43
+print_now 'V3O06' 8000 1
+print_help 'V3H01'
+iPhotos = 0
+iDone1 = 0
+iDone2 = 0
+iDone3 = 0
+iHoldT = 0
+uTask = 1
+uTaskVal = 0
+iPrevT = iNow
+:SITE1_PHOTOS
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+iPoint = 0
+if iDone1 == 0
+then
+    if locate_char_on_foot_3d $scplayer fM1X fM1Y fM1Z 1.6 1.6 2.0 true
+    then
+        iPoint = 1
+    end
+end
+if iDone2 == 0
+then
+    if locate_char_on_foot_3d $scplayer fM2X fM2Y fM2Z 1.6 1.6 2.0 true
+    then
+        iPoint = 2
+    end
+end
+if iDone3 == 0
+then
+    if locate_char_on_foot_3d $scplayer fM3X fM3Y fM3Z 1.6 1.6 2.0 true
+    then
+        iPoint = 3
+    end
+end
+if iPoint == 0
+then
+    iHoldT = 0
+    jump @SITE1_PHOTOS
+end
+// in a marker: holding the camera and facing the class?
+iWeapon = get_current_char_weapon $scplayer
+if iWeapon <> 43
+then
+    iHoldT = 0
+    jump @SITE1_PHOTOS
+end
+gosub @GET_PLAYER_POS
+fHead = get_char_heading $scplayer
+fTmp = fAX
+fTmp -= fPX
+fTmp2 = fAY
+fTmp2 -= fPY
+fHead2 = get_heading_from_vector_2d fTmp fTmp2
+fHead -= fHead2
+if fHead > 180.0
+then
+    fHead -= 360.0
+end
+if -180.0 > fHead
+then
+    fHead += 360.0
+end
+if 0.0 > fHead
+then
+    fHead *= -1.0
+end
+if fHead > 45.0
+then
+    iHoldT = 0
+    jump @SITE1_PHOTOS
+end
+// a photo counts when the shutter fires, or after holding the shot for 2.5 s
+iTmp = 0
+if is_char_shooting $scplayer
+then
+    iTmp = 1
+end
+iHoldT += iDt
+if iHoldT > 2500
+then
+    iTmp = 1
+end
+if iTmp == 0
+then
+    jump @SITE1_PHOTOS
+end
+iHoldT = 0
+add_one_off_sound 0.0 0.0 0.0 1132
+iPhotos += 1
+uTaskVal = iPhotos
+switch iPoint
+    case 1
+        iDone1 = 1
+    case 2
+        iDone2 = 1
+    case 3
+        iDone3 = 1
+end
+gosub @PUBLISH
+switch iPhotos
+    case 1
+        dLine = 314
+        gosub @SAY
+    case 2
+        dLine = 315
+        gosub @SAY
+        dLine = 317
+        gosub @SAY
+        dLine = 318
+        gosub @SAY
+    default
+        dLine = 316
+        gosub @SAY
+end
+if 3 > iPhotos
+then
+    jump @SITE1_PHOTOS
+end
+clear_help
+remove_blip bTarget
+bTarget = -1
+dLine = 319
+gosub @SAY
+cId = 1
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+cId = 2
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+dLine = 327
+gosub @SAY
+dLine = 328
+gosub @SAY
+uTask = 0
+mark_model_as_no_longer_needed #CAMERA
+gosub @SCN_TAICHI_DELETE
+gosub @BOARD_VAN
+return
+
+// ============================================================================
+// SITE 2 - Easter Basin. Tail the "explosives van" (bread) without touching it.
+// ============================================================================
+:SITE2
+iSite = 2
+fDX = S2_X
+fDY = S2_Y
+fDZ = S2_Z
+print_now 'V3O07' 7000 1
+dLine = 330
+dQEnd = 334
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+// the delivery van, parked on the nearest road
+iMdl = #PONY
+gosub @LOAD_MODEL
+iMdl = #WMYMECH
+gosub @LOAD_MODEL
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading S2_X S2_Y S2_Z
+if fSX == 0.0
+then
+    fSX = S2_X
+    fSY = S2_Y
+    fSZ = S2_Z
+    fHead = 0.0
+end
+custom_plate_for_next_car #PONY "FRSHBRD"
+hDlvVan = create_car #PONY fSX fSY fSZ
+set_car_heading hDlvVan fHead
+change_car_colour hDlvVan 1 1
+hDlvDriver = create_char_inside_car hDlvVan 4 #WMYMECH
+set_car_only_damaged_by_player hDlvVan true
+set_car_health hDlvVan 1000
+iHealth0 = get_car_health hDlvVan
+mark_model_as_no_longer_needed #PONY
+mark_model_as_no_longer_needed #WMYMECH
+bTarget = add_blip_for_car hDlvVan
+// route: snap the waypoint and the drop-off to roads
+fWX, fWY, fWZ = get_closest_car_node S2_WP_X S2_WP_Y S2_WP_Z
+if fWX == 0.0
+then
+    fWX = S2_WP_X
+    fWY = S2_WP_Y
+    fWZ = S2_WP_Z
+end
+fDX, fDY, fDZ = get_closest_car_node S2_DEST_X S2_DEST_Y S2_DEST_Z
+if fDX == 0.0
+then
+    fDX = S2_DEST_X
+    fDY = S2_DEST_Y
+    fDZ = S2_DEST_Z
+end
+// wait until CJ is in the van and close enough to start the tail
+:SITE2_WAIT
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if is_car_dead hDlvVan
+then
+    iFail = FAIL_HIT_DLV
+    return
+end
+if not locate_char_any_means_car_2d $scplayer hDlvVan 75.0 75.0 false
+then
+    jump @SITE2_WAIT
+end
+gosub @DLG_CANCEL
+uAlert = 3
+uMode = 3
+add_one_off_sound 0.0 0.0 0.0 1137
+dLine = 341
+gosub @SAY
+uMode = 0
+dLine = 342
+gosub @SAY
+print_now 'V3O08' 7000 1
+print_help 'V3H03'
+car_goto_coordinates_accurate hDlvVan fWX fWY fWZ
+set_car_cruise_speed hDlvVan 15.0
+set_car_driving_style hDlvVan 5
+iLeg = 1
+iProgress = 0
+iInRangeT = 0
+iLostT = 0
+iLastWarnT = 0
+iSaid = 0
+iSaid2 = 0
+iArrived = 0
+uTask = 2
+uTaskVal = 0
+iPrevT = iNow
+:SITE2_TAIL
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+if is_car_dead hDlvVan
+then
+    iFail = FAIL_HIT_DLV
+    return
+end
+iHealth = get_car_health hDlvVan
+iTmp = iHealth0
+iTmp -= 40
+if iTmp > iHealth
+then
+    iFail = FAIL_HIT_DLV
+    return
+end
+// route legs
+if iLeg == 1
+then
+    if locate_car_2d hDlvVan fWX fWY 14.0 14.0 false
+    then
+        car_goto_coordinates_accurate hDlvVan fDX fDY fDZ
+        iLeg = 2
+    end
+end
+if iLeg == 2
+then
+    if locate_car_2d hDlvVan fDX fDY 10.0 10.0 false
+    then
+        car_set_idle hDlvVan
+        iLeg = 3
+        iArrived = 1
+        if not is_char_dead hDlvDriver
+        then
+            task_leave_car hDlvDriver hDlvVan
+        end
+    end
+end
+// distance band
+gosub @GET_PLAYER_POS
+fSX, fSY, fSZ = get_car_coordinates hDlvVan
+fDist = get_distance_between_coords_3d fPX fPY fPZ fSX fSY fSZ
+uDist =# fDist
+uWarn = 0
+if not is_char_in_car $scplayer hVan
+then
+    if iObjShown == 0
+    then
+        print_now 'V3O18' 5000 1
+        iObjShown = 1
+    end
+else
+    iObjShown = 0
+    if iArrived == 0
+    then
+        if TAIL_MIN > fDist
+        then
+            uWarn = 1
+            iTmp = iNow
+            iTmp -= iLastWarnT
+            if iTmp > 15000
+            then
+                iLastWarnT = iNow
+                dLine = 344
+                dQEnd = 345
+                gosub @SAY_QUEUE
+            end
+        else
+            if fDist > TAIL_MAX
+            then
+                uWarn = 2
+                iTmp = iNow
+                iTmp -= iLastWarnT
+                if iTmp > 15000
+                then
+                    iLastWarnT = iNow
+                    dLine = 346
+                    dQEnd = 346
+                    gosub @SAY_QUEUE
+                end
+            else
+                uWarn = 3
+                iInRangeT += iDt
+                if iInRangeT > TAIL_STEP_MS
+                then
+                    iInRangeT -= TAIL_STEP_MS
+                    if 100 > iProgress
+                    then
+                        iProgress += 1
+                    end
+                end
+            end
+        end
+    else
+        // parked: finish the readings close by and stopped
+        if 30.0 > fDist
+        then
+            if is_car_stopped hVan
+            then
+                uWarn = 3
+                iInRangeT += iDt
+                if iInRangeT > 120
+                then
+                    iInRangeT -= 120
+                    if 100 > iProgress
+                    then
+                        iProgress += 1
+                    end
+                end
+            else
+                uWarn = 4
+            end
+        end
+    end
+end
+uTaskVal = iProgress
+// lost him?
+if fDist > TAIL_LOST
+then
+    iLostT += iDt
+    if iLostT > 9000
+    then
+        iFail = FAIL_LOST_DLV
+        return
+    end
+else
+    iLostT = 0
+end
+// commentary at milestones
+if iSaid == 0
+then
+    if iProgress >= 30
+    then
+        dLine = 343
+        dQEnd = 343
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+if iSaid == 1
+then
+    if iProgress >= 60
+    then
+        dLine = 347
+        dQEnd = 348
+        gosub @SAY_QUEUE
+        iSaid = 2
+    end
+end
+if iArrived == 1
+then
+    if iSaid2 == 0
+    then
+        if 45.0 > fDist
+        then
+            dLine = 349
+            dQEnd = 350
+            gosub @SAY_QUEUE
+            print_now 'V3O09' 6000 1
+            iSaid2 = 1
+        end
+    end
+end
+if 100 > iProgress
+then
+    jump @SITE2_TAIL
+end
+// readings complete: wait for the van to stop before the decisions
+uWarn = 0
+:SITE2_STOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if is_char_in_car $scplayer hVan
+then
+    if not is_car_stopped hVan
+    then
+        uWarn = 4
+        jump @SITE2_STOP
+    end
+end
+uWarn = 0
+remove_blip bTarget
+bTarget = -1
+gosub @DLG_CANCEL
+cId = 3
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+cId = 4
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+dLine = 357
+gosub @SAY
+dLine = 358
+gosub @SAY
+uTask = 0
+// the baker gets back to his day
+if not is_char_dead hDlvDriver
+then
+    if is_char_in_car hDlvDriver hDlvVan
+    then
+        car_wander_randomly hDlvVan
+    else
+        task_wander_standard hDlvDriver
+    end
+end
+mark_char_as_no_longer_needed hDlvDriver
+mark_car_as_no_longer_needed hDlvVan
+hDlvDriver = -1
+hDlvVan = -1
+gosub @BOARD_VAN
+return
+
+// ============================================================================
+// SITE 3 - Industrial Doherty. Comparative measurements around two generators.
+// ============================================================================
+:SITE3
+iSite = 3
+fDX = S3_X
+fDY = S3_Y
+fDZ = S3_Z
+print_now 'V3O10' 7000 1
+dLine = 360
+dQEnd = 363
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+// point A: the road next to the generators
+fM1X, fM1Y, fM1Z = get_closest_car_node S3_X S3_Y S3_Z
+if fM1X == 0.0
+then
+    fM1X = S3_X
+    fM1Y = S3_Y
+    fM1Z = S3_Z
+end
+// point B: 45-95 m away; point C: 18-35 m away (both on roads)
+fAX = fM1X
+fAY = fM1Y
+fAZ = fM1Z
+fTmp5 = 45.0
+fTmp6 = 95.0
+gosub @FIND_NODE_AT_DIST
+fM2X = fSX
+fM2Y = fSY
+fM2Z = fSZ
+fTmp5 = 18.0
+fTmp6 = 35.0
+gosub @FIND_NODE_AT_DIST
+fM3X = fSX
+fM3Y = fSY
+fM3Z = fSZ
+fM1Z += 1.0
+fM2Z += 1.0
+fM3Z += 1.0
+// generators on the pavement next to A
+fAX, fAY, fAZ = get_closest_char_node fM1X fM1Y fM1Z
+if fAX == 0.0
+then
+    fAX = fM1X
+    fAX += 6.0
+    fAY = fM1Y
+    fAZ = fM1Z
+end
+fTmp = fAX
+fTmp -= fM1X
+fTmp2 = fAY
+fTmp2 -= fM1Y
+fAH = get_heading_from_vector_2d fTmp fTmp2
+gosub @SCN_GENSITE_CREATE
+:SITE3_APPROACH
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if not locate_char_any_means_3d $scplayer fM1X fM1Y fM1Z 45.0 45.0 30.0 false
+then
+    jump @SITE3_APPROACH
+end
+gosub @DLG_CANCEL
+uAlert = 4
+uMode = 3
+add_one_off_sound 0.0 0.0 0.0 1137
+dLine = 371
+gosub @SAY
+uMode = 0
+dLine = 372
+gosub @SAY
+print_now 'V3O11' 7000 1
+print_help 'V3H04'
+iReads = 0
+iDone1 = 0
+iDone2 = 0
+iDone3 = 0
+iHoldT = 0
+iSaid = 0
+uTask = 3
+uTaskVal = 0
+iPrevT = iNow
+:SITE3_READ
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+uWarn = 0
+iPoint = 0
+if iDone1 == 0
+then
+    if locate_char_in_car_3d $scplayer fM1X fM1Y fM1Z 3.5 3.5 3.0 true
+    then
+        iPoint = 1
+    end
+end
+if iDone2 == 0
+then
+    if locate_char_in_car_3d $scplayer fM2X fM2Y fM2Z 3.5 3.5 3.0 true
+    then
+        iPoint = 2
+    end
+end
+if iDone3 == 0
+then
+    if locate_char_in_car_3d $scplayer fM3X fM3Y fM3Z 3.5 3.5 3.0 true
+    then
+        iPoint = 3
+    end
+end
+if not is_char_in_car $scplayer hVan
+then
+    iPoint = 0
+end
+if iPoint == 0
+then
+    iHoldT = 0
+    jump @SITE3_READ
+end
+if not is_car_stopped hVan
+then
+    uWarn = 4
+    if iHoldT > 600
+    then
+        if iSaid == 0
+        then
+            dLine = 376
+            dQEnd = 376
+            gosub @SAY_QUEUE
+            iSaid = 1
+        end
+    end
+    iHoldT = 0
+    jump @SITE3_READ
+end
+uWarn = 3
+iHoldT += iDt
+// live signal quality: noisy at first, settling as the reading integrates
+uSignal = iHoldT
+uSignal /= 50
+uSignal += 20
+iTmp = generate_random_int_in_range -6 7
+uSignal += iTmp
+if uSignal > 98
+then
+    uSignal = 98
+end
+if READ_HOLD_MS > iHoldT
+then
+    jump @SITE3_READ
+end
+iHoldT = 0
+iReads += 1
+uTaskVal = iReads
+add_one_off_sound 0.0 0.0 0.0 1058
+switch iPoint
+    case 1
+        iDone1 = 1
+        dLine = 373
+    case 2
+        iDone2 = 1
+        dLine = 374
+    case 3
+        iDone3 = 1
+        dLine = 375
+end
+gosub @PUBLISH
+gosub @SAY
+if 3 > iReads
+then
+    jump @SITE3_READ
+end
+uWarn = 0
+dLine = 377
+gosub @SAY
+cId = 5
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+cId = 6
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+dLine = 387
+gosub @SAY
+dLine = 388
+gosub @SAY
+uTask = 0
+gosub @SCN_GENSITE_DELETE
+return
+
+// Nearest road node around fAX/fAY/fAZ at a distance between fTmp5 and fTmp6.
+// Out: fSX fSY fSZ (falls back to an offset point if nothing is found).
+:FIND_NODE_AT_DIST
+iNode = 2
+:FIND_NODE_AT_DIST_LOOP
+fSX, fSY, fSZ = get_nth_closest_car_node fAX fAY fAZ iNode
+fDist = get_distance_between_coords_2d fAX fAY fSX fSY
+if fDist >= fTmp5
+then
+    if fTmp6 >= fDist
+    then
+        return
+    end
+end
+iNode += 1
+if 80 > iNode
+then
+    jump @FIND_NODE_AT_DIST_LOOP
+end
+fSX = fAX
+fSX += fTmp5
+fSY = fAY
+fSZ = fAZ
+return
