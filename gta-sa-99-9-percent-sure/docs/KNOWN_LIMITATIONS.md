@@ -62,7 +62,10 @@
 - There are no stock animations for adjusting glasses, touching a pendant or
   standing with arms crossed, so those personality touches from the brief are
   **not implemented**. They need custom IFP animations (proposed).
-- Facial animation is the game's generic talking mouth (`START_CHAR_FACIAL_TALK`).
+- Talking uses the game's facial animation (`START_CHAR_FACIAL_TALK`). Christopher's
+  jaw and brows carry skin weights so it moves his mouth and brows, but the
+  game's facial clips (in `ped.ifp`) were not available, so how far they open
+  his mouth is untested. The mouth corners stretch the most.
 
 ## Lab and exterior
 
