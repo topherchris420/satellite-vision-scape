@@ -132,11 +132,10 @@ def main():
     if not args.no_tests:
         run(PY + [os.path.join(ROOT, "tests", "run_mission_tests.py")])
     chris = os.path.join(ROOT, "tools", "character", "build_chris.py")
-    if os.path.exists(chris):
-        run([sys.executable, chris, "--synthetic", "--out", MODEL_PREVIEW])
-        if args.img:
-            run([sys.executable, chris, "--img", args.img, "--out", MODEL_INSTALL]
-                + (["--reference", args.reference] if args.reference else []))
+    run([sys.executable, chris, "--synthetic", "--out", MODEL_PREVIEW])
+    if args.img:
+        run([sys.executable, chris, "--img", args.img, "--out", MODEL_INSTALL]
+            + (["--reference", args.reference] if args.reference else []))
     package()
     return 0
 
