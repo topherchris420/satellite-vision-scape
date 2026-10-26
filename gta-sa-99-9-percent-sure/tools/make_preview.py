@@ -56,13 +56,40 @@ def ui_gallery():
     return "\n".join(out)
 
 
+CHAR_ORDER = [  # (file stem, caption, full width)
+    ("chrisw_comparison", "Head renders beside the reference photo and the concept art", True),
+    ("chrisw_front", "Front (bind pose)", False),
+    ("chrisw_three_quarter", "Three-quarter", False),
+    ("chrisw_side", "Side", False),
+    ("chrisw_back", "Back", False),
+    ("chrisw_head_front", "Head, front", False),
+    ("chrisw_head_closeup", "Head, close-up", False),
+    ("chrisw_relaxed_pose", "Relaxed stance", False),
+    ("chrisw_refit_standin", "Built with --img on a stand-in skeleton (A-pose, other proportions)", True),
+    ("chrisw_pose_test", "Deformation test with the model's own skin weights", True),
+    ("chrisw_pose_joints", "Joint close-ups", True),
+    ("chrisw_facial_standin", "Jaw and brows (stand-in skeleton): closed, mouth open, brows raised, weights", True),
+    ("chrisw_facial", "Jaw and brows (synthetic skeleton)", True),
+]
+
+
 def character_gallery():
-    files = sorted(glob.glob(os.path.join(ROOT, "assets", "character", "previews", "*.png")))
+    folder = os.path.join(ROOT, "assets", "character", "previews")
     out = []
-    for f in files:
-        name = os.path.splitext(os.path.basename(f))[0].replace("_", " ")
-        out.append(f'<figure>{img_tag(f, width=900, alt=name)}<figcaption>{html.escape(name)}</figcaption></figure>')
-    return "\n".join(out) or "<p class=note>No character previews found (run tools/character/build_chris.py).</p>"
+    listed = set()
+    for stem, caption, wide in CHAR_ORDER:
+        f = os.path.join(folder, stem + ".png")
+        if not os.path.exists(f):
+            continue
+        listed.add(f)
+        cls = ' class="wide"' if wide else ""
+        out.append(f'<figure{cls}>{img_tag(f, width=1600 if wide else 900, alt=caption)}'
+                   f'<figcaption>{html.escape(caption)}</figcaption></figure>')
+    for f in sorted(glob.glob(os.path.join(folder, "*.png"))):
+        if f not in listed:
+            name = os.path.splitext(os.path.basename(f))[0].replace("_", " ")
+            out.append(f'<figure>{img_tag(f, width=900, alt=name)}<figcaption>{html.escape(name)}</figcaption></figure>')
+    return "\n".join(out) or "<p class=note>No character previews found (run tools/character/preview_chris.py).</p>"
 
 
 def tests_table():
@@ -110,7 +137,8 @@ h2 {{ margin-top:2.2em; border-bottom:2px solid var(--teal); padding-bottom:.25e
 .tag {{ color:var(--spectral); font-weight:600; }}
 .status {{ background:#2a1c10; border:1px solid #7a5524; border-radius:8px; padding:12px 16px; margin:16px 0; }}
 .grid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,440px),1fr)); gap:16px; }}
-figure {{ margin:0; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }}
+figure.wide {{ grid-column:1 / -1; }}
+figure {{ margin:0; align-self:start; background:var(--panel); border:1px solid var(--line); border-radius:8px; overflow:hidden; }}
 figure img {{ display:block; width:100%; height:auto; }}
 figcaption {{ padding:8px 12px; color:var(--muted); font-size:.9rem; }}
 table {{ width:100%; border-collapse:collapse; font-size:.92rem; }}
