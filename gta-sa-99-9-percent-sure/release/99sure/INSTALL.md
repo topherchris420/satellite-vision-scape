@@ -52,6 +52,12 @@ for the **?** blip at CJ's garage in **Doherty, San Fierro**. Walk into the
 marker on foot with no wanted level. If San Fierro is still locked in your
 story progress you will pick up a wanted level getting there.
 
+**Updating an older copy:** replace the mission, launcher and FXT together.
+This build has seven checkpoints instead of four; the launcher discards its
+old saved mission progress and removes its old contact blip. Your GTA story
+save is unaffected. New failures offer a retry from the current site, with
+the score restored to the start of that site.
+
 ## 4. Christopher's model
 
 Christopher is loaded as special character slot 1 (`SPECIAL01`), so no story
@@ -108,7 +114,7 @@ The mission ships with **subtitles only**. Every line is shown on screen, and
 a line plays as audio when `cleo\99sure\audio\<line key>.mp3` exists (for
 example `V3D0201.mp3`). Missing files never stop the mission.
 
-- `dialogue/VO_RECORDING_SCRIPT.md` lists all 215 lines by speaker with file
+- `dialogue/VO_RECORDING_SCRIPT.md` lists all 217 lines by speaker with file
   names and target lengths; `dialogue/audio_manifest.csv` is the same as a table.
 - `python3 tools/prepare_audio.py <folder of takes>` converts WAV/MP3/OGG/FLAC
   takes named after their keys into loudness-normalised MP3s in

@@ -46,7 +46,7 @@ var
 end
 
 const
-    lCheckpoint    = 0@     // last checkpoint the mission reached (0..4)
+    lCheckpoint    = 0@     // last checkpoint the mission reached (0..7)
     lScore         = 1@     // evidence score carried into a checkpoint restart
     lRight         = 2@
     lTotal         = 3@
@@ -75,7 +75,8 @@ const
     lKeyPrev       = 26@
     lKey           = 27@
 
-    LAUNCHER_MAGIC = 99901
+    LAUNCHER_MAGIC = 99902  // new checkpoint numbering; discard older launcher locals
+    BLIP_MAGIC_OLD = 99901  // still recognise and remove the old saved contact blip
     SV_BLIP        = 956    // this launcher's blip handle, kept in the CLEO save
     SV_BLIP_OK     = 957    // LAUNCHER_MAGIC while SV_BLIP holds a live blip
     BLIP_QMARK     = 37     // RADAR_SPRITE_QMARK [gta-reversed Radar.h]
@@ -107,7 +108,9 @@ then
     lHint = 0
     // a blip that a different build of this launcher left in the savegame
     lTmp = get_cleo_shared_var SV_BLIP_OK
-    if lTmp == LAUNCHER_MAGIC
+    if or
+        lTmp == LAUNCHER_MAGIC
+        lTmp == BLIP_MAGIC_OLD
     then
         lTmp = get_cleo_shared_var SV_BLIP
         remove_blip lTmp
@@ -266,9 +269,9 @@ then
     lTotal = 0
     jump @L_LOOP
 end
-if lCheckpoint > 4
+if lCheckpoint > CP_RETURN
 then
-    lCheckpoint = 4
+    lCheckpoint = CP_RETURN
 end
 
 // wait until CJ is back in control (after the hospital or police station)

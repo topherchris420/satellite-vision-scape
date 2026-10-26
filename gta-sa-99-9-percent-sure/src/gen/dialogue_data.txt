@@ -226,7 +226,7 @@ switch dLine
         dGest = 1
     case 224
         dKey = 'V3D0224'
-        dDur = 4250
+        dDur = 10200
         dWho = 2
         dGest = 0
     case 225
@@ -491,17 +491,17 @@ switch dLine
         dGest = 1
     case 354
         dKey = 'V3D0354'
-        dDur = 6750
+        dDur = 7250
         dWho = 2
         dGest = 2
     case 355
         dKey = 'V3D0355'
-        dDur = 5250
+        dDur = 7900
         dWho = 2
         dGest = 1
     case 356
         dKey = 'V3D0356'
-        dDur = 4850
+        dDur = 7300
         dWho = 2
         dGest = 1
     case 357
@@ -717,6 +717,16 @@ switch dLine
     case 422
         dKey = 'V3D0422'
         dDur = 3650
+        dWho = 2
+        dGest = 0
+    case 423
+        dKey = 'V3D0423'
+        dDur = 5850
+        dWho = 2
+        dGest = 0
+    case 424
+        dKey = 'V3D0424'
+        dDur = 8300
         dWho = 2
         dGest = 0
     case 501

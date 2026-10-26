@@ -5,9 +5,9 @@
 // the news report.
 // ============================================================================
 :ACT5
-iCheckpoint = 4
+iCheckpoint = CP_DEMO
 iState = ST_DEMO
-gosub @PUBLISH
+gosub @SAVE_CHECKPOINT
 uHud = 1
 uTask = 0
 iNeedVan = 0

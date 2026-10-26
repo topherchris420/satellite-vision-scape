@@ -7,9 +7,12 @@
 // Each site ends with two R.A.I.N. decisions.
 // ============================================================================
 :ACT3
-iCheckpoint = 2
 iState = ST_INVESTIGATE
-gosub @PUBLISH
+if iArgCheckpoint <= CP_DOWNTOWN
+then
+    iCheckpoint = CP_DOWNTOWN
+end
+gosub @SAVE_CHECKPOINT
 uHud = 1
 uTask = 0
 gosub @BOARD_VAN
@@ -18,15 +21,21 @@ then
     return
 end
 iNeedVan = 1
-gosub @SITE1
-if iFail <> 0
+if iArgCheckpoint <= CP_DOWNTOWN
 then
-    return
+    gosub @SITE1
+    if iFail <> 0
+    then
+        return
+    end
 end
-gosub @SITE2
-if iFail <> 0
+if iArgCheckpoint <= CP_BASIN
 then
-    return
+    gosub @SITE2
+    if iFail <> 0
+    then
+        return
+    end
 end
 gosub @SITE3
 return
@@ -75,6 +84,8 @@ return
 // SITE 1 - Downtown. "Paramilitary training cell" (a tai chi class).
 // ============================================================================
 :SITE1
+iCheckpoint = CP_DOWNTOWN
+gosub @SAVE_CHECKPOINT
 iSite = 1
 fDX = S1_X
 fDY = S1_Y
@@ -202,6 +213,7 @@ end
 if iPoint == 0
 then
     iHoldT = 0
+    uWarn = 0
     jump @SITE1_PHOTOS
 end
 // in a marker: holding the camera and facing the class?
@@ -209,6 +221,7 @@ iWeapon = get_current_char_weapon $scplayer
 if iWeapon <> 43
 then
     iHoldT = 0
+    uWarn = 6
     jump @SITE1_PHOTOS
 end
 gosub @GET_PLAYER_POS
@@ -234,9 +247,11 @@ end
 if fHead > 45.0
 then
     iHoldT = 0
+    uWarn = 5
     jump @SITE1_PHOTOS
 end
 // a photo counts when the shutter fires, or after holding the shot for 2.5 s
+uWarn = 7
 iTmp = 0
 if is_char_shooting $scplayer
 then
@@ -252,6 +267,7 @@ then
     jump @SITE1_PHOTOS
 end
 iHoldT = 0
+uWarn = 0
 add_one_off_sound 0.0 0.0 0.0 1132
 iPhotos += 1
 uTaskVal = iPhotos
@@ -284,6 +300,7 @@ then
     jump @SITE1_PHOTOS
 end
 clear_help
+uWarn = 0
 remove_blip bTarget
 bTarget = -1
 dLine = 319
@@ -314,6 +331,8 @@ return
 // SITE 2 - Easter Basin. Tail the "explosives van" (bread) without touching it.
 // ============================================================================
 :SITE2
+iCheckpoint = CP_BASIN
+gosub @SAVE_CHECKPOINT
 iSite = 2
 fDX = S2_X
 fDY = S2_Y
@@ -579,6 +598,11 @@ if 100 > iProgress
 then
     jump @SITE2_TAIL
 end
+// A full meter is not proof of a delivery. Observe the destination as well.
+if iArrived == 0
+then
+    jump @SITE2_TAIL
+end
 // readings complete: wait for the van to stop before the decisions
 uWarn = 0
 :SITE2_STOP
@@ -637,6 +661,8 @@ return
 // SITE 3 - Industrial Doherty. Comparative measurements around two generators.
 // ============================================================================
 :SITE3
+iCheckpoint = CP_INDUSTRIAL
+gosub @SAVE_CHECKPOINT
 iSite = 3
 fDX = S3_X
 fDY = S3_Y

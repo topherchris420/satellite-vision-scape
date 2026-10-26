@@ -33,6 +33,9 @@ BUILD = os.path.join(ROOT, "build", "CLEO")
 SV_RESULT = 952
 
 FAIL = dict(CHRIS=1, VAN=2, LOST_DLV=3, HIT_DLV=4, LATE=5, MINI_DEAD=6, LOST_MINI=7, ABANDON=8, MAX=9)
+# Boundary snapshots: (score, first-try correct, unique claims decided).
+CHECKPOINT_LOGS = {1: (0, 0, 0), 2: (10, 1, 1), 3: (30, 3, 3), 4: (50, 5, 5),
+                   5: (70, 7, 7), 6: (70, 7, 7), 7: (100, 10, 10)}
 
 
 def scenarios():
@@ -44,8 +47,15 @@ def scenarios():
     add("pass_skipping_every_cutscene", "pass", plan=dict(skip=True))
     add("pass_with_wrong_answers", "pass", plan=dict(wrong={0: 1, 1: 1, 3: 1, 5: 1, 7: 1, 9: 1}))
     add("pass_photos_with_shutter", "pass", plan=dict(shutter=True))
-    for cp in (1, 2, 3, 4):
+    for cp in CHECKPOINT_LOGS:
         add(f"pass_from_checkpoint_{cp}", "pass", checkpoint=cp)
+    for count in (1, 3):
+        add(f"pass_corrective_retries_{count}", "pass", plan=dict(wrong={7: count}),
+            expected_score=85, expected_right=9, expected_total=10, expected_attempts={7: count + 1})
+    add("pass_weak_log_needs_review", "pass", plan=dict(wrong={1: 1, 3: 1, 5: 1}),
+        expected_upload_step=600, expected_score=55, expected_right=7, expected_total=10)
+    add("pass_clean_log_quick_review", "pass", expected_upload_step=340,
+        expected_score=100, expected_right=10, expected_total=10)
     add("fail_chris_killed_in_act3", f"fail:{FAIL['CHRIS']}",
         plan=dict(inject=[dict(what="kill_chris", state=ST["INVESTIGATE"])]))
     add("fail_chris_killed_in_finale", f"fail:{FAIL['CHRIS']}",
@@ -79,8 +89,22 @@ def scenarios():
     add("launcher_stale_blip_after_update", "pass", via_launcher=True, save_load=dict(at_ms=15000, stale=True),
         plan=dict(start_via_marker=False))
     add("launcher_retry_after_failure", "pass", via_launcher=True,
-        plan=dict(retry=True, inject=[dict(what="wreck_van", state=ST["RESCUE"])]),
-        launches=2)
+        plan=dict(retry=True, inject=[dict(what="kill_mini", state=ST["RESCUE"], at_upload=30)]),
+        launches=2, expected_retry_checkpoint=5, expected_snapshot=(70, 7, 7),
+        expected_score=100, expected_right=10, expected_total=10)
+    for cp, cid in ((2, 2), (3, 4), (4, 6), (6, 8)):
+        add(f"launcher_retry_partial_checkpoint_{cp}", "pass", via_launcher=True, launches=2,
+            plan=dict(retry=True, inject=[dict(what="kill_chris",
+                state=ST["DEMO"] if cp == 6 else ST["INVESTIGATE"],
+                when=lambda b, cid=cid: b.L("uMode") == 2 and b.L("cId") == cid
+                                        and b.L("uFeedback") == 0)]),
+            expected_retry_checkpoint=cp, expected_snapshot=CHECKPOINT_LOGS[cp],
+            expected_score=100, expected_right=10, expected_total=10)
+    add("launcher_retry_return_trip", "pass", via_launcher=True, launches=2,
+        plan=dict(retry=True, inject=[dict(what="kill_chris", state=ST["FINALE"],
+                                          when=lambda b: b.L("iCheckpoint") == 7)]),
+        expected_retry_checkpoint=7, expected_snapshot=(100, 10, 10),
+        expected_score=100, expected_right=10, expected_total=10)
     return s
 
 
@@ -155,7 +179,8 @@ def run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=False)
         vm.start_script("cleo\\99sure_launcher.cs", False)
     else:
         cp = sc.get("checkpoint", 0)
-        vm.start_script("cleo\\99sure.cm", True, [(cp, False), (0, False), (0, False), (0, False)])
+        snapshot = CHECKPOINT_LOGS.get(cp, (0, 0, 0))
+        vm.start_script("cleo\\99sure.cm", True, [(v, False) for v in (cp, *snapshot)])
     max_ms = sc.get("max_ms", 75 * 60 * 1000)
     ends = []
     frames = []
@@ -164,6 +189,8 @@ def run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=False)
     mission_seen = False
     launches_wanted = sc.get("launches", 1)
     save_load = sc.get("save_load")
+    upload_steps = set()
+    delivery_decisions = []
     try:
         while vm.time < max_ms:
             if save_load and not save_load.get("done") and vm.time >= save_load["at_ms"]:
@@ -177,6 +204,10 @@ def run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=False)
             m = vm.mission()
             if m is not None:
                 mission_seen = True
+                if bot.L("iState") == ST["RESCUE"] and bot.L("uTask") == 4:
+                    upload_steps.add(bot.L("iUploadStep"))
+                if bot.L("uMode") == 2 and bot.L("cId") == 4:
+                    delivery_decisions.append(bot.L("iArrived"))
                 if key is not None and engine.frame_draws and key not in seen:
                     seen.add(key)
                     frames.append(dict(time=vm.time, key=key, draws=engine.frame_draws,
@@ -187,6 +218,9 @@ def run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=False)
                                  leftovers=engine.leftovers(m_before), state=engine.global_state_problems(),
                                  onmission=vm.gvar(409), max_depth=m_before.max_depth,
                                  death_reset=any(k == "death_arrest_reset" for _, k, _ in engine.log)))
+                ends[-1].update(score=bot.L("iScore"), right=bot.L("iDecRight"), total=bot.L("iDecTotal"),
+                                checkpoint=u2i(vm.shared[951]),
+                                snapshot=tuple(u2i(vm.shared[i]) for i in (953, 954, 955)))
                 if len(ends) >= launches_wanted or not sc.get("via_launcher"):
                     # let the launcher react for a few seconds, then stop
                     for _ in range(int(4000 / vm.frame_ms)):
@@ -200,7 +234,7 @@ def run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=False)
     wall = time.time() - t0
     contact_blips = sum(1 for b in engine.blips.values() if b["kind"] == "contact")
     return dict(vm=vm, engine=engine, bot=bot, ends=ends, error=error, wall=wall, frames=frames,
-                contact_blips=contact_blips)
+                contact_blips=contact_blips, upload_steps=upload_steps, delivery_decisions=delivery_decisions)
 
 
 def judge(sc, r):
@@ -212,6 +246,29 @@ def judge(sc, r):
         problems.append("the mission did not end within the time limit")
         return problems
     last = ends[-1]
+    for cid, want in sc.get("expected_attempts", {}).items():
+        got = sum(1 for decision in r["bot"].decisions if decision[0] == cid)
+        if got != want:
+            problems.append(f"claim {cid}: expected {want} submitted attempts, got {got}")
+    for field in ("score", "right", "total"):
+        if f"expected_{field}" in sc and last[field] != sc[f"expected_{field}"]:
+            problems.append(f"expected {field} {sc[f'expected_{field}']}, got {last[field]}")
+    for e in ends:
+        if not (0 <= e["score"] <= 100 and 0 <= e["right"] <= e["total"] <= 10):
+            problems.append(f"invalid evidence counters: {e['score']}, {e['right']}/{e['total']}")
+    if "expected_retry_checkpoint" in sc:
+        if len(ends) < 2:
+            problems.append("retry scenario never launched a second mission")
+        if ends[0]["result"] != 2:
+            problems.append("retry scenario did not actually fail its first mission")
+        if ends[0]["checkpoint"] != sc["expected_retry_checkpoint"]:
+            problems.append(f"wrong retry checkpoint: {ends[0]['checkpoint']}")
+        if ends[0]["snapshot"] != sc["expected_snapshot"]:
+            problems.append(f"partial decisions leaked into snapshot: {ends[0]['snapshot']}")
+    if "expected_upload_step" in sc and r["upload_steps"] != {sc["expected_upload_step"]}:
+        problems.append(f"wrong dispatch review time: {r['upload_steps']}")
+    if any(arrived != 1 for arrived in r["delivery_decisions"]):
+        problems.append("delivery claim opened before the van arrived")
     exp = sc["expect"]
     if exp == "pass":
         if last["result"] != 1:
@@ -240,6 +297,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("-k", default="")
     ap.add_argument("--frames", action="store_true", help="save UI draw lists to build/ui_frames.json")
+    ap.add_argument("--frame-ms", type=int, default=50, choices=(50, 100, 200),
+                    help="mock-engine frame interval; 200 also stress-tests slow frames")
     ap.add_argument("--json", default=os.path.join(ROOT, "build", "test_report.json"))
     args = ap.parse_args()
 
@@ -256,6 +315,7 @@ def main():
     for sc in scenarios():
         if args.k not in sc["name"]:
             continue
+        sc["frame_ms"] = args.frame_ms
         r = run(sc, lib, fxt, models, anims, manifest, names, consts, save_frames=args.frames and sc.get("frames"))
         problems = judge(sc, r)
         e = r["engine"]
@@ -263,12 +323,15 @@ def main():
         ok_all &= ok
         last = r["ends"][-1] if r["ends"] else {}
         line = dict(name=sc["name"], expect=sc["expect"], ok=ok, problems=problems,
+                    frame_ms=args.frame_ms,
                     game_minutes=round(r["vm"].time / 60000, 1), wall_s=round(r["wall"], 1),
                     instructions=sum(s.executed for s in r["vm"].scripts) if r["vm"].scripts else None,
                     result=last.get("result"), fail=last.get("fail"), launches=len(r["ends"]),
                     max_gosub_depth=max((x["max_depth"] for x in r["ends"]), default=None),
                     max_text_lines=e.max_counts["text"], max_rects=e.max_counts["rect"],
                     money=e.money, respect=e.respect, audio_streams_loaded=e.streams_loaded,
+                    score=last.get("score"), right=last.get("right"), total=last.get("total"),
+                    upload_steps=sorted(r["upload_steps"]),
                     decisions=r["bot"].decisions, warnings=[f["what"] for f in e.findings if f["severity"] != "error"],
                     node_warnings=e.node_warnings[:6])
         report.append(line)

@@ -91,13 +91,12 @@ switch uTask
     default
         display_text_with_2_numbers 486.0 177.0 'V3U20' iDecRight iDecTotal
 end
-if uTask == 2
+if uTask > 0
 then
-    gosub @DRAW_HUD_BAR
-end
-if uTask == 4
-then
-    gosub @DRAW_HUD_BAR
+    if 5 > uTask
+    then
+        gosub @DRAW_HUD_BAR
+    end
 end
 if uWarn > 0
 then
@@ -118,6 +117,15 @@ then
         case 4
             set_text_colour 240 170 40 255
             display_text 486.0 202.0 'V3U32'
+        case 5
+            set_text_colour 240 170 40 255
+            display_text 486.0 202.0 'V3U39'
+        case 6
+            set_text_colour 240 170 40 255
+            display_text 486.0 202.0 'V3U40'
+        case 7
+            set_text_colour 90 220 210 255
+            display_text 486.0 202.0 'V3U41'
     end
 end
 return
@@ -125,6 +133,23 @@ return
 :DRAW_HUD_BAR
 draw_rect 556.0 196.0 136.0 5.0 20 40 44 255
 uW =# uTaskVal
+if uTask == 1
+then
+    uW =# iHoldT
+    uW /= 25.0
+end
+if uTask == 3
+then
+    uW =# iHoldT
+    uI = READ_HOLD_MS
+    uF =# uI
+    uW /= uF
+    uW *= 100.0
+end
+if uW > 100.0
+then
+    uW = 100.0
+end
 uW *= 1.36
 uX = uW
 uX /= 2.0
@@ -306,6 +331,14 @@ switch uStatus
         set_text_colour 235 245 245 255
         display_text 252.0 276.0 'V3U14'
 end
+// Decision rules stay visible while choosing, rather than relying on a lecture.
+set_text_font 1
+set_text_scale 0.26 1.00
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+display_text 320.0 291.0 'V3U42'
 // the three answers
 uI = 1
 while 3 >= uI
@@ -365,13 +398,19 @@ then
         set_text_proportional true
         set_text_right_justify true
         set_text_edge 2 0 0 0 255
-        if uFeedback == 1
-        then
-            set_text_colour 120 240 150 255
-            display_text 534.0 342.0 'V3U35'
-        else
-            set_text_colour 255 90 90 255
-            display_text 534.0 342.0 'V3U36'
+        switch uFeedback
+            case 1
+                set_text_colour 120 240 150 255
+                display_text 534.0 342.0 'V3U35'
+            case 2
+                set_text_colour 255 90 90 255
+                display_text 534.0 342.0 'V3U36'
+            case 3
+                set_text_colour 120 240 150 255
+                display_text 534.0 342.0 'V3U37'
+            case 4
+                set_text_colour 240 170 40 255
+                display_text 534.0 342.0 'V3U38'
         end
     end
 end
@@ -846,25 +885,40 @@ jump @RAIN_DECIDE_LOOP
 :RAIN_DECIDE_CHOSEN
 clear_help
 cChoice = uSel
-iDecTotal += 1
 iTmp3 += 1
+// Only the first decision enters the evidence score. Corrective teaching
+// retries still explain the result, but cannot earn points or inflate accuracy.
+if iTmp3 == 1
+then
+    iDecTotal += 1
+end
 if cChoice == cAns
 then
     cCorrect = 1
-    iScore += 10
-    iDecRight += 1
+    if iTmp3 == 1
+    then
+        iScore += 10
+        iDecRight += 1
+        uFeedback = 1
+    else
+        uFeedback = 3
+    end
     uStatus = cChoice
-    uFeedback = 1
     add_one_off_sound 0.0 0.0 0.0 1029
 else
     cCorrect = 0
-    iScore -= 5
-    if 0 > iScore
+    if iTmp3 == 1
     then
-        iScore = 0
+        iScore -= 5
+        if 0 > iScore
+        then
+            iScore = 0
+        end
+        uFeedback = 2
+    else
+        uFeedback = 4
     end
     uStatus = 4
-    uFeedback = 2
     add_one_off_sound 0.0 0.0 0.0 1030
 end
 uFlashT = iNow

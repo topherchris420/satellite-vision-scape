@@ -41,10 +41,19 @@ script text and rectangle commands, in the Vers3Dynamics teal `#0B5D63`.
 - **REJECT** when the evidence contradicts it.
 - **ABSTAIN** when there is not enough evidence to decide.
 
-Scoring: +10 for a correct decision, -5 for a wrong one (never below 0). The
+Scoring: the **first answer to each claim** earns +10 when correct or -5
+when wrong (never below 0). Only that answer enters the first-try accuracy
+counter. The
 four teaching decisions (CJ's file and the three public ones) must be answered
 correctly before the story moves on, with Christopher explaining why; the
-others count and move on. Maximum evidence score 100.
+others count and move on. Corrective retries show `CORRECTED +0` or `RETRY +0`
+and do not alter score or accuracy. Maximum evidence score 100 across ten
+unique claims. The three decision rules remain visible on the console.
+
+The photography HUD shows capture progress and whether the player needs to
+equip the camera, face the group or hold the shot. Shutter input still takes
+the photograph immediately; holding the framing for 2.5 seconds also works.
+The industrial HUD shows progress during each four-second stationary reading.
 
 | # | Where | CERTAIN claims | Claimed | Evidence | Answer |
 |---|---|---|---|---|---|
@@ -52,16 +61,31 @@ others count and move on. Maximum evidence score 100.
 | 1 | Site 1 | Paramilitary training cell | 97.2% | 3 consistent photos, mean age 71, no weapons, a tai chi flyer | REJECT |
 | 2 | Site 1 | Instructor is a flight risk | 88.0% | one blurred frame, no history, no independent source | ABSTAIN |
 | 3 | Site 2 | Van transporting explosives | 99.1% | flour, sugar and yeast; oven-warm cargo; bakery route | REJECT |
-| 4 | Site 2 | Van exceeded the speed limit | 61.0% | radar 74 km/h and GPS 73 km/h in a 50 zone | ACCEPT |
+| 4 | Site 2 | Delivery reached the shelter | 61.0% | player follows the route and observes arrival; driver's account matches | ACCEPT |
 | 5 | Site 3 | Deliberate signal jamming | 93.4% | 60 Hz hum that falls off like a generator, no modulation | REJECT |
 | 6 | Site 3 | Port radar will fail tonight | 70.0% | no radar data, one sample, no mechanism | ABSTAIN |
 | 7 | Stage | Row 3, aisle seat: pickpocket | 99.9% | hands in his own pockets, his own wallet, no complaints | REJECT |
-| 8 | Stage | Rain at 4:15 PM today | 99.9% | no weather sensors on either side; nobody can know yet | ABSTAIN |
+| 8 | Stage | Rain at 4:15 PM today | 99.9% | neither system collected weather data; no basis to confirm or rule out rain | ABSTAIN |
 | 9 | Stage | Crowd exceeds safe capacity | 76.0% | two independent counts agree, 214 and 211, capacity 150 | ACCEPT |
 
 The last two show the point plainly: CERTAIN is 99.9% sure about something
-nobody can know, and only 76% sure about something two independent counts
+neither system has measured, and only 76% sure about something two independent counts
 agree on.
+
+The bakery decisions cannot open until the van has reached its destination,
+even if the evidence meter filled earlier. The earlier version's fixed speed
+readings did not come from the vehicle's actual speed; the supported claim
+now depends on an event the player observes.
+
+## Validation affects the rescue
+
+With at least **5 first-try correct answers out of the 7 pre-rescue claims**,
+dispatch reviews the log at 340 ms per upload percentage point. Otherwise it
+needs 600 ms per point. Christopher explains the difference before the escort
+and a help box repeats the rule. This adds roughly 26 seconds of close escort
+for a weak log, plus normal frame timing. Both routes remain winnable; neither
+requires harming civilians. The upload timer starts after that explanation,
+so dialogue time cannot fill the upload meter.
 
 ## Rewards
 
@@ -93,15 +117,32 @@ The money is deliberately modest: this is not a mission about getting rich.
 The launcher (`src/99sure_launcher.txt`) keeps the last checkpoint in the CLEO
 save. After a failure it offers a retry from that checkpoint for 10 seconds
 ("Conversation - Yes", Y by default, or D-pad right); otherwise walking into
-the marker again starts from the checkpoint. Checkpoints: 1 = lab, 2 =
-investigation, 3 = rescue, 4 = demonstration. Every restart begins at the lab
-door with the van and Christopher as needed; score and decisions so far are
-carried over. After a pass the checkpoint resets and the mission can be
-replayed.
+the marker again starts from the checkpoint.
+
+| Checkpoint | Resume objective |
+|---|---|
+| 1 | Meet Christopher in the lab |
+| 2 | Downtown investigation |
+| 3 | Easter Basin delivery investigation |
+| 4 | Industrial comparison readings |
+| 5 | Rescue the family |
+| 6 | SureThing demonstration |
+| 7 | Return Christopher to the lab |
+
+Later checkpoints stream their district before selecting a road node for
+the research van. The lab door is cached while its own path data is loaded.
+Christopher and the van are recreated as needed.
+
+The checkpoint saves score and first-try counters **at its start**. A failure
+rolls back partial decisions from that checkpoint, so replaying them cannot
+duplicate rewards. Shared variables 953-955 hold this boundary snapshot;
+the HUD uses live mission locals. After a pass the checkpoint resets and the
+mission can be replayed. Updating from the old four-checkpoint launcher starts
+a fresh run and recognises/removes its old saved blip.
 
 ## Dialogue
 
-215 lines (about 15 minutes), in `dialogue/lines.json`, all subtitled from
+217 lines (about 16 minutes), in `dialogue/lines.json`, all subtitled from
 `cleo\cleo_text\99sure.fxt`. The 62 lines the brief gives word for word are
 kept verbatim and flagged `"exact": true`. A line plays its voice file
 `cleo\99sure\audio\V3D<id>.mp3` if present and otherwise shows for an estimated

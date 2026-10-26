@@ -79,7 +79,7 @@
 ## Audio
 
 - **No voice recordings are included.** The brief asks for original or
-  licensed performances, and none were available. All 215 lines are subtitled;
+  licensed performances, and none were available. All 217 lines are subtitled;
   recordings named after their line keys are played automatically when added.
   No speech synthesiser was available to voice CERTAIN either.
 - No music is shipped. An optional `cleo\99sure\music\lab.mp3` plays in the lab.
@@ -88,7 +88,7 @@
 
 - Requires the PC v1.0 US executable with CLEO. CLEO 5 is the target; CLEO
   4.4 should work but was not checked.
-- The mission (58.6 KB) is under the 69,000-byte mission block that CLEO
+- The mission (59,970 bytes, including its compiler footer) is under the 69,000-byte mission block that CLEO
   versions before 5.4 copied custom missions into; keep it there if you
   extend it, or require CLEO 5.4+.
 - CLEO shared variables 950-957 are used to talk to the launcher; another mod
@@ -104,3 +104,9 @@
 - The R.A.I.N. panels were laid out in the game's 640 x 448 script space and
   previewed with stand-in fonts (`build/ui_frames/`); text widths in the real
   fonts may differ slightly, so long lines could run close to panel edges.
+- The new full figure lab reveal uses the supplied garage concept as camera
+  direction. It does not turn that image into geometry or alter the character
+  mesh; the camera still needs a wall/prop clipping check inside the game.
+- Sensor values and public demonstration records are fictional mission data.
+  The bakery arrival claim is gated on the scripted van reaching its route
+  destination; this is not a real-world measurement or AI service.

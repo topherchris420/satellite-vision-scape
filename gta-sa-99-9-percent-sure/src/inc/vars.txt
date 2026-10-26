@@ -467,6 +467,10 @@ const
     hPlayer        = 316@
     iDestFixed     = 317@   // Act IV: recital node re-checked near the minivan
     dPath          = 318@v  // 318@..321@: voice file name, e.g. "V3D0101.mp3"
+    iSavedScore    = 322@   // score at the START of the current checkpoint
+    iSavedRight    = 323@
+    iSavedTotal    = 324@
+    iUploadStep    = 325@   // dispatch review time, derived from first-try decisions
 end
 
 var
@@ -528,4 +532,8 @@ var
     315@: float
     316@: int
     317@: int
+    322@: int
+    323@: int
+    324@: int
+    325@: int
 end
