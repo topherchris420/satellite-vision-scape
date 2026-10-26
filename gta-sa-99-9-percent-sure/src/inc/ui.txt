@@ -333,12 +333,12 @@ switch uStatus
 end
 // Decision rules stay visible while choosing, rather than relying on a lecture.
 set_text_font 1
-set_text_scale 0.26 1.00
+set_text_scale 0.24 0.90
 set_text_colour 170 240 220 255
 set_text_proportional true
 set_text_centre true
 set_text_edge 1 0 0 0 200
-display_text 320.0 291.0 'V3U42'
+display_text 320.0 287.0 'V3U42'
 // the three answers
 uI = 1
 while 3 >= uI
