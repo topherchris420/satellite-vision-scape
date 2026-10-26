@@ -334,12 +334,17 @@ return
 // ---------------------------------------------------------------------------
 // Shared state for the launcher.
 // ---------------------------------------------------------------------------
+:SAVE_CHECKPOINT
+iSavedScore = iScore
+iSavedRight = iDecRight
+iSavedTotal = iDecTotal
+// Fall through: publish the boundary snapshot without another gosub level.
 :PUBLISH
 set_cleo_shared_var SV_STATE iState
 set_cleo_shared_var SV_CHECKPOINT iCheckpoint
-set_cleo_shared_var SV_SCORE iScore
-set_cleo_shared_var SV_RIGHT iDecRight
-set_cleo_shared_var SV_TOTAL iDecTotal
+set_cleo_shared_var SV_SCORE iSavedScore
+set_cleo_shared_var SV_RIGHT iSavedRight
+set_cleo_shared_var SV_TOTAL iSavedTotal
 return
 
 // ---------------------------------------------------------------------------

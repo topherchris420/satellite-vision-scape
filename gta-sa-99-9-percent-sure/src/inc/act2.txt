@@ -4,9 +4,9 @@
 // and a first validation on CJ's own file. Ends outside with the research van.
 // ============================================================================
 :ACT2
-iCheckpoint = 1
+iCheckpoint = CP_LAB
 iState = ST_LAB
-gosub @PUBLISH
+gosub @SAVE_CHECKPOINT
 gosub @CS_BEGIN
 gosub @FADE_OUT
 gosub @LAB_ENTER
@@ -47,6 +47,18 @@ then
     gosub @WAIT_MS
 end
 gosub @LAB_STAND_CHRIS
+
+// Reference-led reveal: full figure beside the CRT bench before the likeness
+// close-up. Preserve the glasses, pendant, mint shirt and jacket silhouette.
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = -1.0
+fCamOY = 3.2
+fCamOZ = 0.15
+fCamTZ = 0.0
+gosub @CAM_SHOT
+iWaitMs = 2400
+gosub @WAIT_MS
 
 // close-up: Christopher (the likeness shot)
 hCamFrom = hChris

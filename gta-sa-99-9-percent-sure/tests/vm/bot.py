@@ -251,6 +251,11 @@ class Bot:
     # ---- R.A.I.N. decisions -------------------------------------------------------------------
     def decide(self):
         self.stop()
+        # Feedback still draws the console while SAY runs. Those frames are
+        # not new decisions, and inputs there used to inflate the attempt log.
+        if self.L("uFeedback") != 0:
+            self.prev_sel_input = 0
+            return
         cid = self.L("cId")
         ans = self.L("cAns")
         attempt = sum(1 for d in self.decisions if d[0] == cid)
@@ -268,8 +273,9 @@ class Bot:
         elif sel > want:
             self.press(("pad", STICK_X), -128)
         else:
-            self.press(("pad", BTN_TRIANGLE))
-            self.decisions.append((cid, want, ans))
+            if self.L("uBtnPrev") == 0:
+                self.press(("pad", BTN_TRIANGLE))
+                self.decisions.append((cid, want, ans))
         self.prev_sel_input = 1
 
     # ---- acts --------------------------------------------------------------------------------

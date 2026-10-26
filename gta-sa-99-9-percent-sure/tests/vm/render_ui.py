@@ -32,6 +32,10 @@ FONTS = {
     2: os.path.join(FONT_DIR, "dejavu", "DejaVuSans-Bold.ttf"),
     3: os.path.join(FONT_DIR, "dejavu", "DejaVuSans-Bold.ttf"),
 }
+if os.name == "nt":
+    win_fonts = os.path.join(os.environ.get("WINDIR", "C:\\Windows"), "Fonts")
+    FONTS = {0: os.path.join(win_fonts, "georgiab.ttf"),
+             **{i: os.path.join(win_fonts, "arialbd.ttf") for i in (1, 2, 3)}}
 COLOURS = {"r": (180, 25, 29), "g": (54, 104, 44), "b": (50, 60, 127), "y": (226, 192, 99),
            "p": (168, 110, 252), "w": (225, 225, 225), "l": (0, 0, 0), "h": (255, 255, 255)}
 KEYS = {"VEHICLE_ENTER_EXIT": "F", "PED_FIREWEAPON": "LMB", "GO_LEFT": "A", "GO_RIGHT": "D",

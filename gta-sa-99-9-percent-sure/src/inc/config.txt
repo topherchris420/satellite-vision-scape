@@ -17,9 +17,18 @@ const
     SV_STATE       = 950
     SV_CHECKPOINT  = 951
     SV_RESULT      = 952    // 0 running, 1 passed, 2 failed
-    SV_SCORE       = 953
+    SV_SCORE       = 953    // checkpoint snapshot, not the live HUD score
     SV_RIGHT       = 954
     SV_TOTAL       = 955
+
+    // Checkpoints advance only at complete scene/site boundaries.
+    CP_LAB         = 1
+    CP_DOWNTOWN    = 2
+    CP_BASIN       = 3
+    CP_INDUSTRIAL  = 4
+    CP_RESCUE      = 5
+    CP_DEMO        = 6
+    CP_RETURN      = 7
 
     // ---- mission states (as listed in the brief) ----------------------------------
     ST_INACTIVE    = 1
@@ -120,7 +129,9 @@ const
     R_COP3_Y       = 260.0
     R_COP3_Z       = 10.0
     R_ETA_MS       = 95000       // time to reach the minivan before the police
-    R_UPLOAD_STEP  = 340         // ms per 1% of upload while in range
+    R_UPLOAD_STEP  = 340         // ms per 1% with a carefully validated field log
+    R_REVIEW_STEP  = 600         // a weaker log needs extra dispatch review
+    R_READY_RIGHT  = 5           // first-try correct decisions (out of 7 before rescue)
 
     // ---- Act V: SureThing demo, Downtown [approx; Cluckin' Bell ENEX -1815.84 618.68 35.30]
     D_X            = -1822.0

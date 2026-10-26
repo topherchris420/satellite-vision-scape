@@ -101,7 +101,7 @@ _Christopher Woodyard. Calm, curious, conversational; dry humour; never lectures
 | `V3D0219.mp3` | Act II | 8.9 s | It weighs the evidence, keeps track of what we don't know, and tells us when we shouldn't decide at all. |  |
 | `V3D0221.mp3` | Act II | 6.1 s | It's a rare skill. Most systems are built to always have an answer. |  |
 | `V3D0222.mp3` | Act II | 7.5 s | Here's your file. CERTAIN flagged you for standing near an incident report... while wearing green. |  |
-| `V3D0224.mp3` | Act II | 4.2 s | So you tell me. Accept, reject, or abstain? |  |
+| `V3D0224.mp3` | Act II | 10.2 s | Accept, reject, or abstain? Your first decision goes in the log. We can correct it, but we keep the mistake on record. |  |
 | `V3D0225.mp3` | Act II | 8.7 s | Reject. There's an independent log that puts you here at the garage the whole time. The claim falls apart. |  |
 | `V3D0226.mp3` | Act II | 8.3 s | You just accepted a claim that says you're a criminal. Bold choice. Look at the garage log again. |  |
 | `V3D0227.mp3` | Act II | 8.8 s | Abstaining is for when we don't have evidence. Here we do, and it points the other way. Try again. |  |
@@ -136,9 +136,9 @@ _Christopher Woodyard. Calm, curious, conversational; dry humour; never lectures
 | `V3D0351.mp3` | Act III | 4.3 s | Reject. It's bread, Carl. Very confidently classified bread. |  |
 | `V3D0352.mp3` | Act III | 4.0 s | We followed it across town. It delivered bread. |  |
 | `V3D0353.mp3` | Act III | 5.0 s | We don't need to abstain. We measured it. It's bread. |  |
-| `V3D0354.mp3` | Act III | 6.8 s | Accept. The confidence score is low, but the evidence holds. Two separate measurements agree. |  |
-| `V3D0355.mp3` | Act III | 5.2 s | Our own radar clocked him at seventy-four. The claim's right. |  |
-| `V3D0356.mp3` | Act III | 4.8 s | We have two measurements that agree. That's enough to accept. |  |
+| `V3D0354.mp3` | Act III | 7.2 s | Accept. We watched him arrive, and the driver's delivery account matches. Low confidence, solid evidence. |  |
+| `V3D0355.mp3` | Act III | 7.9 s | We just followed him to the shelter. His account matches what we saw. This claim holds up. |  |
+| `V3D0356.mp3` | Act III | 7.3 s | We have the route and a matching delivery account. There's enough evidence to accept this one. |  |
 | `V3D0358.mp3` | Act III | 6.6 s | A small one, with weak confidence. It's the big confident ones that worry me. |  |
 | `V3D0360.mp3` | Act III | 6.2 s | Last site, industrial Doherty. CERTAIN says somebody's jamming the port radar from there. |  |
 | `V3D0362.mp3` | Act III | 7.2 s | With a transmitter, allegedly. The readings are unstable, so we compare locations. That's the trick. |  |
@@ -164,6 +164,8 @@ _Christopher Woodyard. Calm, curious, conversational; dry humour; never lectures
 | `V3D0416.mp3` | Act IV | 2.9 s | Too far! The upload's stalling! |  |
 | `V3D0419.mp3` | Act IV | 6.0 s | Logs preserved. Every observation, timestamped. Nobody gets to pretend this didn't happen. |  |
 | `V3D0422.mp3` | Act IV | 3.6 s | The police are almost on them. Hurry! |  |
+| `V3D0423.mp3` | Act IV | 5.8 s | Clean field log. Dispatch can check our sources quickly. Keep us close. |  |
+| `V3D0424.mp3` | Act IV | 8.3 s | Our field log needs another check. Dispatch will take longer. Stay close; we can still get them clear. |  |
 | `V3D0501.mp3` | Act V | 7.1 s | SureThing is doing a live demo downtown. Max Certainty, on stage, in front of everybody. |  |
 | `V3D0503.mp3` | Act V | 4.2 s | We're going to ask questions. Loudly. With data. |  |
 | `V3D0510.mp3` | Act V | 3.5 s | Then you won't mind a live test. |  |

@@ -25,6 +25,8 @@ import sys
 
 
 def win_path(path: str) -> str:
+    if os.name == "nt":
+        return os.path.abspath(path)
     return "Z:" + os.path.abspath(path).replace("/", "\\")
 
 
@@ -69,7 +71,8 @@ def compile_one(sb4: str, work: str, src: str, out: str, timeout: int = 180) -> 
         os.remove(log)
     if os.path.exists(out):
         os.remove(out)
-    cmd = ["xvfb-run", "-a", "wine", "sanny.exe", "--no-splash", "--mode", "sa_sbl",
+    prefix = [os.path.join(sb4, "sanny.exe")] if os.name == "nt" else ["xvfb-run", "-a", "wine", "sanny.exe"]
+    cmd = prefix + ["--no-splash", "--mode", "sa_sbl",
            "--compile", win_path(src), win_path(out)]
     subprocess.run(cmd, cwd=sb4, env=env, timeout=timeout,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=False)
@@ -90,7 +93,7 @@ def main() -> int:
     ap.add_argument("pairs", nargs="+", help="src.txt=out.cm pairs")
     args = ap.parse_args()
 
-    if not shutil.which("wine") or not shutil.which("xvfb-run"):
+    if os.name != "nt" and (not shutil.which("wine") or not shutil.which("xvfb-run")):
         print("wine and xvfb-run are required on Linux", file=sys.stderr)
         return 2
     game = os.path.join(args.work, "stubgame")

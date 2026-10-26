@@ -3,8 +3,10 @@
 // CJ takes Christopher back to the lab. Outside the garage, the last talk.
 // ============================================================================
 :ACT7
+iNeedVan = 0              // the return leg accepts any vehicle, including on restart
+iCheckpoint = CP_RETURN
 iState = ST_FINALE
-gosub @PUBLISH
+gosub @SAVE_CHECKPOINT
 uHud = 0
 uTask = 0
 if iLabSet == 0

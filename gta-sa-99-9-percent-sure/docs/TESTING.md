@@ -6,12 +6,12 @@ comes from tools in this folder and can be re-run.
 
 | Check | Tool | Result |
 |---|---|---|
-| Compile all three scripts | Sanny Builder 4.2, mode "GTA SA (v1.0 - SBL)" (under Wine) | 0 errors |
-| Bytecode validation | `tools/scm/validate.py` | 0 errors, 0 warnings: mission 7,032 instructions (58.6 KB), launcher 223, calibration overlay 38 |
-| Text | CLEO-equivalent FXT parser (`scm_common.load_fxt`) | 391 keys, every key used by the scripts present, no line over CLEO's 255-character limit |
-| Mission logic | `tests/run_mission_tests.py` (script VM + bot) | **30 of 30 scenarios pass** (table below) |
-| RenderWare writer | `tools/rw/tests/run_tests.py` | 31 passed, including cross-checks against DragonFF and librw |
-| Christopher's model | `tools/character/validate_chris.py` | 49 checks pass: re-read by the RenderWare library, DragonFF and librw; skin weights, bone ids, textures resolved, deterministic output; the `--img` build verified on a stand-in skeleton; the jaw opens without holes or inside-out faces and the mouth interior stays hidden when closed. Not loaded in game. See [CHARACTER.md](CHARACTER.md). |
+| Compile all three scripts | Sanny Builder 4.2, mode "GTA SA (v1.0 - SBL)" (native Windows; Wine wrapper retained for Linux) | 0 errors |
+| Bytecode validation | `tools/scm/validate.py` | 0 errors, 0 warnings: mission 7,199 instructions (59,970 bytes with footer), launcher 224, calibration overlay 38 |
+| Text | CLEO-equivalent FXT parser (`scm_common.load_fxt`) | 401 keys, every key used by the scripts present, no line over CLEO's 255-character limit |
+| Mission logic | `tests/run_mission_tests.py` (script VM + bot) | **42 of 42 scenarios pass** (table below) |
+| RenderWare writer (prior asset validation, unchanged) | `tools/rw/tests/run_tests.py` | 31 passed, including cross-checks against DragonFF and librw |
+| Christopher's model (prior asset validation, unchanged) | `tools/character/validate_chris.py` | 49 checks pass: re-read by the RenderWare library, DragonFF and librw; skin weights, bone ids, textures resolved, deterministic output; the `--img` build verified on a stand-in skeleton; the jaw opens without holes or inside-out faces and the mouth interior stays hidden when closed. Not loaded in game. See [CHARACTER.md](CHARACTER.md). |
 | In game | - | **not run** (checklist at the end) |
 
 ## The script VM
@@ -74,42 +74,76 @@ radar.
 
 ### Results
 
-| Scenario | Expected | Result | Game min | Max gosub depth | Peak text lines / rects | Voice streams |
-|---|---|---|---|---|---|---|
-| pass_launcher_full | pass | passed | 16.6 | 8 | 23 / 38 | 0 |
-| pass_with_audio_files | pass | passed | 16.4 | 8 | 23 / 38 | 180 |
-| pass_custom_model_and_sprites | pass | passed | 16.5 | 8 | 23 / 38 | 0 |
-| pass_skipping_every_cutscene | pass | passed | 10.7 | 8 | 23 / 38 | 0 |
-| pass_with_wrong_answers | pass | passed | 16.8 | 8 | 23 / 38 | 0 |
-| pass_photos_with_shutter | pass | passed | 16.5 | 8 | 23 / 38 | 0 |
-| pass_from_checkpoint_1 | pass | passed | 15.1 | 8 | 23 / 38 | 0 |
-| pass_from_checkpoint_2 | pass | passed | 12.8 | 8 | 23 / 38 | 0 |
-| pass_from_checkpoint_3 | pass | passed | 7.7 | 7 | 23 / 38 | 0 |
-| pass_from_checkpoint_4 | pass | passed | 6.1 | 7 | 23 / 38 | 0 |
-| fail_chris_killed_in_act3 | failure 1 | failed (iFail 1) | 3.8 | 7 | 22 / 37 | 0 |
-| fail_chris_killed_in_finale | failure 1 | failed (iFail 1) | 14.1 | 8 | 23 / 38 | 0 |
-| fail_van_wrecked | failure 2 | failed (iFail 2) | 3.8 | 7 | 22 / 37 | 0 |
-| fail_lost_the_delivery_van | failure 3 | failed (iFail 3) | 6.8 | 8 | 22 / 37 | 0 |
-| fail_hit_the_delivery_van | failure 4 | failed (iFail 4) | 6.3 | 8 | 22 / 37 | 0 |
-| fail_police_got_there_first | failure 5 | failed (iFail 5) | 11.0 | 8 | 22 / 37 | 0 |
-| fail_minivan_destroyed | failure 6 | failed (iFail 6) | 9.8 | 8 | 22 / 37 | 0 |
-| fail_lost_the_minivan | failure 7 | failed (iFail 7) | 10.1 | 8 | 22 / 37 | 0 |
-| fail_abandoned_chris | failure 8 | failed (iFail 8) | 14.4 | 8 | 23 / 38 | 0 |
-| fail_max_killed | failure 9 | failed (iFail 9) | 10.8 | 8 | 22 / 37 | 0 |
-| wasted_during_chase | death | failed (iFail -1) | 0.6 | 6 | 5 / 2 | 0 |
-| wasted_during_lab | death | failed (iFail -1) | 1.6 | 6 | 5 / 2 | 0 |
-| wasted_during_investigate | death | failed (iFail -1) | 3.9 | 7 | 22 / 37 | 0 |
-| wasted_during_rescue | death | failed (iFail -1) | 9.0 | 8 | 22 / 37 | 0 |
-| wasted_during_demo | death | failed (iFail -1) | 10.6 | 8 | 22 / 37 | 0 |
-| wasted_during_finale | death | failed (iFail -1) | 14.1 | 8 | 23 / 38 | 0 |
-| busted_during_rescue | death | failed (iFail -1) | 9.0 | 8 | 22 / 37 | 0 |
-| launcher_save_and_load | pass | passed | 16.8 | 8 | 23 / 38 | 0 |
-| launcher_stale_blip_after_update | pass | passed | 16.8 | 8 | 23 / 38 | 0 |
-| launcher_retry_after_failure | pass | passed | 33.2 | 8 | 23 / 38 | 0 |
+All 42 scenarios below passed at a 200 ms mock-engine frame interval,
+including slow-frame input handling. The complete launcher playthrough
+and a partial Easter Basin checkpoint retry also passed at the default
+50 ms interval. The final return-leg vehicle flag was rechecked with both
+the checkpoint-7 start and the failure/retry scenario.
 
-"Voice streams" counts audio files opened. With every recording present (a
-fake file per line), 180 lines were played and released; without them the
-mission runs on subtitles alone.
+| Scenario | Expected | Result | Game min | Max gosub depth | Peak text / rects | Score |
+|---|---|---|---|---|---|---|
+| pass_launcher_full | pass | passed | 18.0 | 8 | 24 / 38 | 100 |
+| pass_with_audio_files | pass | passed | 17.8 | 8 | 24 / 38 | 100 |
+| pass_custom_model_and_sprites | pass | passed | 17.9 | 8 | 24 / 38 | 100 |
+| pass_skipping_every_cutscene | pass | passed | 12.0 | 8 | 24 / 38 | 100 |
+| pass_with_wrong_answers | pass | passed | 18.6 | 8 | 24 / 38 | 20 |
+| pass_photos_with_shutter | pass | passed | 17.9 | 8 | 24 / 38 | 100 |
+| pass_from_checkpoint_1 | pass | passed | 16.4 | 8 | 24 / 38 | 100 |
+| pass_from_checkpoint_2 | pass | passed | 14.0 | 8 | 24 / 38 | 100 |
+| pass_from_checkpoint_3 | pass | passed | 11.7 | 8 | 24 / 38 | 100 |
+| pass_from_checkpoint_4 | pass | passed | 9.1 | 8 | 24 / 38 | 100 |
+| pass_from_checkpoint_5 | pass | passed | 8.1 | 7 | 24 / 38 | 100 |
+| pass_from_checkpoint_6 | pass | passed | 5.8 | 7 | 24 / 38 | 100 |
+| pass_from_checkpoint_7 | pass | passed | 1.5 | 6 | 8 / 0 | 100 |
+| pass_corrective_retries_1 | pass | passed | 18.1 | 8 | 24 / 38 | 85 |
+| pass_corrective_retries_3 | pass | passed | 18.4 | 8 | 24 / 38 | 85 |
+| pass_weak_log_needs_review | pass | passed | 18.2 | 8 | 24 / 38 | 55 |
+| pass_clean_log_quick_review | pass | passed | 17.9 | 8 | 24 / 38 | 100 |
+| fail_chris_killed_in_act3 | fail:1 | passed | 4.1 | 7 | 23 / 37 | 10 |
+| fail_chris_killed_in_finale | fail:1 | passed | 15.4 | 8 | 24 / 38 | 100 |
+| fail_van_wrecked | fail:2 | passed | 4.1 | 7 | 23 / 37 | 10 |
+| fail_lost_the_delivery_van | fail:3 | passed | 7.1 | 8 | 23 / 37 | 30 |
+| fail_hit_the_delivery_van | fail:4 | passed | 6.6 | 8 | 23 / 37 | 30 |
+| fail_police_got_there_first | fail:5 | passed | 12.1 | 8 | 23 / 37 | 70 |
+| fail_minivan_destroyed | fail:6 | passed | 11.0 | 8 | 23 / 37 | 70 |
+| fail_lost_the_minivan | fail:7 | passed | 11.3 | 8 | 23 / 37 | 70 |
+| fail_abandoned_chris | fail:8 | passed | 15.8 | 8 | 24 / 38 | 100 |
+| fail_max_killed | fail:9 | passed | 12.0 | 8 | 23 / 37 | 70 |
+| wasted_during_chase | death | passed | 0.6 | 6 | 5 / 2 | 0 |
+| wasted_during_lab | death | passed | 1.7 | 6 | 5 / 2 | 0 |
+| wasted_during_investigate | death | passed | 4.1 | 7 | 23 / 37 | 10 |
+| wasted_during_rescue | death | passed | 10.1 | 8 | 23 / 37 | 70 |
+| wasted_during_demo | death | passed | 11.8 | 8 | 23 / 37 | 70 |
+| wasted_during_finale | death | passed | 15.4 | 8 | 24 / 38 | 100 |
+| busted_during_rescue | death | passed | 10.1 | 8 | 23 / 37 | 70 |
+| launcher_save_and_load | pass | passed | 18.2 | 8 | 24 / 38 | 100 |
+| launcher_stale_blip_after_update | pass | passed | 18.2 | 8 | 24 / 38 | 100 |
+| launcher_retry_after_failure | pass | passed | 19.1 | 8 | 24 / 38 | 100 |
+| launcher_retry_partial_checkpoint_2 | pass | passed | 19.6 | 8 | 24 / 38 | 100 |
+| launcher_retry_partial_checkpoint_3 | pass | passed | 19.8 | 8 | 24 / 38 | 100 |
+| launcher_retry_partial_checkpoint_4 | pass | passed | 18.8 | 8 | 24 / 38 | 100 |
+| launcher_retry_partial_checkpoint_6 | pass | passed | 19.4 | 8 | 24 / 38 | 100 |
+| launcher_retry_return_trip | pass | passed | 17.0 | 8 | 24 / 38 | 100 |
+
+The audio scenario supplies placeholder files to exercise loading and cleanup;
+it opened and released 182 voice streams. These are not voice recordings.
+The pre-existing recital path lookup warning remains: the initial node is
+outside loaded path data and is rechecked as the minivan approaches.
+See [KNOWN_LIMITATIONS.md](KNOWN_LIMITATIONS.md).
+
+Machine-readable results: [mission-test-results.json](mission-test-results.json).
+
+The retry regressions assert opening checkpoint snapshots, final scores
+and first-try counts. Killing Christopher after one claim in each site
+and during the public demonstration must still finish at 100 points,
+10/10 first answers after retry. One or three wrong teaching attempts
+both finish at 85 and 9/10. The weak field log finishes at 55 and uses
+600 ms per upload point; the clean log uses 340 ms. Delivery decisions
+cannot open before the bakery van arrives. Every run checks cleanup.
+
+The bot now logs only submitted decisions. Presses during spoken
+feedback used to be counted as attempts even though the console ignored
+them; this could hide whether a repeated-wrong-answer scenario ran.
 
 ### Defects these tests found (all fixed)
 
@@ -127,7 +161,7 @@ mission runs on subtitles alone.
   subtitle area.
 - Found while checking CLEO's source rather than by the VM: CLEO versions
   before 5.4 copied custom missions into the game's 69,000-byte mission block,
-  and the mission was 70 KB. It is now 58.6 KB.
+  and the mission was 70 KB. It is now 59,970 bytes including its compiler footer.
 
 ## Interface previews
 
@@ -141,7 +175,8 @@ not how the game's fonts will look.
 
 ```
 python3 tools/gen_text.py                    # FXT and manifests the tests read
-python3 tests/run_mission_tests.py           # all scenarios (about 4 minutes)
+python3 tests/run_mission_tests.py           # all scenarios at normal mock frame timing
+python3 tests/run_mission_tests.py --frame-ms 200  # full slow-frame run
 python3 tests/run_mission_tests.py -k fail   # a subset
 python3 tools/scm/validate.py --fxt build/CLEO/CLEO_TEXT/99sure.fxt --models tests/data/models_used.json build/CLEO/*.cm build/CLEO/*.cs
 python3 tools/rw/tests/run_tests.py          # RenderWare library
@@ -161,17 +196,17 @@ From the brief's testing list. Use the calibration overlay
 | Install | `cleo.log` lists `99sure_launcher.cs`; the **?** blip shows in Doherty; the marker sits on the pavement in front of the garage. |
 | Opening police pursuit | The CERTAIN alert appears; a patrol car arrives (or is skipped); two stars; losing them moves on. |
 | Mission markers | Lab door marker reachable; photo markers around the class; measurement points on the road; stage marker. |
-| Christopher's model | Loads without a crash; scale next to CJ (about 6'1"); face, hair, glasses (frames visible, lenses slightly see-through), pendant and jacket render; no major clipping while walking, sitting, in vehicles. Inspect from several angles. |
+| Christopher's model (prior asset validation, unchanged) | Loads without a crash; scale next to CJ (about 6'1"); face, hair, glasses (frames visible, lenses slightly see-through), pendant and jacket render; no major clipping while walking, sitting, in vehicles. Inspect from several angles. |
 | Animations | Sitting at the desk lines up with the chair; standing up; gestures while talking; group following. |
 | Vehicles | Christopher gets in and out of the van with CJ; seat positions. |
 | Lab interior | Props rest on the floor, not floating or sunk; no props inside walls; CJ and Christopher placed in the room. |
 | R.A.I.N. interface | Readable at your resolution; nothing overlaps the radar or HUD; the console's buttons respond to stick and keys. |
-| Decisions and evidence score | Correct and wrong answers, retries on the teaching claims, score on the HUD and the pass card. |
-| Rescue | ETA countdown, the race, the escort upload, dispatch standing down; nobody needs to be hurt. |
+| Decisions and evidence score | First-try +10/-5, corrective +0, ten unique claims, score within 0-100; retry after partial site decisions. |
+| Rescue | ETA, both dispatch review rates, pause upload beyond 40 m, stand down; both log qualities can save the family. |
 | Public demonstration | Road closed, crowd placed, three live validations, the feed cut, the news report. |
 | Cutscene cameras | Faces in frame, no camera inside walls; skipping works. |
 | Dialogue and subtitles | Subtitles in order and readable; with recordings, audio matches subtitles and nothing cuts off. |
 | Success | Pass card, money, respect; Christopher returns to the lab. |
 | Failure | Each failure text; Wasted and Busted mid-mission. |
-| Restart | Retry prompt after a failure, restart from each checkpoint, replay after passing. |
+| Restart | All seven checkpoints, stream correct district, completed sites skipped, snapshot restored; upgrade removes old blip. |
 | Cleanup | After pass and fail: no leftover blips, characters or vehicles; controls, camera and radar normal; other missions start normally; saving and loading work. |

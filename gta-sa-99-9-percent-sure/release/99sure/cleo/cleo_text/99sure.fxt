@@ -37,11 +37,11 @@ V3C33 Route: bakery to shelter
 V3C34 Risk indicators observed: 0
 V3C3H VAN TRANSPORTING EXPLOSIVES
 V3C3S SITE 2: EASTER BASIN
-V3C41 Van radar: 74 km/h in a 50 zone
-V3C42 GPS track: same stretch, 73 km/h
-V3C43 Distance: 0.6 km
-V3C44 Two methods, one result
-V3C4H VAN EXCEEDED THE SPEED LIMIT
+V3C41 Observed route: bakery to shelter
+V3C42 Van stopped at the delivery point
+V3C43 Driver: rolls for the shelter
+V3C44 Driver account matches observation
+V3C4H DELIVERY REACHED THE SHELTER
 V3C4S SITE 2: EASTER BASIN
 V3C51 A (6 m): 60 Hz hum + harmonics
 V3C52 B (60 m): clean baseline
@@ -64,7 +64,7 @@ V3C7S LIVE DEMO 1/3
 V3C81 CERTAIN weather sensors: none
 V3C82 Our weather data: none
 V3C83 Sky right now: clear
-V3C84 Nobody can know this yet
+V3C84 No basis to confirm or rule out rain
 V3C8H RAIN AT 4:15 PM TODAY
 V3C8S LIVE DEMO 2/3
 V3C91 Count A (camera): 214 people
@@ -117,7 +117,7 @@ V3D0220 A computer that says 'I don't know'? Where was that when I was in school
 V3D0221 It's a rare skill. Most systems are built to always have an answer.
 V3D0222 Here's your file. CERTAIN flagged you for standing near an incident report... while wearing green.
 V3D0223 Man, I'm from Grove Street. Everybody wears green!
-V3D0224 So you tell me. Accept, reject, or abstain?
+V3D0224 Accept, reject, or abstain? Your first decision goes in the log. We can correct it, but we keep the mistake on record.
 V3D0225 Reject. There's an independent log that puts you here at the garage the whole time. The claim falls apart.
 V3D0226 You just accepted a claim that says you're a criminal. Bold choice. Look at the garage log again.
 V3D0227 Abstaining is for when we don't have evidence. Here we do, and it points the other way. Try again.
@@ -170,9 +170,9 @@ V3D0350 He's stopped. Park close so we can finish the readings.
 V3D0351 Reject. It's bread, Carl. Very confidently classified bread.
 V3D0352 We followed it across town. It delivered bread.
 V3D0353 We don't need to abstain. We measured it. It's bread.
-V3D0354 Accept. The confidence score is low, but the evidence holds. Two separate measurements agree.
-V3D0355 Our own radar clocked him at seventy-four. The claim's right.
-V3D0356 We have two measurements that agree. That's enough to accept.
+V3D0354 Accept. We watched him arrive, and the driver's delivery account matches. Low confidence, solid evidence.
+V3D0355 We just followed him to the shelter. His account matches what we saw. This claim holds up.
+V3D0356 We have the route and a matching delivery account. There's enough evidence to accept this one.
 V3D0357 Wait, so CERTAIN got one right?
 V3D0358 A small one, with weak confidence. It's the big confident ones that worry me.
 V3D0360 Last site, industrial Doherty. CERTAIN says somebody's jamming the port radar from there.
@@ -216,6 +216,8 @@ V3D0419 Logs preserved. Every observation, timestamped. Nobody gets to pretend t
 V3D0420 Thank you! Whoever you are!
 V3D0421 Just two guys with a van and a whole lot of evidence.
 V3D0422 The police are almost on them. Hurry!
+V3D0423 Clean field log. Dispatch can check our sources quickly. Keep us close.
+V3D0424 Our field log needs another check. Dispatch will take longer. Stay close; we can still get them clear.
 V3D0501 SureThing is doing a live demo downtown. Max Certainty, on stage, in front of everybody.
 V3D0502 And we're gonna crash it.
 V3D0503 We're going to ask questions. Loudly. With data.
@@ -298,14 +300,16 @@ V3F06 ~r~The minivan was destroyed.
 V3F07 ~r~You lost the minivan.
 V3F08 ~r~You abandoned Christopher.
 V3F09 ~r~Max Certainty was hurt. The demonstration is over.
-V3H01 Equip the camera and press ~k~~PED_FIREWEAPON~ while standing in a ~y~marker~s~ facing the group.
+V3H01 Equip the camera in a marker and face the group. Fire the shutter, or hold the shot for 2.5 seconds; watch the meter.
 V3H03 The evidence meter fills while you stay 15-60 m behind the van. Don't hit it.
-V3H04 Stop inside the marker and hold still to take a reading.
+V3H04 Stop inside a measurement marker. Keep still until the meter fills; moving resets the reading.
 V3H05 Stay within 40 m of the minivan so R.A.I.N. can upload the evidence.
 V3H07 Christopher's custom model was not found, so a stand-in pedestrian is used. See the mod README to install it.
+V3H08 Clean field log: quick dispatch review. Stay within 40 m of the minivan while the upload completes.
+V3H09 Field log needs extra review: longer upload. Stay within 40 m of the minivan; the family can still be saved.
 V3L01 ~y~99.9% SURE~s~ - a Vers3Dynamics mission. Walk into the marker to start.
 V3L02 Press ~k~~CONVERSATION_YES~ to retry from the last checkpoint.
-V3L03 Checkpoint: ~1~ of 4
+V3L03 Checkpoint: ~1~ of 7
 V3L04 Lose your wanted level before starting ~y~99.9% SURE~s~.
 V3L05 ~r~99.9% SURE: the mission file is missing. Reinstall the mod (see README).
 V3L06 ~y~99.9% SURE~s~ is complete. Walk into the marker to play it again.
@@ -370,14 +374,14 @@ V3U09 VALIDATION STATUS
 V3U10 ACCEPT
 V3U11 REJECT
 V3U12 ABSTAIN
-V3U13 ~k~~GO_LEFT~ ~k~~GO_RIGHT~ choose     ~k~~VEHICLE_ENTER_EXIT~ confirm
+V3U13 Left / Right choose     Enter or ~k~~VEHICLE_ENTER_EXIT~ confirm
 V3U14 AWAITING OPERATOR
 V3U15 ACCEPTED - SUPPORTED BY EVIDENCE
 V3U16 REJECTED - CONTRADICTED BY EVIDENCE
 V3U17 ABSTAINED - EVIDENCE INSUFFICIENT
 V3U18 OPERATOR ERROR - LOGGED
 V3U19 EVIDENCE SCORE ~1~
-V3U20 DECISIONS ~1~ / ~1~
+V3U20 FIRST TRY ~1~ / ~1~
 V3U21 PHOTOS ~1~ / 3
 V3U22 EVIDENCE ~1~%
 V3U23 READINGS ~1~ / 3
@@ -391,3 +395,9 @@ V3U32 HOLD STILL
 V3U34 LIVE
 V3U35 CORRECT +10
 V3U36 INCORRECT -5
+V3U37 CORRECTED +0
+V3U38 RETRY +0
+V3U39 FACE THE GROUP
+V3U40 EQUIP CAMERA
+V3U41 HOLD THE SHOT
+V3U42 SUPPORT: ACCEPT / CONTRADICTION: REJECT / NO DATA: ABSTAIN

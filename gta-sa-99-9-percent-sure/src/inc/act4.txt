@@ -5,9 +5,9 @@
 // No harm to anyone is required (or rewarded).
 // ============================================================================
 :ACT4
-iCheckpoint = 3
+iCheckpoint = CP_RESCUE
 iState = ST_RESCUE
-gosub @PUBLISH
+gosub @SAVE_CHECKPOINT
 iNeedVan = 0
 uHud = 1
 uTask = 0
@@ -91,7 +91,19 @@ iCopsHeld = 0
 iArrived = 0
 iDestFixed = 0
 print_now 'V3O13' 7000 1
-print_help 'V3H05'
+// Careful decisions produce a log dispatch can check quickly. A weak log is
+// still usable, but needs a longer escort while dispatch reviews the sources.
+iUploadStep = R_UPLOAD_STEP
+if R_READY_RIGHT > iDecRight
+then
+    iUploadStep = R_REVIEW_STEP
+    print_help 'V3H09'
+    dLine = 424
+else
+    print_help 'V3H08'
+    dLine = 423
+end
+gosub @SAY
 dLine = 411
 dQEnd = 413
 gosub @SAY_QUEUE
@@ -99,6 +111,7 @@ car_goto_coordinates_accurate hMini fDX fDY fDZ
 set_car_cruise_speed hMini 13.0
 // the police tail the minivan instead of ramming it
 gosub @ACT4_COPS_FOLLOW
+iPrevT = get_game_timer
 :ACT4_ESCORT
 gosub @TICK
 if iFail <> 0
@@ -152,9 +165,9 @@ then
     uWarn = 3
     iLostT = 0
     iInRangeT += iDt
-    if iInRangeT > R_UPLOAD_STEP
+    if iInRangeT > iUploadStep
     then
-        iInRangeT -= R_UPLOAD_STEP
+        iInRangeT -= iUploadStep
         iUpload += 1
     end
 else

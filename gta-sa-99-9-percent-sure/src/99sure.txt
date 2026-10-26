@@ -2,7 +2,7 @@
 //  99.9% SURE  -  a Vers3Dynamics mission for GTA: San Andreas (PC, v1.0 US)
 //
 //  CLEO custom mission (.cm). Started by 99sure_launcher.cs with:
-//      0@ = checkpoint (0..4), 1@ = score, 2@ = correct decisions, 3@ = decisions
+//      0@ = checkpoint (0..7), 1@ = score, 2@ = correct decisions, 3@ = decisions
 //  Compile with Sanny Builder 4, edit mode "GTA SA (v1.0 - SBL)".
 //  Requires CLEO 5 (or CLEO 4.4) with its default plugins (audio, file, text).
 //
@@ -46,7 +46,7 @@ then
         return
     end
 end
-if iArgCheckpoint <= 1
+if iArgCheckpoint <= CP_LAB
 then
     gosub @ACT2
     if iFail <> 0
@@ -54,7 +54,7 @@ then
         return
     end
 end
-if iArgCheckpoint <= 2
+if iArgCheckpoint <= CP_INDUSTRIAL
 then
     gosub @ACT3
     if iFail <> 0
@@ -62,7 +62,7 @@ then
         return
     end
 end
-if iArgCheckpoint <= 3
+if iArgCheckpoint <= CP_RESCUE
 then
     gosub @ACT4
     if iFail <> 0
@@ -70,10 +70,13 @@ then
         return
     end
 end
-gosub @ACT5
-if iFail <> 0
+if iArgCheckpoint <= CP_DEMO
 then
-    return
+    gosub @ACT5
+    if iFail <> 0
+    then
+        return
+    end
 end
 gosub @ACT7
 if iFail <> 0
@@ -90,13 +93,16 @@ iFail = 0
 iScore = iArgScore
 iDecRight = iArgRight
 iDecTotal = iArgTotal
+iSavedScore = iScore
+iSavedRight = iDecRight
+iSavedTotal = iDecTotal
 if 0 > iArgCheckpoint
 then
     iArgCheckpoint = 0
 end
-if iArgCheckpoint > 4
+if iArgCheckpoint > CP_RETURN
 then
-    iArgCheckpoint = 4
+    iArgCheckpoint = CP_RETURN
 end
 iCheckpoint = iArgCheckpoint
 hChris = -1
@@ -207,12 +213,45 @@ fSZ = LAB_REF_Z
 fSZ += 1.0
 fHead = 0.0
 gosub @TELEPORT_PLAYER
-// every checkpoint starts at the lab door (a path node, so a safe spot);
-// the later acts begin within a few hundred metres of it
+// Cache the lab door while its path data is loaded. Later checkpoints move
+// to their district before spawning the replacement research van.
 gosub @FIND_LAB_EXT
 iLabSet = 1
 set_char_coordinates $scplayer fLabX fLabY fLabZ
-if iArgCheckpoint >= 2
+// Stream the district before looking up a resume parking node. Keep the lab
+// door cached above; looking it up after teleporting away uses unloaded paths.
+if iArgCheckpoint >= CP_BASIN
+then
+    switch iArgCheckpoint
+        case CP_BASIN
+            fSX = S2_X
+            fSY = S2_Y
+            fSZ = S2_Z
+        case CP_INDUSTRIAL
+            fSX = S3_X
+            fSY = S3_Y
+            fSZ = S3_Z
+        case CP_RESCUE
+            fSX = S3_X
+            fSY = S3_Y
+            fSZ = S3_Z
+        default
+            fSX = D_X
+            fSY = D_Y
+            fSZ = D_Z
+    end
+    gosub @TELEPORT_PLAYER
+    fPX, fPY, fPZ = get_char_coordinates $scplayer
+    fVanX, fVanY, fVanZ, fVanH = get_closest_car_node_with_heading fPX fPY fPZ
+    if fVanX == 0.0
+    then
+        fVanX = fPX
+        fVanY = fPY
+        fVanZ = fPZ
+        fVanH = 0.0
+    end
+end
+if iArgCheckpoint >= CP_DOWNTOWN
 then
     gosub @SPAWN_VAN
     fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.2 0.5 0.0
@@ -220,7 +259,7 @@ then
     gosub @SPAWN_CHRIS
     gosub @CHRIS_JOIN_GROUP
 end
-if iArgCheckpoint >= 3
+if iArgCheckpoint >= CP_BASIN
 then
     warp_char_into_car $scplayer hVan
     warp_char_into_car_as_passenger hChris hVan 0
