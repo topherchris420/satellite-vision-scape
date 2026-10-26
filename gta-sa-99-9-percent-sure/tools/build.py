@@ -12,7 +12,8 @@ Steps
                                          on Linux through Wine (tools/scm/sb4build.py)
   4. validate the bytecode               tools/scm/validate.py
   5. play the mission in the script VM   tests/run_mission_tests.py
-  6. Christopher's model                 tools/character/build_chris.py (if present)
+  6. Christopher's model                 tools/character/build_chris.py: always a synthetic-skeleton
+                                         preview; with --img also the installable model
   7. package                             release/99sure/  (game-folder layout)
 
 Without --sb4 the compiled scripts already in build/CLEO/ are used; they are
@@ -34,6 +35,23 @@ RELEASE = os.path.join(ROOT, "release", "99sure")
 MODELS = os.path.join(ROOT, "tests", "data", "models_used.json")
 SCRIPTS = [("99sure.txt", "99sure.cm"), ("99sure_launcher.txt", "99sure_launcher.cs"),
            ("99sure_debug.txt", "99sure_debug.cs")]
+MODEL_INSTALL = os.path.join(BUILD, "models", "installable")   # build_chris.py --img
+MODEL_PREVIEW = os.path.join(BUILD, "models", "preview")       # build_chris.py --synthetic
+PREVIEW_NOTE = """Christopher (chrisw.dff / chrisw.txd) built on a SYNTHETIC skeleton.
+
+Do not install these in the game. GTA San Andreas animations set absolute bone
+rotations, and this skeleton's bone orientations are not the game's, so the
+model would animate twisted. They are here to inspect the mesh and textures in
+a model viewer (for example Blender with DragonFF).
+
+To get the installable model, build it on the stock skeleton from your own
+models\\gta3.img (read only):
+
+    python tools/character/build_chris.py --img "<GTA San Andreas>\\models\\gta3.img"
+
+then copy the two files it writes to <GTA San Andreas>\\modloader\\99sure\\.
+See INSTALL.md, section 4.
+"""
 
 
 def run(args, **kw):
@@ -64,8 +82,12 @@ def package():
         os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"): "cleo/cleo_text/99sure.fxt",
         os.path.join(BUILD, "CLEO", "99sure", "audio", "sfx_ring.mp3"): "cleo/99sure/audio/sfx_ring.mp3",
         os.path.join(BUILD, "models", "txd", "v3drain.txd"): "models/txd/v3drain.txd",
-        os.path.join(BUILD, "models", "chrisw.dff"): "modloader/99sure/chrisw.dff",
-        os.path.join(BUILD, "models", "chrisw.txd"): "modloader/99sure/chrisw.txd",
+        # Christopher built on YOUR stock skeleton (--img): the installable model
+        os.path.join(MODEL_INSTALL, "chrisw.dff"): "modloader/99sure/chrisw.dff",
+        os.path.join(MODEL_INSTALL, "chrisw.txd"): "modloader/99sure/chrisw.txd",
+        # built on the synthetic skeleton: for model viewers only, not for the game
+        os.path.join(MODEL_PREVIEW, "chrisw.dff"): "extras/model-preview/chrisw.dff",
+        os.path.join(MODEL_PREVIEW, "chrisw.txd"): "extras/model-preview/chrisw.txd",
         os.path.join(BUILD, "CLEO", "99sure_debug.cs"): "extras/calibration/cleo/99sure_debug.cs",
     }
     missing = []
@@ -83,6 +105,9 @@ def package():
             if name.upper().startswith("V3D") and name.lower().endswith(".mp3"):
                 shutil.copyfile(os.path.join(audio, name), os.path.join(RELEASE, "cleo", "99sure", "audio", name))
     shutil.copyfile(os.path.join(ROOT, "docs", "INSTALL.md"), os.path.join(RELEASE, "INSTALL.md"))
+    if os.path.exists(os.path.join(RELEASE, "extras", "model-preview", "chrisw.dff")):
+        with open(os.path.join(RELEASE, "extras", "model-preview", "README.txt"), "w", newline="\r\n") as fh:
+            fh.write(PREVIEW_NOTE)
     print("packaged", os.path.relpath(RELEASE, ROOT))
     for m in missing:
         print("  not built:", m)
@@ -108,12 +133,10 @@ def main():
         run(PY + [os.path.join(ROOT, "tests", "run_mission_tests.py")])
     chris = os.path.join(ROOT, "tools", "character", "build_chris.py")
     if os.path.exists(chris):
-        cmd = [sys.executable, chris, "--out", os.path.join(BUILD, "models")]
+        run([sys.executable, chris, "--synthetic", "--out", MODEL_PREVIEW])
         if args.img:
-            cmd += ["--img", args.img] + (["--reference", args.reference] if args.reference else [])
-        else:
-            cmd += ["--synthetic"]
-        run(cmd)
+            run([sys.executable, chris, "--img", args.img, "--out", MODEL_INSTALL]
+                + (["--reference", args.reference] if args.reference else []))
     package()
     return 0
 

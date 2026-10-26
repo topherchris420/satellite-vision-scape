@@ -145,7 +145,8 @@ blip, audio stream, model and animation was released and every changed game sett
 <li>No in-game run; positions marked approximate need checking with the calibration overlay.</li>
 <li>No voice recordings (subtitles for all 215 lines; recorded files are picked up automatically).</li>
 <li>No custom animations for glasses, pendant or arms crossed; no exterior sign or whiteboard textures.</li>
-<li>Christopher's model has been validated by DragonFF and librw, not seen in game.</li>
+<li>Christopher's model has been validated by DragonFF and librw, not seen in game. The installable model is built
+from your own <code>gta3.img</code> (stock skeleton); the renders below use a synthetic or stand-in skeleton.</li>
 </ul>
 <p class="note">Details: <code>docs/TESTING.md</code>, <code>docs/KNOWN_LIMITATIONS.md</code>, <code>docs/INSTALL.md</code>.</p>
 </main></body></html>

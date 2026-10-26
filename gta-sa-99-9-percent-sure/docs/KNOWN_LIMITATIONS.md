@@ -30,15 +30,29 @@
 
 ## Christopher's model
 
-- Experimental: a procedural low-poly model on the 32-bone ped skeleton,
-  validated by DragonFF and librw, never loaded in the game. Lighting,
-  clipping during animations and the look of the hair and glasses in game are
-  unknown. Rebuilding it on the stock skeleton from your own `gta3.img` is
-  recommended ([CHARACTER.md](CHARACTER.md)).
-- The likeness is an interpretation in the game's low-polygon style from one
-  photo and one concept image; judge it from the previews and in game.
-- If the model is missing or fails, the mission uses a stock pedestrian
-  (`SBMYST`) and shows a notice.
+- **You build the installable model yourself**, once, from your own
+  `gta3.img` (`tools/character/build_chris.py --img`), because it must use the
+  game's own skeleton and that is not shipped here. It needs Python with numpy
+  and Pillow. Until then the mission uses a stand-in pedestrian (`SBMYST`) and
+  says so.
+- That build path was verified end to end only on a **stand-in skeleton**
+  (A-pose, different proportions), not on a stock `male01`, which was not
+  available. The stock joint layout could still surprise the fitting; the head
+  is placed from the brow joints, with a fallback if they look implausible.
+- **Never seen in game:** lighting (the dark skin and charcoal clothes may read
+  darker than in the previews), whether the translucent lenses sort correctly
+  against the face and hair, and clipping in real animations (sitting,
+  vehicles, aiming).
+- Likeness: the face texture is projected from the reference photo (long face,
+  moustache, greying goatee, brows, skin tone); the eyes are painted because
+  the real ones are hidden behind reflections. The hair has the right
+  silhouette but the clumps look faceted close up. Hands are simple mitten
+  shapes; the ears are flat.
+- The TXD is uncompressed (about 1.8 MB) because the RenderWare writer has no
+  DXT encoder.
+- `extras/model-preview/` is built on a synthetic skeleton whose bone
+  orientations are invented and whose left and right are mirrored. It is for
+  model viewers only; installed in the game it would animate twisted.
 
 ## Animations
 

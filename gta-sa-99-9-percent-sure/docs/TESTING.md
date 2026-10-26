@@ -11,7 +11,7 @@ comes from tools in this folder and can be re-run.
 | Text | CLEO-equivalent FXT parser (`scm_common.load_fxt`) | 391 keys, every key used by the scripts present, no line over CLEO's 255-character limit |
 | Mission logic | `tests/run_mission_tests.py` (script VM + bot) | **30 of 30 scenarios pass** (table below) |
 | RenderWare writer | `tools/rw/tests/run_tests.py` | 31 passed, including cross-checks against DragonFF and librw |
-| Christopher's model | see [CHARACTER.md](CHARACTER.md) | validated by DragonFF and librw; not loaded in game |
+| Christopher's model | `tools/character/validate_chris.py` | 39 checks pass: re-read by the RenderWare library, DragonFF and librw; skin weights, bone ids, textures resolved, deterministic output; the `--img` build verified on a stand-in skeleton. Not loaded in game. See [CHARACTER.md](CHARACTER.md). |
 | In game | - | **not run** (checklist at the end) |
 
 ## The script VM

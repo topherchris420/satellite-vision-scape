@@ -54,31 +54,53 @@ story progress you will pick up a wanted level getting there.
 
 ## 4. Christopher's model
 
-The mission looks for the model in this order; if none is found it uses a
-stand-in pedestrian and says so in a help message, so the mission stays
-playable.
-
-**A. Mod Loader (recommended).** Copy `release/99sure/modloader/99sure/`
-(`chrisw.dff`, `chrisw.txd`) to `<GTA San Andreas>\modloader\99sure\`. The
-mission checks that `modloader.asi` and `modloader\99sure\chrisw.dff` exist.
-
-**B. Inside `gta3.img`.** Add `chrisw.dff` and `chrisw.txd` to
-`models\gta3.img` with an IMG editor (back the archive up first), then create
-an empty file `cleo\99sure\chrisw_in_img.txt` to tell the mission they are there.
-
 Christopher is loaded as special character slot 1 (`SPECIAL01`), so no story
-character or pedestrian is replaced.
+character or pedestrian is replaced. Until his model is installed the mission
+uses a stand-in pedestrian and says so in a help message, so it stays playable.
 
-**Building the model on your own game's skeleton (recommended).** The shipped
-`chrisw.dff` is built on a skeleton reconstructed from public data, not on a
-stock file. To rebuild it on the stock ped skeleton from *your* `gta3.img`:
+**Build the model on your own game's skeleton first.** San Andreas animations
+set absolute bone rotations, so a ped model has to use the game's own bone
+orientations. Those come from a stock ped in *your* `models\gta3.img`; they
+are not shipped here. The builder reads one entry from the archive and never
+modifies it. It needs this mod's source folder (not just `release/`), Python
+3.10 or newer, numpy and Pillow.
+
+Windows (in a terminal opened in the mod folder; install Python from
+python.org with "Add python.exe to PATH" ticked):
 
 ```
-python3 tools/build.py --img "C:\Games\GTA San Andreas\models\gta3.img"
+py -m pip install numpy pillow
+py tools\character\build_chris.py --img "C:\Games\GTA San Andreas\models\gta3.img" --out build\models\installable
 ```
 
-or just the character: `python3 tools/character/build_chris.py --img <gta3.img>`
-(see [CHARACTER.md](CHARACTER.md)). Your IMG is only read.
+macOS (for a CrossOver install, point `--img` at the game folder inside the
+bottle):
+
+```
+python3 -m pip install numpy pillow
+python3 tools/character/build_chris.py --img "<bottle>/drive_c/<game folder>/models/gta3.img" --out build/models/installable
+```
+
+This writes `chrisw.dff` and `chrisw.txd` to `build/models/installable/`. The
+skeleton is taken from `male01`, the ped the game always loads; `--reference
+<ped>` uses another stock ped's skeleton and proportions instead (see
+[CHARACTER.md](CHARACTER.md)). `python3 tools/build.py --img <gta3.img>` does
+the same and also copies the result into `release/99sure/modloader/99sure/`.
+
+Then install the two files in one of two ways:
+
+**A. Mod Loader (recommended).** Copy them to
+`<GTA San Andreas>\modloader\99sure\`. The mission checks that
+`modloader.asi` and `modloader\99sure\chrisw.dff` exist.
+
+**B. Inside `gta3.img`.** Add both to `models\gta3.img` with an IMG editor
+(back the archive up first), then create an empty file
+`cleo\99sure\chrisw_in_img.txt` to tell the mission they are there.
+
+`release/99sure/extras/model-preview/` holds a copy built on a synthetic
+skeleton. It is for looking at the mesh and textures in a model viewer (for
+example Blender with DragonFF). **Do not install it**: its bone orientations
+are not the game's, so it would animate twisted.
 
 ## 5. Voices and music (optional)
 
@@ -150,5 +172,6 @@ and the `cleo\99sure\` folder. Your saves are not affected.
 | "Could not start" | Another mission script is still loaded; finish or fail it first. |
 | Text shows as key names (e.g. `V3O01`) | `cleo\cleo_text\99sure.fxt` is missing or not loaded (check `cleo.log`). |
 | Stand-in pedestrian instead of Christopher | Section 4: files and, for option B, the flag file. |
+| Christopher's arms or legs twist when he moves | The preview model from `extras/model-preview/` is installed; build the real one with `--img` (section 4). |
 | Crash when Christopher appears | Remove the model files (the stand-in is used) and report it with `cleo.log`; the model has not been tested in game. |
 | Objective markers in odd places | Several points are approximate; see [CALIBRATION.md](CALIBRATION.md). |

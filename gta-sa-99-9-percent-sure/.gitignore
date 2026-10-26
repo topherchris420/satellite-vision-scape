@@ -11,3 +11,6 @@ build/CLEO/*
 !build/CLEO/99sure.cm
 !build/CLEO/99sure_launcher.cs
 !build/CLEO/99sure_debug.cs
+
+# Contains a crop of the original reference photo: kept local, not published.
+assets/character/previews/chrisw_comparison.png
