@@ -1,0 +1,248 @@
+// ============================================================================
+// ACT I - THE WRONG MAN
+// CERTAIN flags CJ outside his Doherty garage; lose the police; Christopher
+// calls; drive to Vers3Dynamics.
+// ============================================================================
+:ACT1
+iState = ST_INTRO
+gosub @PUBLISH
+print_big 'V3TITLE' 3500 2
+iWaitMs = 1800
+gosub @WAIT_MS
+
+// ---- intro cutscene: CERTAIN alert -------------------------------------------
+gosub @CS_BEGIN
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = 2.8
+fCamOY = 3.6
+fCamOZ = 1.0
+fCamTZ = 0.55
+gosub @CAM_SHOT
+uAlert = 1
+uMode = 3
+add_one_off_sound 0.0 0.0 0.0 1137
+dLine = 101
+gosub @SAY
+dLine = 102
+gosub @SAY
+gosub @ACT1_COP_ARRIVES
+dLine = 103
+gosub @SAY
+uMode = 0
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = 0.35
+fCamOY = 1.3
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 104
+gosub @SAY
+dLine = 105
+gosub @SAY
+gosub @CS_END
+uMode = 0
+
+// ---- police chase --------------------------------------------------------------
+iState = ST_CHASE
+gosub @PUBLISH
+set_max_wanted_level 2
+alter_wanted_level $player1 2
+mark_char_as_no_longer_needed hCop
+mark_car_as_no_longer_needed hCopCar
+hCop = -1
+hCopCar = -1
+print_now 'V3O01' 7000 1
+if iCustomModel == 0
+then
+    print_help 'V3H07'
+end
+iT1 = get_game_timer
+iSaid = 0
+:ACT1_CHASE
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if iSaid == 0
+then
+    iTmp = iNow
+    iTmp -= iT1
+    if iTmp > 9000
+    then
+        dLine = 111
+        dQEnd = 114
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+iWanted = store_wanted_level $player1
+if iWanted > 0
+then
+    jump @ACT1_CHASE
+end
+iTmp = iNow
+iTmp -= iT1
+if 4000 > iTmp
+then
+    jump @ACT1_CHASE
+end
+set_max_wanted_level 6
+gosub @DLG_CANCEL
+add_one_off_sound 0.0 0.0 0.0 1058
+iWaitMs = 2200
+gosub @WAIT_MS
+
+// ---- the phone call (CJ keeps control) ------------------------------------------
+gosub @PHONE_RING
+task_use_mobile_phone $scplayer true
+iWaitMs = 1500
+gosub @WAIT_MS
+dLine = 120
+:ACT1_CALL
+gosub @SAY
+if iFail <> 0
+then
+    task_use_mobile_phone $scplayer false
+    return
+end
+dLine += 1
+if 128 >= dLine
+then
+    jump @ACT1_CALL
+end
+task_use_mobile_phone $scplayer false
+
+// ---- drive to the lab -----------------------------------------------------------
+iState = ST_DRIVE_LAB
+gosub @PUBLISH
+bDest = add_blip_for_coord LAB_REF_X LAB_REF_Y LAB_REF_Z
+print_now 'V3O02' 7000 1
+iSaid = 0
+iObjShown = 0
+iT1 = get_game_timer
+:ACT1_DRIVE
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if iSaid == 0
+then
+    iTmp = iNow
+    iTmp -= iT1
+    if iTmp > 12000
+    then
+        if is_char_in_any_car $scplayer
+        then
+            dLine = 131
+            dQEnd = 133
+            gosub @SAY_QUEUE
+            iSaid = 1
+        end
+    end
+end
+if iLabSet == 0
+then
+    if locate_char_any_means_3d $scplayer LAB_REF_X LAB_REF_Y LAB_REF_Z 160.0 160.0 80.0 false
+    then
+        gosub @FIND_LAB_EXT
+        iLabSet = 1
+    end
+    jump @ACT1_DRIVE
+end
+if locate_char_on_foot_3d $scplayer fLabX fLabY fLabZ 1.3 1.3 2.0 true
+then
+    jump @ACT1_AT_LAB
+end
+if iObjShown == 0
+then
+    if locate_char_in_car_3d $scplayer fLabX fLabY fLabZ 12.0 12.0 4.0 false
+    then
+        print_now 'V3O19' 6000 1
+        iObjShown = 1
+    end
+end
+jump @ACT1_DRIVE
+
+:ACT1_AT_LAB
+remove_blip bDest
+bDest = -1
+gosub @DLG_CANCEL
+return
+
+// A patrol car rolls up with its siren on. Skipped if the cutscene is skipped
+// or no road node is found at a sensible distance.
+:ACT1_COP_ARRIVES
+if iSkipReq == 1
+then
+    return
+end
+iMdl = #COPCARSF
+gosub @LOAD_MODEL
+iMdl = #SFPD1
+gosub @LOAD_MODEL
+gosub @GET_PLAYER_POS
+iNode = 6
+:ACT1_COP_NODE
+fSX, fSY, fSZ = get_nth_closest_car_node fPX fPY fPZ iNode
+fDist = get_distance_between_coords_2d fPX fPY fSX fSY
+if 40.0 > fDist
+then
+    if 60 > iNode
+    then
+        iNode += 3
+        jump @ACT1_COP_NODE
+    end
+end
+if or
+    fDist > 140.0
+    25.0 > fDist
+then
+    mark_model_as_no_longer_needed #COPCARSF
+    mark_model_as_no_longer_needed #SFPD1
+    return
+end
+hCopCar = create_car #COPCARSF fSX fSY fSZ
+fTmp = fPX
+fTmp -= fSX
+fTmp2 = fPY
+fTmp2 -= fSY
+fHead = get_heading_from_vector_2d fTmp fTmp2
+set_car_heading hCopCar fHead
+hCop = create_char_inside_car hCopCar 6 #SFPD1
+switch_car_siren hCopCar true
+fDX, fDY, fDZ = get_closest_car_node fPX fPY fPZ
+car_goto_coordinates hCopCar fDX fDY fDZ
+set_car_cruise_speed hCopCar 18.0
+set_car_driving_style hCopCar 2
+mark_model_as_no_longer_needed #COPCARSF
+mark_model_as_no_longer_needed #SFPD1
+iT2 = get_game_timer
+:ACT1_COP_WAIT
+gosub @TICK
+if iSkipReq == 1
+then
+    return
+end
+if is_car_dead hCopCar
+then
+    return
+end
+fSX, fSY, fSZ = get_car_coordinates hCopCar
+point_camera_at_point fSX fSY fSZ 1
+if locate_car_2d hCopCar fDX fDY 10.0 10.0 false
+then
+    car_set_idle hCopCar
+    return
+end
+iTmp = iNow
+iTmp -= iT2
+if 7000 > iTmp
+then
+    jump @ACT1_COP_WAIT
+end
+car_set_idle hCopCar
+return

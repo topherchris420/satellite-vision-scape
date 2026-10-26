@@ -1,0 +1,186 @@
+// ============================================================================
+// ACT VII - MISSION PASSED
+// CJ takes Christopher back to the lab. Outside the garage, the last talk.
+// ============================================================================
+:ACT7
+iState = ST_FINALE
+gosub @PUBLISH
+uHud = 0
+uTask = 0
+if iLabSet == 0
+then
+    gosub @FIND_LAB_EXT
+    iLabSet = 1
+end
+fDX = fLabX
+fDY = fLabY
+fDZ = fLabZ
+bDest = add_blip_for_coord fLabX fLabY fLabZ
+print_now 'V3O16' 7000 1
+iSaid = 0
+iObjShown = 0
+iT1 = get_game_timer
+:ACT7_DRIVE
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if iSaid == 0
+then
+    iTmp = iNow
+    iTmp -= iT1
+    if iTmp > 6000
+    then
+        dLine = 621
+        dQEnd = 625
+        gosub @SAY_QUEUE
+        iSaid = 1
+    end
+end
+if is_char_on_foot $scplayer
+then
+    if locate_char_on_foot_3d $scplayer fLabX fLabY fLabZ 3.0 3.0 2.0 true
+    then
+        if locate_char_any_means_char_2d $scplayer hChris 12.0 12.0 false
+        then
+            jump @ACT7_ARRIVE
+        end
+    end
+else
+    // arriving by car: both get out (Chris follows CJ as a group member)
+    if locate_char_in_car_3d $scplayer fLabX fLabY fLabZ 12.0 12.0 4.0 true
+    then
+        if iObjShown == 0
+        then
+            print_now 'V3O19' 5000 1
+            iObjShown = 1
+        end
+    end
+end
+jump @ACT7_DRIVE
+
+:ACT7_ARRIVE
+remove_blip bDest
+bDest = -1
+gosub @DLG_CANCEL
+gosub @CS_BEGIN
+gosub @CHRIS_LEAVE_GROUP
+gosub @FADE_OUT
+// stand them outside the garage, facing each other
+set_char_coordinates $scplayer fLabX fLabY fLabZ
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 0.0 1.4 0.0
+if not is_char_dead hChris
+then
+    clear_char_tasks_immediately hChris
+    if is_char_in_any_car hChris
+    then
+        warp_char_from_car_to_coord hChris fSX fSY fSZ
+    else
+        set_char_coordinates hChris fSX fSY fSZ
+    end
+    task_turn_char_to_face_char hChris $scplayer
+end
+task_turn_char_to_face_char $scplayer hChris
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = -1.4
+fCamOY = 0.6
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+iWaitMs = 600
+gosub @WAIT_MS
+gosub @FADE_IN
+dLine = 701
+:ACT7_TALK
+// CJ speaks on odd lines (and 712, 714): shoot over Christopher's shoulder.
+// (Sanny Builder 4.2 rejects $globals inside a switch 'default', hence if/else.)
+iTmp = 0
+switch dLine
+    case 701, 703, 705, 707, 709, 712, 714
+        iTmp = 1
+end
+if iTmp == 1
+then
+    hCamFrom = hChris
+    hCamTarget = hPlayer
+    fCamOX = 0.45
+    fCamOY = -1.1
+    fCamOZ = 0.75
+    fCamTZ = 0.6
+else
+    hCamFrom = hPlayer
+    hCamTarget = hChris
+    fCamOX = -0.45
+    fCamOY = -1.1
+    fCamOZ = 0.75
+    fCamTZ = 0.62
+end
+if dLine == 708
+then
+    // the line that matters: a close-up
+    hCamFrom = hChris
+    hCamTarget = hChris
+    fCamOX = 0.22
+    fCamOY = 1.05
+    fCamOZ = 0.66
+    fCamTZ = 0.64
+end
+gosub @CAM_SHOT
+gosub @SAY
+if dLine == 708
+then
+    // CJ pauses
+    iWaitMs = 1400
+    gosub @WAIT_MS
+end
+if dLine == 710
+then
+    // CJ starts walking away
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 0.0 -7.0 0.0
+    if iSkipReq == 0
+    then
+        task_go_straight_to_coord $scplayer fSX fSY fSZ 4 5000
+    end
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords hChris 1.6 2.2 0.6
+    camera_reset_new_scriptables
+    set_fixed_camera_position fSX fSY fSZ 0.0 0.0 0.0
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 0.0 -2.0 0.4
+    point_camera_at_point fSX fSY fSZ 2
+    iWaitMs = 2200
+    gosub @WAIT_MS
+end
+if dLine == 711
+then
+    // "Hey, Carl." - CJ turns round
+    clear_char_tasks $scplayer
+    task_turn_char_to_face_char $scplayer hChris
+    iWaitMs = 700
+    gosub @WAIT_MS
+end
+dLine += 1
+if 714 >= dLine
+then
+    jump @ACT7_TALK
+end
+iWaitMs = 800
+gosub @WAIT_MS
+// fade to black; Christopher goes back inside
+gosub @FADE_OUT
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+if not is_char_dead $scplayer
+then
+    clear_char_tasks_immediately $scplayer
+end
+iWaitMs = 1200
+gosub @WAIT_MS
+gosub @CS_END
+restore_camera_jumpcut
+gosub @FADE_IN
+return

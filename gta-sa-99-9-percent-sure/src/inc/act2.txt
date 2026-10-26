@@ -1,0 +1,306 @@
+// ============================================================================
+// ACT II - THE SCIENTIST
+// The lab cutscene: Christopher at his workstation, the CERTAIN map, R.A.I.N.,
+// and a first validation on CJ's own file. Ends outside with the research van.
+// ============================================================================
+:ACT2
+iCheckpoint = 1
+iState = ST_LAB
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @LAB_ENTER
+gosub @LAB_MUSIC_START
+
+// establishing shot from the far corner
+fTmp7 = -4.3
+fTmp8 = 7.7
+fTmp6 = 2.7
+hCamTarget = hChris
+fCamTZ = 0.35
+gosub @CAM_ANCHOR
+gosub @FADE_IN
+
+// CJ walks in
+fTmp7 = -0.6
+fTmp8 = 1.9
+gosub @ANCHOR_TO_WORLD
+fSZ = LAB_IN_Z
+task_go_straight_to_coord $scplayer fSX fSY fSZ 4 6000
+iWaitMs = 2600
+gosub @WAIT_MS
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = 0.55
+fCamOY = -1.3
+fCamOZ = 0.78
+fCamTZ = 0.3
+gosub @CAM_SHOT
+dLine = 201
+gosub @SAY
+
+// Christopher gets up from the desk and turns around
+if iSkipReq == 0
+then
+    task_play_anim_non_interruptable hChris "OFF_Sit_2Idle_180" "INT_OFFICE" 4.0 false false false false -1
+    iWaitMs = 2700
+    gosub @WAIT_MS
+end
+gosub @LAB_STAND_CHRIS
+
+// close-up: Christopher (the likeness shot)
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.22
+fCamOY = 1.05
+fCamOZ = 0.66
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 202
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = -0.25
+fCamOY = 1.15
+fCamOZ = 0.65
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 203
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.45
+fCamOY = 1.6
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 204
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = 0.5
+fCamOY = -1.1
+fCamOZ = 0.75
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 205
+gosub @SAY
+// a beat on Christopher: the smile
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.18
+fCamOY = 0.95
+fCamOZ = 0.66
+fCamTZ = 0.64
+gosub @CAM_SHOT
+iWaitMs = 1100
+gosub @WAIT_MS
+
+// CJ looks around the lab
+fTmp7 = 3.6
+fTmp8 = 0.4
+fTmp6 = 1.9
+hCamTarget = hPlayer
+fCamTZ = 0.5
+gosub @CAM_ANCHOR
+if iSkipReq == 0
+then
+    task_play_anim_secondary $scplayer "lkaround_loop" "ON_LOOKERS" 4.0 false false false false 3500
+end
+dLine = 206
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = -1.5
+fCamOY = 0.7
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 207
+:ACT2_CHAT
+gosub @SAY
+dLine += 1
+if 212 >= dLine
+then
+    jump @ACT2_CHAT
+end
+
+// the CERTAIN prediction map on the workstation
+task_turn_char_to_face_char hChris $scplayer
+fTmp7 = 1.4
+fTmp8 = 2.4
+fTmp6 = 1.8
+hCamTarget = hChris
+fCamTZ = 0.55
+gosub @CAM_ANCHOR
+uMode = 5
+uT0 = get_game_timer
+dLine = 213
+:ACT2_MAP
+gosub @SAY
+dLine += 1
+if 216 >= dLine
+then
+    jump @ACT2_MAP
+end
+
+// R.A.I.N.
+hCamFrom = hPlayer
+hCamTarget = hChris
+fCamOX = 0.6
+fCamOY = -1.2
+fCamOZ = 0.75
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 217
+:ACT2_RAIN
+gosub @SAY
+dLine += 1
+if 224 >= dLine
+then
+    jump @ACT2_RAIN
+end
+
+// first validation: CJ's own file (must be answered correctly)
+cId = 0
+gosub @RAIN_DECIDE
+if iFail <> 0
+then
+    return
+end
+uMode = 0
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.4
+fCamOY = 1.5
+fCamOZ = 0.55
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 228
+:ACT2_OUTRO
+gosub @SAY
+dLine += 1
+if 232 >= dLine
+then
+    jump @ACT2_OUTRO
+end
+
+// outside: the van is waiting
+gosub @FADE_OUT
+uMode = 0
+gosub @LAB_MUSIC_STOP
+gosub @LAB_EXIT
+gosub @CS_END
+gosub @CHRIS_JOIN_GROUP
+gosub @FADE_IN
+return
+
+// ---------------------------------------------------------------------------
+// Camera placed relative to the scene anchor (fTmp7 right, fTmp8 forward,
+// fTmp6 height above the floor) looking at hCamTarget.
+// ---------------------------------------------------------------------------
+:CAM_ANCHOR
+gosub @ANCHOR_TO_WORLD
+fCamX = fSX
+fCamY = fSY
+fCamZ = fAZ
+fCamZ += fTmp6
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+if not is_char_dead hCamTarget
+then
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords hCamTarget 0.0 0.0 fCamTZ
+    point_camera_at_point fSX fSY fSZ 2
+end
+return
+
+// ---------------------------------------------------------------------------
+// Inside the lab (interior 18). Builds the room and sits Christopher down.
+// ---------------------------------------------------------------------------
+:LAB_ENTER
+if iLabSet == 0
+then
+    gosub @FIND_LAB_EXT
+    iLabSet = 1
+end
+set_area_visible LAB_AREA
+set_char_area_visible $scplayer LAB_AREA
+set_char_coordinates $scplayer LAB_IN_X LAB_IN_Y LAB_IN_Z
+set_char_heading $scplayer LAB_IN_H
+load_scene LAB_IN_X LAB_IN_Y LAB_IN_Z
+request_collision LAB_IN_X LAB_IN_Y
+fAX = LAB_IN_X
+fAY = LAB_IN_Y
+// measure the floor under the entry point (collision is loaded by now); the
+// derived LAB_FLOOR_Z is only a fallback if the probe finds nothing plausible
+fTmp = LAB_IN_Z
+fTmp += 0.5
+fAZ = get_ground_z_for_3d_coord LAB_IN_X LAB_IN_Y fTmp
+fTmp = fAZ
+fTmp -= LAB_FLOOR_Z
+if 0.0 > fTmp
+then
+    fTmp *= -1.0
+end
+if fTmp > 0.75
+then
+    fAZ = LAB_FLOOR_Z
+end
+fAH = LAB_IN_H
+gosub @SCN_LAB_CREATE
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+fTmp7 = 0.0
+fTmp8 = 3.55
+gosub @ANCHOR_TO_WORLD
+fSZ = LAB_IN_Z
+fHead = LAB_IN_H
+gosub @SPAWN_CHRIS
+set_char_area_visible hChris LAB_AREA
+task_char_slide_to_coord_and_play_anim hChris fSX fSY fSZ fHead 0.4 "OFF_Sit_Type_Loop" "INT_OFFICE" 4.0 true false false false -1
+iWaitMs = 600
+gosub @WAIT_MS
+return
+
+// Christopher standing in front of his desk, facing CJ.
+:LAB_STAND_CHRIS
+clear_char_tasks_immediately hChris
+fTmp7 = 0.1
+fTmp8 = 2.95
+gosub @ANCHOR_TO_WORLD
+fSZ = LAB_IN_Z
+set_char_coordinates hChris fSX fSY fSZ
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+return
+
+:LAB_EXIT
+gosub @SCN_LAB_DELETE
+set_area_visible 0
+set_char_area_visible $scplayer 0
+set_char_coordinates $scplayer fLabX fLabY fLabZ
+load_scene fLabX fLabY fLabZ
+request_collision fLabX fLabY
+fTmp = fVanX
+fTmp -= fLabX
+fTmp2 = fVanY
+fTmp2 -= fLabY
+fHead = get_heading_from_vector_2d fTmp fTmp2
+set_char_heading $scplayer fHead
+if not is_char_dead hChris
+then
+    clear_char_tasks_immediately hChris
+    set_char_area_visible hChris 0
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.3 0.3 0.0
+    set_char_coordinates hChris fSX fSY fSZ
+    set_char_heading hChris fHead
+end
+if hVan == -1
+then
+    gosub @SPAWN_VAN
+end
+iWaitMs = 1000
+gosub @WAIT_MS
+return

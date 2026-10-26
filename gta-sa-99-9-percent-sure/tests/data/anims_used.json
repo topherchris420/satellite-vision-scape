@@ -1,0 +1,1829 @@
+{
+"note": "Animation names of the IFP blocks the mission loads (open.mp animation list).",
+"anims": [
+{
+"lib": "CAMERA",
+"name": "camcrch_cmon"
+},
+{
+"lib": "CAMERA",
+"name": "camcrch_idleloop"
+},
+{
+"lib": "CAMERA",
+"name": "camcrch_stay"
+},
+{
+"lib": "CAMERA",
+"name": "camcrch_to_camstnd"
+},
+{
+"lib": "CAMERA",
+"name": "camstnd_cmon"
+},
+{
+"lib": "CAMERA",
+"name": "camstnd_idleloop"
+},
+{
+"lib": "CAMERA",
+"name": "camstnd_lkabt"
+},
+{
+"lib": "CAMERA",
+"name": "camstnd_to_camcrch"
+},
+{
+"lib": "CAMERA",
+"name": "piccrch_in"
+},
+{
+"lib": "CAMERA",
+"name": "piccrch_out"
+},
+{
+"lib": "CAMERA",
+"name": "piccrch_take"
+},
+{
+"lib": "CAMERA",
+"name": "picstnd_in"
+},
+{
+"lib": "CAMERA",
+"name": "picstnd_out"
+},
+{
+"lib": "CAMERA",
+"name": "picstnd_take"
+},
+{
+"lib": "CARRY",
+"name": "crry_prtial"
+},
+{
+"lib": "CARRY",
+"name": "liftup"
+},
+{
+"lib": "CARRY",
+"name": "liftup05"
+},
+{
+"lib": "CARRY",
+"name": "liftup105"
+},
+{
+"lib": "CARRY",
+"name": "putdwn"
+},
+{
+"lib": "CARRY",
+"name": "putdwn05"
+},
+{
+"lib": "CARRY",
+"name": "putdwn105"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Copbrowse_in"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Copbrowse_loop"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Copbrowse_nod"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Copbrowse_out"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Copbrowse_shake"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_in"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_loop"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_nod"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_out"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_shake"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_think"
+},
+{
+"lib": "COP_AMBIENT",
+"name": "Coplook_watch"
+},
+{
+"lib": "DANCING",
+"name": "bd_clap"
+},
+{
+"lib": "DANCING",
+"name": "bd_clap1"
+},
+{
+"lib": "DANCING",
+"name": "dance_loop"
+},
+{
+"lib": "DANCING",
+"name": "DAN_Down_A"
+},
+{
+"lib": "DANCING",
+"name": "DAN_Left_A"
+},
+{
+"lib": "DANCING",
+"name": "DAN_Loop_A"
+},
+{
+"lib": "DANCING",
+"name": "DAN_Right_A"
+},
+{
+"lib": "DANCING",
+"name": "DAN_Up_A"
+},
+{
+"lib": "DANCING",
+"name": "dnce_M_a"
+},
+{
+"lib": "DANCING",
+"name": "dnce_M_b"
+},
+{
+"lib": "DANCING",
+"name": "dnce_M_c"
+},
+{
+"lib": "DANCING",
+"name": "dnce_M_d"
+},
+{
+"lib": "DANCING",
+"name": "dnce_M_e"
+},
+{
+"lib": "GANGS",
+"name": "DEALER_DEAL"
+},
+{
+"lib": "GANGS",
+"name": "DEALER_IDLE"
+},
+{
+"lib": "GANGS",
+"name": "drnkbr_prtl"
+},
+{
+"lib": "GANGS",
+"name": "drnkbr_prtl_F"
+},
+{
+"lib": "GANGS",
+"name": "DRUGS_BUY"
+},
+{
+"lib": "GANGS",
+"name": "hndshkaa"
+},
+{
+"lib": "GANGS",
+"name": "hndshkba"
+},
+{
+"lib": "GANGS",
+"name": "hndshkca"
+},
+{
+"lib": "GANGS",
+"name": "hndshkcb"
+},
+{
+"lib": "GANGS",
+"name": "hndshkda"
+},
+{
+"lib": "GANGS",
+"name": "hndshkea"
+},
+{
+"lib": "GANGS",
+"name": "hndshkfa"
+},
+{
+"lib": "GANGS",
+"name": "hndshkfa_swt"
+},
+{
+"lib": "GANGS",
+"name": "Invite_No"
+},
+{
+"lib": "GANGS",
+"name": "Invite_Yes"
+},
+{
+"lib": "GANGS",
+"name": "leanIDLE"
+},
+{
+"lib": "GANGS",
+"name": "leanIN"
+},
+{
+"lib": "GANGS",
+"name": "leanOUT"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkA"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkB"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkC"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkD"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkE"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkF"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkG"
+},
+{
+"lib": "GANGS",
+"name": "prtial_gngtlkH"
+},
+{
+"lib": "GANGS",
+"name": "prtial_hndshk_01"
+},
+{
+"lib": "GANGS",
+"name": "prtial_hndshk_biz_01"
+},
+{
+"lib": "GANGS",
+"name": "shake_cara"
+},
+{
+"lib": "GANGS",
+"name": "shake_carK"
+},
+{
+"lib": "GANGS",
+"name": "shake_carSH"
+},
+{
+"lib": "GANGS",
+"name": "smkcig_prtl"
+},
+{
+"lib": "GANGS",
+"name": "smkcig_prtl_F"
+},
+{
+"lib": "INT_OFFICE",
+"name": "FF_Dam_Fwd"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_2Idle_180"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Bored_Loop"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Crash"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Drink"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Idle_Loop"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_In"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Read"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Type_Loop"
+},
+{
+"lib": "INT_OFFICE",
+"name": "OFF_Sit_Watch"
+},
+{
+"lib": "MISC",
+"name": "bitchslap"
+},
+{
+"lib": "MISC",
+"name": "BMX_celebrate"
+},
+{
+"lib": "MISC",
+"name": "BMX_comeon"
+},
+{
+"lib": "MISC",
+"name": "bmx_idleloop_01"
+},
+{
+"lib": "MISC",
+"name": "bmx_idleloop_02"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkleft_in"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkleft_loop"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkleft_out"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkright_in"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkright_loop"
+},
+{
+"lib": "MISC",
+"name": "bmx_talkright_out"
+},
+{
+"lib": "MISC",
+"name": "bng_wndw"
+},
+{
+"lib": "MISC",
+"name": "bng_wndw_02"
+},
+{
+"lib": "MISC",
+"name": "Case_pickup"
+},
+{
+"lib": "MISC",
+"name": "door_jet"
+},
+{
+"lib": "MISC",
+"name": "GRAB_L"
+},
+{
+"lib": "MISC",
+"name": "GRAB_R"
+},
+{
+"lib": "MISC",
+"name": "Hiker_Pose"
+},
+{
+"lib": "MISC",
+"name": "Hiker_Pose_L"
+},
+{
+"lib": "MISC",
+"name": "Idle_Chat_02"
+},
+{
+"lib": "MISC",
+"name": "KAT_Throw_K"
+},
+{
+"lib": "MISC",
+"name": "KAT_Throw_O"
+},
+{
+"lib": "MISC",
+"name": "KAT_Throw_P"
+},
+{
+"lib": "MISC",
+"name": "PASS_Rifle_O"
+},
+{
+"lib": "MISC",
+"name": "PASS_Rifle_Ped"
+},
+{
+"lib": "MISC",
+"name": "PASS_Rifle_Ply"
+},
+{
+"lib": "MISC",
+"name": "pickup_box"
+},
+{
+"lib": "MISC",
+"name": "Plane_door"
+},
+{
+"lib": "MISC",
+"name": "Plane_exit"
+},
+{
+"lib": "MISC",
+"name": "Plane_hijack"
+},
+{
+"lib": "MISC",
+"name": "Plunger_01"
+},
+{
+"lib": "MISC",
+"name": "Plyrlean_loop"
+},
+{
+"lib": "MISC",
+"name": "plyr_shkhead"
+},
+{
+"lib": "MISC",
+"name": "Run_Dive"
+},
+{
+"lib": "MISC",
+"name": "Scratchballs_01"
+},
+{
+"lib": "MISC",
+"name": "SEAT_LR"
+},
+{
+"lib": "MISC",
+"name": "Seat_talk_01"
+},
+{
+"lib": "MISC",
+"name": "Seat_talk_02"
+},
+{
+"lib": "MISC",
+"name": "SEAT_watch"
+},
+{
+"lib": "MISC",
+"name": "smalplane_door"
+},
+{
+"lib": "MISC",
+"name": "smlplane_door"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkaround_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkaround_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkaround_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkup_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkup_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkup_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "lkup_point"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_cower"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_hide"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_point"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "panic_shout"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "Pointup_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "Pointup_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "Pointup_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "Pointup_shout"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "point_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "point_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "point_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "shout_01"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "shout_02"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "shout_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "shout_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "shout_out"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "wave_in"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "wave_loop"
+},
+{
+"lib": "ON_LOOKERS",
+"name": "wave_out"
+},
+{
+"lib": "PARK",
+"name": "Tai_Chi_in"
+},
+{
+"lib": "PARK",
+"name": "Tai_Chi_Loop"
+},
+{
+"lib": "PARK",
+"name": "Tai_Chi_Out"
+},
+{
+"lib": "ped",
+"name": "abseil"
+},
+{
+"lib": "ped",
+"name": "ARRESTgun"
+},
+{
+"lib": "ped",
+"name": "ATM"
+},
+{
+"lib": "ped",
+"name": "BIKE_elbowL"
+},
+{
+"lib": "ped",
+"name": "BIKE_elbowR"
+},
+{
+"lib": "ped",
+"name": "BIKE_fallR"
+},
+{
+"lib": "ped",
+"name": "BIKE_fall_off"
+},
+{
+"lib": "ped",
+"name": "BIKE_pickupL"
+},
+{
+"lib": "ped",
+"name": "BIKE_pickupR"
+},
+{
+"lib": "ped",
+"name": "BIKE_pullupL"
+},
+{
+"lib": "ped",
+"name": "BIKE_pullupR"
+},
+{
+"lib": "ped",
+"name": "bomber"
+},
+{
+"lib": "ped",
+"name": "CAR_alignHI_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_alignHI_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_align_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_align_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_closedoorL_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_closedoorL_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_closedoor_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_closedoor_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_close_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_close_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_crawloutRHS"
+},
+{
+"lib": "ped",
+"name": "CAR_dead_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_dead_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_doorlocked_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_doorlocked_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_fallout_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_fallout_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getinL_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getinL_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getin_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getin_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getoutL_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getoutL_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getout_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_getout_RHS"
+},
+{
+"lib": "ped",
+"name": "car_hookertalk"
+},
+{
+"lib": "ped",
+"name": "CAR_jackedLHS"
+},
+{
+"lib": "ped",
+"name": "CAR_jackedRHS"
+},
+{
+"lib": "ped",
+"name": "CAR_jumpin_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_LB"
+},
+{
+"lib": "ped",
+"name": "CAR_LB_pro"
+},
+{
+"lib": "ped",
+"name": "CAR_LB_weak"
+},
+{
+"lib": "ped",
+"name": "CAR_LjackedLHS"
+},
+{
+"lib": "ped",
+"name": "CAR_LjackedRHS"
+},
+{
+"lib": "ped",
+"name": "CAR_Lshuffle_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_Lsit"
+},
+{
+"lib": "ped",
+"name": "CAR_open_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_open_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_pulloutL_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_pulloutL_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_pullout_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_pullout_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_Qjacked"
+},
+{
+"lib": "ped",
+"name": "CAR_rolldoor"
+},
+{
+"lib": "ped",
+"name": "CAR_rolldoorLO"
+},
+{
+"lib": "ped",
+"name": "CAR_rollout_LHS"
+},
+{
+"lib": "ped",
+"name": "CAR_rollout_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_shuffle_RHS"
+},
+{
+"lib": "ped",
+"name": "CAR_sit"
+},
+{
+"lib": "ped",
+"name": "CAR_sitp"
+},
+{
+"lib": "ped",
+"name": "CAR_sitpLO"
+},
+{
+"lib": "ped",
+"name": "CAR_sit_pro"
+},
+{
+"lib": "ped",
+"name": "CAR_sit_weak"
+},
+{
+"lib": "ped",
+"name": "CAR_tune_radio"
+},
+{
+"lib": "ped",
+"name": "CLIMB_idle"
+},
+{
+"lib": "ped",
+"name": "CLIMB_jump"
+},
+{
+"lib": "ped",
+"name": "CLIMB_jump2fall"
+},
+{
+"lib": "ped",
+"name": "CLIMB_jump_B"
+},
+{
+"lib": "ped",
+"name": "CLIMB_Pull"
+},
+{
+"lib": "ped",
+"name": "CLIMB_Stand"
+},
+{
+"lib": "ped",
+"name": "CLIMB_Stand_finish"
+},
+{
+"lib": "ped",
+"name": "cower"
+},
+{
+"lib": "ped",
+"name": "Crouch_Roll_L"
+},
+{
+"lib": "ped",
+"name": "Crouch_Roll_R"
+},
+{
+"lib": "ped",
+"name": "DAM_armL_frmBK"
+},
+{
+"lib": "ped",
+"name": "DAM_armL_frmFT"
+},
+{
+"lib": "ped",
+"name": "DAM_armL_frmLT"
+},
+{
+"lib": "ped",
+"name": "DAM_armR_frmBK"
+},
+{
+"lib": "ped",
+"name": "DAM_armR_frmFT"
+},
+{
+"lib": "ped",
+"name": "DAM_armR_frmRT"
+},
+{
+"lib": "ped",
+"name": "DAM_LegL_frmBK"
+},
+{
+"lib": "ped",
+"name": "DAM_LegL_frmFT"
+},
+{
+"lib": "ped",
+"name": "DAM_LegL_frmLT"
+},
+{
+"lib": "ped",
+"name": "DAM_LegR_frmBK"
+},
+{
+"lib": "ped",
+"name": "DAM_LegR_frmFT"
+},
+{
+"lib": "ped",
+"name": "DAM_LegR_frmRT"
+},
+{
+"lib": "ped",
+"name": "DAM_stomach_frmBK"
+},
+{
+"lib": "ped",
+"name": "DAM_stomach_frmFT"
+},
+{
+"lib": "ped",
+"name": "DAM_stomach_frmLT"
+},
+{
+"lib": "ped",
+"name": "DAM_stomach_frmRT"
+},
+{
+"lib": "ped",
+"name": "DOOR_LHinge_O"
+},
+{
+"lib": "ped",
+"name": "DOOR_RHinge_O"
+},
+{
+"lib": "ped",
+"name": "DrivebyL_L"
+},
+{
+"lib": "ped",
+"name": "DrivebyL_R"
+},
+{
+"lib": "ped",
+"name": "Driveby_L"
+},
+{
+"lib": "ped",
+"name": "Driveby_R"
+},
+{
+"lib": "ped",
+"name": "DRIVE_BOAT"
+},
+{
+"lib": "ped",
+"name": "DRIVE_BOAT_back"
+},
+{
+"lib": "ped",
+"name": "DRIVE_BOAT_L"
+},
+{
+"lib": "ped",
+"name": "DRIVE_BOAT_R"
+},
+{
+"lib": "ped",
+"name": "Drive_L"
+},
+{
+"lib": "ped",
+"name": "Drive_LO_l"
+},
+{
+"lib": "ped",
+"name": "Drive_LO_R"
+},
+{
+"lib": "ped",
+"name": "Drive_L_pro"
+},
+{
+"lib": "ped",
+"name": "Drive_L_pro_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_L_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_L_weak"
+},
+{
+"lib": "ped",
+"name": "Drive_L_weak_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_R"
+},
+{
+"lib": "ped",
+"name": "Drive_R_pro"
+},
+{
+"lib": "ped",
+"name": "Drive_R_pro_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_R_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_R_weak"
+},
+{
+"lib": "ped",
+"name": "Drive_R_weak_slow"
+},
+{
+"lib": "ped",
+"name": "Drive_truck"
+},
+{
+"lib": "ped",
+"name": "DRIVE_truck_back"
+},
+{
+"lib": "ped",
+"name": "DRIVE_truck_L"
+},
+{
+"lib": "ped",
+"name": "DRIVE_truck_R"
+},
+{
+"lib": "ped",
+"name": "Drown"
+},
+{
+"lib": "ped",
+"name": "DUCK_cower"
+},
+{
+"lib": "ped",
+"name": "endchat_01"
+},
+{
+"lib": "ped",
+"name": "endchat_02"
+},
+{
+"lib": "ped",
+"name": "endchat_03"
+},
+{
+"lib": "ped",
+"name": "EV_dive"
+},
+{
+"lib": "ped",
+"name": "EV_step"
+},
+{
+"lib": "ped",
+"name": "facanger"
+},
+{
+"lib": "ped",
+"name": "facgum"
+},
+{
+"lib": "ped",
+"name": "facsurp"
+},
+{
+"lib": "ped",
+"name": "facsurpm"
+},
+{
+"lib": "ped",
+"name": "factalk"
+},
+{
+"lib": "ped",
+"name": "facurios"
+},
+{
+"lib": "ped",
+"name": "FALL_back"
+},
+{
+"lib": "ped",
+"name": "FALL_collapse"
+},
+{
+"lib": "ped",
+"name": "FALL_fall"
+},
+{
+"lib": "ped",
+"name": "FALL_front"
+},
+{
+"lib": "ped",
+"name": "FALL_glide"
+},
+{
+"lib": "ped",
+"name": "FALL_land"
+},
+{
+"lib": "ped",
+"name": "FALL_skyDive"
+},
+{
+"lib": "ped",
+"name": "Fight2Idle"
+},
+{
+"lib": "ped",
+"name": "FightA_1"
+},
+{
+"lib": "ped",
+"name": "FightA_2"
+},
+{
+"lib": "ped",
+"name": "FightA_3"
+},
+{
+"lib": "ped",
+"name": "FightA_block"
+},
+{
+"lib": "ped",
+"name": "FightA_G"
+},
+{
+"lib": "ped",
+"name": "FightA_M"
+},
+{
+"lib": "ped",
+"name": "FIGHTIDLE"
+},
+{
+"lib": "ped",
+"name": "FightShB"
+},
+{
+"lib": "ped",
+"name": "FightShF"
+},
+{
+"lib": "ped",
+"name": "FightSh_BWD"
+},
+{
+"lib": "ped",
+"name": "FightSh_FWD"
+},
+{
+"lib": "ped",
+"name": "FightSh_Left"
+},
+{
+"lib": "ped",
+"name": "FightSh_Right"
+},
+{
+"lib": "ped",
+"name": "flee_lkaround_01"
+},
+{
+"lib": "ped",
+"name": "FLOOR_hit"
+},
+{
+"lib": "ped",
+"name": "FLOOR_hit_f"
+},
+{
+"lib": "ped",
+"name": "fucku"
+},
+{
+"lib": "ped",
+"name": "gang_gunstand"
+},
+{
+"lib": "ped",
+"name": "gas_cwr"
+},
+{
+"lib": "ped",
+"name": "getup"
+},
+{
+"lib": "ped",
+"name": "getup_front"
+},
+{
+"lib": "ped",
+"name": "gum_eat"
+},
+{
+"lib": "ped",
+"name": "GunCrouchBwd"
+},
+{
+"lib": "ped",
+"name": "GunCrouchFwd"
+},
+{
+"lib": "ped",
+"name": "GunMove_BWD"
+},
+{
+"lib": "ped",
+"name": "GunMove_FWD"
+},
+{
+"lib": "ped",
+"name": "GunMove_L"
+},
+{
+"lib": "ped",
+"name": "GunMove_R"
+},
+{
+"lib": "ped",
+"name": "Gun_2_IDLE"
+},
+{
+"lib": "ped",
+"name": "GUN_BUTT"
+},
+{
+"lib": "ped",
+"name": "GUN_BUTT_crouch"
+},
+{
+"lib": "ped",
+"name": "Gun_stand"
+},
+{
+"lib": "ped",
+"name": "handscower"
+},
+{
+"lib": "ped",
+"name": "handsup"
+},
+{
+"lib": "ped",
+"name": "HitA_1"
+},
+{
+"lib": "ped",
+"name": "HitA_2"
+},
+{
+"lib": "ped",
+"name": "HitA_3"
+},
+{
+"lib": "ped",
+"name": "HIT_back"
+},
+{
+"lib": "ped",
+"name": "HIT_behind"
+},
+{
+"lib": "ped",
+"name": "HIT_front"
+},
+{
+"lib": "ped",
+"name": "HIT_GUN_BUTT"
+},
+{
+"lib": "ped",
+"name": "HIT_L"
+},
+{
+"lib": "ped",
+"name": "HIT_R"
+},
+{
+"lib": "ped",
+"name": "HIT_walk"
+},
+{
+"lib": "ped",
+"name": "HIT_wall"
+},
+{
+"lib": "ped",
+"name": "Idlestance_fat"
+},
+{
+"lib": "ped",
+"name": "idlestance_old"
+},
+{
+"lib": "ped",
+"name": "IDLE_armed"
+},
+{
+"lib": "ped",
+"name": "IDLE_chat"
+},
+{
+"lib": "ped",
+"name": "IDLE_csaw"
+},
+{
+"lib": "ped",
+"name": "Idle_Gang1"
+},
+{
+"lib": "ped",
+"name": "IDLE_HBHB"
+},
+{
+"lib": "ped",
+"name": "IDLE_ROCKET"
+},
+{
+"lib": "ped",
+"name": "IDLE_stance"
+},
+{
+"lib": "ped",
+"name": "IDLE_taxi"
+},
+{
+"lib": "ped",
+"name": "IDLE_tired"
+},
+{
+"lib": "ped",
+"name": "Jetpack_Idle"
+},
+{
+"lib": "ped",
+"name": "JOG_femaleA"
+},
+{
+"lib": "ped",
+"name": "JOG_maleA"
+},
+{
+"lib": "ped",
+"name": "JUMP_glide"
+},
+{
+"lib": "ped",
+"name": "JUMP_land"
+},
+{
+"lib": "ped",
+"name": "JUMP_launch"
+},
+{
+"lib": "ped",
+"name": "JUMP_launch_R"
+},
+{
+"lib": "ped",
+"name": "KART_drive"
+},
+{
+"lib": "ped",
+"name": "KART_L"
+},
+{
+"lib": "ped",
+"name": "KART_LB"
+},
+{
+"lib": "ped",
+"name": "KART_R"
+},
+{
+"lib": "ped",
+"name": "KD_left"
+},
+{
+"lib": "ped",
+"name": "KD_right"
+},
+{
+"lib": "ped",
+"name": "KO_shot_face"
+},
+{
+"lib": "ped",
+"name": "KO_shot_front"
+},
+{
+"lib": "ped",
+"name": "KO_shot_stom"
+},
+{
+"lib": "ped",
+"name": "KO_skid_back"
+},
+{
+"lib": "ped",
+"name": "KO_skid_front"
+},
+{
+"lib": "ped",
+"name": "KO_spin_L"
+},
+{
+"lib": "ped",
+"name": "KO_spin_R"
+},
+{
+"lib": "ped",
+"name": "pass_Smoke_in_car"
+},
+{
+"lib": "ped",
+"name": "phone_in"
+},
+{
+"lib": "ped",
+"name": "phone_out"
+},
+{
+"lib": "ped",
+"name": "phone_talk"
+},
+{
+"lib": "ped",
+"name": "Player_Sneak"
+},
+{
+"lib": "ped",
+"name": "Player_Sneak_walkstart"
+},
+{
+"lib": "ped",
+"name": "roadcross"
+},
+{
+"lib": "ped",
+"name": "roadcross_female"
+},
+{
+"lib": "ped",
+"name": "roadcross_gang"
+},
+{
+"lib": "ped",
+"name": "roadcross_old"
+},
+{
+"lib": "ped",
+"name": "run_1armed"
+},
+{
+"lib": "ped",
+"name": "run_armed"
+},
+{
+"lib": "ped",
+"name": "run_civi"
+},
+{
+"lib": "ped",
+"name": "run_csaw"
+},
+{
+"lib": "ped",
+"name": "run_fat"
+},
+{
+"lib": "ped",
+"name": "run_fatold"
+},
+{
+"lib": "ped",
+"name": "run_gang1"
+},
+{
+"lib": "ped",
+"name": "run_left"
+},
+{
+"lib": "ped",
+"name": "run_old"
+},
+{
+"lib": "ped",
+"name": "run_player"
+},
+{
+"lib": "ped",
+"name": "run_right"
+},
+{
+"lib": "ped",
+"name": "run_rocket"
+},
+{
+"lib": "ped",
+"name": "Run_stop"
+},
+{
+"lib": "ped",
+"name": "Run_stopR"
+},
+{
+"lib": "ped",
+"name": "Run_Wuzi"
+},
+{
+"lib": "ped",
+"name": "SEAT_down"
+},
+{
+"lib": "ped",
+"name": "SEAT_idle"
+},
+{
+"lib": "ped",
+"name": "SEAT_up"
+},
+{
+"lib": "ped",
+"name": "SHOT_leftP"
+},
+{
+"lib": "ped",
+"name": "SHOT_partial"
+},
+{
+"lib": "ped",
+"name": "SHOT_partial_B"
+},
+{
+"lib": "ped",
+"name": "SHOT_rightP"
+},
+{
+"lib": "ped",
+"name": "Shove_Partial"
+},
+{
+"lib": "ped",
+"name": "Smoke_in_car"
+},
+{
+"lib": "ped",
+"name": "sprint_civi"
+},
+{
+"lib": "ped",
+"name": "sprint_panic"
+},
+{
+"lib": "ped",
+"name": "Sprint_Wuzi"
+},
+{
+"lib": "ped",
+"name": "swat_run"
+},
+{
+"lib": "ped",
+"name": "Swim_Tread"
+},
+{
+"lib": "ped",
+"name": "Tap_hand"
+},
+{
+"lib": "ped",
+"name": "Tap_handP"
+},
+{
+"lib": "ped",
+"name": "turn_180"
+},
+{
+"lib": "ped",
+"name": "Turn_L"
+},
+{
+"lib": "ped",
+"name": "Turn_R"
+},
+{
+"lib": "ped",
+"name": "WALK_armed"
+},
+{
+"lib": "ped",
+"name": "WALK_civi"
+},
+{
+"lib": "ped",
+"name": "WALK_csaw"
+},
+{
+"lib": "ped",
+"name": "Walk_DoorPartial"
+},
+{
+"lib": "ped",
+"name": "WALK_drunk"
+},
+{
+"lib": "ped",
+"name": "WALK_fat"
+},
+{
+"lib": "ped",
+"name": "WALK_fatold"
+},
+{
+"lib": "ped",
+"name": "WALK_gang1"
+},
+{
+"lib": "ped",
+"name": "WALK_gang2"
+},
+{
+"lib": "ped",
+"name": "WALK_old"
+},
+{
+"lib": "ped",
+"name": "WALK_player"
+},
+{
+"lib": "ped",
+"name": "WALK_rocket"
+},
+{
+"lib": "ped",
+"name": "WALK_shuffle"
+},
+{
+"lib": "ped",
+"name": "WALK_start"
+},
+{
+"lib": "ped",
+"name": "WALK_start_armed"
+},
+{
+"lib": "ped",
+"name": "WALK_start_csaw"
+},
+{
+"lib": "ped",
+"name": "WALK_start_rocket"
+},
+{
+"lib": "ped",
+"name": "Walk_Wuzi"
+},
+{
+"lib": "ped",
+"name": "WEAPON_crouch"
+},
+{
+"lib": "ped",
+"name": "woman_idlestance"
+},
+{
+"lib": "ped",
+"name": "woman_run"
+},
+{
+"lib": "ped",
+"name": "WOMAN_runbusy"
+},
+{
+"lib": "ped",
+"name": "WOMAN_runfatold"
+},
+{
+"lib": "ped",
+"name": "woman_runpanic"
+},
+{
+"lib": "ped",
+"name": "WOMAN_runsexy"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walkbusy"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walkfatold"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walknorm"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walkold"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walkpro"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walksexy"
+},
+{
+"lib": "ped",
+"name": "WOMAN_walkshop"
+},
+{
+"lib": "ped",
+"name": "XPRESSscratch"
+}
+]
+}

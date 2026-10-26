@@ -1,0 +1,78 @@
+// ============================================================================
+//  99.9% SURE  -  calibration overlay (optional CLEO script, not for players)
+//
+//  Hold F9   show CJ's position, heading and interior (area) on screen.
+//  Press F10 append them to cleo\99sure\positions.txt, numbered.
+//
+//  Use it to check or replace the [approx] points in src/inc/config.txt and
+//  the CHAIR_* / scene anchors described in docs/CALIBRATION.md. Remove
+//  cleo\99sure_debug.cs again when you are done.
+//  Compile with Sanny Builder 4, edit mode "GTA SA (v1.0 - SBL)".
+// ============================================================================
+{$CLEO .cs}
+{$NOSOURCE}
+
+var
+    0@: float
+    1@: float
+    2@: float
+    3@: float
+    4@: int
+    5@: int
+    6@: int
+    7@: int
+end
+
+const
+    cX       = 0@
+    cY       = 1@
+    cZ       = 2@
+    cH       = 3@
+    cArea    = 4@
+    cCount   = 5@
+    cKeyPrev = 6@
+    cFile    = 7@
+    KEY_F9   = 120
+    KEY_F10  = 121
+end
+
+nop
+script_name 'V3DCAL'
+cCount = 0
+cKeyPrev = 0
+
+:CAL_LOOP
+wait 0
+if not is_player_playing $player1
+then
+    jump @CAL_LOOP
+end
+if is_key_pressed KEY_F9
+then
+    cX, cY, cZ = get_char_coordinates $scplayer
+    cH = get_char_heading $scplayer
+    cArea = get_area_visible
+    print_formatted_now "X %.2f  Y %.2f  Z %.2f  H %.1f  AREA %d" 100 cX cY cZ cH cArea
+end
+if is_key_pressed KEY_F10
+then
+    if cKeyPrev == 0
+    then
+        cX, cY, cZ = get_char_coordinates $scplayer
+        cH = get_char_heading $scplayer
+        cArea = get_area_visible
+        cCount += 1
+        if open_file "cleo\99sure\positions.txt" "at" cFile
+        then
+            write_formatted_string_to_file cFile "%d  %.3f %.3f %.3f  heading %.1f  area %d\n" cCount cX cY cZ cH cArea
+            close_file cFile
+            print_formatted_now "Saved position %d to cleo\99sure\positions.txt" 2000 cCount
+        else
+            print_formatted_now "Could not open cleo\99sure\positions.txt (does cleo\99sure exist?)" 3000
+        end
+    end
+    cKeyPrev = 1
+else
+    cKeyPrev = 0
+end
+jump @CAL_LOOP

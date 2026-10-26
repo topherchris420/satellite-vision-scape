@@ -1,0 +1,493 @@
+// ============================================================================
+//  99.9% SURE  -  a Vers3Dynamics mission for GTA: San Andreas (PC, v1.0 US)
+//
+//  CLEO custom mission (.cm). Started by 99sure_launcher.cs with:
+//      0@ = checkpoint (0..4), 1@ = score, 2@ = correct decisions, 3@ = decisions
+//  Compile with Sanny Builder 4, edit mode "GTA SA (v1.0 - SBL)".
+//  Requires CLEO 5 (or CLEO 4.4) with its default plugins (audio, file, text).
+//
+//  Mission states (iState): 1 INACTIVE, 2 INTRO, 3 POLICE_CHASE, 4 DRIVE_TO_LAB,
+//  5 LAB_CUTSCENE, 6 INVESTIGATION, 7 RESCUE_SEQUENCE, 8 PUBLIC_DEMONSTRATION,
+//  9 FINAL_CUTSCENE, 10 SUCCESS, 11 FAILURE, 12 CLEANUP.
+// ============================================================================
+{$CLEO .cm}
+{$NOSOURCE}
+{$INCLUDE inc/vars.txt}
+{$INCLUDE gen/scene_vars.txt}
+{$INCLUDE inc/config.txt}
+
+nop
+script_name 'V3DSURE'
+gosub @MISSION_START
+if has_deatharrest_been_executed
+then
+    iFail = -1                  // wasted or busted
+end
+if iFail <> 0
+then
+    gosub @MISSION_FAILED
+end
+gosub @MISSION_CLEANUP
+terminate_this_script
+
+// ============================================================================
+:MISSION_START
+$onmission = 1
+gosub @INIT
+if iArgCheckpoint > 0
+then
+    gosub @RESUME_SETUP
+end
+if iArgCheckpoint <= 0
+then
+    gosub @ACT1
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= 1
+then
+    gosub @ACT2
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= 2
+then
+    gosub @ACT3
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= 3
+then
+    gosub @ACT4
+    if iFail <> 0
+    then
+        return
+    end
+end
+gosub @ACT5
+if iFail <> 0
+then
+    return
+end
+gosub @ACT7
+if iFail <> 0
+then
+    return
+end
+gosub @MISSION_PASSED
+return
+
+// ============================================================================
+:INIT
+008B: hPlayer = $scplayer
+iFail = 0
+iScore = iArgScore
+iDecRight = iArgRight
+iDecTotal = iArgTotal
+if 0 > iArgCheckpoint
+then
+    iArgCheckpoint = 0
+end
+if iArgCheckpoint > 4
+then
+    iArgCheckpoint = 4
+end
+iCheckpoint = iArgCheckpoint
+hChris = -1
+hVan = -1
+hMax = -1
+hVanDish = -1
+hCopCar = -1
+hCop = -1
+hDlvVan = -1
+hDlvDriver = -1
+hMini = -1
+hMother = -1
+hFather = -1
+hCopCar1 = -1
+hCopCar2 = -1
+hCopCar3 = -1
+hCop1 = -1
+hCop2 = -1
+hCop3 = -1
+hReporter = -1
+hCameraman = -1
+hDentist = -1
+hGuard = -1
+hLimo = -1
+hNewsVan = -1
+hSenior = -1
+bDest = -1
+bChris = -1
+bVan = -1
+bTarget = -1
+bAux1 = -1
+bAux2 = -1
+bAux3 = -1
+bCop1 = -1
+bCop2 = -1
+bCop3 = -1
+gosub @SCN_LAB_RESET
+gosub @SCN_TAICHI_RESET
+gosub @SCN_GENSITE_RESET
+gosub @SCN_DEMO_RESET
+dStream = 0
+dActive = 0
+dQNext = 0
+dPed = -1
+iRingStream = 0
+iMusicStream = 0
+uMode = 0
+uHud = 0
+uTask = 0
+uWarn = 0
+uFeedback = 0
+uFeed = 1
+iDemoStage = 0
+iNeedChris = 0
+iNeedVan = 0
+iSkipOk = 0
+iSkipReq = 0
+iInCs = 0
+iLabSet = 0
+iAnimsReady = 0
+iRoadsOff = 0
+// Is Christopher's model installed? (see README: modloader or IMG + flag file)
+iCustomModel = 0
+if and
+    does_file_exist "modloader.asi"
+    does_file_exist "modloader\99sure\chrisw.dff"
+then
+    iCustomModel = 1
+end
+if does_file_exist "cleo\99sure\chrisw_in_img.txt"
+then
+    iCustomModel = 1
+end
+// R.A.I.N. sprites (optional): models\txd\v3drain.txd
+iSpritesOk = 0
+if does_file_exist "models\txd\v3drain.txd"
+then
+    load_texture_dictionary 'v3drain'
+    load_sprite 1 'v3dlogo'
+    load_sprite 2 'cymat'
+    iSpritesOk = 1
+end
+iNow = get_game_timer
+set_cleo_shared_var SV_RESULT 0
+iState = ST_INTRO
+gosub @PUBLISH
+gosub @LOAD_ANIMS
+// (fresh starts show the custom-model notice once the opening alert is gone)
+if iArgCheckpoint > 0
+then
+    if iCustomModel == 0
+    then
+        print_help 'V3H07'
+    end
+end
+return
+
+// ============================================================================
+// Checkpoint restarts: put CJ (and Chris and the van) where the act begins.
+// ============================================================================
+:RESUME_SETUP
+gosub @FADE_OUT
+set_player_control $player1 false
+clear_wanted_level $player1
+fSX = LAB_REF_X
+fSY = LAB_REF_Y
+fSZ = LAB_REF_Z
+fSZ += 1.0
+fHead = 0.0
+gosub @TELEPORT_PLAYER
+// every checkpoint starts at the lab door (a path node, so a safe spot);
+// the later acts begin within a few hundred metres of it
+gosub @FIND_LAB_EXT
+iLabSet = 1
+set_char_coordinates $scplayer fLabX fLabY fLabZ
+if iArgCheckpoint >= 2
+then
+    gosub @SPAWN_VAN
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.2 0.5 0.0
+    fHead = 0.0
+    gosub @SPAWN_CHRIS
+    gosub @CHRIS_JOIN_GROUP
+end
+if iArgCheckpoint >= 3
+then
+    warp_char_into_car $scplayer hVan
+    warp_char_into_car_as_passenger hChris hVan 0
+end
+set_player_control $player1 true
+restore_camera_jumpcut
+gosub @FADE_IN
+return
+
+// In: fSX fSY fSZ fHead. Streams the destination in before returning.
+:TELEPORT_PLAYER
+set_area_visible 0
+set_char_area_visible $scplayer 0
+if is_char_in_any_car $scplayer
+then
+    warp_char_from_car_to_coord $scplayer fSX fSY fSZ
+else
+    set_char_coordinates $scplayer fSX fSY fSZ
+end
+set_char_heading $scplayer fHead
+load_scene fSX fSY fSZ
+request_collision fSX fSY
+wait 1500
+return
+
+// Door marker on the pavement in front of the lab, and a kerbside parking spot.
+:FIND_LAB_EXT
+fLabX, fLabY, fLabZ = get_closest_char_node LAB_REF_X LAB_REF_Y LAB_REF_Z
+if fLabX == 0.0
+then
+    fLabX = LAB_REF_X
+    fLabY = LAB_REF_Y
+    fLabZ = LAB_REF_Z
+end
+fLabZ += 1.0
+fVanX, fVanY, fVanZ, fVanH = get_closest_car_node_with_heading fLabX fLabY fLabZ
+if fVanX == 0.0
+then
+    fVanX = fLabX
+    fVanX += 6.0
+    fVanY = fLabY
+    fVanZ = fLabZ
+    fVanH = 0.0
+else
+    // pull 1.8 m from the lane centre towards the pavement
+    fTmp = fLabX
+    fTmp -= fVanX
+    fTmp2 = fLabY
+    fTmp2 -= fVanY
+    fDist = get_distance_between_coords_2d fLabX fLabY fVanX fVanY
+    if fDist > 2.5
+    then
+        fTmp /= fDist
+        fTmp2 /= fDist
+        fTmp *= 1.8
+        fTmp2 *= 1.8
+        fVanX += fTmp
+        fVanY += fTmp2
+    end
+end
+return
+
+:PHONE_RING
+if load_audio_stream "cleo\99sure\audio\sfx_ring.mp3" iRingStream
+then
+    set_audio_stream_state iRingStream 1
+    iWaitMs = 2600
+    gosub @WAIT_MS
+    set_audio_stream_state iRingStream 0
+    remove_audio_stream iRingStream
+    iRingStream = 0
+else
+    add_one_off_sound 0.0 0.0 0.0 1028
+    iWaitMs = 400
+    gosub @WAIT_MS
+    add_one_off_sound 0.0 0.0 0.0 1028
+    iWaitMs = 900
+    gosub @WAIT_MS
+end
+return
+
+// Optional: if you place your own track at cleo\99sure\music\lab.mp3 it plays
+// quietly in the lab. No music is shipped with the mod.
+:LAB_MUSIC_START
+if load_audio_stream "cleo\99sure\music\lab.mp3" iMusicStream
+then
+    set_audio_stream_volume iMusicStream 0.35
+    set_audio_stream_looped iMusicStream true
+    set_audio_stream_state iMusicStream 1
+end
+return
+
+:LAB_MUSIC_STOP
+if iMusicStream <> 0
+then
+    set_audio_stream_state iMusicStream 0
+    remove_audio_stream iMusicStream
+    iMusicStream = 0
+end
+return
+
+// ============================================================================
+:MISSION_PASSED
+iState = ST_SUCCESS
+iReward = iScore
+iReward *= 25
+iReward += REWARD_BASE
+set_cleo_shared_var SV_RESULT 1
+gosub @PUBLISH
+play_mission_passed_tune 1
+print_with_number_big 'V3P00' iReward 5000 1
+add_score $player1 iReward
+award_player_mission_respect RESPECT_AWARD
+register_mission_passed 'V3TITLE'
+uHud = 0
+uMode = 7
+uT0 = get_game_timer
+iWaitMs = 9500
+gosub @WAIT_MS
+uMode = 0
+return
+
+:MISSION_FAILED
+iState = ST_FAILURE
+set_cleo_shared_var SV_RESULT 2
+gosub @PUBLISH
+gosub @DLG_CANCEL
+print_big 'V3F00' 5000 1
+switch iFail
+    case 1
+        print_now 'V3F01' 5000 1
+    case 2
+        print_now 'V3F02' 5000 1
+    case 3
+        print_now 'V3F03' 5000 1
+    case 4
+        print_now 'V3F04' 5000 1
+    case 5
+        print_now 'V3F05' 5000 1
+    case 6
+        print_now 'V3F06' 5000 1
+    case 7
+        print_now 'V3F07' 5000 1
+    case 8
+        print_now 'V3F08' 5000 1
+    case 9
+        print_now 'V3F09' 5000 1
+end
+return
+
+// ============================================================================
+// Cleanup: runs after success, failure, death and arrest.
+// ============================================================================
+:MISSION_CLEANUP
+iState = ST_CLEANUP
+gosub @DLG_CANCEL
+if iRingStream <> 0
+then
+    remove_audio_stream iRingStream
+    iRingStream = 0
+end
+gosub @LAB_MUSIC_STOP
+uMode = 0
+uHud = 0
+use_text_commands false
+if iSpritesOk == 1
+then
+    remove_texture_dictionary
+    iSpritesOk = 0
+end
+if iInCs == 1
+then
+    switch_widescreen false
+    restore_camera_jumpcut
+    iInCs = 0
+end
+camera_reset_new_scriptables
+set_area_visible 0
+if is_player_playing $player1
+then
+    set_char_area_visible $scplayer 0
+    set_player_control $player1 true
+    hide_char_weapon_for_scripted_cutscene $scplayer false
+end
+set_everyone_ignore_player $player1 false
+set_max_wanted_level 6
+set_player_group_recruitment $player1 true
+if iRoadsOff == 1
+then
+    gosub @DEMO_ROADS_ON
+end
+// blips
+remove_blip bDest
+remove_blip bChris
+remove_blip bVan
+remove_blip bTarget
+remove_blip bAux1
+remove_blip bAux2
+remove_blip bAux3
+remove_blip bCop1
+remove_blip bCop2
+remove_blip bCop3
+bDest = -1
+bChris = -1
+bVan = -1
+bTarget = -1
+bAux1 = -1
+bAux2 = -1
+bAux3 = -1
+bCop1 = -1
+bCop2 = -1
+bCop3 = -1
+// scenes
+gosub @SCN_LAB_DELETE
+gosub @SCN_TAICHI_DELETE
+gosub @SCN_GENSITE_DELETE
+gosub @SCN_DEMO_DELETE
+// Christopher
+if does_char_exist hChris
+then
+    if not is_char_dead hChris
+    then
+        remove_char_from_group hChris
+    end
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+if iCustomModel == 1
+then
+    unload_special_character 1
+end
+mark_model_as_no_longer_needed MDL_CHRIS_FALLBACK
+// vehicles and extras become ambient
+iNeedVan = 0
+mark_car_as_no_longer_needed hVan
+mark_object_as_no_longer_needed hVanDish
+mark_car_as_no_longer_needed hCopCar
+mark_char_as_no_longer_needed hCop
+mark_car_as_no_longer_needed hDlvVan
+mark_char_as_no_longer_needed hDlvDriver
+mark_car_as_no_longer_needed hMini
+mark_char_as_no_longer_needed hMother
+mark_char_as_no_longer_needed hFather
+mark_car_as_no_longer_needed hCopCar1
+mark_car_as_no_longer_needed hCopCar2
+mark_car_as_no_longer_needed hCopCar3
+mark_char_as_no_longer_needed hCop1
+mark_char_as_no_longer_needed hCop2
+mark_char_as_no_longer_needed hCop3
+mark_car_as_no_longer_needed hLimo
+mark_car_as_no_longer_needed hNewsVan
+hVan = -1
+hVanDish = -1
+mark_model_as_no_longer_needed #CAMERA
+gosub @RELEASE_ANIMS
+gosub @PUBLISH
+$onmission = 0
+mission_has_finished
+return
+
+{$INCLUDE inc/core.txt}
+{$INCLUDE inc/ui.txt}
+{$INCLUDE inc/act1.txt}
+{$INCLUDE inc/act2.txt}
+{$INCLUDE inc/act3.txt}
+{$INCLUDE inc/act4.txt}
+{$INCLUDE inc/act5.txt}
+{$INCLUDE inc/act7.txt}
+{$INCLUDE gen/scenes.txt}

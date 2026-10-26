@@ -1,0 +1,122 @@
+"""Build 99.9% SURE and assemble the folder you copy into the game.
+
+    python3 tools/build.py                         regenerate, validate, test, package
+    python3 tools/build.py --sb4 PATH              ... and recompile the scripts first
+    python3 tools/build.py --img PATH\\gta3.img     ... and build Christopher on your own skeleton
+    python3 tools/build.py --no-tests              skip the VM scenarios (about 4 minutes)
+
+Steps
+  1. text, subtitles and data tables     tools/gen_text.py, tools/gen_scenes.py
+  2. UI sprites (v3drain.txd) and ring   tools/build_ui_assets.py
+  3. compile the scripts (with --sb4)    Sanny Builder 4, mode "GTA SA (v1.0 - SBL)";
+                                         on Linux through Wine (tools/scm/sb4build.py)
+  4. validate the bytecode               tools/scm/validate.py
+  5. play the mission in the script VM   tests/run_mission_tests.py
+  6. Christopher's model                 tools/character/build_chris.py (if present)
+  7. package                             release/99sure/  (game-folder layout)
+
+Without --sb4 the compiled scripts already in build/CLEO/ are used; they are
+rebuilt from src/ whenever the sources change (and committed).
+"""
+
+from __future__ import annotations
+
+import argparse
+import os
+import shutil
+import subprocess
+import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PY = [sys.executable, "-I"]
+BUILD = os.path.join(ROOT, "build")
+RELEASE = os.path.join(ROOT, "release", "99sure")
+MODELS = os.path.join(ROOT, "tests", "data", "models_used.json")
+SCRIPTS = [("99sure.txt", "99sure.cm"), ("99sure_launcher.txt", "99sure_launcher.cs"),
+           ("99sure_debug.txt", "99sure_debug.cs")]
+
+
+def run(args, **kw):
+    print("$", " ".join(os.path.relpath(a, ROOT) if os.path.isabs(a) and a.startswith(ROOT) else a for a in args))
+    subprocess.run(args, check=True, **kw)
+
+
+def compile_scripts(sb4):
+    pairs = [f"{os.path.join(ROOT, 'src', s)}={os.path.join(BUILD, 'CLEO', o)}" for s, o in SCRIPTS]
+    if os.name == "nt":
+        sanny = os.path.join(sb4, "sanny.exe")
+        for s, o in SCRIPTS:
+            run([sanny, "--no-splash", "--mode", "sa_sbl", "--compile", os.path.join(ROOT, "src", s),
+                 os.path.join(BUILD, "CLEO", o)])
+    else:
+        work = os.path.join(BUILD, "sb4work")
+        os.makedirs(work, exist_ok=True)
+        run(PY + [os.path.join(ROOT, "tools", "scm", "sb4build.py"), "--sb4", sb4, "--models", MODELS,
+                  "--work", work] + pairs)
+
+
+def package():
+    if os.path.isdir(RELEASE):
+        shutil.rmtree(RELEASE)
+    layout = {
+        os.path.join(BUILD, "CLEO", "99sure.cm"): "cleo/99sure.cm",
+        os.path.join(BUILD, "CLEO", "99sure_launcher.cs"): "cleo/99sure_launcher.cs",
+        os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"): "cleo/cleo_text/99sure.fxt",
+        os.path.join(BUILD, "CLEO", "99sure", "audio", "sfx_ring.mp3"): "cleo/99sure/audio/sfx_ring.mp3",
+        os.path.join(BUILD, "models", "txd", "v3drain.txd"): "models/txd/v3drain.txd",
+        os.path.join(BUILD, "models", "chrisw.dff"): "modloader/99sure/chrisw.dff",
+        os.path.join(BUILD, "models", "chrisw.txd"): "modloader/99sure/chrisw.txd",
+        os.path.join(BUILD, "CLEO", "99sure_debug.cs"): "extras/calibration/cleo/99sure_debug.cs",
+    }
+    missing = []
+    for src, dst in layout.items():
+        if not os.path.exists(src):
+            missing.append(dst)
+            continue
+        out = os.path.join(RELEASE, dst)
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        shutil.copyfile(src, out)
+    # recorded voice lines, if any were prepared with tools/prepare_audio.py
+    audio = os.path.join(BUILD, "CLEO", "99sure", "audio")
+    if os.path.isdir(audio):
+        for name in sorted(os.listdir(audio)):
+            if name.upper().startswith("V3D") and name.lower().endswith(".mp3"):
+                shutil.copyfile(os.path.join(audio, name), os.path.join(RELEASE, "cleo", "99sure", "audio", name))
+    shutil.copyfile(os.path.join(ROOT, "docs", "INSTALL.md"), os.path.join(RELEASE, "INSTALL.md"))
+    print("packaged", os.path.relpath(RELEASE, ROOT))
+    for m in missing:
+        print("  not built:", m)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--sb4", help="extracted Sanny Builder 4 folder (contains sanny.exe)")
+    ap.add_argument("--img", help="your models\\gta3.img, to build Christopher on a stock skeleton")
+    ap.add_argument("--reference", default=None, help="stock ped to take the skeleton from (see docs/CHARACTER.md)")
+    ap.add_argument("--no-tests", action="store_true")
+    args = ap.parse_args()
+
+    run(PY + [os.path.join(ROOT, "tools", "gen_text.py")])
+    run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py")], env=dict(os.environ, SA_MODELS_JSON=MODELS))
+    run([sys.executable, os.path.join(ROOT, "tools", "build_ui_assets.py")])
+    if args.sb4:
+        compile_scripts(args.sb4)
+    run(PY + [os.path.join(ROOT, "tools", "scm", "validate.py"), "--fxt",
+              os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"), "--models", MODELS]
+        + [os.path.join(BUILD, "CLEO", o) for _, o in SCRIPTS])
+    if not args.no_tests:
+        run(PY + [os.path.join(ROOT, "tests", "run_mission_tests.py")])
+    chris = os.path.join(ROOT, "tools", "character", "build_chris.py")
+    if os.path.exists(chris):
+        cmd = [sys.executable, chris, "--out", os.path.join(BUILD, "models")]
+        if args.img:
+            cmd += ["--img", args.img] + (["--reference", args.reference] if args.reference else [])
+        else:
+            cmd += ["--synthetic"]
+        run(cmd)
+    package()
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
