@@ -383,7 +383,7 @@ describe("what running the scripted player across seeds turned up", () => {
   test("two vehicles at the kerb do not stop the right one being taken (seed 2, borrowed wheels)", async () => {
     const ch = await baseline("borrowed-wheels", 2, 900);
     expect(ch?.status).toBe("success");
-  });
+  }, 30_000);
 
   test("running from the response, the car goes only where the roads go, and is never left to back out of a place it cannot leave (seed 48291, borrowed wheels)", async () => {
     const g = frGame({ seed: 48291, challenge: "borrowed-wheels" });

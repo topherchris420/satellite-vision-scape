@@ -71,7 +71,7 @@ describe("import boundary", () => {
   test("only the environment bridge and the task adapter read the game", () => {
     const readers = files("src/agent")
       .filter((path) => /from\s+["'][^"']*\/Game["']/.test(read(path)))
-      .map((path) => relative(".", path))
+      .map((path) => relative(".", path).replaceAll("\\", "/"))
       .sort();
     expect(readers).toEqual(["src/agent/session.ts", "src/agent/tasks/afterHours.ts"]);
   });
