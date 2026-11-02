@@ -10,21 +10,28 @@ import type { QualityTier } from "./SiteScene";
 
 /**
  * Trees of the outback and the campus gardens. Each species has three grown
- * variants, each with a detailed and a distant mesh; every few metres of
- * camera travel the instances are re-sorted into the near and far buffers
- * (a linear pass over preallocated arrays, no allocation), so only trees
- * close to the viewer pay for full branch and leaf detail.
+ * variants, each with three meshes: detailed, reduced and distant. Every few
+ * metres of camera travel the instances are re-sorted into those buffers (a
+ * linear pass over preallocated arrays, no allocation), so only trees close to
+ * the viewer pay for full branch and leaf detail, and the thousands out towards
+ * the horizon cost tens of triangles each. They are not frustum culled (one
+ * instance buffer serves the view and both shadow maps), so these bands are
+ * what keeps them affordable: every tree is drawn in every pass.
  */
 
 const VARIANTS = 3;
 const SPECIES_LIST: Species[] = ["desertOak", "mulga", "ghostGum", "redGum", "gardenGum"];
 
-const TIERS: Record<QualityTier, { near: number; extent: number; density: number; shadows: boolean }> = {
-  low: { near: 0, extent: 1300, density: 0.45, shadows: false },
-  medium: { near: 90, extent: 2000, density: 0.75, shadows: true },
-  high: { near: 170, extent: 2500, density: 1, shadows: true },
-  ultra: { near: 280, extent: 2700, density: 1.15, shadows: true },
+/** `near` and `mid` are the outer edges of the detailed and reduced bands (metres). */
+const TIERS: Record<QualityTier, { near: number; mid: number; extent: number; density: number; shadows: boolean }> = {
+  low: { near: 0, mid: 110, extent: 1300, density: 0.45, shadows: false },
+  medium: { near: 60, mid: 180, extent: 2000, density: 0.75, shadows: true },
+  high: { near: 110, mid: 280, extent: 2500, density: 1, shadows: true },
+  ultra: { near: 200, mid: 450, extent: 2700, density: 1.15, shadows: true },
 };
+
+/** Camera travel between re-sorts (metres): small next to the bands, so nothing pops up close. */
+const RESORT_DISTANCE = 6;
 
 const base = `${import.meta.env.BASE_URL ?? "/"}assets/terrain/`;
 
@@ -121,6 +128,8 @@ export function Vegetation({ quality }: { quality: QualityTier }) {
         g.meshes.near.leaves.dispose();
         g.meshes.far.wood.dispose();
         g.meshes.far.leaves.dispose();
+        g.meshes.distant.wood.dispose();
+        g.meshes.distant.leaves.dispose();
       }
     },
     [groups],
@@ -137,52 +146,45 @@ export function Vegetation({ quality }: { quality: QualityTier }) {
     [materials],
   );
 
-  // [group][near wood, near leaves, far wood, far leaves]
+  // [group][near wood, near leaves, far wood, far leaves, distant wood, distant leaves]
   const refs = useRef<(THREE.InstancedMesh | null)[][]>([]);
   const last = useRef(new THREE.Vector3(Infinity, 0, 0));
-  const lastNear = useRef(-1);
+  const lastBands = useRef("");
 
   useFrame(({ camera }) => {
     const cam = camera.position;
-    if (cam.distanceToSquared(last.current) < 9 && lastNear.current === tier.near) return;
+    const bands = `${tier.near}:${tier.mid}`;
+    if (cam.distanceToSquared(last.current) < RESORT_DISTANCE * RESORT_DISTANCE && lastBands.current === bands) return;
     last.current.copy(cam);
-    lastNear.current = tier.near;
+    lastBands.current = bands;
     const near2 = tier.near * tier.near;
+    const mid2 = tier.mid * tier.mid;
     groups.forEach((g, gi) => {
       const meshes = refs.current[gi];
       if (!meshes || meshes.some((x) => !x)) return;
-      const [nw, nl, fw, fl] = meshes as THREE.InstancedMesh[];
-      const nm = nw.instanceMatrix.array as Float32Array;
-      const fm = fw.instanceMatrix.array as Float32Array;
-      const nc = nw.instanceColor!.array as Float32Array;
-      const fc = fw.instanceColor!.array as Float32Array;
-      let n = 0;
-      let f = 0;
+      const parts = meshes as THREE.InstancedMesh[];
+      const owners = [parts[0], parts[2], parts[4]];
+      const toMatrices = owners.map((mesh) => mesh.instanceMatrix.array as Float32Array);
+      const toColors = owners.map((mesh) => mesh.instanceColor!.array as Float32Array);
+      const counts = [0, 0, 0];
       for (let i = 0; i < g.count; i++) {
         const dx = g.positions[i * 3] - cam.x;
         const dy = g.positions[i * 3 + 1] - cam.y;
         const dz = g.positions[i * 3 + 2] - cam.z;
-        if (dx * dx + dy * dy + dz * dz < near2) {
-          nm.set(g.matrices.subarray(i * 16, i * 16 + 16), n * 16);
-          nc.set(g.colors.subarray(i * 3, i * 3 + 3), n * 3);
-          n++;
-        } else {
-          fm.set(g.matrices.subarray(i * 16, i * 16 + 16), f * 16);
-          fc.set(g.colors.subarray(i * 3, i * 3 + 3), f * 3);
-          f++;
-        }
+        const d2 = dx * dx + dy * dy + dz * dz;
+        const band = d2 < near2 ? 0 : d2 < mid2 ? 1 : 2;
+        const n = counts[band]++;
+        const toMatrix = toMatrices[band];
+        for (let k = 0; k < 16; k++) toMatrix[n * 16 + k] = g.matrices[i * 16 + k];
+        const toColor = toColors[band];
+        for (let k = 0; k < 3; k++) toColor[n * 3 + k] = g.colors[i * 3 + k];
       }
       // Wood and leaves of a LOD share one buffer pair.
-      for (const [mesh, count] of [
-        [nw, n],
-        [nl, n],
-        [fw, f],
-        [fl, f],
-      ] as const) {
-        mesh.count = count;
-        mesh.visible = count > 0;
-      }
-      for (const mesh of [nw, fw]) {
+      parts.forEach((mesh, k) => {
+        mesh.count = counts[k >> 1];
+        mesh.visible = mesh.count > 0;
+      });
+      for (const mesh of owners) {
         mesh.instanceMatrix.clearUpdateRanges();
         mesh.instanceMatrix.addUpdateRange(0, mesh.count * 16);
         mesh.instanceMatrix.needsUpdate = true;
@@ -202,6 +204,8 @@ export function Vegetation({ quality }: { quality: QualityTier }) {
           [g.meshes.near.leaves, mat.leaves],
           [g.meshes.far.wood, mat.bark],
           [g.meshes.far.leaves, mat.leaves],
+          [g.meshes.distant.wood, mat.bark],
+          [g.meshes.distant.leaves, mat.leaves],
         ] as const;
         return parts.map(([geometry, m], k) => (
           <TreePart
@@ -214,7 +218,7 @@ export function Vegetation({ quality }: { quality: QualityTier }) {
             // Each LOD's leaves share the instance buffers of its wood.
             shareWith={k % 2 === 1 ? () => refs.current[gi]?.[k - 1] ?? null : null}
             onMesh={(mesh) => {
-              refs.current[gi] ??= [null, null, null, null];
+              refs.current[gi] ??= [null, null, null, null, null, null];
               refs.current[gi][k] = mesh;
               last.current.set(Infinity, 0, 0);
             }}

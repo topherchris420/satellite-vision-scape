@@ -1,8 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { buildings, domes, RADOME_SHELL_SIN } from "@/lib/site-layout";
 import { sampleFootprintGrade } from "@/lib/terrain";
 import { RADOME_FLOODLIGHT_ANGLES, RADOME_FLOODLIGHT_OFFSET } from "@/game/world/buildSiteWorld";
+import { startCompiling, whenCompiled } from "@/lib/shader-warmup";
 import { AERIAL_GLSL, atmosphereUniforms } from "./shaderChunks";
 import type { QualityTier } from "../SiteScene";
 
@@ -189,9 +191,55 @@ function fogUniforms() {
   };
 }
 
-export function SiteLights({ level, tier }: { level: number; tier: QualityTier }) {
+/**
+ * How many real lights the scene may hold right now. Every lit material is
+ * compiled for an exact number of lights, so adding them would rebuild every
+ * material on the next draw: a freeze of many seconds on Windows, right as
+ * night falls. Instead the new versions are built in the background, with
+ * stand-in lights so the compile sees the count to come, and the real lights
+ * arrive when they are ready. Until then the glows and painted pools carry the
+ * night, which is what they are for.
+ */
+function useCompiledLightCount(want: number, portable: boolean, current: RefObject<THREE.Group | null>) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (want === count) return;
+    // No lights is the version every material was first built for.
+    if (want === 0) {
+      setCount(0);
+      return;
+    }
+    const signal = { cancelled: false };
+    const output = portable ? "canvas" : "linear";
+    const standIns = new THREE.Group();
+    for (let i = 0; i < want; i++) standIns.add(new THREE.PointLight());
+    const held = current.current;
+    if (held) held.visible = false;
+    scene.add(standIns);
+    let programs: ReturnType<typeof startCompiling>;
+    try {
+      programs = startCompiling(gl, scene, camera, output);
+    } finally {
+      scene.remove(standIns);
+      if (held) held.visible = true;
+    }
+    void whenCompiled(programs, { output, signal }).then(() => {
+      if (!signal.cancelled) setCount(want);
+    });
+    return () => {
+      signal.cancelled = true;
+    };
+  }, [want, count, portable, gl, scene, camera, current]);
+  return count;
+}
+
+export function SiteLights({ level, tier, portable = false }: { level: number; tier: QualityTier; portable?: boolean }) {
   const all = fixtures();
-  const realCount = level >= 0.99 ? REAL_LIGHTS[tier] : 0;
+  const lightsRef = useRef<THREE.Group>(null);
+  const realCount = useCompiledLightCount(level >= 0.99 ? REAL_LIGHTS[tier] : 0, portable, lightsRef);
   const real = all.slice(0, realCount);
 
   const glow = useMemo(() => {
@@ -300,16 +348,18 @@ export function SiteLights({ level, tier }: { level: number; tier: QualityTier }
     <group name="site-lights">
       <primitive object={glow} />
       {level >= 0.99 && <primitive object={pools.mesh} />}
-      {real.map((f, i) => (
-        <pointLight
-          key={i}
-          position={f.light}
-          color={f.color}
-          intensity={f.intensity}
-          distance={f.range}
-          decay={2}
-        />
-      ))}
+      <group ref={lightsRef}>
+        {real.map((f, i) => (
+          <pointLight
+            key={i}
+            position={f.light}
+            color={f.color}
+            intensity={f.intensity}
+            distance={f.range}
+            decay={2}
+          />
+        ))}
+      </group>
     </group>
   );
 }

@@ -41,6 +41,17 @@ import type { AfterHoursSnapshot } from "@/game/afterhours/AfterHoursHud";
 import { GameplayState } from "@/game/core/GameState";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
+import { warmScene, type WarmupOptions, type WarmupProgress } from "@/lib/shader-warmup";
+import {
+  FPS_BOUNDS,
+  RESOLUTION_STEPS,
+  loadBudget,
+  saveBudget,
+  stepDown,
+  stepUp,
+  type QualityTier,
+  type RenderBudget,
+} from "@/lib/render-budget";
 
 const noSubscribe = () => () => undefined;
 const noSnapshot = () => null;
@@ -76,7 +87,7 @@ function useFreeRoamSnapshot(game: Game | null): FreeRoamSnapshot | null {
   );
 }
 
-export type QualityTier = "low" | "medium" | "high" | "ultra";
+export type { QualityTier } from "@/lib/render-budget";
 
 /**
  * Development-only camera handle for the visual capture harness
@@ -134,18 +145,48 @@ function CaptureCameraBridge() {
   return null;
 }
 
+/** Says when a few real frames have reached the screen. */
 function ReadyProbe({ onReady }: { onReady: () => void }) {
   const frames = useRef(0);
-
-  useEffect(() => {
-    const timer = setTimeout(onReady, 1200);
-    return () => clearTimeout(timer);
-  }, [onReady]);
 
   useFrame(() => {
     frames.current += 1;
     if (frames.current === 3) setTimeout(onReady, 0);
   });
+  return null;
+}
+
+/**
+ * Holds the first frame until the shaders are built. Sits inside the scene's
+ * Suspense boundary, so by the time it runs, the terrain, textures, structures
+ * and (once it exists) the game are all in the scene and nothing draws yet.
+ */
+function ShaderWarmup({
+  phase,
+  output,
+  onProgress,
+  onDone,
+}: {
+  phase: string | null;
+  output: WarmupOptions["output"];
+  onProgress: (progress: WarmupProgress) => void;
+  onDone: (phase: string) => void;
+}) {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  useEffect(() => {
+    if (!phase) return;
+    const signal = { cancelled: false };
+    void warmScene(gl, scene, camera, { output, onProgress, signal }).then((result) => {
+      if (signal.cancelled) return;
+      if (result.timedOut) console.warn("Shaders were still compiling at the deadline; drawing anyway.");
+      onDone(phase);
+    });
+    return () => {
+      signal.cancelled = true;
+    };
+  }, [phase, output, gl, scene, camera, onProgress, onDone]);
   return null;
 }
 
@@ -259,7 +300,14 @@ export function SiteScene() {
   const [deviceProfile, setDeviceProfile] = useState<"portable" | "desktop" | null>(null);
   useEffect(() => {
     const portable = window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches;
-    setQualityTier(portable ? "low" : "high");
+    if (portable) {
+      setBudget({ tier: "low", step: 0 });
+    } else {
+      const loaded = loadBudget();
+      rendererName.current = loaded.renderer;
+      setBudget({ tier: loaded.tier, step: loaded.step });
+      setManualQuality(loaded.manual);
+    }
     setDeviceProfile(portable ? "portable" : "desktop");
   }, []);
   const [mode, setMode] = useState<ControlMode>("play");
@@ -271,9 +319,15 @@ export function SiteScene() {
   const [showIndex, setShowIndex] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
-  // Quality Tier Architecture
-  const [qualityTier, setQualityTier] = useState<QualityTier>("high");
+  // What this device can afford: a tier chosen once, and a render resolution
+  // that follows the frame rate (see render-budget.ts).
+  const [budget, setBudget] = useState<RenderBudget>({ tier: "high", step: 0 });
+  const qualityTier = budget.tier;
   const [manualQuality, setManualQuality] = useState(false);
+  const rendererName = useRef("");
+  useEffect(() => {
+    if (deviceProfile === "desktop") saveBudget(budget, rendererName.current, manualQuality);
+  }, [deviceProfile, budget, manualQuality]);
 
   const markerRef = useRef<SVGGElement>(null);
   const vehicleMarkersRef = useRef<SVGGElement>(null);
@@ -285,9 +339,10 @@ export function SiteScene() {
   const [game, setGame] = useState<Game | null>(null);
   const [gameError, setGameError] = useState<string | null>(null);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
-  // On portable devices, let the terrain finish loading before constructing
+  // On portable devices, let the terrain reach the screen before constructing
   // gameplay meshes and collision data. This avoids two peak allocations at once.
-  const canCreateGame = deviceProfile === "desktop" || (deviceProfile === "portable" && ready);
+  const [terrainOnScreen, setTerrainOnScreen] = useState(false);
+  const canCreateGame = deviceProfile === "desktop" || (deviceProfile === "portable" && terrainOnScreen);
   useEffect(() => {
     if (!canCreateGame) return;
     let instance: Game;
@@ -305,6 +360,29 @@ export function SiteScene() {
     if (import.meta.env.DEV) (window as unknown as { __pineGapGame?: Game }).__pineGapGame = instance;
     return () => instance.dispose();
   }, [canCreateGame]);
+  // What the shaders are being built for. Nothing draws while a phase is
+  // unfinished; a desktop has one phase (the whole world), a phone two.
+  const warmupPhase =
+    game || gameError
+      ? `world:${qualityTier}`
+      : deviceProfile === "portable"
+        ? terrainOnScreen
+          ? null
+          : "terrain"
+        : null;
+  const [warmedPhase, setWarmedPhase] = useState<string | null>(null);
+  const warming = warmupPhase === null || warmedPhase !== warmupPhase;
+  const onWarmupDone = useCallback((phase: string) => setWarmedPhase(phase), []);
+  const loadBarRef = useRef<HTMLDivElement>(null);
+  const loadLabelRef = useRef<HTMLDivElement>(null);
+  const onWarmupProgress = useCallback(({ ready: done, total }: WarmupProgress) => {
+    if (loadBarRef.current) loadBarRef.current.style.transform = `scaleX(${total ? done / total : 0})`;
+    if (loadLabelRef.current) loadLabelRef.current.textContent = total ? `Building shaders · ${done} of ${total}` : "";
+  }, []);
+  const onFramesDrawn = useCallback(() => {
+    if (warmedPhase === "terrain") setTerrainOnScreen(true);
+    else setReady(true);
+  }, [warmedPhase]);
   const gameUnavailable = useRef(false);
   gameUnavailable.current = gameError !== null;
   const modeRef = useRef(mode);
@@ -400,7 +478,7 @@ export function SiteScene() {
       setMode,
       setTime,
       setQuality: (q: QualityTier) => {
-        setQualityTier(q);
+        setBudget({ tier: q, step: 0 });
         setManualQuality(true);
       },
       setClean: setCaptureClean,
@@ -416,7 +494,7 @@ export function SiteScene() {
   }, []);
 
   const handleQualityChange = useCallback((q: QualityTier) => {
-    setQualityTier(q);
+    setBudget({ tier: q, step: 0 });
     setManualQuality(true);
   }, []);
 
@@ -495,8 +573,12 @@ export function SiteScene() {
 
   // Derive DPR and post features from QualityTier. Low is the phone tier:
   // no ambient occlusion, a single shadow cascade, the cheap sky.
-  const dpr: number | [number, number] =
-    deviceProfile === "portable" ? 0.85 : qualityTier === "ultra" ? [1, 2] : qualityTier === "high" ? [1, 1.5] : 1;
+  const fullResolution = qualityTier === "ultra" ? 2 : qualityTier === "high" ? 1.5 : 1;
+  const dpr =
+    deviceProfile === "portable"
+      ? 0.85
+      : Math.min(Math.max(1, typeof window === "undefined" ? 1 : window.devicePixelRatio), fullResolution) *
+        RESOLUTION_STEPS[budget.step];
   const enableAO = qualityTier !== "low";
 
   return (
@@ -621,18 +703,24 @@ export function SiteScene() {
           <div className="h-2 w-2 rounded-full bg-amber-300 shadow-[0_0_24px_rgba(252,211,77,.8)]" />
         </div>
         <div className="relative mt-6 font-mono text-[9px] uppercase tracking-[.38em] text-amber-200/70">
-          Establishing spatial link
+          Building Pine Gap
         </div>
         <div className="relative mt-2 h-px w-48 overflow-hidden bg-white/10">
-          <div className="h-full w-2/3 animate-pulse bg-gradient-to-r from-transparent via-amber-300 to-transparent" />
+          <div
+            ref={loadBarRef}
+            className="h-full w-full origin-left bg-amber-300 transition-transform duration-200 [transform:scaleX(0)]"
+          />
         </div>
-        <div className="relative mt-2 font-mono text-[8px] uppercase tracking-[.18em] text-white/25">
-          Pine Gap · 23.7985°S / 133.7370°E
-        </div>
+        <div
+          ref={loadLabelRef}
+          role="status"
+          className="relative mt-2 h-3 font-mono text-[8px] uppercase tracking-[.18em] text-white/40"
+        />
       </div>
 
       {deviceProfile && <Canvas
         shadows={deviceProfile === "portable" ? false : "percentage"}
+        frameloop={warming ? "never" : "always"}
         dpr={dpr}
         camera={{ fov: 55, near: 0.1, far: 9000, position: HOME_POSITION }}
         gl={{
@@ -652,15 +740,11 @@ export function SiteScene() {
         {!manualQuality && deviceProfile !== "portable" && (
           <PerformanceMonitor
             flipflops={4}
-            onDecline={() => {
-              if (qualityTier === "ultra") setQualityTier("high");
-              else if (qualityTier === "high") setQualityTier("medium");
-              else if (qualityTier === "medium") setQualityTier("low");
-            }}
-            onIncline={() => {
-              if (qualityTier === "low") setQualityTier("medium");
-              else if (qualityTier === "medium") setQualityTier("high");
-            }}
+            bounds={() => FPS_BOUNDS}
+            // Resolution first. The tier only moves on the briefing card: changing it
+            // rebuilds the trees and ground cover, which nobody should feel during play.
+            onDecline={() => setBudget((b) => stepDown(b, sessionStatus.current === "briefing"))}
+            onIncline={() => setBudget(stepUp)}
           />
         )}
         <Suspense fallback={null}>
@@ -669,6 +753,7 @@ export function SiteScene() {
             tier={qualityTier}
             shadowFocus={playing && game ? game.focusPoint : null}
             fogScale={mode === "overhead" ? 0.35 : 1}
+            portable={deviceProfile === "portable"}
           />
           <Terrain quality={qualityTier} />
           <Roads />
@@ -680,13 +765,20 @@ export function SiteScene() {
           {showDebug && <TerrainDebug />}
           {/* Enables fog on every material; the shared aerial-perspective chunk does the real work. */}
           <fog attach="fog" args={[fogColor, 1100, 5500]} />
-          <ReadyProbe onReady={() => setReady(true)} />
           {game && (
             <GameRuntime game={game} playing={playing} status={session.status} time={effectiveTime} />
           )}
+          <ShaderWarmup
+            phase={warmupPhase}
+            output={deviceProfile === "portable" ? "canvas" : "linear"}
+            onProgress={onWarmupProgress}
+            onDone={onWarmupDone}
+          />
+          {!warming && !ready && <ReadyProbe key={warmupPhase} onReady={onFramesDrawn} />}
         </Suspense>
 
-        {ready && deviceProfile !== "portable" && (
+        {/* Mounted from the start, so materials are built once, for the output they really draw to. */}
+        {deviceProfile !== "portable" && (
           <EffectComposer multisampling={0} stencilBuffer={false}>
             {enableAO ? (
               <N8AO
