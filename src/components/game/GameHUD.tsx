@@ -20,6 +20,7 @@ import { AfterHoursMenu, AfterHoursOverlay, CharacterPicker } from "./AfterHours
 import { AgentHUD } from "./AgentHUD";
 import { AgentLaunch } from "./AgentLaunch";
 import { FreeRoamMenu } from "./FreeRoamMenu";
+import { Landing } from "./Landing";
 import { FreeRoamOverlay } from "./FreeRoamHUD";
 import { FreeRoamMapLayer } from "./FreeRoamMapLayer";
 import { useFreeRoam, usePointerLocked } from "@/hooks/use-free-roam";
@@ -183,7 +184,7 @@ function Card({ children }: { children: React.ReactNode }) {
     // day) stays usable while the card is up.
     <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center bg-black/25 p-4">
       <section
-        className={`${glass} pointer-events-auto max-h-[80vh] w-full max-w-3xl overflow-y-auto rounded-2xl`}
+        className={`${glass} scroll-quiet pointer-events-auto max-h-[88vh] w-full max-w-3xl overflow-y-auto rounded-2xl`}
       >
         <div className="h-px bg-gradient-to-r from-transparent via-amber-300/80 to-transparent" />
         <div className="p-5 sm:p-7">{children}</div>
@@ -204,6 +205,7 @@ export function GameHUD({
   onStart,
   onStartAfterHours,
   onStartFreeRoam,
+  onStartRace,
   onReplayTrace,
   onLeaveFreeRoam,
   onCapture,
@@ -223,6 +225,8 @@ export function GameHUD({
   onStartAfterHours: (capturePointer?: boolean) => void;
   /** Begin a Free Roam run with the chosen controller (from a click). */
   onStartFreeRoam: (launch: FrLaunch) => Promise<LaunchResult>;
+  /** Race the committed recording of Jev (from a click). */
+  onStartRace: () => void;
   /** Watch a saved Free Roam trace. */
   onReplayTrace: (text: string) => LaunchResult;
   onLeaveFreeRoam: () => void;
@@ -437,78 +441,49 @@ export function GameHUD({
 
       {status === "briefing" && (
         <Card>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.26em] text-amber-300">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-50" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-300" />
-                </span>
-                Open-world exterior
-              </div>
-              <h1 className="mt-2 font-sans text-3xl font-light tracking-[-.04em]">
-                Pine Gap <span className="text-white/35">/ field deployment</span>
-              </h1>
-              <p className="mt-2 max-w-xl font-sans text-[12px] leading-relaxed text-white/55">
-                Walk the compound on foot, take one of the utility vehicles parked on site and drive
-                the roads and the surrounding outback. A fictionalised interpretation built from
-                publicly observable exterior features — no interiors or operational detail.
-              </p>
-            </div>
-          </div>
-          <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} isMobile={isMobile} />
-          <div className="mt-4 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="max-w-md">
-                <div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7fd6d0]">
-                  <MoonStar size={12} /> Pine Gap: After Hours
-                  <span className="rounded-sm bg-[#0B5D63] px-1 text-[7px] tracking-[.18em] text-white/90">
-                    Fiction
-                  </span>
+          <Landing
+            isMobile={isMobile}
+            returning={returning}
+            onRace={onStartRace}
+            onWalk={onStart}
+            onSurvey={onExplore}
+            onAfterHours={() => onStartAfterHours()}
+          >
+            <FreeRoamMenu game={game} onLaunch={onStartFreeRoam} onReplayText={onReplayTrace} isMobile={isMobile} />
+            <div className="mt-4 rounded-xl border border-[#0B5D63]/80 bg-[#041517]/70 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="max-w-md">
+                  <div className="flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[.24em] text-[#7fd6d0]">
+                    <MoonStar size={12} /> Pine Gap: After Hours
+                    <span className="rounded-sm bg-[#0B5D63] px-1 text-[7px] tracking-[.18em] text-white/90">
+                      Fiction
+                    </span>
+                  </div>
+                  <p className="mt-1.5 font-sans text-[12px] leading-relaxed text-white/60">
+                    An invented night shift, beginning at dusk: a coffee to deliver, a vehicle radio,
+                    a numbers station and something broadcasting on 420. The reconstruction stays
+                    factual; everything After Hours adds is fiction.
+                  </p>
+                  <p className="mt-1.5 font-sans text-[11px] text-amber-200/80">
+                    {SOUNDTRACK_CREDIT.line} · {SOUNDTRACK_CREDIT.release}
+                  </p>
                 </div>
-                <p className="mt-1.5 font-sans text-[12px] leading-relaxed text-white/60">
-                  An invented night shift, beginning at dusk: a coffee to deliver, a vehicle radio,
-                  a numbers station and something broadcasting on 420. The reconstruction stays
-                  factual; everything After Hours adds is fiction.
-                </p>
-                <p className="mt-1.5 font-sans text-[11px] text-amber-200/80">
-                  {SOUNDTRACK_CREDIT.line} · {SOUNDTRACK_CREDIT.release}
-                </p>
-              </div>
-              <div className="flex flex-col items-start gap-2">
-                <button
-                  onClick={() => onStartAfterHours()}
-                  className="flex items-center gap-2 rounded-xl bg-[#0B5D63] px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-white ring-1 ring-[#7fd6d0]/40 transition hover:bg-[#0e727a]"
-                >
-                  <MoonStar size={14} /> {returning ? "Continue After Hours" : "After Hours"}
-                </button>
-                <AgentLaunch game={game} onStart={() => onStartAfterHours(false)} />
-                <CharacterPicker game={game} />
+                <div className="flex flex-col items-start gap-2">
+                  <button
+                    onClick={() => onStartAfterHours()}
+                    className="flex items-center gap-2 rounded-xl bg-[#0B5D63] px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-white ring-1 ring-[#7fd6d0]/40 transition hover:bg-[#0e727a]"
+                  >
+                    <MoonStar size={14} /> {returning ? "Continue After Hours" : "After Hours"}
+                  </button>
+                  <AgentLaunch game={game} onStart={() => onStartAfterHours(false)} />
+                  <CharacterPicker game={game} />
+                </div>
               </div>
             </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <button
-              onClick={onStart}
-              className="flex items-center gap-2 rounded-xl bg-amber-300 px-5 py-3 text-[11px] font-bold uppercase tracking-[.18em] text-[#16120a] transition hover:bg-amber-200"
-            >
-              <Play size={14} /> Deploy
-            </button>
-            <button
-              onClick={onExplore}
-              className="rounded-xl border border-white/15 px-4 py-3 text-[10px] uppercase tracking-[.16em] text-white/60 transition hover:bg-white/10 hover:text-white"
-            >
-              Survey the site instead
-            </button>
-            <span className="font-sans text-[10px] text-white/35">
-              {isMobile
-                ? "Drag anywhere to look around."
-                : "Deploying captures the mouse · Esc releases it."}
-            </span>
-          </div>
-          <div className="mt-7">
-            <ControlsGrid isMobile={isMobile} freeRoam />
-          </div>
+            <div className="mt-5">
+              <ControlsGrid isMobile={isMobile} freeRoam />
+            </div>
+          </Landing>
         </Card>
       )}
 

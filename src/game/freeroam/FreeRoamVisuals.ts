@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import type { GhostTrack } from "@/lib/freeroam/ghost";
+import type { GhostPose, GhostTrack } from "@/lib/freeroam/ghost";
 import { hashString } from "@/lib/freeroam/rng";
 import type { FreeRoam } from "./FreeRoam";
 import { LOCATION_INFO, type LocationKind } from "./Sites";
@@ -122,8 +122,13 @@ export class FreeRoamVisuals {
   private builtFor: unknown = null;
 
   private readonly ghost: THREE.Mesh;
+  private readonly ghostCar: THREE.Group;
+  private readonly ghostTag: THREE.Sprite;
+  private readonly ghostTagCanvas: HTMLCanvasElement;
+  private readonly ghostTagTexture: THREE.CanvasTexture;
   private ghostTrack: GhostTrack | null = null;
-  private readonly ghostPose = { x: 0, z: 0, yaw: 0 };
+  private readonly ghostPose: GhostPose = { x: 0, z: 0, yaw: 0, driving: false };
+  private ghostShown = false;
 
   private readonly disposables: { dispose(): void }[] = [];
 
@@ -184,14 +189,54 @@ export class FreeRoamVisuals {
     const ghostMaterial = new THREE.MeshBasicMaterial({
       color: "#67e8f9",
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.45,
       depthWrite: false,
       fog: false,
     });
     this.disposables.push(ghostGeometry, ghostMaterial);
     this.ghost = new THREE.Mesh(ghostGeometry, ghostMaterial);
     this.ghost.visible = false;
-    this.root.add(this.ghost);
+    // A recorded driver is drawn as a vehicle: a person-sized capsule at 15 m/s is easy to lose.
+    const carBody = new THREE.BoxGeometry(1.9, 0.75, 4.5);
+    const carCab = new THREE.BoxGeometry(1.7, 0.7, 2.2);
+    this.disposables.push(carBody, carCab);
+    this.ghostCar = new THREE.Group();
+    const carEdges = new THREE.LineBasicMaterial({ color: "#cffafe", transparent: true, opacity: 0.85, depthWrite: false, fog: false });
+    const bodyEdges = new THREE.EdgesGeometry(carBody);
+    const cabEdges = new THREE.EdgesGeometry(carCab);
+    this.disposables.push(carEdges, bodyEdges, cabEdges);
+    for (const [fill, edges, y, z] of [
+      [carBody, bodyEdges, 0.75, 0],
+      [carCab, cabEdges, 1.475, -0.25],
+    ] as const) {
+      const part = new THREE.Mesh(fill, ghostMaterial);
+      part.position.set(0, y, z);
+      const outline = new THREE.LineSegments(edges, carEdges);
+      outline.position.set(0, y, z);
+      this.ghostCar.add(part, outline);
+    }
+    this.ghostCar.visible = false;
+    // The name stays the same size on screen and shows through walls: this is the thing being raced.
+    this.ghostTagCanvas = document.createElement("canvas");
+    this.ghostTagCanvas.width = 256;
+    this.ghostTagCanvas.height = 64;
+    this.ghostTagTexture = new THREE.CanvasTexture(this.ghostTagCanvas);
+    this.ghostTagTexture.colorSpace = THREE.SRGBColorSpace;
+    const tagMaterial = new THREE.SpriteMaterial({
+      map: this.ghostTagTexture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      sizeAttenuation: false,
+      toneMapped: false,
+      fog: false,
+    });
+    this.disposables.push(this.ghostTagTexture, tagMaterial);
+    this.ghostTag = new THREE.Sprite(tagMaterial);
+    this.ghostTag.scale.set(0.16, 0.04, 1);
+    this.ghostTag.renderOrder = 6;
+    this.ghostTag.visible = false;
+    this.root.add(this.ghost, this.ghostCar, this.ghostTag);
 
     for (let i = 0; i < MAX_TRACERS; i++) this.tracers.push({ age: 9, life: 0, ox: 0, oy: 0, oz: 0, dx: 0, dy: 0, dz: 1, len: 1, security: false });
     for (let i = 0; i < MAX_SPARKS; i++) this.sparks.push({ age: 9, x: 0, y: 0, z: 0, color: SPARK_COLOR.none });
@@ -225,8 +270,39 @@ export class FreeRoamVisuals {
 
   /** Show another run, as it went, beside this one (or `null` to remove it). */
   setGhost(track: GhostTrack | null): void {
+    const label = track?.label ?? null;
+    if (label !== (this.ghostTrack?.label ?? null) && label) this.drawGhostTag(label);
     this.ghostTrack = track;
-    if (!track) this.ghost.visible = false;
+    if (!track) {
+      this.ghost.visible = false;
+      this.ghostCar.visible = false;
+      this.ghostTag.visible = false;
+      this.ghostShown = false;
+    }
+  }
+
+  private drawGhostTag(label: string): void {
+    const canvas = this.ghostTagCanvas;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "700 30px ui-monospace, Menlo, Consolas, monospace";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    const text = label.length > 14 ? `${label.slice(0, 13)}…` : label;
+    const width = Math.min(canvas.width - 4, ctx.measureText(text).width + 36);
+    ctx.fillStyle = "rgba(4, 18, 28, 0.82)";
+    ctx.beginPath();
+    ctx.roundRect((canvas.width - width) / 2, 6, width, canvas.height - 12, 12);
+    ctx.fill();
+    ctx.fillStyle = "#67e8f9";
+    ctx.fillText(text, canvas.width / 2, canvas.height / 2 + 1);
+    this.ghostTagTexture.needsUpdate = true;
+  }
+
+  /** Where the ghost is drawn now, for the minimap; null when there is none. */
+  get ghostPosition(): { x: number; z: number } | null {
+    return this.ghostShown ? this.ghostPose : null;
   }
 
   get ghostLabel(): string | null {
@@ -581,10 +657,17 @@ export class FreeRoamVisuals {
     const track = this.ghostTrack;
     if (!track) return;
     const ok = track.at(world.simTime * 1000, this.ghostPose);
-    this.ghost.visible = ok;
-    if (!ok) return;
+    this.ghostShown = ok;
     const g = this.ghostPose;
-    this.ghost.position.set(g.x, world.heightAt(g.x, g.z) + 0.85, g.z);
+    this.ghost.visible = ok && !g.driving;
+    this.ghostCar.visible = ok && !!g.driving;
+    this.ghostTag.visible = ok;
+    if (!ok) return;
+    const ground = world.heightAt(g.x, g.z);
+    this.ghost.position.set(g.x, ground + 0.85, g.z);
     this.ghost.rotation.y = g.yaw;
+    this.ghostCar.position.set(g.x, ground, g.z);
+    this.ghostCar.rotation.y = g.yaw;
+    this.ghostTag.position.set(g.x, ground + (g.driving ? 2.7 : 2.2), g.z);
   }
 }

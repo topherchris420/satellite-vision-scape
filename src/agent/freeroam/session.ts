@@ -6,6 +6,7 @@ import type { ResolvedFrame } from "@/game/freeroam/ControlStack";
 import { CHALLENGES, SCENARIO_VERSION } from "@/game/freeroam/Scenario";
 import { compassOf, type ActionSource, type ControllerMode } from "@/lib/freeroam/contracts";
 import { ghostFromRows } from "@/lib/freeroam/ghost";
+import { createRaceTarget, RaceTracker } from "@/game/freeroam/RaceTracker";
 import { round } from "../observation";
 import { AssistProducer } from "./assist";
 import { FreeRoamBridge } from "./bridge";
@@ -133,9 +134,13 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
   private replaying = false;
   private comparing: { a: string; b: string } | null = null;
 
+  /** The score against a recorded run, when one is being raced. */
+  readonly race: RaceTracker;
+
   constructor(host: SessionHost) {
     this.host = host;
     this.fr = host.freeRoam;
+    this.race = new RaceTracker(this.fr);
     this.sessionId = randomHex(16);
     this.bridge = new FreeRoamBridge({ freeRoam: this.fr, events: host.events });
     this.pilot = new Pilot(this.bridge);
@@ -240,7 +245,20 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
   /** Begin a run of `challenge` with `seed`, played by a person. */
   play(options: { seed?: number; challenge?: string } = {}): void {
     this.leaveReplay();
+    this.race.end();
     this.fr.start(options);
+  }
+
+  /**
+   * Race the committed recording of Jev: the same seed, in the person's hands,
+   * with Jev's recorded path drawn beside them. No model is called.
+   */
+  startRace(): void {
+    const target = createRaceTarget();
+    this.leaveReplay();
+    this.race.end();
+    this.fr.start({ seed: target.seed, challenge: target.challenge });
+    this.race.begin(target);
   }
 
   /** Run the same scenario again from the very first frame, back in the person's hands. */
@@ -303,6 +321,7 @@ export class FreeRoamSession implements FreeRoamEnvironment, RuntimeSink {
     // handing over control. An unknown challenge otherwise starts a fallback.
     if (!data || data.scenarioVersion !== SCENARIO_VERSION || !CHALLENGES.some((c) => c.id === data.challenge)) return false;
     this.leaveReplay();
+    this.race.end();
     this.replaying = true;
     this.replayLabel = label ?? (typeof source === "object" && "label" in source ? source.label : "Replay");
     this.fr.start({ seed: data.seed, challenge: data.challenge });

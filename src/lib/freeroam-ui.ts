@@ -36,6 +36,32 @@ export function beginFreeRoam(game: Game, launch: FrLaunch): void {
   else if (launch.controller === "baseline") game.roam.setController("JEV", "baseline");
 }
 
+const BEST_KEY = "svs.race-best.v1";
+
+export function readBest(targetId: string): number | null {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(BEST_KEY) ?? "{}") as Record<string, unknown>;
+    const value = stored[targetId];
+    return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps the faster time. Returns true when this one is a new best. */
+export function recordBest(targetId: string, seconds: number): boolean {
+  const best = readBest(targetId);
+  if (best !== null && best <= seconds) return false;
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(BEST_KEY) ?? "{}") as Record<string, unknown>;
+    stored[targetId] = seconds;
+    window.localStorage.setItem(BEST_KEY, JSON.stringify(stored));
+  } catch {
+    // Private windows and blocked storage: this visit's result still shows.
+  }
+  return true;
+}
+
 export function parseSeed(text: string, fallback: number): number {
   const n = Number(text.trim());
   return Number.isInteger(n) && n >= 0 && n < 2 ** 32 ? n : fallback;

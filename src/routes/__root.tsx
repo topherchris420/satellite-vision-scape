@@ -77,7 +77,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Pine Gap — Public Reference Reconstruction" },
+      { title: "Satellite Vision Scape" },
       {
         name: "description",
         content:
@@ -100,12 +100,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:image",
         content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png",
+          "https://geotwn.vercel.app/og-race.jpg",
       },
       {
         name: "twitter:image",
         content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/582b0365-bb7e-43d4-8dd7-c30c507749cc/id-preview-49681053--dc66a5d5-1651-4b26-90c1-0da9ca197074.lovable.app-1784141347035.png",
+          "https://geotwn.vercel.app/og-race.jpg",
       },
     ],
     links: [

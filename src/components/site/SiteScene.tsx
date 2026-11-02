@@ -446,6 +446,15 @@ export function SiteScene() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [game, session.start, session.startUnlocked],
   );
+  const startRace = useCallback(() => {
+    if (!game) return;
+    // Audio and pointer lock may only start inside the click that asked.
+    game.unlockAudio();
+    session.start();
+    game.setPaused(false);
+    game.roam.startRace();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, session.start]);
   const replayFreeRoamTrace = useCallback(
     (text: string): LaunchResult => {
       if (!game) return { ok: false, detail: "The game is not ready yet." };
@@ -616,6 +625,7 @@ export function SiteScene() {
           onStart={session.start}
           onStartAfterHours={startAfterHours}
           onStartFreeRoam={startFreeRoam}
+          onStartRace={startRace}
           onReplayTrace={replayFreeRoamTrace}
           onLeaveFreeRoam={leaveFreeRoam}
           onCapture={session.start}
@@ -716,6 +726,9 @@ export function SiteScene() {
           role="status"
           className="relative mt-2 h-3 font-mono text-[8px] uppercase tracking-[.18em] text-white/40"
         />
+        <p className="relative mt-5 max-w-xs px-6 text-center font-sans text-[12px] leading-relaxed text-white/55">
+          Next: race an AI agent&apos;s recorded run through this site, or walk it in your own time.
+        </p>
       </div>
 
       {deviceProfile && <Canvas

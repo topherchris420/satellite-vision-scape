@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { Game } from "@/game/Game";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
+import type { RaceSnapshot } from "@/game/freeroam/RaceTracker";
 import type { JevHudSnapshot } from "@/agent/freeroam/hud";
 import type { RunEntry } from "@/agent/freeroam/session";
 
@@ -19,6 +20,12 @@ export function useJevControl(game: Game): JevHudSnapshot {
 /** Finished runs of this visit, newest first (without their traces). */
 export function useRuns(game: Game): readonly RunEntry[] {
   return useSyncExternalStore(game.roam.subscribeRuns, game.roam.getRuns, game.roam.getRuns);
+}
+
+/** The race against a recorded run, when one is on. */
+export function useRace(game: Game): RaceSnapshot | null {
+  const race = game.roam.race;
+  return useSyncExternalStore(race.subscribe, race.getSnapshot, race.getSnapshot);
 }
 
 /** Whether the game holds the mouse (pointer lock). */

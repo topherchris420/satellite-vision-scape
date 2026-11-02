@@ -24,7 +24,8 @@ import type { Game } from "@/game/Game";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import type { JevHudSnapshot } from "@/agent/freeroam/hud";
 import type { RunEntry } from "@/agent/freeroam/session";
-import { useFreeRoam, useJevControl, useRuns } from "@/hooks/use-free-roam";
+import { useFreeRoam, useJevControl, useRace, useRuns } from "@/hooks/use-free-roam";
+import { RaceResult, RaceStrip } from "./RaceHUD";
 import { downloadFreeRoamTrace, formatClock, formatValue } from "@/lib/freeroam-ui";
 
 /**
@@ -55,7 +56,7 @@ function Kbd({ children }: { children: string }) {
 
 // --- Objective ------------------------------------------------------------------------------------
 
-function ObjectiveBanner({ fr, compact = false }: { fr: FreeRoamSnapshot; compact?: boolean }) {
+function ObjectiveBanner({ fr, compact = false, children }: { fr: FreeRoamSnapshot; compact?: boolean; children?: React.ReactNode }) {
   const o = fr.objective;
   const [open, setOpen] = useState(false);
   if (!o) return null;
@@ -106,6 +107,7 @@ function ObjectiveBanner({ fr, compact = false }: { fr: FreeRoamSnapshot; compac
           <div className="h-full bg-sky-400 transition-[width] duration-300" style={{ width: `${Math.round(o.progress * 100)}%` }} />
         </div>
       </button>
+      {children}
       {open && fr.criteria && (
         <div className={`${glass} mt-1.5 rounded-xl px-4 py-2.5 font-sans text-[11px]`}>
           <div className="mb-1 text-[9px] font-bold uppercase tracking-[.2em] text-white/40">Success</div>
@@ -588,10 +590,12 @@ function Results({
   fr,
   runs,
   onLeave,
+  onCapture,
 }: {
   game: Game;
   fr: FreeRoamSnapshot;
   runs: readonly RunEntry[];
+  onCapture: () => void;
   onLeave: () => void;
 }) {
   const o = fr.objective;
@@ -601,6 +605,7 @@ function Results({
   const [a, setA] = useState<string>("");
   const [b, setB] = useState<string>("");
   const [showCompare, setShowCompare] = useState(false);
+  const race = useRace(game);
 
   // Default the comparison to the newest run of two different controllers on this scenario.
   const defaults = useMemo(() => {
@@ -624,6 +629,26 @@ function Results({
       <span className="tabular-nums text-white/90">{value}</span>
     </div>
   );
+  const statsGrid = s && (
+      <div className="mt-4 grid gap-x-8 sm:grid-cols-2">
+        <div>
+          {line("Distance on foot", formatValue(s.navigation.distanceOnFootM, "m"))}
+          {line("Distance driven", formatValue(s.navigation.distanceDrivenM, "m"))}
+          {line("Route efficiency", formatValue(s.navigation.routeEfficiency, ""))}
+          {line("Vehicle / pedestrian / world hits", `${s.driving.vehicleCollisions} / ${s.driving.pedestrianCollisions} / ${s.driving.worldCollisions}`)}
+          {line("Average speed", formatValue(s.driving.avgSpeedMps, "m/s"))}
+          {line("Braking efficiency", formatValue(s.driving.brakingEfficiency, ""))}
+        </div>
+        <div>
+          {line("Shots fired / hit", `${s.shooting.shotsFired} / ${s.shooting.shotsHit}`)}
+          {line("Accuracy", formatValue(s.shooting.accuracy, ""))}
+          {line("Damage caused / received", `${Math.round(s.combat.damageDealt)} / ${Math.round(s.combat.damageReceived)}`)}
+          {line("Attention peak", `${s.attention.peakLevel} / 5`)}
+          {line("Decisions · interventions", `${s.control.decisions} · ${s.control.interventions}`)}
+          {line("Mean decision latency", formatValue(s.control.meanLatencyMs, "ms"))}
+        </div>
+      </div>
+  );
   return (
     <div className="pointer-events-auto absolute inset-0 z-30 flex items-center justify-center bg-black/45 p-4">
       <section className={`${glass} max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-2xl`} aria-label="Run results">
@@ -632,35 +657,34 @@ function Results({
           <div className={`text-[9px] font-bold uppercase tracking-[.26em] ${won ? "text-emerald-300" : "text-rose-300"}`}>
             {won ? "Objective complete" : "Objective failed"} · {fr.challengeTitle} · seed {fr.seed}
           </div>
-          <h2 className="mt-1 font-sans text-2xl font-light tracking-tight">
-            {latest ? latest.label : "Run"} · {formatClock(fr.elapsedS)}
-          </h2>
+          {!race && (
+            <h2 className="mt-1 font-sans text-2xl font-light tracking-tight">
+              {latest ? latest.label : "Run"} · {formatClock(fr.elapsedS)}
+            </h2>
+          )}
           {!won && o.failReason && <p className="mt-1 font-sans text-[12px] text-rose-200/80">{o.failReason}</p>}
 
-          {s && (
-            <div className="mt-4 grid gap-x-8 sm:grid-cols-2">
-              <div>
-                {line("Distance on foot", formatValue(s.navigation.distanceOnFootM, "m"))}
-                {line("Distance driven", formatValue(s.navigation.distanceDrivenM, "m"))}
-                {line("Route efficiency", formatValue(s.navigation.routeEfficiency, ""))}
-                {line("Vehicle / pedestrian / world hits", `${s.driving.vehicleCollisions} / ${s.driving.pedestrianCollisions} / ${s.driving.worldCollisions}`)}
-                {line("Average speed", formatValue(s.driving.avgSpeedMps, "m/s"))}
-                {line("Braking efficiency", formatValue(s.driving.brakingEfficiency, ""))}
-              </div>
-              <div>
-                {line("Shots fired / hit", `${s.shooting.shotsFired} / ${s.shooting.shotsHit}`)}
-                {line("Accuracy", formatValue(s.shooting.accuracy, ""))}
-                {line("Damage caused / received", `${Math.round(s.combat.damageDealt)} / ${Math.round(s.combat.damageReceived)}`)}
-                {line("Attention peak", `${s.attention.peakLevel} / 5`)}
-                {line("Decisions · interventions", `${s.control.decisions} · ${s.control.interventions}`)}
-                {line("Mean decision latency", formatValue(s.control.meanLatencyMs, "ms"))}
-              </div>
-            </div>
+          {race && <RaceResult race={race} won={won} helpedS={s ? s.controlSeconds.jev + s.controlSeconds.assist : 0} />}
+
+          {s && !race && statsGrid}
+          {s && race && (
+            <details className="group mt-3">
+              <summary className="flex cursor-pointer list-none items-center gap-1.5 font-sans text-[10px] font-bold uppercase tracking-[.14em] text-white/50 transition hover:text-white [&::-webkit-details-marker]:hidden">
+                <ChevronDown size={11} className="transition group-open:rotate-180" /> Run details
+              </summary>
+              {statsGrid}
+            </details>
           )}
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button className={`${chip} bg-sky-400 text-[#04121c] hover:bg-sky-300`} onClick={() => game.roam.restart()}>
-              <RotateCcw size={10} className="mr-1 inline" /> Run it yourself
+            <button
+              className={`${chip} bg-sky-400 text-[#04121c] hover:bg-sky-300`}
+              onClick={() => {
+                game.roam.restart();
+                if (race) onCapture();
+              }}
+            >
+              <RotateCcw size={10} className="mr-1 inline" /> {race ? `Race ${race.target.label} again` : "Run it yourself"}
             </button>
             <button
               className={chip}
@@ -751,6 +775,7 @@ export function FreeRoamOverlay({
   const fr = useFreeRoam(game);
   const jev = useJevControl(game);
   const runs = useRuns(game);
+  const race = useRace(game);
   if (!fr.active) return null;
 
   const takeControl = () => {
@@ -779,13 +804,15 @@ export function FreeRoamOverlay({
             onAssist={assist}
             compact
           />
-          <ObjectiveBanner fr={fr} compact />
+          <ObjectiveBanner fr={fr} compact>
+            {race && <RaceStrip game={game} race={race} compact />}
+          </ObjectiveBanner>
           <Vitals fr={fr} compact />
           <JevPanel jev={jev} onTakeControl={takeControl} compact />
         </div>
       ) : (
         <>
-          <ObjectiveBanner fr={fr} />
+          <ObjectiveBanner fr={fr}>{race && <RaceStrip game={game} race={race} />}</ObjectiveBanner>
           <Vitals fr={fr} />
           <JevPanel jev={jev} onTakeControl={takeControl} />
         </>
@@ -816,7 +843,7 @@ export function FreeRoamOverlay({
       {!isMobile && (
         <ControllerBar game={game} jev={jev} onLeave={onLeave} onTakeControl={takeControl} onLetJev={letJev} onAssist={assist} />
       )}
-      <Results game={game} fr={fr} runs={runs} onLeave={onLeave} />
+      <Results game={game} fr={fr} runs={runs} onLeave={onLeave} onCapture={onCapture} />
     </>
   );
 }
