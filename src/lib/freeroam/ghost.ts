@@ -10,13 +10,26 @@ export interface GhostTrack {
   /**
    * Position (metres) and heading (radians) at simulation time `tMs`. Returns
    * false outside the recording. `out.yaw` keeps its last value while the
-   * recorded avatar stands still.
+   * recorded avatar stands still. `out.driving`, when asked for, says whether
+   * the recorded avatar was in a vehicle at that moment.
    */
-  at(tMs: number, out: { x: number; z: number; yaw: number }): boolean;
+  at(tMs: number, out: GhostPose): boolean;
+}
+
+export interface GhostPose {
+  x: number;
+  z: number;
+  yaw: number;
+  driving?: boolean;
 }
 
 /** Sample rows start `[seconds, x, z, …]`. */
 export type GhostRow = readonly [number, number, number, ...unknown[]];
+
+/** Trace samples name the locomotion ("driving") in column 5; race rows flag it in column 3. */
+function rowIsDriving(row: GhostRow): boolean {
+  return row[3] === 1 || row[5] === "driving";
+}
 
 export function ghostFromRows(rows: readonly GhostRow[], label: string): GhostTrack {
   let hint = 0;
@@ -38,6 +51,7 @@ export function ghostFromRows(rows: readonly GhostRow[], label: string): GhostTr
       const dx = b[1] - a[1];
       const dz = b[2] - a[2];
       if (dx * dx + dz * dz > 0.04) out.yaw = Math.atan2(dx, dz);
+      out.driving = rowIsDriving(a);
       return true;
     },
   };

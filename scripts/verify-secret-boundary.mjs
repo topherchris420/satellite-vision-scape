@@ -18,12 +18,14 @@ import { join } from "node:path";
 const CANARY = "svs-secret-boundary-canary-2026-do-not-ship";
 
 if (!process.argv.includes("--scan")) {
-  const build = spawnSync("bun", ["run", "build"], {
+  // Through a shell: bun is a .cmd shim on some Windows installs, which nothing else can start.
+  const build = spawnSync("bun run build", {
     stdio: "inherit",
     env: { ...process.env, TYPESAFE_API_KEY: CANARY, TYPESAFE_MODEL: "jev-latest" },
+    shell: true,
   });
   if (build.status !== 0) {
-    console.error("FAIL: the production build did not complete");
+    console.error(`FAIL: the production build did not complete${build.error ? ` (${build.error.message})` : ""}`);
     process.exit(1);
   }
 }

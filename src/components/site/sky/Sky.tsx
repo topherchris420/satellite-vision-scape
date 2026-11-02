@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import {
@@ -56,27 +56,38 @@ export function SkyDome({ state, low }: { state: SkyState; low: boolean }) {
 export function SkyEnvironment({ state, intensity }: { state: SkyState; intensity: number }) {
   const gl = useThree((s) => s.gl);
   const scene = useThree((s) => s.scene);
-  useEffect(() => {
+  // The sky shader and the prefilter are kept between times of day: compiling
+  // them again would stall every change of light for a second.
+  const capture = useMemo(() => {
     const material = createSkyMaterial("env", false);
-    const lut = createSkyLutTexture(state.solution.lut);
-    applySkyState(material, state, lut);
     const envScene = new THREE.Scene();
     const mesh = new THREE.Mesh(triangle, material);
     mesh.frustumCulled = false;
     bindCamera(mesh, material);
     envScene.add(mesh);
-    const pmrem = new THREE.PMREMGenerator(gl);
-    const target = pmrem.fromScene(envScene, 0, 0.1, 100);
+    return { material, envScene, pmrem: new THREE.PMREMGenerator(gl) };
+  }, [gl]);
+  useEffect(
+    () => () => {
+      capture.material.dispose();
+      capture.pmrem.dispose();
+    },
+    [capture],
+  );
+  // Before the first compile, not after it: a material compiled without an
+  // environment has to be compiled again with one.
+  useLayoutEffect(() => {
+    const lut = createSkyLutTexture(state.solution.lut);
+    applySkyState(capture.material, state, lut);
+    const target = capture.pmrem.fromScene(capture.envScene, 0, 0.1, 100);
     const previous = scene.environment;
     scene.environment = target.texture;
-    material.dispose();
     lut.dispose();
-    pmrem.dispose();
     return () => {
       if (scene.environment === target.texture) scene.environment = previous;
       target.dispose();
     };
-  }, [gl, scene, state]);
+  }, [capture, scene, state]);
   useEffect(() => {
     scene.environmentIntensity = intensity;
   }, [scene, intensity]);

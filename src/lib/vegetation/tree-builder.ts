@@ -326,7 +326,27 @@ export type TreeMeshes = {
   height: number;
   near: { wood: THREE.BufferGeometry; leaves: THREE.BufferGeometry };
   far: { wood: THREE.BufferGeometry; leaves: THREE.BufferGeometry };
+  /** A tree a few pixels tall: tens of triangles, and most trees on screen are this one. */
+  distant: { wood: THREE.BufferGeometry; leaves: THREE.BufferGeometry };
 };
+
+/** Crown clusters kept in the distant mesh. Each one costs four triangles. */
+export const DISTANT_CLUSTERS = 10;
+
+/**
+ * A crown's clusters overlap, so what the eye sees is less than the sum of their
+ * cards. Fewer, larger cards overlap far less: keeping the summed area would
+ * overstate the crown and hide its trunk. This is the share of it to keep,
+ * chosen by comparing the two side by side from the same camera.
+ */
+const DISTANT_COVERAGE = 0.5;
+
+/** Keeps every `step`th cluster and enlarges it to cover about what the whole crown did. */
+export function distantCardPlan(clusters: number): { step: number; scale: number } {
+  const step = Math.max(1, Math.ceil(clusters / DISTANT_CLUSTERS));
+  if (step === 1) return { step, scale: 1 };
+  return { step, scale: Math.sqrt(step * DISTANT_COVERAGE) };
+}
 
 export function buildTree(species: Species, seed: number): TreeMeshes {
   const rules = SPECIES[species];
@@ -352,9 +372,18 @@ export function buildTree(species: Species, seed: number): TreeMeshes {
   // Every third cluster, enlarged to keep the crown's coverage.
   meshCards(farLeaves, sk, leafRules, (i) => i % 3 === 0, 1.65);
 
+  const distantWood = builder();
+  for (const br of sk.branches) {
+    if (br.level === 0) meshBranch(distantWood, br, 3, Math.max(4, br.pts.length), barkColor, height);
+  }
+  const distantLeaves = builder();
+  const plan = distantCardPlan(sk.clusters.length);
+  meshCards(distantLeaves, sk, leafRules, (i) => i % plan.step === 0, plan.scale);
+
   return {
     height,
     near: { wood: toGeometry(nearWood), leaves: toGeometry(nearLeaves) },
     far: { wood: toGeometry(farWood), leaves: toGeometry(farLeaves) },
+    distant: { wood: toGeometry(distantWood), leaves: toGeometry(distantLeaves) },
   };
 }

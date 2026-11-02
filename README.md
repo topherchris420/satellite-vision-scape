@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://geotwn.vercel.app/"><strong>Play in your browser</strong></a> ·
+  <a href="https://geotwn.vercel.app/"><strong>Race Jev in your browser</strong></a> ·
   <a href="https://geotwn.vercel.app/?controller=mock"><strong>Watch the scripted baseline</strong></a> ·
   <a href="#recorded-runs"><strong>Inspect the evidence</strong></a> ·
   <a href="#run-locally"><strong>Run locally</strong></a>
@@ -32,17 +32,18 @@ A human and an agent share the world's controls, physics, collisions and task ru
 
 ## Explore the world
 
-Human play and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/) and choose a mode on the briefing card.
+Human play, the race and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/): the first screen offers the race, and everything else is one click further in.
 
 | Experience | What you do | What it makes observable |
 | --- | --- | --- |
+| **Race Jev** | Take a vehicle, reach the checkpoint and shake the response, on the seed Jev ran, with its recorded run drawn beside you and a live gap. Time to beat: 1:44.5, from a [committed trace](docs/traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json). | The same task, the same rules and a stated difference. [What the comparison does and does not show →](docs/FREE_ROAM.md#racing-a-recorded-run) |
 | **After Hours** | Deliver coffee across the site, decode a radio clue, tune four signal terminals and reach a midnight concert. | Planning across stages, smooth driving, feedback-based tuning and knowing when to wait. |
 | **GTA-Style Free Roam** | Choose one of 14 seeded scenarios, including free play. Walk, drive, interact with traffic and pedestrians, and attempt challenges with a human, Jev or a scripted controller. | Navigation, vehicle handling, aiming, recovery and the consequences of actions. |
 | **Explore, Tour and Plan** | Fly over the site, take a camera tour or inspect the overhead plan. Select a structure to see its source dossier. | The historical reference behind the scene, separated from the fictional gameplay. |
 
-**Start with After Hours.** Collect the coffee at the canteen cart, find a vehicle and follow the objective. The cup reacts to braking, cornering and impacts. After delivery, switch the radio to the Numbers Station and follow its captioned clue.
+**Then try After Hours.** Collect the coffee at the canteen cart, find a vehicle and follow the objective. The cup reacts to braking, cornering and impacts. After delivery, switch the radio to the Numbers Station and follow its captioned clue.
 
-To watch the same journey without a model key, [open the scripted baseline](https://geotwn.vercel.app/?controller=mock) and press **After Hours**. It is a hand-written policy, clearly labelled in the interface.
+To watch the same journey without a model key, [open the scripted baseline](https://geotwn.vercel.app/?controller=mock) and start After Hours from **More ways to play**. It is a hand-written policy, clearly labelled in the interface.
 
 The vehicle radio features **_Green Machine_ by Indigo People**, original music written by **Christopher Woodyard**. The puzzle and concert use a separate procedural score. [Soundtrack, credits and permissions →](docs/SOUNDTRACK.md)
 
@@ -208,7 +209,7 @@ bun run build
 bun run preview
 ```
 
-The focused test commands are subsets of the full suite. Tests cover world interactions, agent authority, takeover, contracts, replay integrity and experiment definitions. `bun run verify:secrets` performs a separate production build with a canary credential and scans the output for leaks.
+`bun run preview` builds for Node and serves it the way production runs, on port 3000 unless `PORT` says otherwise. CI runs the same typecheck, lint, tests, build and secret scan on pushes to `main` and on pull requests. The focused test commands are subsets of the full suite. Tests cover world interactions, agent authority, takeover, contracts, replay integrity and experiment definitions. `bun run verify:secrets` performs a separate production build with a canary credential and scans the output for leaks.
 
 ### Experiments
 
@@ -262,6 +263,7 @@ The simulation uses stylised vehicle dynamics and simplified collision geometry.
 | Agent contracts, validation, takeover and evaluation | [Agent runtime](docs/AGENT_RUNTIME.md) |
 | Jev configuration, recorded success and failure analysis | [Jev After Hours](docs/JEV_AFTER_HOURS.md) |
 | Seeded scenarios, shared actions, replay and comparison | [Free Roam](docs/FREE_ROAM.md) · [Acceptance review](docs/FREE_ROAM_ACCEPTANCE.md) |
+| How startup and frame rate were measured and what changed | [Performance](docs/PERFORMANCE.md) |
 | Reproducible experiments and hypothesis tracking | [Experiments](docs/EXPERIMENTS.md) · [Research backlog](experiments/HYPOTHESES.md) |
 | Prompt assists, capability probes and model comparisons | [Next-model method](docs/NEXT_MODEL.md) |
 | Proposed mathematical extension; not yet tested | [Research proposal](docs/MATH_RESEARCH.md) |

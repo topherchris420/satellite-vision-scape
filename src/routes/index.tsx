@@ -4,17 +4,17 @@ import { SiteScene } from "@/components/site/SiteScene";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Pine Gap — Public Reference Reconstruction" },
+      { title: "Beat the AI's time · Pine Gap, a playable reconstruction" },
       {
         name: "description",
         content:
-          "Explore Pine Gap in 3D: historical public antenna coordinates at real-world scale, with approximate terrain and architecture.",
+          "Race an AI agent's recorded run through a playable 3D reconstruction of Pine Gap, in your browser, with no account or key. Then watch what the agent actually did.",
       },
-      { property: "og:title", content: "Pine Gap — Public Reference Reconstruction" },
+      { property: "og:title", content: "Beat the AI's time" },
       {
         property: "og:description",
         content:
-          "A historically anchored Pine Gap exterior reconstruction with approximate contextual terrain and buildings.",
+          "A browser game where you race an AI agent's recorded run through a reconstruction of Pine Gap, on the same seed, with the same controls.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

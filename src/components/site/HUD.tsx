@@ -365,7 +365,7 @@ export function HUD({
                 {mode === "fly"
                   ? "Drag to orbit · Scroll to zoom · WASD to move"
                   : mode === "play"
-                    ? "Deploy or resume to take control · Esc pauses"
+                    ? "Pick how to play, or resume · Esc pauses"
                     : mode === "overhead"
                       ? "Drag to pan · Scroll to zoom · Compare with the overhead reference"
                       : "Automated orbital survey in progress"}

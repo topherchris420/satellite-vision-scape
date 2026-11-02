@@ -139,7 +139,7 @@ It contains no credentials and no prompts. **Replay** rebuilds the scenario from
 ## Tests and commands
 
 ```
-bun test                 # 390 tests, 130 of them for Free Roam (bun run test:freeroam)
+bun run test             # 440 tests, 163 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build
@@ -158,6 +158,22 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
 | `freeroam-trace` | recording, separation of decision/action/outcome, exact replay with jittered frame lengths and no provider call, measurement and comparison, malformed/incompatible imports preserving the current run or replay, frame-log ordering and bounds |
 | `freeroam-server` | the question, the answer validation, request hardening, rate limits, typed upstream errors, the credential never in a response, header or log, the browser client |
 | `freeroam-authority` | import and write boundaries; no clock or random number in the simulation |
+| `freeroam-race` | the race target against its trace, the recording replayed through today's simulation, the live gap, shared links, a whole race end to end, and the world hash with and without a race running |
+| `freeroam-audio` | silence before unlock, the siren against every way a pursuit or run can end, and no path from the sound back to the simulation |
+
+## Racing a recorded run
+
+**Race Jev** on the first screen starts Borrowed Wheels on seed 48291 in the person's hands, with the committed run [`traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json`](traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json) drawn beside them. No model is called and no key is needed, so anyone can do the thing this project is about.
+
+- **The target is derived, not typed.** `src/lib/freeroam/race-target.generated.json` comes from the trace (`bun run race:build`), and `tests/freeroam-race.test.ts` fails if the two disagree. It also replays the trace through the current simulation and checks that it still finishes at the stated time.
+- **The fastest committed run is the target, and the card says so.** The result card names the model and date, links the trace, and quotes the other committed run of this seed (2:23.6). Other uncommitted runs took 100.8 s and 109.7 s, so 1:44.5 is one run, not Jev's limit. Four or five runs are not a distribution.
+- **A hand-written script beats it.** The scripted baseline, which uses the same local controllers, finishes this seed in 98.6 s headless, 5.9 s faster than the target and with no model. The race tests a person against one recording. It is not evidence that the model drives well.
+- **The two runs were not recorded the same way.** Jev's was recorded headless through the decision service, and the person plays in the browser. Both clocks are simulation time, so a slow frame rate costs control but not seconds. Jev reads structured observations and has local controllers for movement; the person has eyes and thumbs. Beating or losing to it says nothing about human-equivalent ability.
+- **Racing writes nothing to the world.** `RaceTracker` only listens, and a test holds the world hash identical with and without it. The ghost is drawn from the recording's positions.
+- **Help is not hidden.** If Jev or the assist has the controls at any point in the run, the result says for how long and gives no comparison, no personal best and no link.
+- **A shared link is a claim.** `/?race=1&beat=91.2` carries a number and nothing else. It is shown as what the link claims, and nothing verifies it.
+
+The result prints the two times and the difference and names no winner, as the compare view does.
 
 ## Known limitations
 
@@ -168,7 +184,7 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
   - `borrowed-wheels` (walk to a vehicle, take it, drive to a checkpoint, shake the pursuit): success in 104.6 s and in 106.3 s on the two runs made after the fixes below; 92 and 76 decisions, ~300 ms mean latency, no failures, 565–571 m driven with no collisions. The run is committed as [`traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json`](traces/jev-free-roam-borrowed-wheels-live-2026-09-30.json) and replays frame for frame in the test suite. Two later runs, made after the sweep hardening (not committed), also succeeded: 100.8 s and 109.7 s, 79 and 93 decisions, 287 and 303 ms mean latency, no failures and no collisions. Jev chose different steps each time (the last one used more manual swerves and straightening-ups, and drove 779 m to the others' ~566). A run recorded in the browser through Let Jev Play on 3 October 2026, after the graphics overhaul, also succeeded: 143.7 s, 126 decisions, 183 ms mean latency (269 ms p95), no failures or holds, 1,060 m driven, one pedestrian collision. It is committed as [`traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json`](traces/jev-free-roam-borrowed-wheels-live-2026-10-03.json), replays to the finish in the browser without diverging, and is the run filmed at the top of the README (`scripts/record-live-freeroam.mjs` records such a run; `scripts/record-replay.mjs` renders a trace to frames).
   - The runs *before* those fixes failed, and instructively: Jev got the car wedged against a wall and kept choosing "accelerate" for five minutes. That produced the driver's own back-out reflex (the driver, not the model, gets a car out of a wall), driving options that are only offered when they would do something, wording that steers the model to phrase-sized decisions (the manual driving options are described as interruptions), and a "blocked" outcome that says so when a manoeuvre could not move the car. Five back-outs happened in the committed run and six in the 100.8 s one, all while shaking the pursuit: the escape kept choosing places no road reaches and sat at the checkpoint until each attempt timed out. It now chooses only places a route reaches (a regression test holds it to no back-outs on that seed), and the run made after that fix needed none. Four live runs are not a success rate.
 - One weapon, one site, one crowd and one traffic model. Pedestrians do not drive; traffic obeys obstacles, not signals.
-- There is no Free Roam audio yet (shots, sirens). The touch buttons have been exercised in a phone-sized emulation, not on a range of devices.
+- Free Roam's sound is procedural and presentation only (`src/game/audio/FreeRoamAudio.ts`: shots by distance, a siren during a pursuit, hits, objective cues); it has been checked for correct behaviour and for errors, but nobody has listened to it yet. The touch buttons have been exercised in a phone-sized emulation, not on a range of devices.
 - Guards shown on the minimap are those hunting the player. That is a HUD affordance for the person; Jev's observation contains no such thing.
 - Replays are exact for the same build on the same JavaScript engine. Transcendental math can differ in the last bit between engines, and if the game changes, a recorded run reports drift (`divergence`) instead of pretending. A run recorded headless (`scripts/verify-freeroam-live.ts`, the test suite) replays exactly headless but not in the browser, where the gameplay camera and the visuals take part in the simulation: in a browser it reports drift within the first seconds. A run recorded in the browser replays exactly in the browser.
 

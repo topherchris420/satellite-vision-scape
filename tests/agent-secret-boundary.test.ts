@@ -21,9 +21,9 @@ function walk(dir: string): string[] {
   });
 }
 
-const all = walk("src");
-const server = (path: string) =>
-  path.startsWith(join("src", "server")) || path.endsWith(join("src", "server.ts"));
+/** Paths with forward slashes on every platform, so the rules below read one way. */
+const all = walk("src").map((p) => p.replaceAll("\\", "/"));
+const server = (path: string) => path.startsWith("src/server") || path.endsWith("src/server.ts");
 const serverRoute = (path: string) => /src\/routes\/api\./.test(path);
 const browser = all.filter((p) => !server(p) && !serverRoute(p) && !p.endsWith("routeTree.gen.ts"));
 const read = (p: string) => readFileSync(p, "utf8");
@@ -33,7 +33,7 @@ describe("credential boundary (source)", () => {
     const offenders = browser.filter((p) =>
       /TYPESAFE_API_KEY|VITE_TYPESAFE|process\.env/.test(read(p)),
     );
-    expect(offenders.map((p) => relative(".", p))).toEqual([]);
+    expect(offenders.map((p) => relative(".", p).replaceAll("\\", "/"))).toEqual([]);
   });
 
   test("no browser module imports server code or the upstream endpoint", () => {
@@ -42,7 +42,7 @@ describe("credential boundary (source)", () => {
         /from\s+["'][^"']*\/server\/|from\s+["']@\/server\//.test(read(p)) ||
         read(p).includes("api.typesafe.ai"),
     );
-    expect(offenders.map((p) => relative(".", p))).toEqual([]);
+    expect(offenders.map((p) => relative(".", p).replaceAll("\\", "/"))).toEqual([]);
   });
 
   test("the key is read by the server entry only", () => {
@@ -50,14 +50,14 @@ describe("credential boundary (source)", () => {
       .filter((p) =>
         /process\.env(\.TYPESAFE_API_KEY|\[\s*["']TYPESAFE_API_KEY["']\s*\])/.test(read(p)),
       )
-      .map((p) => relative(".", p));
+      .map((p) => relative(".", p).replaceAll("\\", "/"));
     expect(readers).toEqual(["src/server/agent/jev.server.ts"]);
   });
 
   test("the only route that reaches the server module is the API route", () => {
     const importers = all
       .filter((p) => /server\/agent\/jev\.server/.test(read(p)))
-      .map((p) => relative(".", p));
+      .map((p) => relative(".", p).replaceAll("\\", "/"));
     expect(importers).toEqual(["src/routes/api.agent.jev.decision.ts"]);
   });
 

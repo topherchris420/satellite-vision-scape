@@ -30,7 +30,7 @@ const touchesGame = (i: string) => i.includes("game/") || i.includes("/Game");
 const AGENT = files("src/agent/freeroam");
 /** The only agent modules that read the game: the bridge and the observation builder read it (and never write it); the session composes. */
 const READS_THE_GAME = new Set(["bridge.ts", "observe.ts", "session.ts"]);
-const base = (p: string) => p.split("/").pop()!;
+const base = (p: string) => p.split(/[\\/]/).pop()!;
 
 describe("import boundary", () => {
   test("choosing, validating, recording and driving modules import nothing from the game", () => {

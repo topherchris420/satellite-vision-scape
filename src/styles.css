@@ -242,3 +242,9 @@
 .capture-clean > *:not(:has(canvas)) {
   display: none !important;
 }
+
+/* A dark glass card should not grow a bright system scrollbar. */
+.scroll-quiet {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
+}

@@ -48,8 +48,16 @@ export function FreeRoamMapLayer({ game }: { game: Game }) {
       );
     }
     const guards = new Map<string, SVGCircleElement>();
+    const ghost = el("circle", { r: "15", fill: "#67e8f9", stroke: "#04121c", "stroke-width": "5", opacity: "0" });
+    root.append(ghost);
 
     const tick = () => {
+      const ghostAt = game.freeRoam.visuals?.ghostPosition ?? null;
+      if (ghostAt) {
+        ghost.setAttribute("cx", ghostAt.x.toFixed(1));
+        ghost.setAttribute("cy", ghostAt.z.toFixed(1));
+        ghost.setAttribute("opacity", "1");
+      } else ghost.setAttribute("opacity", "0");
       const m = game.freeRoam.objectiveMarker();
       if (m) {
         objective.setAttribute("transform", `translate(${m.x.toFixed(1)} ${m.z.toFixed(1)})`);

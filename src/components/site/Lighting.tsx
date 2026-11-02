@@ -32,11 +32,17 @@ type CascadeConfig = {
   farInterval: number;
 };
 
+/** Phones draw without shadow maps and a light fewer, which keeps their shaders smaller. */
+const PORTABLE_CASCADES: CascadeConfig = { cascades: 1, nearSize: 1024, farSize: 0, playExtent: 70, farExtent: 0, farInterval: 1 };
+
+// Every desktop tier has the same two lights. The number of shadow-casting
+// lights is compiled into every material, so a tier that changed it would
+// rebuild them all.
 const CASCADES: Record<QualityTier, CascadeConfig> = {
-  low: { cascades: 1, nearSize: 1024, farSize: 0, playExtent: 70, farExtent: 0, farInterval: 1 },
-  medium: { cascades: 2, nearSize: 2048, farSize: 2048, playExtent: 55, farExtent: 1100, farInterval: 4 },
-  high: { cascades: 2, nearSize: 4096, farSize: 4096, playExtent: 60, farExtent: 1500, farInterval: 3 },
-  ultra: { cascades: 2, nearSize: 4096, farSize: 4096, playExtent: 60, farExtent: 1600, farInterval: 1 },
+  low: { cascades: 2, nearSize: 1024, farSize: 1024, playExtent: 70, farExtent: 1000, farInterval: 40 },
+  medium: { cascades: 2, nearSize: 2048, farSize: 2048, playExtent: 55, farExtent: 1100, farInterval: 24 },
+  high: { cascades: 2, nearSize: 4096, farSize: 4096, playExtent: 60, farExtent: 1500, farInterval: 15 },
+  ultra: { cascades: 2, nearSize: 4096, farSize: 4096, playExtent: 60, farExtent: 1600, farInterval: 4 },
 };
 
 /** Writes the per-time-of-day atmosphere constants shared by every material. */
@@ -100,14 +106,16 @@ function SunCascades({
   state,
   tier,
   focus,
+  portable,
 }: {
   state: SkyState;
   tier: QualityTier;
   focus: THREE.Vector3 | null;
+  portable: boolean;
 }) {
   const nearRef = useRef<THREE.DirectionalLight>(null);
   const farRef = useRef<THREE.DirectionalLight>(null);
-  const cfg = CASCADES[tier];
+  const cfg = portable ? PORTABLE_CASCADES : CASCADES[tier];
   const sun = useMemo(() => new THREE.Vector3(...state.sourceDir), [state]);
   const color = useMemo(() => new THREE.Color(...state.keyColor), [state]);
   const scratch = useMemo(
@@ -233,6 +241,7 @@ export function Lighting({
   tier = "high",
   shadowFocus = null,
   fogScale = 1,
+  portable = false,
 }: {
   time: TimeOfDay;
   tier?: QualityTier;
@@ -240,6 +249,8 @@ export function Lighting({
   shadowFocus?: THREE.Vector3 | null;
   /** Aerial perspective strength (the top-down map view uses less). */
   fogScale?: number;
+  /** A phone or tablet: no shadow maps, and drawn straight to the canvas. */
+  portable?: boolean;
 }) {
   const state = getSkyState(time);
   // Written during render so children (the environment capture) see it.
@@ -269,8 +280,8 @@ export function Lighting({
       <SkyEnvironment state={state} intensity={preset.envIntensity * (1 - HEMI_SHARE)} />
       <hemisphereLight args={[hemi.sky, hemi.ground, 1]} />
       <CloudDrift />
-      <SunCascades state={state} tier={tier} focus={shadowFocus} />
-      <SiteLights level={preset.siteLights} tier={tier} />
+      <SunCascades state={state} tier={tier} focus={shadowFocus} portable={portable} />
+      <SiteLights level={preset.siteLights} tier={tier} portable={portable} />
     </>
   );
 }
