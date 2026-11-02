@@ -25,6 +25,7 @@ import { WorldManager } from "./world/WorldManager";
 import { PLAYER_SPAWN, VEHICLE_SPAWNS } from "./world/spawns";
 import { DustSystem } from "./effects/DustSystem";
 import { GameAudio } from "./audio/GameAudio";
+import { FreeRoamAudio } from "./audio/FreeRoamAudio";
 import { HudModel } from "./hud/HudModel";
 import { FreeRoam } from "./freeroam/FreeRoam";
 import { FreeRoamVisuals } from "./freeroam/FreeRoamVisuals";
@@ -86,6 +87,7 @@ export class Game {
   readonly interaction: InteractionManager;
   readonly dust: DustSystem | null;
   readonly audio: GameAudio | null;
+  private freeRoamAudio: FreeRoamAudio | null = null;
   readonly hud = new HudModel();
   /** The fictional After Hours expansion (inactive until started). */
   readonly afterHours: AfterHours;
@@ -186,6 +188,7 @@ export class Game {
       resetForScenario: (spawn) => this.resetForScenario(spawn),
       createVisuals: options.visuals ? () => new FreeRoamVisuals() : null,
     });
+    if (this.audio) this.freeRoamAudio = new FreeRoamAudio(this.audio, this.freeRoam.events, () => this.freeRoam.playerPosition());
     this.roam = new FreeRoamSession({
       freeRoam: this.freeRoam,
       events: this.events,
@@ -701,6 +704,7 @@ export class Game {
   }
 
   dispose(): void {
+    this.freeRoamAudio?.dispose();
     this.agent.dispose();
     this.roam.dispose();
     this.freeRoam.dispose();
