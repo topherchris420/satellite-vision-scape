@@ -58,91 +58,7 @@ export function Minimap({
       onClick={handleClick}
     >
       {onNavigate && <title>Click to fly the camera there</title>}
-      {/* southwestern antenna enclosure */}
-      <polygon
-        points={topEnclosurePath.map((p) => p.join(",")).join(" ")}
-        fill="#1c2333"
-        fillOpacity={0.4}
-        stroke="#6b675e"
-        strokeWidth={4}
-      />
-      {/* main perimeter boundary */}
-      <polygon
-        points={perimeterPath.map((p) => p.join(",")).join(" ")}
-        fill="#1c2333"
-        fillOpacity={0.55}
-        stroke="#6b675e"
-        strokeWidth={5}
-      />
-      <polyline points={roadPath.map(p=>p.join(',')).join(' ')} fill="none" stroke="#6b675e" strokeWidth={5}/>
-      {/* interior roads */}
-      {interiorRoads.map((path, i) => (
-        <polyline
-          key={`ir-${i}`}
-          points={path.map((p) => p.join(",")).join(" ")}
-          fill="none"
-          stroke="#6b675e"
-          strokeWidth={4}
-        />
-      ))}
-      {/* dirt tracks */}
-      {dirtTracks.map((path, i) => (
-        <polyline
-          key={`dt-${i}`}
-          points={path.map((p) => p.join(",")).join(" ")}
-          fill="none"
-          stroke="#8a7654"
-          strokeWidth={3}
-          strokeDasharray="8 6"
-        />
-      ))}
-      {/* parking aprons */}
-      {parkingLots.map((p, i) => (
-        <rect
-          key={`pk-${i}`}
-          x={p.pos[0] - p.size[0] / 2}
-          y={p.pos[1] - p.size[1] / 2}
-          width={p.size[0]}
-          height={p.size[1]}
-          transform={`rotate(${-(p.rotY ?? 0)*180/Math.PI} ${p.pos[0]} ${p.pos[1]})`}
-          fill="#3f3f46"
-        />
-      ))}
-      {/* buildings */}
-      {buildings.map((b, i) => (
-        <rect
-          key={`b-${i}`}
-          x={b.pos[0] - b.size[0] / 2}
-          y={b.pos[1] - b.size[1] / 2}
-          width={b.size[0]}
-          height={b.size[1]}
-          transform={`rotate(${-(b.rotY ?? 0)*180/Math.PI} ${b.pos[0]} ${b.pos[1]})`}
-          fill="#b9b2a3"
-        />
-      ))}
-      {/* cylindrical tanks */}
-      {tanks.map((t, i) => (
-        <circle key={`t-${i}`} cx={t.pos[0]} cy={t.pos[1]} r={Math.max(4, t.radius)} fill="#d8d2c6" />
-      ))}
-      {/* spheres + radomes */}
-      {spheres.map((s, i) => (
-        <circle key={`s-${i}`} cx={s.pos[0]} cy={s.pos[1]} r={Math.max(5, s.radius)} fill="#f5f2ea" />
-      ))}
-      {domes.map((d, i) => (
-        <circle key={`d-${i}`} cx={d.pos[0]} cy={d.pos[1]} r={Math.max(5, d.radius)} fill="#f5f2ea" />
-      ))}
-      {/* uncovered dishes — open rings to read apart from the filled radomes */}
-      {dishes.map((a, i) => (
-        <circle
-          key={`dish-${i}`}
-          cx={a.pos[0]}
-          cy={a.pos[1]}
-          r={Math.max(4, a.dishRadius)}
-          fill="none"
-          stroke="#f5f2ea"
-          strokeWidth={2.5}
-        />
-      ))}
+      <SiteShapes />
       {/* north arrow (map "up" is −z = grid north) */}
       <g fill="#ffffff" fillOpacity={0.55}>
         <path d="M245,-370 l9,20 -9,-6 -9,6 Z" />
@@ -189,14 +105,146 @@ export function Minimap({
       {/* objective marker — transform and opacity driven imperatively by After Hours */}
       {waypointRef && (
         <g ref={waypointRef} opacity={0}>
-          <path d="M0,-20 L13,0 L0,20 L-13,0 Z" fill="#7fd6d0" stroke="#000" strokeOpacity={0.5} strokeWidth={3} />
+          <path
+            d="M0,-20 L13,0 L0,20 L-13,0 Z"
+            fill="#7fd6d0"
+            stroke="#000"
+            strokeOpacity={0.5}
+            strokeWidth={3}
+          />
         </g>
       )}
       {children}
       {/* camera marker — transform driven imperatively by CameraTracker */}
       <g ref={markerRef}>
-        <path d="M0,-22 L14,18 L0,9 L-14,18 Z" fill="#fbbf24" stroke="#000" strokeOpacity={0.4} strokeWidth={2} />
+        <path
+          d="M0,-22 L14,18 L0,9 L-14,18 Z"
+          fill="#fbbf24"
+          stroke="#000"
+          strokeOpacity={0.4}
+          strokeWidth={2}
+        />
       </g>
     </svg>
+  );
+}
+
+/**
+ * The site drawn in world metres (x right, z down): enclosures, roads, tracks,
+ * aprons, buildings, tanks, radomes and open dishes. Shared by the overview
+ * minimap and Free Roam's radar, so both always match the 3D scene.
+ */
+export function SiteShapes() {
+  return (
+    <>
+      {/* southwestern antenna enclosure */}
+      <polygon
+        points={topEnclosurePath.map((p) => p.join(",")).join(" ")}
+        fill="#1c2333"
+        fillOpacity={0.4}
+        stroke="#6b675e"
+        strokeWidth={4}
+      />
+      {/* main perimeter boundary */}
+      <polygon
+        points={perimeterPath.map((p) => p.join(",")).join(" ")}
+        fill="#1c2333"
+        fillOpacity={0.55}
+        stroke="#6b675e"
+        strokeWidth={5}
+      />
+      <polyline
+        points={roadPath.map((p) => p.join(",")).join(" ")}
+        fill="none"
+        stroke="#6b675e"
+        strokeWidth={5}
+      />
+      {/* interior roads */}
+      {interiorRoads.map((path, i) => (
+        <polyline
+          key={`ir-${i}`}
+          points={path.map((p) => p.join(",")).join(" ")}
+          fill="none"
+          stroke="#6b675e"
+          strokeWidth={4}
+        />
+      ))}
+      {/* dirt tracks */}
+      {dirtTracks.map((path, i) => (
+        <polyline
+          key={`dt-${i}`}
+          points={path.map((p) => p.join(",")).join(" ")}
+          fill="none"
+          stroke="#8a7654"
+          strokeWidth={3}
+          strokeDasharray="8 6"
+        />
+      ))}
+      {/* parking aprons */}
+      {parkingLots.map((p, i) => (
+        <rect
+          key={`pk-${i}`}
+          x={p.pos[0] - p.size[0] / 2}
+          y={p.pos[1] - p.size[1] / 2}
+          width={p.size[0]}
+          height={p.size[1]}
+          transform={`rotate(${(-(p.rotY ?? 0) * 180) / Math.PI} ${p.pos[0]} ${p.pos[1]})`}
+          fill="#3f3f46"
+        />
+      ))}
+      {/* buildings */}
+      {buildings.map((b, i) => (
+        <rect
+          key={`b-${i}`}
+          x={b.pos[0] - b.size[0] / 2}
+          y={b.pos[1] - b.size[1] / 2}
+          width={b.size[0]}
+          height={b.size[1]}
+          transform={`rotate(${(-(b.rotY ?? 0) * 180) / Math.PI} ${b.pos[0]} ${b.pos[1]})`}
+          fill="#b9b2a3"
+        />
+      ))}
+      {/* cylindrical tanks */}
+      {tanks.map((t, i) => (
+        <circle
+          key={`t-${i}`}
+          cx={t.pos[0]}
+          cy={t.pos[1]}
+          r={Math.max(4, t.radius)}
+          fill="#d8d2c6"
+        />
+      ))}
+      {/* spheres + radomes */}
+      {spheres.map((s, i) => (
+        <circle
+          key={`s-${i}`}
+          cx={s.pos[0]}
+          cy={s.pos[1]}
+          r={Math.max(5, s.radius)}
+          fill="#f5f2ea"
+        />
+      ))}
+      {domes.map((d, i) => (
+        <circle
+          key={`d-${i}`}
+          cx={d.pos[0]}
+          cy={d.pos[1]}
+          r={Math.max(5, d.radius)}
+          fill="#f5f2ea"
+        />
+      ))}
+      {/* uncovered dishes — open rings to read apart from the filled radomes */}
+      {dishes.map((a, i) => (
+        <circle
+          key={`dish-${i}`}
+          cx={a.pos[0]}
+          cy={a.pos[1]}
+          r={Math.max(4, a.dishRadius)}
+          fill="none"
+          stroke="#f5f2ea"
+          strokeWidth={2.5}
+        />
+      ))}
+    </>
   );
 }

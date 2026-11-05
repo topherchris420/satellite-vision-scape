@@ -248,3 +248,109 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
+
+/* Free Roam: a hit marker pops on the crosshair, a damage arc fades at the edge of vision,
+   and title cards sweep in when a stage or a challenge turns over. */
+.hit-marker {
+  animation: fr-hit-pop 0.26s ease-out forwards;
+}
+@keyframes fr-hit-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(1.45);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+.damage-arc {
+  animation-name: fr-arc-fade;
+  animation-timing-function: ease-in;
+  animation-fill-mode: forwards;
+}
+@keyframes fr-arc-fade {
+  0% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.fr-card {
+  animation: fr-card 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+@keyframes fr-card {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.98);
+    letter-spacing: 0.6em;
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}
+.fr-card-rule {
+  animation: fr-rule 2.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  transform-origin: center;
+}
+@keyframes fr-rule {
+  0% {
+    transform: scaleX(0);
+  }
+  25% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+.fr-toast {
+  animation: fr-toast 3.4s ease-out forwards;
+}
+@keyframes fr-toast {
+  0% {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes fr-still {
+  0%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hit-marker {
+    animation: none;
+    opacity: 0.9;
+  }
+  .fr-card,
+  .fr-toast {
+    animation-name: fr-still;
+  }
+  .fr-card-rule {
+    animation: none;
+  }
+}

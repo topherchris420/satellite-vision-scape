@@ -23,6 +23,7 @@ import { FreeRoamMenu } from "./FreeRoamMenu";
 import { Landing } from "./Landing";
 import { FreeRoamOverlay } from "./FreeRoamHUD";
 import { FreeRoamMapLayer } from "./FreeRoamMapLayer";
+import { FreeRoamRadar } from "./FreeRoamRadar";
 import { useFreeRoam, usePointerLocked } from "@/hooks/use-free-roam";
 import type { FrLaunch, LaunchResult } from "@/lib/freeroam-ui";
 
@@ -326,7 +327,8 @@ export function GameHUD({
                 </span>
               )}
             </div>
-            {isMobile && (
+            {isMobile && roam.active && <FreeRoamRadar game={game} compact />}
+            {isMobile && !roam.active && (
               <div className={`${glass} overflow-hidden rounded-xl p-1`}>
                 <Minimap
                   markerRef={markerRef}
@@ -368,20 +370,24 @@ export function GameHUD({
                   <>WASD move · Shift sprint · Space jump · C walk · E interact</>
                 )}
               </div>
-              <div className={`${glass} w-fit overflow-hidden rounded-xl p-1`}>
-                <div className="flex items-center gap-1.5 px-2 py-1 text-[8px] uppercase tracking-[.16em] text-white/35">
-                  <MapIcon size={10} /> Grid
+              {roam.active ? (
+                <FreeRoamRadar game={game} />
+              ) : (
+                <div className={`${glass} w-fit overflow-hidden rounded-xl p-1`}>
+                  <div className="flex items-center gap-1.5 px-2 py-1 text-[8px] uppercase tracking-[.16em] text-white/35">
+                    <MapIcon size={10} /> Grid
+                  </div>
+                  <Minimap
+                    markerRef={markerRef}
+                    vehicleMarkersRef={vehicleMarkersRef}
+                    vehicleCount={game.vehicles.vehicles.length}
+                    waypointRef={waypointRef}
+                    className="w-36"
+                  >
+                    <FreeRoamMapLayer game={game} />
+                  </Minimap>
                 </div>
-                <Minimap
-                  markerRef={markerRef}
-                  vehicleMarkersRef={vehicleMarkersRef}
-                  vehicleCount={game.vehicles.vehicles.length}
-                  waypointRef={waypointRef}
-                  className="w-36"
-                >
-                  <FreeRoamMapLayer game={game} />
-                </Minimap>
-              </div>
+              )}
             </div>
           )}
 

@@ -25,7 +25,9 @@ import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import type { JevHudSnapshot } from "@/agent/freeroam/hud";
 import type { RunEntry } from "@/agent/freeroam/session";
 import { useFreeRoam, useJevControl, useRace, useRuns } from "@/hooks/use-free-roam";
+import { CombatFeedback } from "./CombatFeedback";
 import { RaceResult, RaceStrip } from "./RaceHUD";
+import { TitleCards } from "./TitleCards";
 import { downloadFreeRoamTrace, formatClock, formatValue } from "@/lib/freeroam-ui";
 
 /**
@@ -585,6 +587,9 @@ function CompareTable({ game, aId, bId }: { game: Game; aId: string; bId: string
   );
 }
 
+/** How long the outcome card holds the screen before the results open. */
+const RESULTS_DELAY_MS = 2200;
+
 function Results({
   game,
   fr,
@@ -606,6 +611,16 @@ function Results({
   const [b, setB] = useState<string>("");
   const [showCompare, setShowCompare] = useState(false);
   const race = useRace(game);
+  // The outcome card plays first; the results follow it.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!finished) {
+      setSettled(false);
+      return;
+    }
+    const timer = setTimeout(() => setSettled(true), RESULTS_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [finished]);
 
   // Default the comparison to the newest run of two different controllers on this scenario.
   const defaults = useMemo(() => {
@@ -620,7 +635,7 @@ function Results({
     if (!here.some((r) => r.id === b)) setB(defaults.b);
   }, [defaults, here, a, b]);
 
-  if (!finished || !o) return null;
+  if (!finished || !o || !settled) return null;
   const won = o.status === "success";
   const s = latest?.summary;
   const line = (label: string, value: string) => (
@@ -791,6 +806,8 @@ export function FreeRoamOverlay({
   return (
     <>
       <DamageFlash health={fr.health} />
+      <CombatFeedback game={game} />
+      <TitleCards game={game} />
       <Crosshair fr={fr} />
       {isMobile ? (
         // A phone: one column at the top left (the minimap and pause own the top right, the thumbs the bottom).
@@ -825,11 +842,6 @@ export function FreeRoamOverlay({
           }`}
         >
           {fr.message}
-        </div>
-      )}
-      {!fr.alive && (
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-lg bg-black/55 px-6 py-3 text-[12px] font-bold uppercase tracking-[.3em] text-rose-200">
-          Down · respawning
         </div>
       )}
       {!isMobile && jev.mode === "HUMAN" && !jev.replaying && !locked && (
