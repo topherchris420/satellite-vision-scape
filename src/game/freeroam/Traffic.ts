@@ -426,6 +426,12 @@ export class Traffic {
     return this.entries.find((e) => e.vehicle === vehicle);
   }
 
+  /** Is this a response unit out on a call (its lights and siren are on)? Read-only. */
+  responding(vehicle: Vehicle): boolean {
+    const e = this.entryOf(vehicle);
+    return e !== undefined && e.spec.role === "response" && !e.released && e.driver.mode === "pursue";
+  }
+
   /** The player has taken this vehicle: it stops driving itself. */
   release(vehicle: Vehicle): TrafficEntry | undefined {
     const e = this.entryOf(vehicle);

@@ -25,7 +25,12 @@ import { WorldManager } from "./world/WorldManager";
 import { PLAYER_SPAWN, VEHICLE_SPAWNS } from "./world/spawns";
 import { DustSystem } from "./effects/DustSystem";
 import { GameAudio } from "./audio/GameAudio";
-import { FreeRoamAudio } from "./audio/FreeRoamAudio";
+import { FreeRoamAudio, type SirenSource } from "./audio/FreeRoamAudio";
+import { EmergencyLights } from "./effects/EmergencyLights";
+import { GunEffects } from "./effects/GunEffects";
+import { Jitter } from "./effects/Jitter";
+import { VehicleEffects } from "./effects/VehicleEffects";
+import { RESPONSE_UNIT } from "./freeroam/fleet";
 import { HudModel } from "./hud/HudModel";
 import { FreeRoam } from "./freeroam/FreeRoam";
 import { FreeRoamVisuals } from "./freeroam/FreeRoamVisuals";
@@ -86,6 +91,12 @@ export class Game {
   readonly camera: ThirdPersonCamera;
   readonly interaction: InteractionManager;
   readonly dust: DustSystem | null;
+  /** Tyre marks, smoke, sparks, debris and burning wrecks (null headless). */
+  readonly vehicleFx: VehicleEffects | null;
+  /** Light bars on the site's response units (null headless). */
+  private readonly lightBars: EmergencyLights | null;
+  /** Muzzle flashes and bullet strikes (null headless). */
+  private readonly gunFx: GunEffects | null;
   readonly audio: GameAudio | null;
   private freeRoamAudio: FreeRoamAudio | null = null;
   readonly hud = new HudModel();
@@ -150,6 +161,17 @@ export class Game {
     this.dust = options.visuals
       ? new DustSystem(EFFECTS.dustPoolSize, options.dustSprite ?? null)
       : null;
+    this.vehicleFx = options.visuals ? new VehicleEffects(options.dustSprite ?? null, this.ground) : null;
+    this.lightBars = options.visuals ? new EmergencyLights(options.dustSprite ?? null) : null;
+    this.gunFx = this.vehicleFx
+      ? new GunEffects(
+          options.dustSprite ?? null,
+          this.vehicleFx.sparks,
+          this.dust,
+          (x, z) => this.ground.heightAt(x, z),
+          new Jitter(0x6a7e),
+        )
+      : null;
     this.audio = options.visuals ? new GameAudio() : null;
 
     for (const spawn of VEHICLE_SPAWNS) {
@@ -165,6 +187,8 @@ export class Game {
     this.root.add(this.world.root, this.vehicles.root);
     if (this.characterVisual) this.root.add(this.characterVisual.root);
     if (this.dust) this.root.add(this.dust.points);
+    if (this.vehicleFx) this.root.add(this.vehicleFx.root);
+    if (this.gunFx) this.root.add(this.gunFx.root);
     this.wireEvents();
     this.afterHours = new AfterHours(
       this,
@@ -188,7 +212,20 @@ export class Game {
       resetForScenario: (spawn) => this.resetForScenario(spawn),
       createVisuals: options.visuals ? () => new FreeRoamVisuals() : null,
     });
-    if (this.audio) this.freeRoamAudio = new FreeRoamAudio(this.audio, this.freeRoam.events, () => this.freeRoam.playerPosition());
+    if (this.audio)
+      this.freeRoamAudio = new FreeRoamAudio(
+        this.audio,
+        this.freeRoam.events,
+        () => this.freeRoam.playerPosition(),
+        this.unitsOnCall,
+      );
+    // Gunfire, seen and felt: the flash and the strike, and a kick of the view when the player fires.
+    this.unsubscribers.push(
+      this.freeRoam.events.on("shot", (e) => {
+        this.gunFx?.shot(e);
+        if (this.gunFx && e.source !== "security") this.camera.addShake(0.05);
+      }),
+    );
     this.roam = new FreeRoamSession({
       freeRoam: this.freeRoam,
       events: this.events,
@@ -220,6 +257,8 @@ export class Game {
     this.camera.snapBehind(this.focus);
     this.input.releaseAll();
     this.agent.controls.synthetic.releaseAll();
+    this.vehicleFx?.clear();
+    this.gunFx?.clear();
   }
 
   /** The player's character visual (null headless). */
@@ -297,6 +336,10 @@ export class Game {
         this.camera.addShake(e.speed * CAMERA.shake.impactScale);
       }
       this.audio?.impact(e.speed);
+      if (this.vehicleFx) {
+        const struck = e.vehicleId === null ? null : (this.vehicles.vehicles.find((v) => v.id === e.vehicleId) ?? null);
+        this.vehicleFx.impact(e, struck);
+      }
       if (this.dust && e.speed > 2) {
         for (let i = 0; i < 6; i++) {
           this.dust.emit(
@@ -530,6 +573,15 @@ export class Game {
     this.updateFocus();
     this.emitVehicleDust(dt);
     this.dust?.update(dt);
+    this.vehicleFx?.update(dt, this.vehicles.vehicles, this.focusPoint);
+    this.gunFx?.update(dt);
+    this.lightBars?.update(
+      dt,
+      this.vehicles.vehicles,
+      this.isResponseUnit,
+      this.isResponding,
+      this.time === "night" ? 1 : this.time === "dusk" ? 0.5 : 0,
+    );
 
     if (options.camera) {
       if (options.establishing) {
@@ -545,12 +597,35 @@ export class Game {
         this.characterVisual.visible = this.afterHours.cinematic || !this.camera.characterOccluded;
       this.updateListener(options.camera);
     }
+    this.freeRoamAudio?.frame(dt);
 
     this.updateAudio();
     this.afterHours.present(dt, options.camera);
     this.freeRoam.present(dt, this.alpha);
     this.updateHud(dt);
   }
+
+  private readonly isResponseUnit = (v: Vehicle): boolean => v.spec === RESPONSE_UNIT;
+  private readonly sirenPool: SirenSource[] = [];
+  private readonly sirenList: SirenSource[] = [];
+  /** Response units out on a call, for their sirens (presentation; reused objects). */
+  private readonly unitsOnCall = (): readonly SirenSource[] => {
+    const out = this.sirenList;
+    out.length = 0;
+    if (!this.freeRoam.active) return out;
+    for (const v of this.vehicles.vehicles) {
+      if (v.spec !== RESPONSE_UNIT || v.health <= 0 || !this.freeRoam.traffic.responding(v)) continue;
+      const s = (this.sirenPool[out.length] ??= { id: "", x: 0, y: 0, z: 0 });
+      s.id = v.id;
+      s.x = v.physics.render.x;
+      s.y = v.physics.render.y;
+      s.z = v.physics.render.z;
+      out.push(s);
+    }
+    return out;
+  };
+  private readonly isResponding = (v: Vehicle): boolean =>
+    this.freeRoam.active && this.freeRoam.traffic.responding(v);
 
   /** The Web Audio listener rides with the camera (spatial radio). */
   private updateListener(camera: THREE.PerspectiveCamera): void {
@@ -716,6 +791,9 @@ export class Game {
     this.world.dispose();
     this.characterVisual?.dispose();
     this.dust?.dispose();
+    this.vehicleFx?.dispose();
+    this.lightBars?.dispose();
+    this.gunFx?.dispose();
     this.audio?.dispose();
     this.root.removeFromParent();
   }

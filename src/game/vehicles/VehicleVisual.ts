@@ -910,9 +910,49 @@ export class VehicleVisual {
     for (const sp of this.brakeSprites) sp.visible = braking || headlights;
   }
 
+  /**
+   * A burnt-out shell: the paint and canvas turn to soot. The charred
+   * materials are clones of the live ones (same shader program, so nothing is
+   * compiled when a vehicle burns), made the first time and kept for a reset.
+   */
+  setWrecked(wrecked: boolean): void {
+    if (wrecked === this.wrecked) return;
+    this.wrecked = wrecked;
+    if (wrecked && !this.charred) {
+      const paint = this.paint.clone();
+      paint.color.set("#1d1a17");
+      paint.roughness = 1;
+      paint.metalness = 0.15;
+      const canvas = this.canvas.clone();
+      canvas.color.set("#141210");
+      canvas.roughness = 1;
+      this.charred = new Map<THREE.Material, THREE.Material>([
+        [this.paint, paint],
+        [this.canvas, canvas],
+      ]);
+    }
+    const swap = this.charred;
+    if (!swap) return;
+    this.root.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh || Array.isArray(mesh.material)) return;
+      if (wrecked) {
+        const charred = swap.get(mesh.material);
+        if (charred) mesh.material = charred;
+      } else {
+        for (const [live, charred] of swap) if (mesh.material === charred) mesh.material = live;
+      }
+    });
+    if (wrecked) this.setLights(false, false);
+  }
+
+  private wrecked = false;
+  private charred: Map<THREE.Material, THREE.Material> | null = null;
+
   dispose(): void {
     for (const g of this.owned) g.dispose();
     this.owned.length = 0;
+    if (this.charred) for (const m of this.charred.values()) m.dispose();
     this.root.removeFromParent();
   }
 }

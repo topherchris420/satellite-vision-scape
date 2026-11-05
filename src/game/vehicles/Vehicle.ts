@@ -166,8 +166,10 @@ export class Vehicle {
     for (const side of [0, 1] as const) {
       this.doorOpen[side] = moveToward(this.doorOpen[side], this.doorTarget[side], rate);
     }
-    const braking = this.driven && (this.controls.brake > 0.05 || this.controls.handbrake);
-    this.visual?.setLights(this.driven && this.headlights, braking);
+    const wrecked = this.health <= 0;
+    const braking = !wrecked && this.driven && (this.controls.brake > 0.05 || this.controls.handbrake);
+    this.visual?.setWrecked(wrecked);
+    this.visual?.setLights(!wrecked && this.driven && this.headlights, braking);
     this.syncFrame();
   }
 
