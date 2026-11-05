@@ -335,7 +335,9 @@ export class FreeRoam {
     const runner = new ChallengeRunner(spec.challenge);
     runner.hooks = {
       onStageStart: (stage, index) => {
-        if (stage.kind === "escape" || stage.kind === "survive") this.raiseAlarm(Number(stage.params["alarm"] ?? 3.4));
+        // An escape or a survival stage starts with the alarm up; so does any stage that names one.
+        if (stage.kind === "escape" || stage.kind === "survive" || stage.params["alarm"] !== undefined)
+          this.raiseAlarm(Number(stage.params["alarm"] ?? 3.4));
         // The scout pulls out once the player is in a vehicle and the chase is on.
         if (stage.kind === "follow") this.traffic.depart(String(stage.params["vehicleId"] ?? ""));
         this.events.emit("stage", {
