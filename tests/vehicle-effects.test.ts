@@ -260,3 +260,37 @@ describe("presentation never reaches the simulation", () => {
     }
   });
 });
+
+describe("the fleet's bodies", () => {
+  test("each kind of vehicle is built differently on the same chassis, and every one can burn and be repaired", async () => {
+    const { VehicleMaterialLibrary } = await import("../src/game/vehicles/VehicleMaterials");
+    const { VehicleVisual } = await import("../src/game/vehicles/VehicleVisual");
+    const { FLEET_SPECS, variantFor } = await import("../src/game/freeroam/fleet");
+    const lib = new VehicleMaterialLibrary();
+    const triangles = new Map<string, number>();
+    for (const kind of ["utility", "scout", "hauler", "response"] as const) {
+      const variant = variantFor(kind, 1);
+      const visual = new VehicleVisual(FLEET_SPECS[kind], variant, lib);
+      let tris = 0;
+      visual.root.traverse((o) => {
+        const mesh = o as THREE.Mesh;
+        if (!mesh.isMesh) return;
+        const g = mesh.geometry;
+        tris += (g.index ? g.index.count : g.getAttribute("position").count) / 3;
+      });
+      triangles.set(kind, tris);
+      expect(() => {
+        visual.setWrecked(true);
+        visual.setWrecked(false);
+      }).not.toThrow();
+      // The physics never sees the body: the collider is the spec's, the same for all four.
+      expect(FLEET_SPECS[kind].collider).toEqual(FLEET_SPECS.utility.collider);
+      visual.dispose();
+    }
+    // Four different builds, not four liveries on one.
+    expect(new Set(triangles.values()).size).toBe(4);
+    expect(variantFor("scout", 1).roof).toBe("open");
+    expect(variantFor("hauler", 1).rear).toBe("tray");
+    expect(variantFor("response", 1).stripe).toBeDefined();
+  });
+});
