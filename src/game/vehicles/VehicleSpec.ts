@@ -161,7 +161,8 @@ export const UTILITY_4X4: VehicleSpec = {
   headlightZ: 2.33,
 };
 
-export type RearBody = "canopy" | "hardtop";
+/** What sits behind the cab: a canvas canopy, a steel hardtop, an open tray with a load, or an open tub. */
+export type RearBody = "canopy" | "hardtop" | "tray" | "open";
 
 export interface VehicleVariant {
   /** Short fleet identifier shown on the HUD. */
@@ -169,6 +170,14 @@ export interface VehicleVariant {
   paint: string;
   canvas: string;
   rear: RearBody;
+  /**
+   * What is on top: the expedition rack (the default), a bare roof (where a
+   * light bar can sit), or no roof at all (an open top with half doors).
+   * Presentation only: the collider and the physics are the spec's.
+   */
+  roof?: "rack" | "bare" | "open";
+  /** A contrasting band along each side at the belt line (site security's livery). */
+  stripe?: string;
 }
 
 export const VEHICLE_VARIANTS: Record<string, VehicleVariant> = {

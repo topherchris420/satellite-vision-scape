@@ -70,16 +70,20 @@ Everything below is presentation. It reads the simulation and the events it anno
 - **Driving leaves marks.** A sliding tyre lays black rubber on asphalt and concrete and dark ruts in the red dirt, and burns a white cloud of tyre smoke on a hard surface. Marks are one ring-buffered mesh that fades over about a minute.
 - **Crashes.** A hard hit throws sparks (more for metal on metal) and debris in the vehicle's paint and window glass; the camera shakes for the driver.
 - **Damage you can read.** An engine below 60% smokes white, below 30% grey, and a wreck burns: the body chars, sheets of flame rise out of the engine bay and then the cab, embers lift and black smoke climbs, for about half a minute before it only smoulders. (A wreck does not explode: that would be a rule of the world, not a picture of it.)
+- **Four kinds of vehicle that look it.** On the same chassis (so the same collider fits every one): the canopied 4×4, an open-topped runabout with a roll hoop and half doors, a tray-back hauler carrying crates under a tarp, and a striped response unit with a bare roof for its light bar.
+- **A crowd you can read.** People hold their hands up when something alarms them, sprint with their arms pumping (some with their hands over their heads) when they run, shift their weight or fold their arms while they wait, and security stands at ease with their hands behind their backs until the alarm goes up. Hair, caps and a little variety in height tell them apart. The poses are read from the state each person already publishes.
 - **Response units look the part.** Each carries a roof light bar, dark at the depot and strobing red and blue while the unit is out on a call. Each unit on a call has its own siren, placed where the unit is and pitched up or down by how fast it is closing (a Doppler shift); a low site alarm runs underneath while a pursuit is on.
 - **Gunfire.** A muzzle flash, dust kicked up where a bullet hits the ground and sparks where it hits metal or masonry, a report that rolls back off the ranges, a whiz when a guard's shot goes past your ear, and a small kick of the view when you fire (the render camera only; the aim is computed from the gameplay camera, so it does not move the shot).
 - **The radar.** A round, zoomed map centred on you that turns with the camera, zooming out with speed. It shows the objective (pinned to the rim with an arrow when it is out of range), vehicles, response units on a call (flashing), guards you can see or who are hunting you, the service points, the shards and a race ghost. The rim carries the attention level and pulses during a pursuit; underneath are the name of the place you are in (a public landmark, the main compound, the antenna enclosure, or outside the fence) and the distance to the objective.
 - **Moments.** A title card when a run begins, at each new stage, and when it is decided (the results open after it); the vehicle's name as you climb in; a notice when a pursuit starts and when you have lost it; a hit marker on the crosshair (amber for a head, red when it drops someone); a red arc pointing at whoever just shot you; a vignette that tightens as health runs low; and a grey screen while you are down.
 
-### Challenges (14)
+### Challenges (16)
 
 Each has machine-readable success and failure criteria (`metric op value`), stage parameters that are plain data, and a time limit.
 
-`borrowed-wheels` · `checkpoint-race` · `vehicle-delivery` · `reach-destination` · `escape-pursuit` · `precision-drive` · `collect-shards` · `shooting-range` · `follow-target` · `survive` · `stealth-approach` · `clean-drive` · `exploration` · `free-play`
+`borrowed-wheels` · `checkpoint-race` · `vehicle-delivery` · `reach-destination` · `escape-pursuit` · `precision-drive` · `collect-shards` · `shooting-range` · `follow-target` · `survive` · `stealth-approach` · `clean-drive` · `exploration` · `getaway` · `courier-run` · `free-play`
+
+The two newest are built only from rules the world already had. **Getaway** (at dusk): take the runabout idling at the kerb, hit three drop points in order with security already on its way, then lose them. **Courier run**: get the transport hauler waiting at the kerb to the depot with at least a quarter of it left while security tries to stop you. Any stage may carry an `alarm` parameter (attention jumps to it when the stage begins, as an escape or a survival stage always did); no stage that existed before has one it did not have, so every older scenario, seed and recorded run is bit-identical. The scripted baseline (the same local controllers a Jev decision uses) completed Getaway on 6 of 8 seeds (48291, 7, 1, 2, 3, 5, 11, 13: one death and one timeout while shaking the pursuit) and Courier run on 5 of 8 (the hauler was shot below a quarter on two seeds, and one ran out of time). Those are measurements of a scripted player; Jev has not attempted either.
 
 ## What Jev sees, and what it can answer
 
@@ -151,7 +155,7 @@ It contains no credentials and no prompts. **Replay** rebuilds the scenario from
 ## Tests and commands
 
 ```
-bun run test             # 440 tests, 163 of them for Free Roam (bun run test:freeroam)
+bun run test             # 465 tests, 174 of them for Free Roam (bun run test:freeroam)
 bun run typecheck
 bun run lint
 bun run build
@@ -164,7 +168,7 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
 | Suite | Covers |
 | --- | --- |
 | `freeroam-actions` | the action contract, bus arbitration and limits, assist bounds, the person's keys as actions, the avatar controller |
-| `freeroam-world` | scenario purity, 14 challenges' criteria, fresh = restart = reset, deterministic replays, wake-on-approach, traffic, pickups, enter/drive/exit by keys and by actions, identical shots for a person and for an agent, objective completion and failure |
+| `freeroam-world` | scenario purity, every challenge's criteria, fresh = restart = reset, deterministic replays, wake-on-approach, traffic, pickups, enter/drive/exit by keys and by actions, identical shots for a person and for an agent, objective completion and failure |
 | `freeroam-agent` | observation bounds/visibility/tampering, decision parsing and legality, the local controllers' effect through the ordinary controls, aiming discipline |
 | `freeroam-runtime` | Human → Jev → Human, the takeover within the frame, J/K, cadence, hold on every failure, recovery, malformed and stale answers, the wedged-car reflex, and the assist in play (it leans the camera onto the hostile the crosshair is nearest and never fires; steers by at most a quarter of the stick and yields to the person's own steering; speaks in words only) |
 | `freeroam-trace` | recording, separation of decision/action/outcome, exact replay with jittered frame lengths and no provider call, measurement and comparison, malformed/incompatible imports preserving the current run or replay, frame-log ordering and bounds |
@@ -172,6 +176,9 @@ FREEROAM_LIVE_TEST=1 TYPESAFE_API_KEY=… bun scripts/verify-freeroam-live.ts --
 | `freeroam-authority` | import and write boundaries; no clock or random number in the simulation |
 | `freeroam-race` | the race target against its trace, the recording replayed through today's simulation, the live gap, shared links, a whole race end to end, and the world hash with and without a race running |
 | `freeroam-audio` | silence before unlock, the siren against every way a pursuit or run can end, and no path from the sound back to the simulation |
+| `freeroam-challenges` | Getaway and Courier run: their stages, the alarm going up exactly when a stage names one, and none where it does not |
+| `freeroam-hud` | the radar's screen angles and place names, and that the radar, combat feedback and title cards only listen |
+| `vehicle-effects` | tyre marks only when a tyre slides, smoke, sparks, debris, a wreck that burns then smoulders, light bars that strobe only on a call, the siren's Doppler and near-miss maths, the four fleet bodies, and the world hash identical with every effect running |
 
 ## Racing a recorded run
 

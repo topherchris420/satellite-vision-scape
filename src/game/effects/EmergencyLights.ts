@@ -78,7 +78,7 @@ export class EmergencyLights {
     const group = new THREE.Group();
     group.name = "light-bar";
     // On the roof, a little forward of centre.
-    group.position.set(0, v.spec.collider.height + 0.02, 0.15);
+    group.position.set(0, v.spec.collider.height, 0.15);
     const base = new THREE.Mesh(this.baseGeometry, this.base);
     group.add(base);
     const red = new THREE.MeshBasicMaterial({ color: RED_OFF.clone(), toneMapped: false });

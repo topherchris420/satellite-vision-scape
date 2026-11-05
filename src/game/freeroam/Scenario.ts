@@ -141,6 +141,18 @@ export const CHALLENGES: readonly ChallengeInfo[] = [
     brief: "Visit four of the site's landmarks.",
   },
   {
+    id: "getaway",
+    title: "Getaway",
+    kind: "chain",
+    brief: "Take the runabout, hit three drop points with security on your tail, then lose them.",
+  },
+  {
+    id: "courier-run",
+    title: "Courier run",
+    kind: "delivery",
+    brief: "Get the hauler to the depot in one piece while security tries to stop you.",
+  },
+  {
     id: "free-play",
     title: "Free play",
     kind: "free",
@@ -405,7 +417,9 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
     if (dist(spot.x, spot.z, spawn.x, spawn.z) < 45) continue;
     // Two parked side by side share a door prompt, and the one wanted may never be the one offered.
     if (traffic.some((t) => t.idle && t.depot && dist(spot.x, spot.z, t.depot.x, t.depot.z) < 14)) continue;
-    const kind: FleetKind = idleWanted === 2 ? "utility" : "scout";
+    // The first one is the vehicle a chain takes: a runabout for a getaway, a hauler for a courier run.
+    const first: FleetKind = id === "getaway" ? "scout" : id === "courier-run" ? "hauler" : "utility";
+    const kind: FleetKind = idleWanted === 2 ? first : id === "getaway" ? "utility" : "scout";
     const spec: TrafficSpec = {
       id: `idle-${3 - idleWanted}`,
       callsign: callsign(kind),
@@ -607,7 +621,7 @@ export function buildScenario(seed: number, challengeId: string, ctx: ScenarioCo
   });
 
   const timeOfDay: TimeOfDay =
-    id === "stealth-approach" || id === "escape-pursuit" ? "dusk" : id === "survive" ? "night" : "day";
+    id === "stealth-approach" || id === "escape-pursuit" || id === "getaway" ? "dusk" : id === "survive" ? "night" : "day";
 
   return {
     version: SCENARIO_VERSION,
@@ -815,6 +829,55 @@ function buildChallenge(info: ChallengeInfo, c: BuildCtx): ChallengeDefinition {
       );
       timeLimitS = 480;
       extraSuccess.push({ id: "clean", label: "No vehicle collisions", metric: "vehicleCollisions", op: "==", value: 0 });
+      break;
+    }
+    case "getaway": {
+      // The runabout idling at the kerb, then three drops across the site with the alarm already up.
+      const car = stealTarget;
+      const from = car?.depot ?? spawn;
+      const drops: number[][] = [];
+      let last: { x: number; z: number } = from;
+      for (let i = 0; i < 3; i++) {
+        const p = farPoint(last, 150, 280);
+        drops.push([p.x, p.z]);
+        last = p;
+      }
+      stages.push(
+        stage("take", "enter_vehicle", "Take the runabout", `Get into ${car?.callsign ?? "the runabout"}, idling at the kerb`, {
+          vehicleId: car?.callsign ?? "SC-1",
+        }),
+        stage("drops", "checkpoints", "Drop point", "Hit the drop points in order. Security is already on its way", {
+          points: drops,
+          radius: 14,
+          vehicle: true,
+          alarm: 3.3,
+        }),
+        stage("lose", "escape", "Lose them", "Get out of sight and stay out of sight", { hold: 6, alarm: 3.3 }),
+      );
+      timeLimitS = 720;
+      failOnDeath = true;
+      break;
+    }
+    case "courier-run": {
+      // The hauler waiting at the kerb (not the one out on its rounds).
+      const haul = stealTarget ?? c.traffic.find((t) => t.kind === "hauler");
+      const from = haul?.depot ?? spawn;
+      const dest = farPoint(from, 320, 520);
+      stages.push(
+        stage("board", "enter_vehicle", "Get the hauler", `Get into ${haul?.callsign ?? "HL-1"}, waiting at the kerb`, {
+          vehicleId: haul?.callsign ?? "HL-1",
+        }),
+        stage("deliver", "deliver", "Deliver it", "Security wants it back. Get it to the depot with at least a quarter of it left, and stop there", {
+          vehicleId: haul?.callsign ?? "HL-1",
+          x: dest.x,
+          z: dest.z,
+          radius: 12,
+          minHealth: 25,
+          alarm: 3.2,
+        }),
+      );
+      timeLimitS = 600;
+      failOnDeath = true;
       break;
     }
     case "exploration": {

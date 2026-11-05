@@ -169,6 +169,8 @@ export class VehicleVisual {
   private readonly steeringWheel = new THREE.Group();
   private readonly paint: THREE.MeshStandardMaterial;
   private readonly canvas: THREE.MeshStandardMaterial;
+  /** The livery band, when the variant has one. */
+  private readonly stripe: THREE.MeshStandardMaterial | null;
   private readonly headlamp: THREE.MeshStandardMaterial;
   private readonly taillamp: THREE.MeshStandardMaterial;
   private readonly brakelamp: THREE.MeshStandardMaterial;
@@ -190,6 +192,7 @@ export class VehicleVisual {
   ) {
     this.paint = lib.paint(variant);
     this.canvas = lib.canvas(variant);
+    this.stripe = variant.stripe ? lib.paint({ ...variant, paint: variant.stripe }) : null;
     this.headlamp = lib.headlamp();
     this.taillamp = lib.taillamp();
     this.brakelamp = lib.taillamp();
@@ -511,33 +514,72 @@ export class VehicleVisual {
         [-0.12, 0, 0],
       );
     }
-    b.add(this.box(1.9, 1.4, 0.05), paint, [0, 1.27, -0.64]);
-    b.add(this.box(1.2, 0.32, 0.012), lib.glass, [0, 1.63, -0.67]);
-    for (const side of [1, -1]) {
-      b.add(this.box(0.05, 0.84, 0.07), paint, [side * 0.955, 1.54, REAR_DOOR_EDGE_Z - 0.04]);
-      // Cab quarter panel and quarter glass behind the door.
-      b.add(this.box(0.05, 0.84, 0.54, 0.012), paint, [side * 0.955, 1.54, -0.37]);
-      b.add(this.box(0.012, 0.38, 0.32), lib.glass, [side * 0.984, 1.62, -0.37]);
-      b.add(this.box(0.016, 0.42, 0.36, 0.006), lib.seal, [side * 0.978, 1.62, -0.37]);
-      b.add(this.box(0.06, 0.83, 0.07, 0.02), paint, [side * 0.95, 1.53, 0.84], [-0.263, 0, 0]);
-    }
-    // Rounded roof skin with ribs and drip rails.
-    b.add(this.box(1.96, 0.09, 1.48, 0.04, 3), paint, [0, 1.99, 0.045]);
-    for (const z of [-0.35, 0.05, 0.45])
-      b.add(this.box(1.5, 0.02, 0.06, 0.01), paint, [0, 2.04, z]);
-    for (const side of [1, -1])
+    const roof = this.variant.roof ?? "rack";
+    const open = roof === "open";
+    if (open) {
+      // An open top: the cab is a low bulkhead behind the seats, under a roll hoop.
+      b.add(this.box(1.9, 0.62, 0.05), paint, [0, 0.88, -0.64]);
       b.addMatrix(
         this.tube(
           [
-            [side * 0.985, 1.95, -0.68],
-            [side * 0.985, 1.95, 0.7],
+            [0.9, 1.12, -0.7],
+            [0.86, 1.86, -0.72],
+            [0.62, 2.0, -0.72],
+            [-0.62, 2.0, -0.72],
+            [-0.86, 1.86, -0.72],
+            [-0.9, 1.12, -0.7],
           ],
-          0.012,
-          6,
+          0.04,
+          8,
         ),
-        paint,
+        lib.trim,
         IDENTITY,
       );
+      for (const side of [1, -1]) {
+        // Stays from the hoop back to the tub, and the A-pillar of the fold-down screen.
+        b.addMatrix(
+          this.tube(
+            [
+              [side * 0.84, 1.9, -0.72],
+              [side * 0.86, 1.2, -1.95],
+            ],
+            0.03,
+            6,
+          ),
+          lib.trim,
+          IDENTITY,
+        );
+        b.add(this.box(0.06, 0.83, 0.07, 0.02), paint, [side * 0.95, 1.53, 0.84], [-0.263, 0, 0]);
+      }
+    } else {
+      b.add(this.box(1.9, 1.4, 0.05), paint, [0, 1.27, -0.64]);
+      b.add(this.box(1.2, 0.32, 0.012), lib.glass, [0, 1.63, -0.67]);
+      for (const side of [1, -1]) {
+        b.add(this.box(0.05, 0.84, 0.07), paint, [side * 0.955, 1.54, REAR_DOOR_EDGE_Z - 0.04]);
+        // Cab quarter panel and quarter glass behind the door.
+        b.add(this.box(0.05, 0.84, 0.54, 0.012), paint, [side * 0.955, 1.54, -0.37]);
+        b.add(this.box(0.012, 0.38, 0.32), lib.glass, [side * 0.984, 1.62, -0.37]);
+        b.add(this.box(0.016, 0.42, 0.36, 0.006), lib.seal, [side * 0.978, 1.62, -0.37]);
+        b.add(this.box(0.06, 0.83, 0.07, 0.02), paint, [side * 0.95, 1.53, 0.84], [-0.263, 0, 0]);
+      }
+      // Rounded roof skin with ribs and drip rails.
+      b.add(this.box(1.96, 0.09, 1.48, 0.04, 3), paint, [0, 1.99, 0.045]);
+      for (const z of [-0.35, 0.05, 0.45])
+        b.add(this.box(1.5, 0.02, 0.06, 0.01), paint, [0, 2.04, z]);
+      for (const side of [1, -1])
+        b.addMatrix(
+          this.tube(
+            [
+              [side * 0.985, 1.95, -0.68],
+              [side * 0.985, 1.95, 0.7],
+            ],
+            0.012,
+            6,
+          ),
+          paint,
+          IDENTITY,
+        );
+    }
     b.add(this.box(1.8, 0.83, 0.012), lib.glass, [0, 1.53, 0.84], [-0.263, 0, 0]);
     // Windscreen rubber surround.
     b.add(this.box(1.86, 0.05, 0.05, 0.02), lib.seal, [0, 1.93, 0.735]);
@@ -587,13 +629,33 @@ export class VehicleVisual {
     for (const y of [1.3, 1.75])
       b.add(this.box(0.05, 0.04, 0.05), lib.metal, [1.0, y, 0.93 - (y - 1.3) * 0.24]);
 
-    // Roof rack: tubular frame, slats, swag roll, jerry cans; radio whip.
-    for (const side of [1, -1]) {
+    // Roof rack: tubular frame, slats, swag roll, jerry cans.
+    if (roof === "rack") {
+      for (const side of [1, -1]) {
+        b.addMatrix(
+          this.tube(
+            [
+              [side * 0.82, 2.1, -0.62],
+              [side * 0.82, 2.1, 0.66],
+            ],
+            0.02,
+            6,
+          ),
+          lib.trim,
+          IDENTITY,
+        );
+        for (const z of [-0.6, 0.64])
+          b.add(this.box(0.05, 0.08, 0.05), lib.trim, [side * 0.84, 2.06, z]);
+      }
+      for (const z of [-0.5, -0.25, 0.05, 0.3, 0.6])
+        b.add(this.box(1.64, 0.025, 0.04, 0.008), lib.trim, [0, 2.11, z]);
       b.addMatrix(
         this.tube(
           [
-            [side * 0.82, 2.1, -0.62],
-            [side * 0.82, 2.1, 0.66],
+            [-0.82, 2.1, 0.66],
+            [-0.6, 2.12, 0.7],
+            [0.6, 2.12, 0.7],
+            [0.82, 2.1, 0.66],
           ],
           0.02,
           6,
@@ -601,40 +663,25 @@ export class VehicleVisual {
         lib.trim,
         IDENTITY,
       );
-      for (const z of [-0.6, 0.64])
-        b.add(this.box(0.05, 0.08, 0.05), lib.trim, [side * 0.84, 2.06, z]);
+      b.add(this.cylinder(0.12, 0.12, 1.2, 14), this.canvas, [0, 2.25, -0.38], [0, 0, Math.PI / 2]);
+      for (const x of [-0.4, 0.4])
+        b.add(
+          this.tmp(new THREE.TorusGeometry(0.124, 0.008, 4, 16)),
+          lib.trim,
+          [x, 2.25, -0.38],
+          [0, Math.PI / 2, 0],
+        );
+      for (const x of [-0.22, 0.22]) {
+        b.add(this.box(0.17, 0.34, 0.24, 0.025), this.canvas, [x + 0.35, 2.29, 0.32]);
+        b.add(this.box(0.04, 0.04, 0.12), lib.metal, [x + 0.35, 2.48, 0.32]);
+      }
     }
-    for (const z of [-0.5, -0.25, 0.05, 0.3, 0.6])
-      b.add(this.box(1.64, 0.025, 0.04, 0.008), lib.trim, [0, 2.11, z]);
-    b.addMatrix(
-      this.tube(
-        [
-          [-0.82, 2.1, 0.66],
-          [-0.6, 2.12, 0.7],
-          [0.6, 2.12, 0.7],
-          [0.82, 2.1, 0.66],
-        ],
-        0.02,
-        6,
-      ),
-      lib.trim,
-      IDENTITY,
-    );
-    b.add(this.cylinder(0.12, 0.12, 1.2, 14), this.canvas, [0, 2.25, -0.38], [0, 0, Math.PI / 2]);
-    for (const x of [-0.4, 0.4])
-      b.add(
-        this.tmp(new THREE.TorusGeometry(0.124, 0.008, 4, 16)),
-        lib.trim,
-        [x, 2.25, -0.38],
-        [0, Math.PI / 2, 0],
-      );
-    for (const x of [-0.22, 0.22]) {
-      b.add(this.box(0.17, 0.34, 0.24, 0.025), this.canvas, [x + 0.35, 2.29, 0.32]);
-      b.add(this.box(0.04, 0.04, 0.12), lib.metal, [x + 0.35, 2.48, 0.32]);
-    }
-    b.add(this.box(0.08, 0.05, 0.08), lib.trim, [0.86, 2.06, -0.55]);
-    b.add(this.cylinder(0.006, 0.011, 2.3, 5), lib.seal, [0.86, 3.2, -0.55]);
-    b.add(this.cylinder(0.02, 0.02, 0.08, 8), lib.metal, [0.86, 2.1, -0.55]);
+    // Radio whip (on the bulkhead's corner when there is no roof).
+    const whipY = open ? 1.18 : 2.06;
+    const whipZ = open ? -0.62 : -0.55;
+    b.add(this.box(0.08, 0.05, 0.08), lib.trim, [0.86, whipY, whipZ]);
+    b.add(this.cylinder(0.006, 0.011, 2.3, 5), lib.seal, [0.86, whipY + 1.14, whipZ]);
+    b.add(this.cylinder(0.02, 0.02, 0.08, 8), lib.metal, [0.86, whipY + 0.04, whipZ]);
 
     // Rear body: tray block, tailgate, bumper, tow hitch, jerry cans, mud flaps.
     b.add(this.box(1.24, 0.52, 1.62), lib.interior, [0, 0.84, -1.47]);
@@ -651,7 +698,27 @@ export class VehicleVisual {
     for (const side of [1, -1])
       b.add(this.box(0.26, 0.3, 0.02), lib.seal, [side * 0.81, 0.34, s.rearAxle - 0.52]);
 
-    if (this.variant.rear === "canopy") {
+    if (this.variant.rear === "tray") {
+      // A steel tray with drop sides, a headboard with a ladder guard, and a load under a tarp.
+      b.add(this.box(1.98, 0.08, 1.72, 0.015), lib.metal, [0, 1.16, -1.5]);
+      for (const side of [1, -1]) {
+        b.add(this.box(0.04, 0.3, 1.7, 0.01), paint, [side * 0.97, 1.35, -1.5]);
+        for (const z of [-0.72, -1.5, -2.28]) b.add(this.box(0.06, 0.34, 0.05), lib.trim, [side * 0.975, 1.36, z]);
+      }
+      b.add(this.box(1.96, 0.3, 0.04, 0.01), paint, [0, 1.35, -2.34]);
+      b.add(this.box(1.96, 0.95, 0.05), lib.trim, [0, 1.66, -0.68]);
+      for (const x of [-0.6, -0.2, 0.2, 0.6]) b.add(this.box(0.03, 0.9, 0.03), lib.metal, [x, 1.66, -0.72]);
+      b.add(this.box(0.62, 0.5, 0.56, 0.03, 2), lib.interior, [0.48, 1.45, -1.05]);
+      b.add(this.box(0.55, 0.42, 0.5, 0.03, 2), lib.interior, [-0.5, 1.41, -1.15], [0, 0.12, 0]);
+      b.add(this.box(1.5, 0.48, 0.8, 0.16, 4), this.canvas, [0, 1.44, -1.86]);
+      for (const z of [-1.62, -2.1]) b.add(this.box(1.54, 0.02, 0.04), lib.seal, [0, 1.69, z]);
+    } else if (this.variant.rear === "open") {
+      // An open tub: a capping rail, a bench and a folded soft top over the tailgate.
+      for (const side of [1, -1]) b.add(this.box(0.08, 0.05, 1.68, 0.02), lib.trim, [side * 0.95, 1.15, -1.45]);
+      b.add(this.box(1.6, 0.12, 0.45, 0.04, 3), lib.upholstery, [0, 1.12, -1.25]);
+      b.add(this.box(1.6, 0.42, 0.1, 0.04, 3), lib.upholstery, [0, 1.34, -1.48], [-0.1, 0, 0]);
+      b.add(this.cylinder(0.13, 0.13, 1.7, 12), this.canvas, [0, 1.22, -2.12], [0, 0, Math.PI / 2]);
+    } else if (this.variant.rear === "canopy") {
       b.add(this.box(1.9, 0.06, 1.62), paint, [0, 1.13, -1.47]);
       b.add(this.box(1.88, 0.9, 1.6, 0.14, 4), this.canvas, [0, 1.6, -1.47]);
       for (const z of [-0.8, -1.47, -2.14])
@@ -677,6 +744,15 @@ export class VehicleVisual {
           lib.trim,
           IDENTITY,
         );
+    }
+
+    if (this.variant.stripe) {
+      const band = this.stripe!;
+      for (const side of [1, -1]) {
+        const x = side * (SKIN_OUTER_X + 0.004);
+        b.add(this.box(0.01, 0.09, 2.18), band, [x, 1.0, -1.16]);
+        b.add(this.box(0.01, 0.09, 1.28), band, [x, 1.0, 1.6]);
+      }
     }
 
     this.owned.push(...b.build(this.root));
@@ -736,8 +812,10 @@ export class VehicleVisual {
       b.add(this.box(0.06, 0.03, 0.02), lib.amber, [side * 0.99, 0.62, -2.2]);
     }
     // High-mounted stop lamp.
-    const hy = this.variant.rear === "canopy" ? 1.97 : 1.93;
-    b.add(this.box(0.36, 0.05, 0.04, 0.012), this.brakelamp, [0, hy, -2.3]);
+    const rear = this.variant.rear;
+    const hy = rear === "canopy" ? 1.97 : rear === "hardtop" ? 1.93 : 1.3;
+    const hz = rear === "canopy" || rear === "hardtop" ? -2.3 : -2.37;
+    b.add(this.box(0.36, 0.05, 0.04, 0.012), this.brakelamp, [0, hy, hz]);
     this.owned.push(...b.build(this.root, { castShadow: false }));
 
     // Halos: hidden until lit, so they cost nothing parked or by day.
@@ -755,7 +833,7 @@ export class VehicleVisual {
       sprite(this.tailGlow, this.tailSprites, [side * 0.84, 0.98, -2.36], 0.42);
       sprite(this.brakeGlow, this.brakeSprites, [side * 0.84, 0.89, -2.36], 0.65);
     }
-    sprite(this.brakeGlow, this.brakeSprites, [0, hy, -2.35], 0.5);
+    sprite(this.brakeGlow, this.brakeSprites, [0, hy, hz - 0.05], 0.5);
   }
 
   private buildDoors(): void {
@@ -795,12 +873,15 @@ export class VehicleVisual {
         this.paint,
         new THREE.Matrix4(),
       );
-      b.addMatrix(
-        this.sideExtrusion(frame, -half, SKIN_THICKNESS * 0.8, 0.008),
-        this.paint,
-        new THREE.Matrix4(),
-      );
-      b.addMatrix(this.sideExtrusion(glass, -0.006, 0.012, 0), lib.glass, new THREE.Matrix4());
+      if (this.variant.roof !== "open") {
+        b.addMatrix(
+          this.sideExtrusion(frame, -half, SKIN_THICKNESS * 0.8, 0.008),
+          this.paint,
+          new THREE.Matrix4(),
+        );
+        b.addMatrix(this.sideExtrusion(glass, -0.006, 0.012, 0), lib.glass, new THREE.Matrix4());
+      }
+      if (this.stripe) b.add(this.box(0.01, 0.09, L - 0.04), this.stripe, [sign * (half + 0.006), 1.0, -L / 2]);
       // Handle, keyhole, rubbing strip, window seal and inner trim card.
       b.add(this.box(0.03, 0.04, 0.17, 0.012), lib.trim, [sign * (half + 0.014), 1.0, -L + 0.2]);
       b.add(this.box(0.02, 0.05, 0.02, 0.008), lib.chrome, [sign * (half + 0.012), 1.0, -L + 0.33]);
@@ -810,7 +891,7 @@ export class VehicleVisual {
         BELT_Y + 0.03,
         -L / 2 - 0.03,
       ]);
-      b.add(this.box(0.02, 0.5, 0.02), lib.seal, [0, 1.46, -0.03]);
+      if (this.variant.roof !== "open") b.add(this.box(0.02, 0.5, 0.02), lib.seal, [0, 1.46, -0.03]);
       b.add(this.box(0.03, 0.48, L - 0.1, 0.012), lib.interior, [
         -sign * (half + 0.014),
         0.86,

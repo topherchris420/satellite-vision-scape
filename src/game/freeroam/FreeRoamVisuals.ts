@@ -36,7 +36,13 @@ const CLOTHES = ["#6b7c8f", "#8a7d63", "#5f7a63", "#a0705a", "#59657a", "#7d6a86
   (c) => new THREE.Color(c),
 );
 const TROUSERS = ["#37404d", "#4b4536", "#2f3a35", "#3d3a44"].map((c) => new THREE.Color(c));
-const GUARD = { vest: new THREE.Color("#243447"), legs: new THREE.Color("#182231"), alert: new THREE.Color("#7a2129") };
+const GUARD = {
+  vest: new THREE.Color("#243447"),
+  legs: new THREE.Color("#182231"),
+  alert: new THREE.Color("#7a2129"),
+  cap: new THREE.Color("#141c26"),
+};
+const HAIR = ["#1d1611", "#2f2119", "#4a3020", "#6b4a2b", "#a8834f", "#3a3a3a", "#c9c2b8"].map((c) => new THREE.Color(c));
 const SHARD_COLOR: Record<number, THREE.Color> = {
   10: new THREE.Color("#5eead4"),
   15: new THREE.Color("#fcd34d"),
@@ -87,7 +93,7 @@ export class FreeRoamVisuals {
   private readonly color = new THREE.Color();
   private readonly gait = new Map<string, Gait>();
 
-  private readonly parts: Record<"torso" | "head" | "legL" | "legR" | "armL" | "armR", THREE.InstancedMesh>;
+  private readonly parts: Record<"torso" | "head" | "legL" | "legR" | "armL" | "armR" | "hair", THREE.InstancedMesh>;
   private readonly drones: THREE.InstancedMesh;
   private readonly droneRings: THREE.InstancedMesh;
   private readonly shards: THREE.InstancedMesh;
@@ -155,6 +161,8 @@ export class FreeRoamVisuals {
       legR: make(new THREE.CapsuleGeometry(0.08, 0.58, 3, 6), cloth, MAX_PEOPLE),
       armL: make(new THREE.CapsuleGeometry(0.055, 0.44, 3, 6), cloth, MAX_PEOPLE),
       armR: make(new THREE.CapsuleGeometry(0.055, 0.44, 3, 6), cloth, MAX_PEOPLE),
+      // Hair for the crowd, a cap for security: a dome over the crown.
+      hair: make(new THREE.SphereGeometry(0.122, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.55), skin, MAX_PEOPLE),
     };
 
     const droneMaterial = new THREE.MeshStandardMaterial({ color: "#fb923c", emissive: "#7c2d12", roughness: 0.5 });
@@ -431,8 +439,10 @@ export class FreeRoamVisuals {
 
   private drawPeople(world: FreeRoam, dt: number): void {
     const p0 = world.playerPosition();
-    const { torso, head, legL, legR, armL, armR } = this.parts;
+    const { torso, head, legL, legR, armL, armR, hair } = this.parts;
     const d = this.dummy;
+    // Limbs tilt about the person's own axes, then turn with them.
+    d.rotation.order = "YXZ";
     let n = 0;
     let drones = 0;
     for (const p of world.people) {
@@ -445,10 +455,11 @@ export class FreeRoamVisuals {
         continue;
       }
       if (n >= MAX_PEOPLE) break;
-      this.drawPerson(p, n, dt, d, torso, head, legL, legR, armL, armR);
+      this.drawPerson(p, n, dt, d, torso, head, legL, legR, armL, armR, hair);
       n++;
     }
-    for (const m of [torso, head, legL, legR, armL, armR]) {
+    d.scale.set(1, 1, 1);
+    for (const m of [torso, head, legL, legR, armL, armR, hair]) {
       m.count = n;
       m.instanceMatrix.needsUpdate = true;
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
@@ -471,6 +482,7 @@ export class FreeRoamVisuals {
     legR: THREE.InstancedMesh,
     armL: THREE.InstancedMesh,
     armR: THREE.InstancedMesh,
+    hair: THREE.InstancedMesh,
   ): void {
     const h = hashString(p.id);
     const guard = p.kind === "security";
@@ -479,21 +491,31 @@ export class FreeRoamVisuals {
       gait = { phase: (h % 628) / 100 };
       this.gait.set(p.id, gait);
     }
+    // What they are doing, as anyone watching would read it (the state word the world publishes).
+    const state = p.state;
+    const fleeing = state === "running away";
+    const alarmed = state === "alarmed";
+    const standing = state === "standing" || state === "on watch";
     const speed = Math.hypot(p.vx, p.vz);
-    gait.phase += dt * speed * 2.6;
-    const swing = Math.min(0.75, speed * 0.24) * Math.sin(gait.phase);
-    const bob = Math.abs(Math.cos(gait.phase)) * 0.03 * Math.min(1, speed);
-    const lean = Math.min(0.25, speed * 0.04);
+    gait.phase += dt * speed * (fleeing ? 2.9 : 2.6);
+    const swing = Math.min(fleeing ? 1.05 : 0.75, speed * (fleeing ? 0.27 : 0.24)) * Math.sin(gait.phase);
+    const bob = Math.abs(Math.cos(gait.phase)) * (fleeing ? 0.05 : 0.03) * Math.min(1, speed);
+    const lean = fleeing ? 0.3 : alarmed ? -0.08 : Math.min(0.25, speed * 0.04);
+    // A little life in anyone standing still: weight shifting from foot to foot.
+    const sway = standing || alarmed ? Math.sin(this.time * 0.9 + (h % 97)) * 0.035 : 0;
+    // Not everyone is the same size.
+    const tall = 0.96 + ((h >>> 9) % 9) * 0.01;
     const cs = Math.cos(p.yaw);
     const sn = Math.sin(p.yaw);
     // Local → world (forward +Z, the person's left +X, yaw 0 = +Z).
     const at = (lx: number, ly: number, lz: number) => {
-      d.position.set(p.x + lx * cs + lz * sn, p.y + ly + bob, p.z - lx * sn + lz * cs);
+      d.position.set(p.x + lx * cs + lz * sn, p.y + ly * tall + bob, p.z - lx * sn + lz * cs);
     };
     const skin = SKIN[h % SKIN.length];
     const shirt = guard ? (p.hostile ? GUARD.alert : GUARD.vest) : CLOTHES[(h >>> 3) % CLOTHES.length];
     const legs = guard ? GUARD.legs : TROUSERS[(h >>> 6) % TROUSERS.length];
-    d.scale.set(1, 1, 1);
+    const top = guard ? GUARD.cap : HAIR[(h >>> 12) % HAIR.length];
+    d.scale.set(1, tall, 1);
 
     if (p.down || !p.alive) {
       // On the ground, on their back, head where they were facing.
@@ -504,6 +526,8 @@ export class FreeRoamVisuals {
       d.rotation.set(0, p.yaw, 0);
       this.setPart(head, i, skin);
       d.rotation.set(-Math.PI / 2, p.yaw, 0);
+      at(0, 0.2, 1.13);
+      this.setPart(hair, i, top);
       at(0.09, 0.14, -0.3);
       this.setPart(legL, i, legs);
       at(-0.09, 0.14, -0.3);
@@ -515,14 +539,15 @@ export class FreeRoamVisuals {
       return;
     }
 
-    // Guards with the alarm up hold their arms out in front of them.
-    const armsUp = guard && p.hostile ? 1.35 : 0;
-    d.rotation.set(-lean, p.yaw, 0);
+    d.rotation.set(-lean, p.yaw, sway);
     at(0, 1.28, lean * 0.4);
     this.setPart(torso, i, shirt);
-    d.rotation.set(0, p.yaw, 0);
-    at(0, 1.7, lean * 0.7);
+    d.rotation.set(0, p.yaw, sway * 0.5);
+    at(sway * 0.4, 1.7, lean * 0.7);
     this.setPart(head, i, skin);
+    d.rotation.set(guard ? -0.12 : 0, p.yaw, sway * 0.5);
+    at(sway * 0.4, 1.735, lean * 0.7 + (guard ? 0.012 : -0.008));
+    this.setPart(hair, i, top);
     for (const [mesh, side, s] of [
       [legL, 1, swing],
       [legR, -1, -swing],
@@ -531,13 +556,46 @@ export class FreeRoamVisuals {
       at(0.09 * side, 0.92 - 0.37 * Math.cos(s), 0.37 * Math.sin(s));
       this.setPart(mesh, i, legs);
     }
+    // Arms: how a body holds them says what is going on.
+    const style = h % 4;
     for (const [mesh, side, s] of [
       [armL, 1, -swing],
       [armR, -1, swing],
     ] as const) {
-      const a = armsUp > 0 ? armsUp : s * 0.9;
-      d.rotation.set(-a, p.yaw, 0);
-      at(0.23 * side, 1.5 - 0.26 * Math.cos(a), 0.26 * Math.sin(a));
+      let pitch = s * 0.9;
+      let splay = 0.06;
+      if (guard && p.hostile) {
+        // The sidearm up in front, both hands on it.
+        pitch = 1.35;
+        splay = -0.12;
+      } else if (alarmed) {
+        // Hands up.
+        pitch = 2.65;
+        splay = 0.32;
+      } else if (fleeing && style === 0) {
+        // Running with their hands over their head.
+        pitch = 2.85 + s * 0.12;
+        splay = 0.5;
+      } else if (fleeing) {
+        // Pumping hard.
+        pitch = s * 1.25;
+      } else if (guard && standing) {
+        // At ease: hands behind the back.
+        pitch = -0.42;
+        splay = -0.1;
+      } else if (standing && style === 1) {
+        // Arms folded.
+        pitch = 1.25;
+        splay = -0.62;
+      }
+      // Hung from the shoulder: splayed out to the side, then swung forward or up.
+      const phi = splay * side;
+      d.rotation.set(-pitch, p.yaw, phi);
+      at(
+        0.23 * side + 0.26 * Math.sin(phi),
+        1.5 - 0.26 * Math.cos(phi) * Math.cos(pitch),
+        0.26 * Math.cos(phi) * Math.sin(pitch),
+      );
       this.setPart(mesh, i, shirt);
     }
   }

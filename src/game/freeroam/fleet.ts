@@ -5,8 +5,9 @@ import { UTILITY_4X4, type VehicleSpec, type VehicleVariant } from "../vehicles/
  *
  * All of them run on the same physics and the same interaction choreography as
  * the site's 4×4; they differ in mass, power, top speed, brakes and steering,
- * which is what a driver feels. (They share the procedural body of the 4×4 —
- * see Known limitations — and are told apart by livery.)
+ * which is what a driver feels. They share the 4×4's chassis and footprint (so
+ * the same collider fits), and are told apart by what is built on it: an open
+ * runabout, a tray-back hauler and a striped response unit with a light bar.
  */
 
 /** Light, quick and twitchy: a runabout for scouting the perimeter tracks. */
@@ -79,11 +80,14 @@ export const FLEET_SPECS: Record<FleetKind, VehicleSpec> = {
 export function variantFor(kind: FleetKind, index: number): VehicleVariant {
   switch (kind) {
     case "scout":
-      return { callsign: `SC-${index}`, paint: "#c9a227", canvas: "#5e5a45", rear: "canopy" };
+      // Open-topped and light: a roll bar, half doors and nothing overhead.
+      return { callsign: `SC-${index}`, paint: "#c9a227", canvas: "#5e5a45", rear: "open", roof: "open" };
     case "hauler":
-      return { callsign: `HL-${index}`, paint: "#d8d6cc", canvas: "#6c6a4d", rear: "hardtop" };
+      // A tray-back work truck carrying crates under a tarp.
+      return { callsign: `HL-${index}`, paint: "#d8d6cc", canvas: "#6c6a4d", rear: "tray", roof: "bare" };
     case "response":
-      return { callsign: `RU-${index}`, paint: "#28405e", canvas: "#1b2733", rear: "hardtop" };
+      // Security livery: a clean roof for the light bar and a reflective band along the sides.
+      return { callsign: `RU-${index}`, paint: "#28405e", canvas: "#1b2733", rear: "hardtop", roof: "bare", stripe: "#e9e4cf" };
     default:
       return { callsign: `SV-${index}`, paint: "#8f9a72", canvas: "#4e4f3a", rear: "canopy" };
   }
