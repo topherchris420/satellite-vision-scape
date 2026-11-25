@@ -1,6 +1,12 @@
-# Vers3Dynamics: 99.9% SURE and the San Fierro story
+# 99.9% SURE
 
-*An original storyline for Grand Theft Auto: San Andreas (PC, v1.0, CLEO 5).*
+**Chapter I: San Fierro · An original Vers3Dynamics game storyline.**
+
+[Chapter II: Pine Gap browser experience](https://geotwn.vercel.app/) · [Campaign bridge proposal](../docs/CAMPAIGN_BRIDGE.md)
+
+The chapters belong to one intended game universe. Cross-runtime save and narrative progression are not yet implemented.
+
+*Requires Grand Theft Auto: San Andreas (PC, v1.0, CLEO 5) as its host runtime.*
 
 > **Vers3Dynamics**: Resonance as Substrate. Intelligence as a Layer.
 

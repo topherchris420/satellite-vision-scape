@@ -1,9 +1,9 @@
-<h1 align="center">Satellite Vision Scape</h1>
+<h1 align="center">99.9% SURE</h1>
 
-<p align="center"><strong>Give an agent the controls. Let the world judge the result.</strong></p>
+<p align="center"><strong>What if the machine is certain, but wrong?</strong></p>
 
 <p align="center">
-  A playable 3D world for studying how humans and AI agents act, fail and recover.<br />
+  A Vers3Dynamics scientific mystery spanning San Fierro and Pine Gap, built on Satellite Vision Scape.<br />
   Built by <a href="https://github.com/topherchris420">Christopher Woodyard</a> at <a href="https://vers3dynamics.com">Vers3Dynamics</a>.
 </p>
 
@@ -22,15 +22,43 @@
   <sub>Recorded Jev run · Borrowed Wheels · 3 October 2026 · replay rendered at 8× speed. Click for the MP4. This is a saved run, not a live inference feed.</sub>
 </p>
 
-**Satellite Vision Scape turns a game into an instrument for observing agent behaviour.** Walk through a reconstruction of Pine Gap, get behind the wheel, deliver a coffee without spilling it, or follow a radio signal into a midnight concert. Then give an agent the same task and inspect what actually happened.
+**99.9% SURE turns a game into an instrument for investigating uncertainty.** Satellite Vision Scape is the browser simulation technology underlying the Pine Gap chapter. Walk through a reconstruction of Pine Gap, get behind the wheel, deliver a coffee without spilling it, or follow a radio signal into a midnight concert. Then give an agent the same task and inspect what actually happened.
 
 A human and an agent share the world's controls, physics, collisions and task rules. The agent chooses an intention; local controllers carry it out; the simulation determines the outcome. Decisions, handovers and results become exportable traces.
 
 **Status:** experimental. One site, two task modes, recorded live-model sessions and scripted experiments. The agent receives structured observations and uses local movement controllers, so these runs measure decision-making within that setup—not human-equivalent perception or motor skill.
 
-[Explore the world](#explore-the-world) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
+[Explore Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
 
-## Explore the world
+## One story, two environments
+
+In San Fierro, CERTAIN claims to know what people will do. In the proposed continuation at Pine Gap, R.A.I.N. asks whether the evidence warrants that confidence. The player moves from investigating predictions in a city to investigating signals and competing explanations in a fictional research setting.
+
+**Integration status:** the two environments currently run independently. A proposed [campaign bridge](docs/CAMPAIGN_BRIDGE.md) defines how player conclusions and mission progress could travel between them without requiring a shared engine. Pine Gap's existing Race Jev, After Hours and Free Roam remain independently playable.
+
+## Chapter I · San Fierro
+
+**An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab.
+
+[Story, installation and playtest guide](gta-sa-99-9-percent-sure/README.md)
+
+| R.A.I.N. evidence board | Field validation |
+| --- | --- |
+| ![Evidence board preview](gta-sa-99-9-percent-sure/docs/media/preview_evidence.png) | ![Validation console preview](gta-sa-99-9-percent-sure/docs/media/preview_console.png) |
+| ![Cymatics rig preview](gta-sa-99-9-percent-sure/docs/media/preview_rig.png) | ![Signal receiver preview](gta-sa-99-9-percent-sure/docs/media/preview_receiver.png) |
+
+*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Actual gameplay captures await a playtest in the separately installed Grand Theft Auto: San Andreas PC runtime. The host game is not the title of this original storyline. Pine Gap gameplay captures appear below.*
+
+## Chapter II · Pine Gap — browser experience
+
+### Browser gameplay screenshots
+
+| Free Roam | Driving |
+| --- | --- |
+| ![Browser Free Roam gameplay](docs/media/screens/free-roam.jpg) | ![Browser driving gameplay](docs/media/screens/driving.jpg) |
+| ![Browser concert gameplay](docs/media/screens/concert.jpg) | ![Browser terminal gameplay](docs/media/screens/terminal.jpg) |
+
+*These are actual captures of the Pine Gap browser simulation, part of the intended 99.9% SURE universe. They do not depict the San Fierro missions.*
 
 Human play, the race and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/): the first screen offers the race, and everything else is one click further in.
 
@@ -270,7 +298,7 @@ The simulation uses stylised vehicle dynamics and simplified collision geometry.
 | Terrain, spatial coordinates and data pipelines | [Terrain architecture](docs/TERRAIN_ARCHITECTURE.md) · [Spatial context](docs/SPATIAL_CONTEXT_ARCHITECTURE.md) · [Offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md) |
 | Music and asset permissions | [Soundtrack](docs/SOUNDTRACK.md) · [Attributions](ATTRIBUTIONS.md) · [Data and licence notes](docs/ATTRIBUTION_AND_LICENSES.md) · [Notice](NOTICE) |
 
-**Separate project in this repository:** [99.9% SURE](gta-sa-99-9-percent-sure/README.md) is a Vers3Dynamics mission for a separately installed GTA: San Andreas PC game. It is not part of the browser experience; its guide distinguishes headless validation from in-game testing that remains outstanding.
+**San Fierro runtime:** [Chapter I](gta-sa-99-9-percent-sure/README.md) requires a separately installed GTA: San Andreas PC game. It shares the intended game universe with Pine Gap, but cross-runtime progression is not implemented yet.
 
 ### Credits and reuse
 
