@@ -143,9 +143,13 @@ async function holdUntilMoved(page, keys, read, metres, timeout = 180000) {
   for (const k of [...keys].reverse()) await page.keyboard.up(k);
   return { moved: Math.hypot(b.x - a.x, b.z - a.z), seconds: (Date.now() - started) / 1000 };
 }
+/** Holds E across at least two drawn frames, so a slow frame cannot miss the press. */
 async function pressE(page) {
   await page.keyboard.down("KeyE");
   await page.waitForTimeout(400);
+  await page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(() => done()))),
+  );
   await page.keyboard.up("KeyE");
 }
 
@@ -167,14 +171,16 @@ async function pressE(page) {
   await step("survey", async () => {
     await page.keyboard.press("Digit2");
     await page.waitForFunction(() => window.__pineGapCapture.status().mode === "fly", null, { timeout: LONG });
+    // Checked at once: the signal is meant to appear after 30 s of surveying,
+    // and a software-rendered screenshot can take longer than that.
+    check("the signal is not shown at first", (await page.getByRole("button", { name: "Unlisted carrier" }).count()) === 0);
     await page.waitForTimeout(3000);
     await shoot(page, "survey");
     check("Explore shows the survey interface", await page.getByText("Pine Gap", { exact: false }).first().isVisible());
-    check("the signal is not shown at first", (await page.getByRole("button", { name: "Unlisted carrier" }).count()) === 0);
   });
 
   await step("signal appears after surveying", async () => {
-    await page.getByRole("button", { name: "Unlisted carrier" }).waitFor({ timeout: 120000 });
+    await page.getByRole("button", { name: "Unlisted carrier" }).waitFor({ timeout: LONG });
     check("a curious visitor finds the signal after surveying", true);
     await shoot(page, "signal");
   });
@@ -220,7 +226,7 @@ async function pressE(page) {
     await placeAt(page, m.x + 1.4, m.z, -Math.PI / 2);
     await page.waitForTimeout(1500);
     await pressE(page);
-    await untilCase(page, "s.panel && s.panel.kind === 'dialog'", 120000);
+    await untilCase(page, "s.panel && s.panel.kind === 'dialog'", LONG);
     await page.getByRole("button", { name: "Where were you last night?" }).click();
     await shoot(page, "mara");
     await page.getByRole("button", { name: "That's all for now." }).click();
@@ -234,7 +240,7 @@ async function pressE(page) {
     await pressE(page);
     await page.waitForTimeout(1500);
     await shoot(page, "bearing");
-    await untilCase(page, "c.data.bearings.includes('a')", 240000);
+    await untilCase(page, "c.data.bearings.includes('a')", LONG);
     check("a bearing settles when the player stands still", true);
   });
 
@@ -247,7 +253,7 @@ async function pressE(page) {
     await page.waitForTimeout(1500);
     await pressE(page);
     await page.waitForFunction(() => window.__pineGapGame.vehicles.vehicles.some((v) => v.driven), null, {
-      timeout: 240000,
+      timeout: LONG,
     });
     const driven = await page.evaluate(() => window.__pineGapGame.vehicles.vehicles.findIndex((v) => v.driven));
     const truck = () =>
@@ -264,7 +270,7 @@ async function pressE(page) {
     );
     await pressE(page);
     await page.waitForFunction(() => !window.__pineGapGame.vehicles.vehicles.some((v) => v.driven), null, {
-      timeout: 240000,
+      timeout: LONG,
     });
   });
 
@@ -272,7 +278,7 @@ async function pressE(page) {
     await placeAt(page, -128.6, 177.4, 0);
     await page.waitForTimeout(1500);
     await pressE(page);
-    await untilCase(page, "s.panel && s.panel.kind === 'board'", 120000);
+    await untilCase(page, "s.panel && s.panel.kind === 'board'", LONG);
     await shoot(page, "board");
     await page.getByRole("button", { name: "Abstain: not enough yet" }).click();
     await page.getByRole("button", { name: "60%" }).click();
@@ -293,10 +299,10 @@ async function pressE(page) {
     await page.keyboard.press("Escape");
     await page.waitForTimeout(1500);
     if ((await status(page)).status !== "paused") await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Return to the survey" }).waitFor({ timeout: 120000 });
+    await page.getByRole("button", { name: "Return to the survey" }).waitFor({ timeout: LONG });
     await shoot(page, "case-paused");
     await page.getByRole("button", { name: "Return to the survey" }).click();
-    await page.waitForFunction(() => window.__pineGapCapture.status().mode === "fly", null, { timeout: 120000 });
+    await page.waitForFunction(() => window.__pineGapCapture.status().mode === "fly", null, { timeout: LONG });
     await page.waitForTimeout(3000);
     await shoot(page, "back-in-the-survey");
     check("Return to the survey goes back to Explore", true);
@@ -338,7 +344,7 @@ async function pressE(page) {
   const page = await openPage(context, save);
   await step("phone: signal is there at once for a returning player", async () => {
     await page.evaluate(() => window.__pineGapCapture.setMode("fly"));
-    await page.getByRole("button", { name: "Unlisted carrier" }).waitFor({ timeout: 120000 });
+    await page.getByRole("button", { name: "Unlisted carrier" }).waitFor({ timeout: LONG });
     await shoot(page, "phone-survey");
     await page.getByRole("button", { name: "Unlisted carrier" }).tap();
     await page.getByRole("button", { name: "Resume the case" }).tap();
@@ -372,7 +378,7 @@ async function pressE(page) {
     await placeAt(page, -128.6, 177.4, 0);
     await page.waitForTimeout(1500);
     await page.getByRole("button", { name: "Interact" }).tap();
-    await untilCase(page, "s.panel && s.panel.kind === 'board'", 120000);
+    await untilCase(page, "s.panel && s.panel.kind === 'board'", LONG);
     await shoot(page, "phone-board");
     check("phone: Interact opens the evidence board", true);
     await page.getByRole("button", { name: "Back to the field" }).first().tap();
