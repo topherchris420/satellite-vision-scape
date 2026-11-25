@@ -1,0 +1,97 @@
+// ============================================================================
+// HQ stations: where CJ is standing, the prompts, the markers and lights.
+// Runs every frame of the free-roam loop (depth 2). Sets iStation and uIn;
+// the loop opens the station.
+// ============================================================================
+:HQ_STATIONS
+gosub @MENU_INPUT
+gosub @GET_PLAYER_POS
+iStation = STN_NONE
+// teal lights over the stations
+fTmp = fM3Z
+fTmp += 1.45
+draw_corona fM1X fM1Y fTmp 0.25 0 0 90 220 210
+draw_corona fM2X fM2Y fTmp 0.25 0 0 90 220 210
+draw_corona fM3X fM3Y fTmp 0.25 0 0 90 220 210
+draw_corona fDX fDY fTmp 0.25 0 0 90 220 210
+if is_char_in_any_car $scplayer
+then
+    return
+end
+fDist = get_distance_between_coords_2d fPX fPY fM1X fM1Y
+if 0.8 > fDist
+then
+    iStation = STN_TERMINAL
+end
+fDist = get_distance_between_coords_2d fPX fPY fM2X fM2Y
+if 0.8 > fDist
+then
+    iStation = STN_RIG
+end
+fDist = get_distance_between_coords_2d fPX fPY fM3X fM3Y
+if 0.8 > fDist
+then
+    iStation = STN_DIAGRAMS
+end
+fDist = get_distance_between_coords_2d fPX fPY fDX fDY
+if 0.8 > fDist
+then
+    iStation = STN_RECORDS
+end
+// the door: a normal locate marker; leaving needs a fresh step into it
+fTmp = fM3Z
+fTmp += 1.0
+if locate_char_on_foot_3d $scplayer fWX fWY fTmp 0.9 0.9 1.6 true
+then
+    if iDoorClear == 1
+    then
+        iStation = STN_DOOR
+        iExitReq = 1
+    end
+else
+    iDoorClear = 1
+end
+// the next story mission
+if iNextMission > 0
+then
+    if locate_stopped_char_on_foot_3d $scplayer fM1Z fM2Z fTmp 0.9 0.9 1.6 true
+    then
+        if iStartClear == 1
+        then
+            iStation = STN_START
+            iExitReq = 2
+        end
+    else
+        iStartClear = 1
+    end
+end
+// one help prompt per visit to a station
+if iStation <> iPromptShown
+then
+    if iStation == STN_NONE
+    then
+        if iPromptShown <> STN_NONE
+        then
+            clear_help
+        end
+    else
+        switch iStation
+            case STN_TERMINAL
+                print_help 'VHH01'
+            case STN_RIG
+                print_help 'VHH02'
+            case STN_DIAGRAMS
+                print_help 'VHH03'
+            case STN_RECORDS
+                print_help 'VHH04'
+        end
+    end
+    iPromptShown = iStation
+end
+// what a player reading the HUD would do next (used by the test bot)
+if iStation <> STN_NONE
+then
+    oKind = OBJ_USE
+    oArg = iStation
+end
+return

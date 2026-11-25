@@ -1,0 +1,312 @@
+// ============================================================================
+// Christopher at home: a working routine between his stations, small habits
+// (pushing his glasses up, scratching his head over a problem), turning to CJ
+// when he comes close, thinking out loud, and conversations on Y.
+//
+// Stations (anchor offsets; headings relative to the room):
+//   0 desk, seated typing   (0.00, 3.55)  facing the desk
+//   1 oscilloscope bench    (2.55, 4.10)  facing the CRTs
+//   2 cymatics rig          (-2.60, 4.25) facing the plate
+//   3 diagram wall          (0.90, 6.50)  facing the wall
+//   4 storage shelves       (-1.90, 6.45) facing the shelves
+// All animations are stock (INT_OFFICE, COP_AMBIENT, GANGS, PED).
+// ============================================================================
+
+// Walk to station iChrisStep, or sit straight down at the desk.
+:CHRIS_GO_STATION
+if is_char_dead hChris
+then
+    return
+end
+switch iChrisStep
+    case 0
+        fTmp7 = 0.0
+        fTmp8 = 3.55
+        fHead = 0.0
+    case 1
+        fTmp7 = 2.55
+        fTmp8 = 4.1
+        fHead = 270.0
+    case 2
+        fTmp7 = -2.6
+        fTmp8 = 4.25
+        fHead = 90.0
+    case 3
+        fTmp7 = 0.9
+        fTmp8 = 6.5
+        fHead = 0.0
+    default
+        fTmp7 = -1.9
+        fTmp8 = 6.45
+        fHead = 0.0
+end
+gosub @ANCHOR_TO_WORLD
+fStX = fSX
+fStY = fSY
+fStZ = fAZ
+fStZ += 1.0
+fStH = fAH
+fStH += fHead
+clear_char_tasks hChris
+if iChrisStep == 0
+then
+    task_char_slide_to_coord_and_play_anim hChris fStX fStY fStZ fStH 0.4 "OFF_Sit_Type_Loop" "INT_OFFICE" 4.0 true false false false -1
+    iChrisPhase = 1
+else
+    task_go_straight_to_coord hChris fStX fStY fStZ 4 8000
+    iChrisPhase = 0
+end
+iFlourishT = iNow
+iFlourishT += 6000
+return
+
+:CHRIS_UPDATE
+if is_char_dead hChris
+then
+    return
+end
+if iTalking == 1
+then
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            iTalking = 0
+            iChrisPhase = 0
+            gosub @CHRIS_GO_STATION
+        end
+    end
+    // walking away ends the conversation
+    if not locate_char_any_means_char_2d $scplayer hChris 7.0 7.0 false
+    then
+        gosub @DLG_CANCEL
+        iTalking = 0
+        gosub @CHRIS_GO_STATION
+    end
+    return
+end
+// getting up from the desk takes a moment
+if iChrisPhase == 3
+then
+    if iWaitChris > iNow
+    then
+        return
+    end
+    iChrisPhase = 1
+    iChrisT = iNow
+end
+// on to the next station
+if iNow > iChrisT
+then
+    if iChrisStep == 0
+    then
+        if iChrisPhase <> 3
+        then
+            task_play_anim_non_interruptable hChris "OFF_Sit_2Idle_180" "INT_OFFICE" 4.0 false false false false -1
+            iChrisPhase = 3
+            iWaitChris = iNow
+            iWaitChris += 2600
+            return
+        end
+    end
+    iChrisStep += 1
+    if iChrisStep > 4
+    then
+        iChrisStep = 0
+    end
+    gosub @CHRIS_GO_STATION
+    iTmp = generate_random_int_in_range 18000 30000
+    iChrisT = iNow
+    iChrisT += iTmp
+    return
+end
+// arrived: set to work
+if iChrisPhase == 0
+then
+    if locate_char_on_foot_2d hChris fStX fStY 0.7 0.7 false
+    then
+        set_char_heading hChris fStH
+        switch iChrisStep
+            case 3
+                task_play_anim hChris "Coplook_think" "COP_AMBIENT" 4.0 true false false false -1
+            default
+                task_play_anim hChris "Copbrowse_loop" "COP_AMBIENT" 4.0 true false false false -1
+        end
+        iChrisPhase = 1
+    end
+end
+// a habit now and then
+if iChrisPhase == 1
+then
+    if iNow > iFlourishT
+    then
+        if iChrisStep <> 0
+        then
+            iTmp = generate_random_int_in_range 0 3
+            switch iTmp
+                case 0
+                    task_play_anim_secondary hChris "smkcig_prtl" "GANGS" 4.0 false false false false -1
+                case 1
+                    task_play_anim_secondary hChris "XPRESSscratch" "PED" 4.0 false false false false -1
+                default
+                    task_play_anim_secondary hChris "Copbrowse_nod" "COP_AMBIENT" 4.0 false false false false -1
+            end
+        end
+        iTmp = generate_random_int_in_range 7000 13000
+        iFlourishT = iNow
+        iFlourishT += iTmp
+    end
+end
+// CJ walks up: Christopher looks round (not while seated at the desk)
+if locate_char_any_means_char_2d $scplayer hChris 2.2 2.2 false
+then
+    if iChrisPhase == 1
+    then
+        if iChrisStep <> 0
+        then
+            task_turn_char_to_face_char hChris $scplayer
+            iChrisPhase = 2
+        end
+    end
+    if iStation == STN_NONE
+    then
+        if iHintKind <> 5
+        then
+            print_help 'VHH05'
+            iHintKind = 5
+        end
+        oKind = OBJ_TALK
+        oEnt = hChris
+    end
+else
+    if iChrisPhase == 2
+    then
+        iChrisPhase = 0
+        gosub @CHRIS_GO_STATION
+    end
+    if iHintKind == 5
+    then
+        iHintKind = 0
+    end
+end
+// thinking out loud when CJ is around and nothing else is being said
+if iNow > iBarkT
+then
+    iBarkT = iNow
+    iBarkT += 42000
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            if locate_char_any_means_char_2d $scplayer hChris 9.0 9.0 false
+            then
+                dLine = 301
+                dLine += iBarkIdx
+                dQEnd = dLine
+                gosub @SAY_QUEUE
+                iBarkIdx += 1
+                if iBarkIdx > 9
+                then
+                    iBarkIdx = 0
+                end
+            end
+        end
+    end
+end
+return
+
+// Y near Christopher: the next conversation he has something for.
+:CHRIS_TALK
+if is_char_dead hChris
+then
+    return
+end
+if not locate_char_any_means_char_2d $scplayer hChris 2.4 2.4 false
+then
+    return
+end
+if iTalking == 1
+then
+    return
+end
+iCount2 = 0
+:CHRIS_TALK_PICK
+iCount2 += 1
+if iCount2 > 12
+then
+    return
+end
+iTalkIdx += 1
+if iTalkIdx > 10
+then
+    iTalkIdx = 1
+end
+dLine = 0
+switch iTalkIdx
+    case 1
+        dLine = 201
+        dQEnd = 202
+    case 2
+        dLine = 203
+        dQEnd = 206
+    case 3
+        iTmp = rStory
+        iTmp &= 2
+        if iTmp <> 0
+        then
+            dLine = 213
+            dQEnd = 214
+        end
+    case 4
+        dLine = 209
+        dQEnd = 212
+    case 5
+        iTmp = rStory
+        iTmp &= 4
+        if iTmp <> 0
+        then
+            dLine = 215
+            dQEnd = 216
+        end
+    case 6
+        dLine = 207
+        dQEnd = 208
+    case 7
+        iTmp = rStory
+        iTmp &= 8
+        if iTmp <> 0
+        then
+            dLine = 217
+            dQEnd = 218
+        end
+    case 8
+        dLine = 223
+        dQEnd = 224
+    case 9
+        iTmp = rStory
+        iTmp &= 16
+        if iTmp <> 0
+        then
+            dLine = 219
+            dQEnd = 220
+        end
+    default
+        iTmp = rFlags
+        iTmp &= REC_F_M5_TOOK_FEE
+        if iTmp <> 0
+        then
+            dLine = 221
+            dQEnd = 222
+        end
+end
+if dLine == 0
+then
+    jump @CHRIS_TALK_PICK
+end
+clear_help
+gosub @SAY_QUEUE
+iTalking = 1
+clear_char_tasks hChris
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+return

@@ -225,6 +225,20 @@ var
     421@: int
     422@: int
     423@: int
+    426@: int
+    427@: int
+    428@: int
+    429@: int
+    430@: int
+    431@: int
+    432@: int
+    433@: int
+    434@: int
+    435@: int
+    436@: int
+    437@: int
+    438@: int
+    439@: int
 end
 
 const
@@ -463,4 +477,20 @@ const
     iDt            = 421@
     iHintT         = 422@   // when the current help prompt was shown
     iHintKind      = 423@
+    uPrefix        = 424@s  // 424@ + 425@: this script's text prefix, e.g. 'VGF'
+    // ---- R.A.I.N. field verdicts (v3d/decide.txt) ------------------------------------
+    fcId           = 426@
+    fcAns          = 427@
+    fcLineAcc      = 428@
+    fcLineRej      = 429@
+    fcLineAbs      = 430@
+    fcRetry        = 431@
+    fcChoice       = 432@
+    fcCorrect      = 433@
+    fcTries        = 434@
+    fcFeedback     = 435@   // 1 right, 2 wrong (first try), 3 right on a retry, 4 wrong again
+    fcSaved        = 436@
+    iTimerOn       = 437@   // a countdown on the HUD
+    iTimerEnd      = 438@
+    iTimerLeft     = 439@
 end

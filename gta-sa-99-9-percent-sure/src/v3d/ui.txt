@@ -1,0 +1,163 @@
+// ============================================================================
+// Vers3Dynamics expansion - interface building blocks
+//
+// 640 x 448 script space. The engine forgets text style after every line, so
+// each TS_* routine sets a complete style and the caller draws one line.
+// Palette as mission 1: teal (11,93,99), spectral (90,220,210), mint
+// (170,240,220), CERTAIN red (200,30,40), amber (240,170,40).
+// ============================================================================
+
+:TS_TITLE
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_HEAD
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_BODY
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_DIM
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 120 170 168 255
+set_text_proportional true
+set_text_edge 1 0 0 0 180
+return
+
+:TS_SEL
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 8 22 24 255
+set_text_proportional true
+return
+
+:TS_AMBER
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 240 170 40 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_RED
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 225 60 60 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_GOOD
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 120 230 150 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_HINT
+set_text_font 1
+set_text_scale 0.22 0.90
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+return
+
+// Terminal frame: background, title band with the logo, footer band.
+:DRAW_FRAME
+draw_rect 320.0 226.0 604.0 396.0 6 20 22 236
+draw_rect 320.0 44.0 604.0 32.0 11 93 99 255
+draw_rect 320.0 61.0 604.0 2.0 90 220 210 255
+draw_rect 320.0 410.0 604.0 24.0 4 14 16 255
+if iSpritesOk == 1
+then
+    draw_sprite 1 40.0 44.0 26.0 26.0 255 255 255 255
+end
+return
+
+// Highlight bar behind the menu row whose text top is uY.
+:DRAW_ROW_BAR
+uF = uY
+uF += 7.0
+draw_rect 200.0 uF 344.0 20.0 90 220 210 235
+return
+
+// A horizontal meter: centre uX, uY, full width uW, value uV (0..100), colour uR uG uB.
+:DRAW_METER
+draw_rect uX uY uW 8.0 20 40 42 255
+uF =# uV
+uF /= 100.0
+uF *= uW
+uF2 = uW
+uF2 -= uF
+uF2 /= 2.0
+uF3 = uX
+uF3 -= uF2
+if uV > 0
+then
+    draw_rect uF3 uY uF 8.0 uR uG uB 255
+end
+return
+
+// Location and title cards over the game view (iCardKind 1 = the HQ).
+:DRAW_CARD
+uI = iNow
+uI -= iCardT
+if uI > 5000
+then
+    iCardKind = 0
+    return
+end
+uA = 255
+if uI > 4200
+then
+    uA = 5000
+    uA -= uI
+    uA *= 255
+    uA /= 800
+end
+if 400 > uI
+then
+    uA = uI
+    uA *= 255
+    uA /= 400
+end
+set_text_font 0
+set_text_scale 1.20 3.20
+set_text_colour 225 245 240 uA
+set_text_right_justify true
+set_text_edge 2 0 0 0 uA
+display_text 608.0 346.0 'VHL01'
+set_text_font 2
+set_text_scale 0.34 1.40
+set_text_colour 90 220 210 uA
+set_text_right_justify true
+set_text_edge 1 0 0 0 uA
+display_text 608.0 386.0 'VHL02'
+set_text_font 1
+set_text_scale 0.26 1.06
+set_text_colour 200 225 222 uA
+set_text_right_justify true
+set_text_edge 1 0 0 0 uA
+display_text 608.0 404.0 'VHL03'
+if iSpritesOk == 1
+then
+    draw_sprite 1 420.0 362.0 34.0 34.0 255 255 255 uA
+end
+return

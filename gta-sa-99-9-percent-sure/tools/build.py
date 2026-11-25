@@ -35,7 +35,13 @@ BUILD = os.path.join(ROOT, "build")
 RELEASE = os.path.join(ROOT, "release", "99sure")
 MODELS = os.path.join(ROOT, "tests", "data", "models_used.json")
 SCRIPTS = [("99sure.txt", "99sure.cm"), ("99sure_launcher.txt", "99sure_launcher.cs"),
-           ("99sure_debug.txt", "99sure_debug.cs")]
+           ("99sure_debug.txt", "99sure_debug.cs"), ("v3dhq.txt", "v3dhq.cm"),
+           ("v3dghost.txt", "v3dghost.cm"), ("v3dfalse.txt", "v3dfalse.cm"),
+           ("v3dlink.txt", "v3dlink.cm"), ("v3dopen.txt", "v3dopen.cm")]
+# scenes: (data file, output prefix, first handle variable, last handle variable)
+SCENES = [("data/scenes.json", "", 240, 399), ("data/hq_scenes.json", "hq", 240, 299),
+          ("data/ghost_scenes.json", "ghost", 240, 299), ("data/false_scenes.json", "false", 240, 299),
+          ("data/link_scenes.json", "link", 240, 299), ("data/open_scenes.json", "open", 240, 299)]
 MODEL_INSTALL = os.path.join(BUILD, "models", "installable")   # build_chris.py --img
 MODEL_PREVIEW = os.path.join(BUILD, "models", "preview")       # build_chris.py --synthetic
 PREVIEW_NOTE = """Christopher (chrisw.dff / chrisw.txd) built on a SYNTHETIC skeleton.
@@ -61,7 +67,8 @@ def run(args, **kw):
 
 
 def compile_scripts(sb4):
-    pairs = [f"{os.path.join(ROOT, 'src', s)}={os.path.join(BUILD, 'CLEO', o)}" for s, o in SCRIPTS]
+    pairs = [f"{os.path.join(ROOT, 'src', s)}={os.path.join(BUILD, 'CLEO', o)}" for s, o in SCRIPTS
+             if os.path.exists(os.path.join(ROOT, "src", s))]
     work = os.path.join(BUILD, "sb4work")
     os.makedirs(work, exist_ok=True)
     run(PY + [os.path.join(ROOT, "tools", "scm", "sb4build.py"), "--sb4", sb4, "--models", MODELS,
@@ -84,6 +91,11 @@ def package():
     layout = {
         os.path.join(BUILD, "CLEO", "99sure.cm"): "cleo/99sure.cm",
         os.path.join(BUILD, "CLEO", "99sure_launcher.cs"): "cleo/99sure_launcher.cs",
+        os.path.join(BUILD, "CLEO", "v3dhq.cm"): "cleo/v3dhq.cm",
+        os.path.join(BUILD, "CLEO", "v3dghost.cm"): "cleo/v3dghost.cm",
+        os.path.join(BUILD, "CLEO", "v3dfalse.cm"): "cleo/v3dfalse.cm",
+        os.path.join(BUILD, "CLEO", "v3dlink.cm"): "cleo/v3dlink.cm",
+        os.path.join(BUILD, "CLEO", "v3dopen.cm"): "cleo/v3dopen.cm",
         os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"): "cleo/cleo_text/99sure.fxt",
         os.path.join(BUILD, "CLEO", "99sure", "audio", "sfx_ring.mp3"): "cleo/99sure/audio/sfx_ring.mp3",
         os.path.join(BUILD, "models", "txd", "v3drain.txd"): "models/txd/v3drain.txd",
@@ -138,16 +150,21 @@ def main():
     args = ap.parse_args()
 
     run(PY + [os.path.join(ROOT, "tools", "gen_text.py")])
-    run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py")], env=dict(os.environ, SA_MODELS_JSON=MODELS))
+    for data, prefix, first, last in SCENES:
+        if os.path.exists(os.path.join(ROOT, data)):
+            run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py"), "--data", os.path.join(ROOT, data),
+                      "--prefix", prefix, "--first-var", str(first), "--last-var", str(last)],
+                env=dict(os.environ, SA_MODELS_JSON=MODELS))
     run([sys.executable, os.path.join(ROOT, "tools", "build_ui_assets.py")])
     build_audio()
     if args.sb4:
         compile_scripts(args.sb4)
     run(PY + [os.path.join(ROOT, "tools", "scm", "validate.py"), "--fxt",
               os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"), "--models", MODELS]
-        + [os.path.join(BUILD, "CLEO", o) for _, o in SCRIPTS])
+        + [os.path.join(BUILD, "CLEO", o) for _, o in SCRIPTS if os.path.exists(os.path.join(BUILD, "CLEO", o))])
     if not args.no_tests:
         run(PY + [os.path.join(ROOT, "tests", "run_mission_tests.py")])
+        run(PY + [os.path.join(ROOT, "tests", "run_story_tests.py")])
     chris = os.path.join(ROOT, "tools", "character", "build_chris.py")
     run([sys.executable, chris, "--synthetic", "--out", MODEL_PREVIEW])
     if args.img:

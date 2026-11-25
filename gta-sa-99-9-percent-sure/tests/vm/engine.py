@@ -152,6 +152,7 @@ class Engine:
         self.dead_task_warnings = set()
         self.respawn_point = (-2655.0, 635.0, 14.5)
         self.sounds = []
+        self.coronas = []
         self.handlers = {}
         for name in dir(self):
             if name.startswith("c_"):
@@ -257,6 +258,7 @@ class Engine:
 
     # ------------------------------------------------------------------ frame
     def begin_frame(self):
+        self.coronas = []
         self.last_draws = self.frame_draws
         self.frame_draws = []
         self.counts = {"text": 0, "rect": 0}
@@ -575,6 +577,7 @@ class Engine:
     def c_add_one_off_sound(self, s, x, y, z, sid): self.sounds.append((self.vm.time, sid))
     def c_play_mission_passed_tune(self, s, n): self.ev("passed_tune")
     def c_shake_cam(self, s, n): pass
+    def c_draw_corona(self, s, x, y, z, size, kind, flare, r, g, b): self.coronas.append((x, y, z))
     def c_script_name(self, s, name): s.name = name
     def c_save_this_custom_script(self, s): s.saving = True
     def c_mission_has_finished(self, s): self.ev("mission_has_finished")
@@ -734,7 +737,17 @@ class Engine:
         self.stream(h, "REMOVE_AUDIO_STREAM")
         del self.streams[h]
 
-    def c_set_audio_stream_volume(self, s, h, v): self.stream(h, "SET_AUDIO_STREAM_VOLUME")
+    def c_set_audio_stream_volume(self, s, h, v):
+        st = self.stream(h, "SET_AUDIO_STREAM_VOLUME")
+        if not 0.0 <= v <= 1.0:
+            self.finding("error", f"SET_AUDIO_STREAM_VOLUME {v} outside 0..1")
+        st["volume"] = v
+
+    def c_set_audio_stream_speed(self, s, h, v):
+        st = self.stream(h, "SET_AUDIO_STREAM_SPEED")
+        if not 0.05 <= v <= 8.0:
+            self.finding("error", f"SET_AUDIO_STREAM_SPEED {v} out of range")
+        st["speed"] = v
     def c_set_audio_stream_looped(self, s, h, on): self.stream(h, "SET_AUDIO_STREAM_LOOPED")["loop"] = bool(on)
 
     # ---- pads --------------------------------------------------------------------
@@ -1125,6 +1138,10 @@ class Engine:
     def c_locate_stopped_char_on_foot_3d(self, s, h, x, y, z, rx, ry, rz, draw):
         e = self.ents[h]
         self.cond(s, e.car is None and self._speed(e) < 0.05 and self._in_box(e.pos, x, y, z, rx, ry, rz))
+
+    def c_locate_char_on_foot_2d(self, s, h, x, y, rx, ry, draw):
+        e = self.ents[h]
+        self.cond(s, e.car is None and abs(e.pos[0] - x) <= rx and abs(e.pos[1] - y) <= ry)
 
     def c_locate_char_any_means_char_2d(self, s, h, t, rx, ry, draw):
         a, b = self.ents[h].pos, self.ents[t].pos

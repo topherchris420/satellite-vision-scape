@@ -142,6 +142,74 @@ Original performances only: do not imitate the original game cast.
 
 | File | Speaker | Target | Line | Notes |
 |---|---|---|---|---|
+| `VGF0101.mp3` | REX | 4.7 s | Radio Free Fierro, you're on the air. Tell me about the beeping. |  |
+| `VGF0102.mp3` | CALLER | 9.2 s | It's in my clock radio, Rex. Seven little beeps and a long one. Every night. My dog won't go in the kitchen. |  |
+| `VGF0103.mp3` | REX | 7.1 s | Friends, that is not interference. That is a message. San Fierro has a ghost, and it's trying to talk. |  |
+| `VGF0104.mp3` | CJ | 2.1 s | Your radio's haunted, man. |  |
+| `VGF0105.mp3` | CHRIS | 1.4 s | Listen. | he plays the tape |
+| `VGF0106.mp3` | CHRIS | 8.8 s | Seven short, one long, every ninety seconds, on one-six-six megahertz. People hear it all over the city. |  |
+| `VGF0107.mp3` | CJ | 3.1 s | So it's a ghost with a schedule. |  |
+| `VGF0108.mp3` | CHRIS | 8.5 s | Ghosts don't keep schedules. Transmitters do. A real ghost would have a favourite haunt. Let's find this one's. |  |
+| `VGF0109.mp3` | CHRIS | 7.2 s | We take bearings from two places. Where the lines cross, that's where it lives. Roughly. |  |
+| `VGF0110.mp3` | CJ | 1.4 s | Roughly? |  |
+| `VGF0111.mp3` | CHRIS | 3.5 s | Roughly is the honest version of exactly. |  |
+| `VGF0201.mp3` | CHRIS | 8.2 s | The receiver turns the signal into a needle and a sound. Watch the needle, but trust your ears. |  |
+| `VGF0202.mp3` | CJ | 1.7 s | Why my ears? |  |
+| `VGF0203.mp3` | CHRIS | 7.3 s | Because noise is loud and the pattern is quiet. Loud things like to pretend they're important. |  |
+| `VGF0204.mp3` | CJ | 3.1 s | Sounds like half the people I know. |  |
+| `VGF0205.mp3` | REX | 6.8 s | Callers say the beeping is loudest near Queens. Coincidence? I don't believe in coincidences. I believe in Queens. |  |
+| `VGF0221.mp3` | CHRIS | 5.7 s | Park on the marker and hold still. The antenna does the rest. |  |
+| `VGF0222.mp3` | CHRIS | 2.5 s | Bearing one. Strong, too. |  |
+| `VGF0223.mp3` | CHRIS | 5.0 s | Bearing two. The lines cross in Queens. Near a nightclub. |  |
+| `VGF0224.mp3` | CHRIS | 3.2 s | Hold still. You're smearing the bearing. |  |
+| `VGF0241.mp3` | CHRIS | 4.0 s | The needle's pinned here. But listen to it. |  |
+| `VGF0242.mp3` | CJ | 1.7 s | That's just buzzing. |  |
+| `VGF0243.mp3` | CHRIS | 6.6 s | That sign has a dying transformer. It sprays noise into every channel, ours included. |  |
+| `VGF0244.mp3` | CHRIS | 6.0 s | R.A.I.N. wants a verdict. Is this our ghost? |  |
+| `VGF0261.mp3` | CHRIS | 7.6 s | Rejected. Loud isn't the same as the source. The pattern's still out there, under the buzz. |  |
+| `VGF0262.mp3` | CHRIS | 4.9 s | Accept? Carl, it's buzzing. Our ghost beeps. Listen again. |  |
+| `VGF0263.mp3` | CHRIS | 7.9 s | We can do better than abstain. The pattern isn't in this noise at all. That's a reject. |  |
+| `VGF0264.mp3` | CJ | 3.9 s | So we followed the loudest thing in the city. |  |
+| `VGF0265.mp3` | CHRIS | 8.5 s | Everybody does. That's why it's a trap. New plan: on foot, with the handheld, away from the sign. |  |
+| `VGF0301.mp3` | CHRIS | 7.2 s | Take the handheld. Turn slowly. When the beeps get clean and loud, hold it there. |  |
+| `VGF0302.mp3` | CHRIS | 3.6 s | That's a bearing. Back in the van. |  |
+| `VGF0303.mp3` | CHRIS | 4.5 s | Wait. This one points straight up at the bridge. |  |
+| `VGF0304.mp3` | CJ | 4.8 s | So the ghost lives on the Gant Bridge. Rex was right? |  |
+| `VGF0305.mp3` | CHRIS | 7.9 s | Or the bridge is a mirror. The cables bounce the signal. We might be hearing an echo. |  |
+| `VGF0306.mp3` | CHRIS | 6.7 s | Same question for R.A.I.N. Is the source on the bridge? |  |
+| `VGF0321.mp3` | CHRIS | 7.2 s | Rejected. The bearing swings when we move. A real source holds still. An echo doesn't. |  |
+| `VGF0322.mp3` | CHRIS | 7.6 s | If it was up there, the bearing wouldn't move when we did. It moved. Try again. |  |
+| `VGF0323.mp3` | CHRIS | 7.6 s | We have the swing on record. That's evidence. It's an echo, so we can reject this. |  |
+| `VGF0324.mp3` | CHRIS | 7.4 s | One more bearing from the Esplanade, away from the cables. Then we cross the lines properly. |  |
+| `VGF0325.mp3` | CHRIS | 5.7 s | There. Three clean bearings, one crossing. Downtown, by the parking structure. |  |
+| `VGF0401.mp3` | CHRIS | 6.9 s | That's a SureThing van. And that's a relay dish going into the back of it. |  |
+| `VGF0402.mp3` | TECH | 3.4 s | Oh, come on. I'm on my lunch. |  |
+| `VGF0403.mp3` | CHRIS | 5.8 s | He's leaving! If the relay goes with him, so does our evidence. |  |
+| `VGF0404.mp3` | CHRIS | 5.0 s | Stop the van. Don't hurt him. We need him talking. |  |
+| `VGF0405.mp3` | TECH | 4.8 s | Okay! Okay! I'm out! I just install the things, man! |  |
+| `VGF0406.mp3` | CJ | 1.4 s | Install what? |  |
+| `VGF0407.mp3` | TECH | 7.0 s | Relays. Upload boxes. They told me CERTAIN was switched off. They said these were for weather. |  |
+| `VGF0408.mp3` | CHRIS | 3.9 s | Weather with a CERTAIN header on every packet. |  |
+| `VGF0409.mp3` | TECH | 4.3 s | Look, I don't get paid enough to have an opinion. |  |
+| `VGF0410.mp3` | CHRIS | 4.0 s | Grab the relay out of the back, Carl. |  |
+| `VGF0451.mp3` | CHRIS | 6.5 s | So. We could publish the recording right now. Everybody's listening. The timing's perfect. |  |
+| `VGF0452.mp3` | CHRIS | 9.9 s | Or we take the relay to the lab and check it properly. But it's wiping its own memory. We'd have four minutes. |  |
+| `VGF0453.mp3` | CJ | 3.1 s | And if we put it out now? |  |
+| `VGF0454.mp3` | CHRIS | 7.5 s | Then SureThing says we faked a beep, and they'll pick at every gap. Your call, Carl. |  |
+| `VGF0471.mp3` | CHRIS | 7.6 s | Shielded box in the lab. Four minutes. Drive the way you always drive, but on purpose. |  |
+| `VGF0472.mp3` | CHRIS | 3.2 s | Two minutes. The memory counter's falling. |  |
+| `VGF0473.mp3` | CHRIS | 2.5 s | We're here. Box, now! |  |
+| `VGF0474.mp3` | CHRIS | 6.2 s | Wiped. We've still got the recording. It just won't carry the same weight. |  |
+| `VGF0481.mp3` | CHRIS | 5.5 s | Uploading the recording to the registry. Done. Now it's everybody's ghost. |  |
+| `VGF0482.mp3` | CHRIS | 4.0 s | Let's take the relay back anyway. No rush. |  |
+| `VGF0501.mp3` | CHRIS | 8.1 s | Control run. Relay unplugged... silence. Plugged in... seven short, one long. It's the relay. |  |
+| `VGF0502.mp3` | CHRIS | 7.3 s | And every packet says STC-CERT. CERTAIN was supposed to be switched off two weeks ago. |  |
+| `VGF0503.mp3` | CJ | 5.0 s | So the ghost was a robot that didn't know it got fired. |  |
+| `VGF0504.mp3` | CHRIS | 3.9 s | That is honestly the best summary I've heard. |  |
+| `VGF0505.mp3` | NEWS | 8.6 s | SureThing Technologies confirms a 'legacy relay' was left running in Downtown San Fierro. The company says it was a clerical error. |  |
+| `VGF0506.mp3` | NEWS | 8.9 s | SureThing calls a recording released by an independent lab 'unverifiable'. The lab has published its methods and invited anyone to check them. |  |
+| `VGF0507.mp3` | REX | 7.1 s | So it was a robot. Fine. But who's to say a robot can't be a ghost? Lines are open. |  |
+| `VGF0508.mp3` | CJ | 1.8 s | Man, this city. |  |
 
 ## False Positive
 

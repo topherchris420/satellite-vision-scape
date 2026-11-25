@@ -366,6 +366,27 @@
     }
    ]
   },
+  "0025": {
+   "name": "IS_FLOAT_LVAR_GREATER_THAN_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
   "0029": {
    "name": "IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER",
    "extension": "default",
@@ -652,6 +673,25 @@
     }
    ]
   },
+  "006A": {
+   "name": "MULT_INT_LVAR_BY_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
   "006B": {
    "name": "MULT_FLOAT_LVAR_BY_FLOAT_LVAR",
    "extension": "default",
@@ -666,6 +706,25 @@
     {
      "name": "",
      "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0072": {
+   "name": "DIV_INT_LVAR_BY_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
      "source": "var_local",
      "out": false
     }
@@ -1229,6 +1288,51 @@
      "type": "int",
      "source": "var_any",
      "out": true
+    }
+   ]
+  },
+  "00ED": {
+   "name": "LOCATE_CHAR_ON_FOOT_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
     }
    ]
   },
@@ -2659,6 +2763,70 @@
     }
    ]
   },
+  "024F": {
+   "name": "DRAW_CORONA",
+   "extension": "default",
+   "attrs": {
+    "is_static": true,
+    "is_positional": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "size",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "coronaType",
+     "type": "CoronaType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "flareType",
+     "type": "FlareType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "r",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "g",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "b",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "0256": {
    "name": "IS_PLAYER_PLAYING",
    "extension": "default",
@@ -3233,7 +3401,7 @@
    },
    "params": [
     {
-     "name": "spriteSlot",
+     "name": "memorySlot",
      "type": "int",
      "source": null,
      "out": false
@@ -3353,13 +3521,13 @@
    },
    "params": [
     {
-     "name": "spriteSlot",
+     "name": "memorySlot",
      "type": "int",
      "source": null,
      "out": false
     },
     {
-     "name": "textureName",
+     "name": "spriteName",
      "type": "string",
      "source": null,
      "out": false
@@ -4764,7 +4932,7 @@
      "out": false
     },
     {
-     "name": "slideSpeed",
+     "name": "radius",
      "type": "float",
      "source": null,
      "out": false
@@ -5545,6 +5713,164 @@
     {
      "name": "args",
      "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B10": {
+   "name": "BIT_AND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0B17": {
+   "name": "BIT_AND_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B18": {
+   "name": "BIT_OR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B19": {
+   "name": "BIT_XOR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1B": {
+   "name": "MOD_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "number",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1C": {
+   "name": "BIT_SHR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "n",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1D": {
+   "name": "BIT_SHL_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "n",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "2503": {
+   "name": "SET_AUDIO_STREAM_SPEED",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "speed",
+     "type": "float",
      "source": null,
      "out": false
     }

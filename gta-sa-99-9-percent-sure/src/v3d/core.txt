@@ -325,10 +325,6 @@ return
 // ---------------------------------------------------------------------------
 // Launcher state
 // ---------------------------------------------------------------------------
-:SAVE_CHECKPOINT
-iSavedScore = iScore
-iSavedRight = iDecRight
-iSavedTotal = iDecTotal
 :PUBLISH
 set_cleo_shared_var SV_STATE iState
 set_cleo_shared_var SV_CHECKPOINT iCheckpoint
@@ -733,93 +729,6 @@ set_char_signal_after_kill hChris false
 iNeedChris = 1
 return
 
-:CHRIS_JOIN_GROUP
-hGroup = get_player_group $player1
-set_group_member hGroup hChris
-set_char_never_leaves_group hChris true
-set_player_group_recruitment $player1 false
-iNeedChris = 2
-return
-
-:CHRIS_LEAVE_GROUP
-if not is_char_dead hChris
-then
-    remove_char_from_group hChris
-end
-set_player_group_recruitment $player1 true
-if bChris <> -1
-then
-    remove_blip bChris
-    bChris = -1
-end
-iNeedChris = 1
-return
-
-// The research van: Burrito, charcoal/teal, roof dish. In: fVanX fVanY fVanZ fVanH.
-:SPAWN_VAN
-iMdl = #BURRITO
-gosub @LOAD_MODEL
-iMdl = #SATDISHSML
-gosub @LOAD_MODEL
-hVan = create_car #BURRITO fVanX fVanY fVanZ
-set_car_heading hVan fVanH
-change_car_colour hVan 83 93
-set_car_health hVan 2000
-fTmp = fVanZ
-fTmp += 3.0
-hVanDish = create_object #SATDISHSML fVanX fVanY fTmp
-set_object_collision hVanDish false
-attach_object_to_car hVanDish hVan 0.0 -0.85 1.22 0.0 0.0 180.0
-mark_model_as_no_longer_needed #BURRITO
-mark_model_as_no_longer_needed #SATDISHSML
-iNeedVan = 1
-return
-
-// Waits until CJ and Christopher are both in the van.
-:BOARD_VAN
-iT1 = 0
-:BOARD_VAN_LOOP
-gosub @TICK
-if iFail <> 0
-then
-    return
-end
-if not is_char_in_car $scplayer hVan
-then
-    oKind = OBJ_ENTER
-    oEnt = hVan
-    if iT1 <> 1
-    then
-        print_now 'VXO02' 8000 1
-        if bVan == -1
-        then
-            bVan = add_blip_for_car hVan
-            set_blip_as_friendly bVan true
-        end
-        iT1 = 1
-    end
-    jump @BOARD_VAN_LOOP
-end
-if bVan <> -1
-then
-    remove_blip bVan
-    bVan = -1
-end
-if not is_char_in_car hChris hVan
-then
-    oKind = OBJ_HOLD
-    if iT1 <> 2
-    then
-        print_now 'VXO03' 5000 1
-        task_enter_car_as_passenger hChris hVan 20000 0
-        iT1 = 2
-    end
-    jump @BOARD_VAN_LOOP
-end
-oKind = OBJ_NONE
-clear_small_prints
-return
-
 // ---------------------------------------------------------------------------
 // Positions and cameras
 // ---------------------------------------------------------------------------
@@ -846,16 +755,6 @@ fTmp = fTmp8
 fTmp *= fCos
 fSY += fTmp
 fSY += fAY
-return
-
-:GROUND_AT
-fTmp = fAZ
-fTmp += 4.0
-fSZ = get_ground_z_for_3d_coord fSX fSY fTmp
-if fSZ == 0.0
-then
-    fSZ = fAZ
-end
 return
 
 :CAM_SHOT
