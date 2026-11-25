@@ -1,8 +1,9 @@
-# Installing 99.9% SURE
+# Installing 99.9% SURE and the Vers3Dynamics expansion
 
-> **Status:** the mission has been compiled and tested headlessly (see
-> [TESTING.md](TESTING.md)), but it has **not been run inside GTA: San Andreas**.
-> Treat this as a first in-game test: back up first, and report what you see.
+> **Status:** every script has been compiled with Sanny Builder 4.2 and played
+> headlessly in a script VM against a mocked engine (see [TESTING.md](TESTING.md)),
+> but **none of it has been run inside GTA: San Andreas**. Treat this as a first
+> in-game test: back up first, and report what you see.
 
 ## 1. What you need
 
@@ -10,7 +11,7 @@
 |---|---|---|
 | **GTA: San Andreas for PC, version 1.0 US** (`gta_sa.exe`) | CLEO only supports this executable | The Steam / Rockstar Games Launcher builds and the Definitive Edition are not supported by CLEO. Downgrade a Steam / RGL copy to 1.0 first. |
 | **Silent's ASI Loader** | loads CLEO | Usually bundled with CLEO and SilentPatch. |
-| **CLEO 5** (5.0 or newer; 5.4 recommended) | runs the mission, the text file and the audio | Uses the default CLEO plugins: audio (BASS), file system, text. CLEO 4.4 should also work but was not checked. |
+| **CLEO 5** (5.0 or newer; 5.4 recommended) | runs the missions, the text file and the audio | Uses the default CLEO plugins: audio (BASS), file system, text. **The expansion needs CLEO 5**: the cymatics rig changes the pitch of an audio stream (`SET_AUDIO_STREAM_SPEED`), which CLEO 4 does not have. 99.9% SURE on its own should still run on CLEO 4.4 (not checked). |
 | **SilentPatch** | recommended | Fixes engine bugs; not required by the mission. |
 | **Mod Loader** | optional | Easiest way to install Christopher's model without editing `gta3.img`. |
 | **Sanny Builder 4** | only to recompile | Edit mode "GTA SA (v1.0 - SBL)". Not needed to play. |
@@ -40,11 +41,18 @@ Everything to copy is in `release/99sure/`, laid out like the game folder:
 
 ```
 <GTA San Andreas>\
-  cleo\99sure.cm                    the mission
-  cleo\99sure_launcher.cs           the "?" marker in Doherty; starts and restarts the mission
-  cleo\cleo_text\99sure.fxt         all subtitles and interface text
+  cleo\99sure_launcher.cs           the world script: the "?" contact points, hand-overs, retries, the record
+  cleo\99sure.cm                    mission 1, 99.9% SURE
+  cleo\v3dhq.cm                     the Vers3Dynamics HQ (free roam, after mission 1)
+  cleo\v3dghost.cm                  mission 2, Ghost Frequency
+  cleo\v3dfalse.cm                  mission 3, False Positive
+  cleo\v3dlink.cm                   mission 4, Everything Is Connected
+  cleo\v3dopen.cm                   mission 5, The Open Experiment
+  cleo\cleo_text\99sure.fxt         every subtitle and interface line (1,250+ keys)
   cleo\99sure\audio\sfx_ring.mp3    phone ring (voice lines go here too, see section 5)
-  models\txd\v3drain.txd            R.A.I.N. logo and cymatics sprite (optional; the console works without it)
+  cleo\99sure\sfx\                  original sound effects and loops (R.A.I.N., the rig, the receiver, ...)
+  cleo\99sure\music\lab.mp3         "Evidence in the Quiet", the original lab score
+  models\txd\v3drain.txd            R.A.I.N. logo, plate patterns, diagrams (optional; panels work without it)
 ```
 
 Then install Christopher (section 4). Start the game, load a save, and look
@@ -52,11 +60,20 @@ for the **?** blip at CJ's garage in **Doherty, San Fierro**. Walk into the
 marker on foot with no wanted level. If San Fierro is still locked in your
 story progress you will pick up a wanted level getting there.
 
-**Updating an older copy:** replace the mission, launcher and FXT together.
-This build has seven checkpoints instead of four; the launcher discards its
-old saved mission progress and removes its old contact blip. Your GTA story
-save is unaffected. New failures offer a retry from the current site, with
-the score restored to the start of that site.
+After 99.9% SURE the **?** moves a few doors down, to the Vers3Dynamics lab.
+Walk into it to go inside; Christopher offers each new story mission from a
+marker beside his desk.
+
+**Where progress is kept:** in CLEO's own save (`cleo\cleo_saves\`), one per
+game save slot, as CLEO shared variables 950..970. The game's save files are
+never written. Updating the scripts keeps that progress (CLEO restores shared
+variables even when a script file has changed). Another mod using shared
+variables 950..970 would interfere.
+
+**Updating an older copy:** replace every file above together. Saves made
+with an older build keep their GTA story progress, but that build kept
+"mission passed" only in the launcher's own state, which CLEO discards when
+the launcher changes, so replay 99.9% SURE once to open the lab.
 
 ## 4. Christopher's model
 
@@ -108,24 +125,30 @@ skeleton. It is for looking at the mesh and textures in a model viewer (for
 example Blender with DragonFF). **Do not install it**: its bone orientations
 are not the game's, so it would animate twisted.
 
-## 5. Voices and music (optional)
+## 5. Voices, music and audio settings
 
-The mission ships with **subtitles only**. Every line is shown on screen, and
-a line plays as audio when `cleo\99sure\audio\<line key>.mp3` exists (for
-example `V3D0201.mp3`). Missing files never stop the mission.
+Everything ships with **subtitles**. A line plays as audio when
+`cleo\99sure\audio\<line key>.mp3` exists (for example `V3D0201.mp3` or
+`VHQ0101.mp3`). Missing voice files never stop anything.
 
-- `dialogue/VO_RECORDING_SCRIPT.md` lists all 217 lines by speaker with file
-  names and target lengths; `dialogue/audio_manifest.csv` is the same as a table.
+- `dialogue/VO_RECORDING_SCRIPT.md` (mission 1) and
+  `dialogue/story/VO_RECORDING_SCRIPT.md` (the HQ and missions 2-5) list every
+  line by speaker with file names and target lengths; the matching
+  `audio_manifest.csv` files are the same as tables.
 - `python3 tools/prepare_audio.py <folder of takes>` converts WAV/MP3/OGG/FLAC
-  takes named after their keys into loudness-normalised MP3s in
-  `build/CLEO/99sure/audio/`, and reports missing or over-long takes.
+  takes named after their keys into loudness-normalised MP3s.
 - Use original performances. Do not imitate the voices of the original cast.
   Christopher's own voice may be used with his permission.
 
-**Lab music:** if `cleo\99sure\music\lab.mp3` exists it plays quietly inside
-the lab. No music is shipped. The *Green Machine* recordings in this
-repository are licensed for *Pine Gap: After Hours* only; using one here needs
-the songwriter's permission (see `docs/SOUNDTRACK.md` in the satellite-vision-scape repository).
+**Music and effects are original and included:** the lab score *Evidence in the
+Quiet* (`tools/lab_score.py`) and the effects and loops in `cleo\99sure\sfx\`
+(`tools/sound_design.py`) are synthesised for this project. Loops are Ogg
+Vorbis (gapless in BASS); one-shots are MP3. The *Green Machine* recordings in
+this repository are licensed for *Pine Gap: After Hours* only and are not used.
+
+**Audio settings:** at the HQ, the R.A.I.N. terminal's *Audio settings* page sets
+lab music, equipment ambience, voices and effects from 0 to 10. They are saved
+with your progress and also apply to the lab in 99.9% SURE.
 
 ## 6. macOS with CrossOver
 
@@ -167,7 +190,8 @@ checking positions; see [CALIBRATION.md](CALIBRATION.md).
 
 Delete the files listed in section 3, `modloader\99sure\` (or remove
 `chrisw.dff`/`.txd` from `gta3.img` and delete `cleo\99sure\chrisw_in_img.txt`),
-and the `cleo\99sure\` folder. Your saves are not affected.
+and the `cleo\99sure\` folder. Your game saves are not affected; the
+progress record stays harmlessly in CLEO's save files until they are deleted.
 
 ## 9. Troubleshooting
 
@@ -181,3 +205,9 @@ and the `cleo\99sure\` folder. Your saves are not affected.
 | Christopher's arms or legs twist when he moves | The preview model from `extras/model-preview/` is installed; build the real one with `--img` (section 4). |
 | Crash when Christopher appears | Remove the model files (the stand-in is used) and report it with `cleo.log`; the model has not been tested in game. |
 | Objective markers in odd places | Several points are approximate; see [CALIBRATION.md](CALIBRATION.md). |
+| The **?** stays at the garage after passing 99.9% SURE | `cleo\v3dhq.cm` is missing (the launcher only moves the contact when the HQ is installed). |
+| No new mission marker in the lab | The next story mission's file (`v3dghost.cm`, `v3dfalse.cm`, `v3dlink.cm` or `v3dopen.cm`) is missing, or the previous mission is not passed yet. |
+| Game crashes when you open the cymatics rig | CLEO 4 is installed; the expansion needs CLEO 5 (section 1). |
+| Silent lab, or no interface sounds | `cleo\99sure\music\` and `cleo\99sure\sfx\` are missing, or the levels are at 0 on the terminal's *Audio settings* page. |
+| Screen stays black after starting a mission from the lab | The launcher fades back in after three seconds if the mission did not start; check `cleo.log` for a script that failed to load. |
+| Progress lost | Progress lives in CLEO's save for that slot (`cleo\cleo_saves\`): load the same game save slot it was made in. |

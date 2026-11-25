@@ -132,7 +132,8 @@ def package():
         for name in sorted(os.listdir(audio)):
             if name.upper().startswith("V3D") and name.lower().endswith(".mp3"):
                 shutil.copyfile(os.path.join(audio, name), os.path.join(RELEASE, "cleo", "99sure", "audio", name))
-    shutil.copyfile(os.path.join(ROOT, "docs", "INSTALL.md"), os.path.join(RELEASE, "INSTALL.md"))
+    for doc in ("INSTALL.md", "IMPROVEMENTS.md"):
+        shutil.copyfile(os.path.join(ROOT, "docs", doc), os.path.join(RELEASE, doc))
     if os.path.exists(os.path.join(RELEASE, "extras", "model-preview", "chrisw.dff")):
         with open(os.path.join(RELEASE, "extras", "model-preview", "README.txt"), "w", newline="\r\n") as fh:
             fh.write(PREVIEW_NOTE)
