@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { buildings, canMove, CAR, collectEvidence, evidence, HQ, readCampaign, saveCampaign, submitVerdict, type Campaign, type Verdict } from "@/game/campaign/sanFierro";
+import { buildings, canMove, CAR, collectEvidence, evidence, freshCampaign, HQ, readCampaign, saveCampaign, submitVerdict, type Campaign, type Verdict } from "@/game/campaign/sanFierro";
+import { CHAPTER_HREF } from "@/lib/chapters";
+import { ChapterSwitch } from "./ChapterSwitch";
 
 type Point = { x: number; z: number };
+const OPENING = "CERTAIN has flagged a family vehicle. R.A.I.N. needs independent evidence.";
 const near = (a: Point, b: Point, radius = 3) => Math.hypot(a.x - b.x, a.z - b.z) < radius;
 type Interaction = "hq" | "car" | (typeof evidence)[number]["id"] | null;
 const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
@@ -86,7 +89,7 @@ export function SanFierro() {
   const [campaign, setCampaign] = useState(readCampaign);
   const [interaction, setInteraction] = useState<Interaction>("hq");
   const [driving, setDriving] = useState(false);
-  const [message, setMessage] = useState("CERTAIN has flagged a family vehicle. R.A.I.N. needs independent evidence.");
+  const [message, setMessage] = useState(OPENING);
   const [storageOK, setStorageOK] = useState(true);
   const keys = useRef(new Set<string>());
   const position = useRef<Point>({ ...HQ });
@@ -111,7 +114,25 @@ export function SanFierro() {
       }
     }
   }
+  function playAgain() {
+    update(freshCampaign());
+    position.current = { ...HQ };
+    car.current = { ...CAR };
+    setDriving(false);
+    setMessage(OPENING);
+  }
   const action = useRef(interact);
+  // Development-only handle for the README capture script: place the player
+  // without driving there in real time under software rendering.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const w = window as unknown as { __sanFierroCapture?: unknown };
+    w.__sanFierroCapture = {
+      teleport: (x: number, z: number) => { position.current = { x, z }; },
+      interact: () => action.current(),
+    };
+    return () => { delete w.__sanFierroCapture; };
+  }, []);
   useEffect(() => { action.current = interact; });
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -134,27 +155,27 @@ export function SanFierro() {
   }, []);
   const ready = campaign.collected.length === evidence.length;
   return <main className="relative h-[100dvh] overflow-hidden bg-[#1c292f] text-white">
-    <Canvas camera={{ position: [0, 13, 17], fov: 55 }} dpr={[1, 1.5]} fallback={<p className="p-6">WebGL is required. <a href="/">Return to Pine Gap.</a></p>}>
+    <Canvas camera={{ position: [0, 13, 17], fov: 55 }} dpr={[1, 1.5]} fallback={<p className="p-6">WebGL is required. <a href={CHAPTER_HREF["pine-gap"]}>Return to Pine Gap.</a></p>}>
       <District keys={keys} position={position} car={car} driving={driving} campaign={campaign} onNear={setInteraction} />
     </Canvas>
-    <section className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-3 sm:p-5">
-      <div className="max-w-[65%] rounded-lg bg-black/75 p-3">
+    <section className="pointer-events-none absolute inset-x-0 top-0 flex flex-col items-start gap-2 p-3 sm:flex-row-reverse sm:justify-between sm:p-5">
+      <ChapterSwitch current="san-fierro" className="pointer-events-auto" />
+      <div className="max-w-[calc(100%-7rem)] rounded-lg bg-black/75 p-3 sm:max-w-md">
         <p className="text-[10px] uppercase tracking-widest text-teal-300">99.9% SURE · San Fierro prototype</p>
         <h1 className="text-lg font-bold">The CERTAIN case</h1>
         <p className="text-xs text-white/80">{message}</p>
         <p className="mt-2 text-xs text-amber-200">Evidence {campaign.collected.length}/3 · {ready ? "Return to HQ (teal)" : "Visit amber markers"}</p>
         {!storageOK && <p className="text-xs text-red-200">Browser storage unavailable; progress is temporary.</p>}
       </div>
-      <a href="/" className="pointer-events-auto rounded-lg bg-black/75 px-3 py-2 text-xs">Pine Gap ↗</a>
     </section>
-    <aside className="absolute right-3 top-36 max-w-[45%] rounded-lg bg-black/75 p-2 text-[10px] sm:text-xs">
-      <svg viewBox="-48 -48 96 96" className="h-24 w-24 sm:h-32 sm:w-32" aria-label="District map">
+    <aside className="absolute right-3 top-14 rounded-lg bg-black/75 p-2 text-[10px] sm:top-20 sm:text-xs">
+      <svg viewBox="-48 -48 96 96" className="h-20 w-20 sm:h-32 sm:w-32" aria-label="District map">
         <rect x="-48" y="-48" width="96" height="96" fill="#394147" />
         {buildings.map((b, i) => <rect key={i} x={b.x - 7.5} y={b.z - 7.5} width="15" height="15" fill="#92908a" />)}
         <circle cx="0" cy="0" r="3" fill="#40d9ca" />
         {evidence.filter((e) => !campaign.collected.includes(e.id)).map((e) => <circle key={e.id} cx={e.x} cy={e.z} r="3" fill="#ffbd55" />)}
       </svg>
-      <p>Teal: HQ · Amber: evidence</p>
+      <p className="hidden sm:block">Teal: HQ · Amber: evidence</p>
     </aside>
     <section className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3 sm:p-5">
       <div className="grid grid-cols-3 gap-1 touch-none" aria-label="Movement controls">
@@ -163,8 +184,11 @@ export function SanFierro() {
       <div className="max-w-[55%] rounded-lg bg-black/80 p-3 text-xs">
         {campaign.verdict ? <>
           <p className="font-bold text-teal-300">Case recorded: {campaign.verdict}</p>
-          <p className="my-2">R.A.I.N. has retained your conclusion. Continue to Pine Gap.</p>
-          <a href="/" className="inline-block rounded bg-teal-300 px-3 py-2 font-bold text-black">Chapter II: Pine Gap</a>
+          <p className="my-2">R.A.I.N. has retained your conclusion. Continue to Pine Gap, or reopen the case.</p>
+          <div className="flex flex-wrap gap-1">
+            <a href={CHAPTER_HREF["pine-gap"]} className="inline-block rounded bg-teal-300 px-3 py-2 font-bold text-black">Chapter II: Pine Gap</a>
+            <button className="rounded bg-white/15 px-3 py-2" onClick={playAgain}>Play the case again</button>
+          </div>
         </> : <>
           {ready && interaction === "hq" ? <><p className="mb-2">CERTAIN claims the vehicle is implicated. Does the evidence justify the claim?</p><div className="flex flex-wrap gap-1">{(["accept", "reject", "abstain"] as Verdict[]).map((v) => <button key={v} className="rounded bg-white/15 px-2 py-2 capitalize" onClick={() => { update(submitVerdict(campaign, v)); setMessage(v === "accept" ? "R.A.I.N.: confidence is not independent corroboration." : "R.A.I.N.: keep the uncertainty in your record."); }}>{v}</button>)}</div></> : <button disabled={!interaction} className="rounded bg-teal-300 px-4 py-3 font-bold text-black disabled:opacity-40" onClick={interact}>{interaction === "car" ? (driving ? "Exit vehicle" : "Enter vehicle") : interaction === "hq" ? "Speak to Christopher" : interaction ? "Collect evidence" : "Approach marker"} (E)</button>}
         </>}

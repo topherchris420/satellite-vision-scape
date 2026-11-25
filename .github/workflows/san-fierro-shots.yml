@@ -1,0 +1,48 @@
+# Temporary: films the San Fierro README stills on a runner with Chromium and
+# commits them to this branch. Removed before merge.
+name: San Fierro README stills
+
+on:
+  push:
+    branches: [feat/play-both-chapters]
+    paths:
+      - ".github/workflows/san-fierro-shots.yml"
+      - "scripts/capture-san-fierro-shots.mjs"
+      - "src/components/game/SanFierro.tsx"
+      - "src/components/game/ChapterSwitch.tsx"
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - run: sudo apt-get install -y imagemagick
+      - name: Start the dev server
+        run: |
+          nohup bun run dev --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:5173/ > /dev/null && break; sleep 2; done
+          curl -sf "http://127.0.0.1:5173/?chapter=san-fierro" > /dev/null
+      - run: node scripts/capture-san-fierro-shots.mjs --url http://127.0.0.1:5173/
+      - if: failure()
+        run: tail -100 /tmp/vite.log
+      - name: Commit the stills
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add docs/media/screens/san-fierro
+          git diff --cached --quiet || git commit -m "Film San Fierro README stills from the running game"
+          git push
