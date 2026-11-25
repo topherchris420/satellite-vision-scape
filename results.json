@@ -1,0 +1,130 @@
+{
+  "results": [
+    {
+      "name": "landing shows Pine Gap's own heading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "nothing on the landing advertises the case",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the signal is not shown at first",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Explore shows the survey interface",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a curious visitor finds the signal after surveying",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the inspector labels the signal as fiction",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the transmission ends with the question",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "title card shows 99.9% SURE",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "play mode is running",
+      "ok": true,
+      "detail": "{\"status\":\"running\",\"mode\":\"play\"}"
+    },
+    {
+      "name": "objectives are listed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the player walks with W",
+      "ok": true,
+      "detail": "1.5 m in 34 s at 0.3 fps"
+    },
+    {
+      "name": "the player sprints with Shift+W",
+      "ok": true,
+      "detail": "2.0 m in 22 s"
+    },
+    {
+      "name": "Mara's account is on the board",
+      "ok": true,
+      "detail": "[\"witness\"]"
+    },
+    {
+      "name": "a bearing settles when the player stands still",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the player drives a utility truck",
+      "ok": true,
+      "detail": "vehicle 0, 3.0 m in 87 s"
+    },
+    {
+      "name": "a verdict reaches an ending",
+      "ok": true,
+      "detail": "not-yet"
+    },
+    {
+      "name": "the case is saved under its own key",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Return to the survey goes back to Explore",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the signal stays as the way back in",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the instruments are back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Pine Gap's own pause or briefing card returns",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone: the case resumes from the save",
+      "ok": true,
+      "detail": "{\"active\":true,\"title\":false,\"stage\":\"investigating\",\"panel\":null,\"collected\":[\"witness\"],\"bearings\":[],\"ending\":null}"
+    },
+    {
+      "name": "phone: touch controls are on screen",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone: the joystick walks the player",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "phone: Interact opens the evidence board",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "errors": []
+}

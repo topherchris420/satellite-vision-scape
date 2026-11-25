@@ -1,0 +1,48 @@
+[   1s] desktop: open Pine Gap with no save
+[ 209s] shot /tmp/playtest/01-landing.png
+[ 209s] PASS landing shows Pine Gap's own heading
+[ 209s] PASS nothing on the landing advertises the case
+[ 209s] PASS the signal is not shown at first
+[ 233s] shot /tmp/playtest/02-survey.png
+[ 233s] PASS Explore shows the survey interface
+[ 240s] PASS a curious visitor finds the signal after surveying
+[ 262s] shot /tmp/playtest/03-signal.png
+[ 271s] PASS the inspector labels the signal as fiction
+[ 296s] shot /tmp/playtest/04-inspector.png
+[ 335s] shot /tmp/playtest/05-transmission.png
+[ 335s] PASS the transmission ends with the question
+[ 385s] shot /tmp/playtest/06-title.png
+[ 389s] PASS title card shows 99.9% SURE
+[ 389s] PASS play mode is running ({"status":"running","mode":"play"})
+[ 724s] shot /tmp/playtest/07-at-the-van.png
+[ 724s] PASS objectives are listed
+[ 728s] rendering at 0.3 frames a second
+[ 763s] PASS the player walks with W (1.5 m in 34 s at 0.3 fps)
+[ 789s] PASS the player sprints with Shift+W (2.0 m in 22 s)
+[ 810s] shot /tmp/playtest/08-walking.png
+[ 845s] shot /tmp/playtest/09-mara.png
+[ 852s] PASS Mara's account is on the board (["witness"])
+[ 898s] shot /tmp/playtest/10-bearing.png
+[1041s] PASS a bearing settles when the player stands still
+[1344s] shot /tmp/playtest/11-driving.png
+[1344s] PASS the player drives a utility truck (vehicle 0, 3.0 m in 87 s)
+[1429s] shot /tmp/playtest/12-board.png
+[1464s] shot /tmp/playtest/13-ending.png
+[1465s] PASS a verdict reaches an ending (not-yet)
+[1472s] PASS the case is saved under its own key
+[1490s] shot /tmp/playtest/14-case-paused.png
+[1518s] shot /tmp/playtest/15-back-in-the-survey.png
+[1518s] PASS Return to the survey goes back to Explore
+[1518s] PASS the signal stays as the way back in
+[1518s] PASS the instruments are back
+[1521s] PASS Pine Gap's own pause or briefing card returns
+[1547s] shot /tmp/playtest/16-pine-gap-play.png
+[1547s] phone: open with a found case (the way back in)
+[1726s] shot /tmp/playtest/17-phone-survey.png
+[1740s] PASS phone: the case resumes from the save ({"active":true,"title":false,"stage":"investigating","panel":null,"collected":["witness"],"bearings":[],"ending":null})
+[1752s] shot /tmp/playtest/18-phone-case.png
+[1752s] PASS phone: touch controls are on screen
+[1775s] PASS phone: the joystick walks the player
+[1786s] shot /tmp/playtest/19-phone-board.png
+[1786s] PASS phone: Interact opens the evidence board
+[1790s] 25/25 checks passed, 0 page errors
