@@ -28,7 +28,7 @@ A human and an agent share the world's controls, physics, collisions and task ru
 
 **Status:** experimental. One site, two task modes, recorded live-model sessions and scripted experiments. The agent receives structured observations and uses local movement controllers, so these runs measure decision-making within that setup—not human-equivalent perception or motor skill.
 
-[Explore the world](#explore-the-world) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
+[Explore Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
 
 ## One story, two environments
 
@@ -47,7 +47,7 @@ In San Fierro, CERTAIN claims to know what people will do. In the proposed conti
 | ![Evidence board preview](gta-sa-99-9-percent-sure/docs/media/preview_evidence.png) | ![Validation console preview](gta-sa-99-9-percent-sure/docs/media/preview_console.png) |
 | ![Cymatics rig preview](gta-sa-99-9-percent-sure/docs/media/preview_rig.png) | ![Signal receiver preview](gta-sa-99-9-percent-sure/docs/media/preview_receiver.png) |
 
-*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Actual gameplay captures await a playtest in the separately installed Grand Theft Auto: San Andreas PC runtime. The host game is not the title of this original storyline.*
+*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Actual gameplay captures await a playtest in the separately installed Grand Theft Auto: San Andreas PC runtime. The host game is not the title of this original storyline. Pine Gap gameplay captures appear below.*
 
 ## Chapter II · Pine Gap — browser experience
 
