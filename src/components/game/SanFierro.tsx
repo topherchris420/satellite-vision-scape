@@ -164,7 +164,7 @@ export function SanFierro() {
         <p className="text-[10px] uppercase tracking-widest text-teal-300">99.9% SURE · San Fierro prototype</p>
         <h1 className="text-lg font-bold">The CERTAIN case</h1>
         <p className="text-xs text-white/80">{message}</p>
-        <p className="mt-2 text-xs text-amber-200">Evidence {campaign.collected.length}/3 · {ready ? "Return to HQ (teal)" : "Visit amber markers"}</p>
+        <p className="mt-2 text-xs text-amber-200">Evidence {campaign.collected.length}/3 · {campaign.verdict ? "Case closed" : ready ? "Return to HQ (teal)" : "Visit amber markers"}</p>
         {!storageOK && <p className="text-xs text-red-200">Browser storage unavailable; progress is temporary.</p>}
       </div>
     </section>

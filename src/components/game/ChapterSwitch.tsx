@@ -11,9 +11,18 @@ const CHAPTERS: { id: Chapter; number: string; name: string }[] = [
   { id: "pine-gap", number: "II", name: "Pine Gap" },
 ];
 
-export function ChapterSwitch({ current, className = "" }: { current: Chapter; className?: string }) {
+export function ChapterSwitch({
+  current,
+  className = "",
+}: {
+  current: Chapter;
+  className?: string;
+}) {
   return (
-    <nav aria-label="Choose a chapter" className={`inline-flex rounded-lg bg-black/60 p-0.5 ring-1 ring-white/15 ${className}`}>
+    <nav
+      aria-label="Choose a chapter"
+      className={`inline-flex rounded-lg bg-black/60 p-0.5 ring-1 ring-white/15 ${className}`}
+    >
       {CHAPTERS.map((c) =>
         c.id === current ? (
           <span
