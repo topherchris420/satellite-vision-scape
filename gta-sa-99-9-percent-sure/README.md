@@ -129,6 +129,15 @@ All dialogue is subtitled (584 lines). Original voice recordings drop in by
 file name; the recording scripts list every line. Music, ambience, voices and
 effects each have a 0-10 level on the terminal, saved with your progress.
 
+## Playtest package
+
+The **GTA San Andreas expansion** workflow builds, tests and uploads
+`99sure-vers3dynamics.zip`: the whole storyline, subtitles, textures, the lab
+score *Evidence in the Quiet* and the sound effects, with a SHA-256 manifest.
+It includes no GTA assets and no synthetic-skeleton character model. See the
+[playtest guide](docs/PLAYTEST.md) for local packaging, installation and a
+first real-game checklist.
+
 ## Quick start
 
 1. GTA: San Andreas **PC v1.0 US** with **CLEO 5** (5.4 recommended) and
