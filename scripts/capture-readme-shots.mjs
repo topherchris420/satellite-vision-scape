@@ -101,6 +101,9 @@ const t0 = Date.now();
 const log = (m) => console.log(`[${((Date.now() - t0) / 1000).toFixed(0).padStart(4)}s] ${m}`);
 
 const browser = await chromium.launch({
+  // A preinstalled Chromium can stand in when the local Playwright's own
+  // browser is not downloaded (e.g. CHROMIUM_PATH=/opt/pw-browsers/chromium).
+  ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
   args: [
     "--use-gl=angle",
     "--use-angle=swiftshader",

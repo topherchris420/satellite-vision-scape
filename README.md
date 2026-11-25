@@ -81,12 +81,22 @@ In San Fierro, CERTAIN claims to know what people will do. In the proposed conti
 
 ### Browser gameplay screenshots
 
-| Free Roam | Driving |
-| --- | --- |
-| ![Browser Free Roam gameplay](docs/media/screens/free-roam.jpg) | ![Browser driving gameplay](docs/media/screens/driving.jpg) |
-| ![Browser concert gameplay](docs/media/screens/concert.jpg) | ![Browser terminal gameplay](docs/media/screens/terminal.jpg) |
+<table>
+  <tr>
+    <td width="50%"><img src="docs/media/screens/briefing.jpg" alt="The 99.9% SURE landing card over the Pine Gap reconstruction, offering Race Jev with a 1:44.5 time to beat." width="100%" /><br /><sub><b>Landing.</b> Race Jev, or pick another way to play.</sub></td>
+    <td width="50%"><img src="docs/media/screens/free-roam.jpg" alt="Free Roam on foot in the compound car park, with the Borrowed Wheels objective, health and attention panels, minimap and radomes ahead." width="100%" /><br /><sub><b>Free Roam.</b> Borrowed Wheels, stage 1: the same avatar for human and agent.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/screens/driving.jpg" alt="Driving a 4x4 utility vehicle along the site road toward the radomes, with the coffee meter at 99% and the radio playing." width="100%" /><br /><sub><b>After Hours · driving.</b> Smooth braking keeps the coffee in the cup.</sub></td>
+    <td width="50%"><img src="docs/media/screens/frequency-420.jpg" alt="On foot beside the vehicle at the north antenna hut, holding the receiver on Frequency 420." width="100%" /><br /><sub><b>After Hours · the clue.</b> Tune the receiver to 420 and hold it.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/media/screens/terminal.jpg" alt="The fictional Rhythm layer tuning terminal, with the reference beat, the player's signal and the match meter." width="100%" /><br /><sub><b>After Hours · terminals.</b> Slide your pulse onto the reference beat.</sub></td>
+    <td width="50%"><img src="docs/media/screens/concert.jpg" alt="The midnight transmission: illuminated radomes beneath a starry sky, with the procedural score's progress bar." width="100%" /><br /><sub><b>After Hours · midnight.</b> Four signals become one composition.</sub></td>
+  </tr>
+</table>
 
-*These are actual captures of the Pine Gap browser simulation, part of the intended 99.9% SURE universe. They do not depict the San Fierro missions.*
+*Actual captures of the Pine Gap browser game, played through its real controls by [`scripts/capture-readme-shots.mjs`](scripts/capture-readme-shots.mjs) at a fixed 60 Hz (1280×720, software WebGL). They do not depict the San Fierro missions.*
 
 Human play, the race and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/): the first screen offers the race, and everything else is one click further in.
 
@@ -104,16 +114,16 @@ To watch the same journey without a model key, [open the scripted baseline](http
 The vehicle radio features **_Green Machine_ by Indigo People**, original music written by **Christopher Woodyard**. The puzzle and concert use a separate procedural score. [Soundtrack, credits and permissions →](docs/SOUNDTRACK.md)
 
 <details>
-<summary><strong>A closer look at the world</strong></summary>
+<summary><strong>More from the world</strong></summary>
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/media/screens/free-roam.jpg" alt="Free Roam on foot, with the objective card, vehicle parking area and radomes in view." width="100%" /></td>
-    <td width="50%"><img src="docs/media/screens/concert.jpg" alt="The After Hours midnight concert, with illuminated radomes beneath a starry sky." width="100%" /></td>
+    <td width="50%"><img src="docs/media/screens/explore.jpg" alt="Explore mode: an aerial view of the reconstructed site, radomes and buildings, with the data confidence panel." width="100%" /><br /><sub><b>Explore.</b> Fly over the site; select a structure for its source dossier.</sub></td>
+    <td width="50%"><img src="docs/media/screens/arrival.jpg" alt="Arriving on foot at the start of After Hours, with the night desk's first message and the radio playing Green Machine." width="100%" /><br /><sub><b>After Hours · arrival.</b> The night desk sends you for coffee.</sub></td>
   </tr>
   <tr>
-    <td align="center"><sub>Free Roam: the same avatar for human and agent.</sub></td>
-    <td align="center"><sub>After Hours: four signals become one composition.</sub></td>
+    <td width="50%"><img src="docs/media/screens/credits.jpg" alt="The pause menu's After Hours credits: the Green Machine soundtrack, the procedural score and the fiction notice." width="100%" /><br /><sub><b>Credits.</b> Music permissions and the line between reference and fiction.</sub></td>
+    <td width="50%"></td>
   </tr>
 </table>
 
