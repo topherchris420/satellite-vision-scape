@@ -110,6 +110,39 @@ async function untilCase(page, test, timeout = LONG) {
     { timeout },
   );
 }
+/** Frames the page draws per second right now (software WebGL is slow). */
+const fps = (page) =>
+  page.evaluate(
+    () =>
+      new Promise((done) => {
+        let n = 0;
+        const start = performance.now();
+        const tick = () => {
+          n += 1;
+          if (performance.now() - start < 3000) requestAnimationFrame(tick);
+          else done(n / ((performance.now() - start) / 1000));
+        };
+        requestAnimationFrame(tick);
+      }),
+  );
+/**
+ * Holds keys until `read` has moved more than `metres` from where it started,
+ * or `timeout` ms pass. Under software WebGL a frame can take seconds, so a
+ * fixed hold measures the renderer, not the controls.
+ */
+async function holdUntilMoved(page, keys, read, metres, timeout = 180000) {
+  const a = await read();
+  for (const k of keys) await page.keyboard.down(k);
+  const started = Date.now();
+  let b = a;
+  while (Date.now() - started < timeout) {
+    await page.waitForTimeout(1000);
+    b = await read();
+    if (Math.hypot(b.x - a.x, b.z - a.z) > metres) break;
+  }
+  for (const k of [...keys].reverse()) await page.keyboard.up(k);
+  return { moved: Math.hypot(b.x - a.x, b.z - a.z), seconds: (Date.now() - started) / 1000 };
+}
 async function pressE(page) {
   await page.keyboard.down("KeyE");
   await page.waitForTimeout(400);
@@ -124,6 +157,7 @@ async function pressE(page) {
   const page = await openPage(context, null);
 
   await step("landing", async () => {
+    await page.getByText(/Beat the AI/i).first().waitFor({ timeout: LONG });
     await shoot(page, "landing");
     const text = await page.evaluate(() => document.body.innerText);
     check("landing shows Pine Gap's own heading", /Beat the AI/i.test(text));
@@ -171,20 +205,12 @@ async function pressE(page) {
   });
 
   await step("walking", async () => {
-    const a = await player(page);
-    await page.keyboard.down("KeyW");
-    await page.waitForTimeout(5000);
-    await page.keyboard.up("KeyW");
-    const b = await player(page);
-    const moved = Math.hypot(b.x - a.x, b.z - a.z);
-    check("the player walks with W", moved > 0.5, `${moved.toFixed(1)} m`);
-    await page.keyboard.down("ShiftLeft");
-    await page.keyboard.down("KeyW");
-    await page.waitForTimeout(4000);
-    await page.keyboard.up("KeyW");
-    await page.keyboard.up("ShiftLeft");
-    const c = await player(page);
-    check("the player sprints with Shift+W", Math.hypot(c.x - b.x, c.z - b.z) > 0.5);
+    const rate = await fps(page);
+    log(`rendering at ${rate.toFixed(1)} frames a second`);
+    const walk = await holdUntilMoved(page, ["KeyW"], () => player(page), 1.5);
+    check("the player walks with W", walk.moved > 1.5, `${walk.moved.toFixed(1)} m in ${walk.seconds.toFixed(0)} s at ${rate.toFixed(1)} fps`);
+    const sprint = await holdUntilMoved(page, ["ShiftLeft", "KeyW"], () => player(page), 1.5);
+    check("the player sprints with Shift+W", sprint.moved > 1.5, `${sprint.moved.toFixed(1)} m in ${sprint.seconds.toFixed(0)} s`);
     await page.keyboard.press("Space");
     await shoot(page, "walking");
   });
@@ -224,13 +250,18 @@ async function pressE(page) {
       timeout: 240000,
     });
     const driven = await page.evaluate(() => window.__pineGapGame.vehicles.vehicles.findIndex((v) => v.driven));
-    const a = await page.evaluate((i) => ({ ...window.__pineGapGame.vehicles.vehicles[i].physics }), driven);
-    await page.keyboard.down("KeyW");
-    await page.waitForTimeout(6000);
-    await page.keyboard.up("KeyW");
-    const b = await page.evaluate((i) => ({ ...window.__pineGapGame.vehicles.vehicles[i].physics }), driven);
+    const truck = () =>
+      page.evaluate((i) => {
+        const p = window.__pineGapGame.vehicles.vehicles[i].physics;
+        return { x: p.x, z: p.z };
+      }, driven);
+    const drive = await holdUntilMoved(page, ["KeyW"], truck, 3);
     await shoot(page, "driving");
-    check("the player drives a utility truck", Math.hypot(b.x - a.x, b.z - a.z) > 1, `vehicle ${driven}`);
+    check(
+      "the player drives a utility truck",
+      drive.moved > 3,
+      `vehicle ${driven}, ${drive.moved.toFixed(1)} m in ${drive.seconds.toFixed(0)} s`,
+    );
     await pressE(page);
     await page.waitForFunction(() => !window.__pineGapGame.vehicles.vehicles.some((v) => v.driven), null, {
       timeout: 240000,
