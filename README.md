@@ -3,13 +3,12 @@
 <p align="center"><strong>What if the machine is certain, but wrong?</strong></p>
 
 <p align="center">
-  A Vers3Dynamics scientific mystery spanning San Fierro and Pine Gap, built on Satellite Vision Scape.<br />
+  A playable reconstruction of Pine Gap, built on Satellite Vision Scape.<br />
   Built by <a href="https://github.com/topherchris420">Christopher Woodyard</a> at <a href="https://vers3dynamics.com">Vers3Dynamics</a>.
 </p>
 
 <p align="center">
-  <a href="https://geotwn.vercel.app/?chapter=san-fierro"><strong>Play Chapter I: San Fierro</strong></a> ·
-  <a href="https://geotwn.vercel.app/"><strong>Play Chapter II: Pine Gap</strong></a> ·
+  <a href="https://geotwn.vercel.app/"><strong>Play Pine Gap</strong></a> ·
   <a href="https://geotwn.vercel.app/?controller=mock"><strong>Watch the scripted baseline</strong></a> ·
   <a href="#recorded-runs"><strong>Inspect the evidence</strong></a> ·
   <a href="#run-locally"><strong>Run locally</strong></a>
@@ -23,30 +22,28 @@
   <sub>Recorded Jev run · Borrowed Wheels · 3 October 2026 · replay rendered at 8× speed. Click for the MP4. This is a saved run, not a live inference feed.</sub>
 </p>
 
-**99.9% SURE turns a game into an instrument for investigating uncertainty.** Satellite Vision Scape is the browser simulation technology underlying the Pine Gap chapter. Walk through a reconstruction of Pine Gap, get behind the wheel, deliver a coffee without spilling it, or follow a radio signal into a midnight concert. Then give an agent the same task and inspect what actually happened.
+**A game as an instrument for investigating uncertainty.** Satellite Vision Scape is the browser simulation technology underneath. Walk through a reconstruction of Pine Gap, get behind the wheel, deliver a coffee without spilling it, or follow a radio signal into a midnight concert. Then give an agent the same task and inspect what actually happened.
 
 A human and an agent share the world's controls, physics, collisions and task rules. The agent chooses an intention; local controllers carry it out; the simulation determines the outcome. Decisions, handovers and results become exportable traces.
 
 **Status:** experimental. One site, two task modes, recorded live-model sessions and scripted experiments. The agent receives structured observations and uses local movement controllers, so these runs measure decision-making within that setup—not human-equivalent perception or motor skill.
 
-[Two chapters to play](#two-chapters-to-play) · [San Fierro](#chapter-i--san-fierro) · [Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
+[What to play](#what-to-play) · [Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
 
-## Two chapters to play
+## What to play
 
-Both chapters run in the browser, need no account or key, and work on desktop and phone. Each one has a chapter switch at the top, so you can move between them at any time.
+Everything runs in the browser, needs no account or key, and works on desktop and phone. [Open Pine Gap](https://geotwn.vercel.app/) and choose from the menu.
 
-| Chapter | Start here | What you do |
-| --- | --- | --- |
-| **I · San Fierro: the CERTAIN case** | [Play San Fierro](https://geotwn.vercel.app/?chapter=san-fierro) | A predictive-policing AI flags a family van. Walk or drive the district, collect three independent observations and decide whether the evidence backs the machine. About five minutes. |
-| **II · Pine Gap** | [Play Pine Gap](https://geotwn.vercel.app/) | Race Jev's recorded run, work the After Hours night shift, roam 16 seeded scenarios or survey the reconstruction from above. |
+| Mode | What you do |
+| --- | --- |
+| **Race Jev** | Beat the recorded time of an AI agent on the same course, with the same physics. |
+| **After Hours** | Work a night shift, follow a radio signal and see how a midnight concert ends. |
+| **Free Roam** | Sixteen seeded scenarios that you, a scripted baseline or a live model can play, then replay and compare. |
+| **Explore, Tour and Plan** | Survey the reconstruction from above: antennas from a public 2016 survey, terrain and buildings approximate. |
 
-San Fierro also exists as a longer five-mission storyline for a separately installed PC game; [that edition](#the-full-cleo-storyline) is described below.
+Pine Gap rewards a careful look. Not everything the instruments pick up is on a menu.
 
-## One story, two environments
-
-In San Fierro, CERTAIN claims to know what people will do. In the proposed continuation at Pine Gap, R.A.I.N. asks whether the evidence warrants that confidence. The player moves from investigating predictions in a city to investigating signals and competing explanations in a fictional research setting.
-
-**Integration status:** the first San Fierro browser prototype and Pine Gap share a local case dossier. Full five-mission adaptation and reactive Pine Gap objectives remain future work. [Campaign bridge design](docs/CAMPAIGN_BRIDGE.md). Pine Gap's existing Race Jev, After Hours and Free Roam remain independently playable.
+The same repository also holds an earlier San Fierro prototype and a CLEO storyline for a PC game; both are described [further down](#chapter-i--san-fierro).
 
 ## Chapter I · San Fierro
 
@@ -326,6 +323,7 @@ The simulation uses stylised vehicle dynamics and simplified collision geometry.
 | Reproducible experiments and hypothesis tracking | [Experiments](docs/EXPERIMENTS.md) · [Research backlog](experiments/HYPOTHESES.md) |
 | Prompt assists, capability probes and model comparisons | [Next-model method](docs/NEXT_MODEL.md) |
 | Proposed mathematical extension; not yet tested | [Research proposal](docs/MATH_RESEARCH.md) |
+| Hidden content: how it is found, saved and built (contains spoilers) | [Developer notes](docs/HIDDEN_CAMPAIGN.md) |
 | Terrain, spatial coordinates and data pipelines | [Terrain architecture](docs/TERRAIN_ARCHITECTURE.md) · [Spatial context](docs/SPATIAL_CONTEXT_ARCHITECTURE.md) · [Offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md) |
 | Music and asset permissions | [Soundtrack](docs/SOUNDTRACK.md) · [Attributions](ATTRIBUTIONS.md) · [Data and licence notes](docs/ATTRIBUTION_AND_LICENSES.md) · [Notice](NOTICE) |
 
