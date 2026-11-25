@@ -1,4 +1,4 @@
-<h1 align="center">99.9% SURE</h1>
+<h1 align="center">Pine Gap</h1>
 
 <p align="center"><strong>What if the machine is certain, but wrong?</strong></p>
 
