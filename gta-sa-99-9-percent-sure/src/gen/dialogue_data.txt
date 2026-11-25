@@ -268,7 +268,7 @@ switch dLine
         dKey = 'V3D0232'
         dDur = 3650
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 301
         dKey = 'V3D0301'
         dDur = 6600
@@ -283,7 +283,7 @@ switch dLine
         dKey = 'V3D0303'
         dDur = 3850
         dWho = 2
-        dGest = 0
+        dGest = 11
     case 304
         dKey = 'V3D0304'
         dDur = 4950
@@ -293,7 +293,7 @@ switch dLine
         dKey = 'V3D0305'
         dDur = 4050
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 306
         dKey = 'V3D0306'
         dDur = 3600
@@ -398,7 +398,7 @@ switch dLine
         dKey = 'V3D0328'
         dDur = 3850
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 330
         dKey = 'V3D0330'
         dDur = 6600
@@ -513,7 +513,7 @@ switch dLine
         dKey = 'V3D0358'
         dDur = 6600
         dWho = 2
-        dGest = 0
+        dGest = 11
     case 360
         dKey = 'V3D0360'
         dDur = 6200
@@ -608,7 +608,7 @@ switch dLine
         dKey = 'V3D0388'
         dDur = 5950
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 401
         dKey = 'V3D0401'
         dDur = 6350
@@ -623,7 +623,7 @@ switch dLine
         dKey = 'V3D0403'
         dDur = 8050
         dWho = 2
-        dGest = 0
+        dGest = 11
     case 404
         dKey = 'V3D0404'
         dDur = 6300
@@ -703,7 +703,7 @@ switch dLine
         dKey = 'V3D0419'
         dDur = 5950
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 420
         dKey = 'V3D0420'
         dDur = 2600
@@ -1003,7 +1003,7 @@ switch dLine
         dKey = 'V3D0622'
         dDur = 5750
         dWho = 2
-        dGest = 0
+        dGest = 10
     case 623
         dKey = 'V3D0623'
         dDur = 3900
@@ -1013,7 +1013,7 @@ switch dLine
         dKey = 'V3D0624'
         dDur = 2650
         dWho = 2
-        dGest = 0
+        dGest = 11
     case 625
         dKey = 'V3D0625'
         dDur = 1500

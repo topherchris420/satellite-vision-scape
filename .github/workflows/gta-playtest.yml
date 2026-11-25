@@ -1,4 +1,4 @@
-name: GTA San Andreas playtest
+name: GTA San Andreas expansion
 
 on:
   workflow_dispatch:
@@ -16,9 +16,9 @@ permissions:
   contents: read
 
 jobs:
-  package:
+  build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 40
     defaults:
       run:
         working-directory: gta-sa-99-9-percent-sure
@@ -28,10 +28,19 @@ jobs:
         with:
           python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: python -m pip install numpy pillow
+      # Regenerate text, scenes, sprites and audio; validate the committed bytecode;
+      # play mission 1 (42 scenarios) and the HQ and missions 2-5 (75 scenarios)
+      # in the headless script VM; package release/99sure. Recompiling needs Sanny
+      # Builder 4 and is done locally (tools/build.py --sb4).
+      - run: python tools/build.py
+      - name: Generated sources match the committed ones
+        run: git diff --exit-code -- src/gen dialogue/audio_manifest.csv dialogue/story/audio_manifest.csv
+      - run: python tools/rw/tests/run_tests.py
       - run: python tests/test_playtest.py
-      - run: python tools/package_playtest.py --out build/99sure-playtest.zip
+      - run: python tools/package_playtest.py --out build/99sure-vers3dynamics.zip
       - uses: actions/upload-artifact@v4
         with:
-          name: 99sure-playtest
-          path: gta-sa-99-9-percent-sure/build/99sure-playtest.zip
+          name: 99sure-vers3dynamics
+          path: gta-sa-99-9-percent-sure/build/99sure-vers3dynamics.zip
           if-no-files-found: error

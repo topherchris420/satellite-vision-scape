@@ -149,6 +149,7 @@ dQNext = 0
 dPed = -1
 iRingStream = 0
 iMusicStream = 0
+iAmbStream = 0
 uMode = 0
 uHud = 0
 uTask = 0
@@ -341,14 +342,48 @@ else
 end
 return
 
-// Optional: if you place your own track at cleo\99sure\music\lab.mp3 it plays
-// quietly in the lab. No music is shipped with the mod.
+// The lab score (cleo\99sure\music\lab.mp3, original, tools/lab_score.py) and the
+// equipment room tone (cleo\99sure\sfx\amb_lab.ogg) at the levels the player set
+// at the HQ terminal (the Vers3Dynamics record, CLEO shared var 968: music in
+// bits 0-3, ambience in bits 4-7, 0..10). Without a record: music 3.5, ambience 6.
 :LAB_MUSIC_START
-if load_audio_stream "cleo\99sure\music\lab.mp3" iMusicStream
+fTmp = 0.35
+fTmp2 = 0.6
+iTmp = get_cleo_shared_var 960
+if iTmp == 39931
 then
-    set_audio_stream_volume iMusicStream 0.35
-    set_audio_stream_looped iMusicStream true
-    set_audio_stream_state iMusicStream 1
+    iTmp = get_cleo_shared_var 968
+    iTmp2 = iTmp
+    iTmp2 /= 16
+    iTmp3 = iTmp2
+    iTmp3 *= 16
+    iTmp -= iTmp3
+    fTmp =# iTmp
+    fTmp /= 10.0
+    iTmp = iTmp2
+    iTmp2 /= 16
+    iTmp2 *= 16
+    iTmp -= iTmp2
+    fTmp2 =# iTmp
+    fTmp2 /= 10.0
+end
+if fTmp > 0.0
+then
+    if load_audio_stream "cleo\99sure\music\lab.mp3" iMusicStream
+    then
+        set_audio_stream_volume iMusicStream fTmp
+        set_audio_stream_looped iMusicStream true
+        set_audio_stream_state iMusicStream 1
+    end
+end
+if fTmp2 > 0.0
+then
+    if load_audio_stream "cleo\99sure\sfx\amb_lab.ogg" iAmbStream
+    then
+        set_audio_stream_volume iAmbStream fTmp2
+        set_audio_stream_looped iAmbStream true
+        set_audio_stream_state iAmbStream 1
+    end
 end
 return
 
@@ -358,6 +393,12 @@ then
     set_audio_stream_state iMusicStream 0
     remove_audio_stream iMusicStream
     iMusicStream = 0
+end
+if iAmbStream <> 0
+then
+    set_audio_stream_state iAmbStream 0
+    remove_audio_stream iAmbStream
+    iAmbStream = 0
 end
 return
 

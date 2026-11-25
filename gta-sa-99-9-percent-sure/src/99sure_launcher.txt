@@ -422,6 +422,13 @@ then
     // missions 2..5 write their own record; 99.9% SURE predates the record
     if lMission == 1
     then
+        lTmp = lStory
+        lTmp &= 1
+        if lTmp == 0
+        then
+            // the lab is open from now on
+            print_help 'VLH02'
+        end
         lStory |= 1
         set_cleo_shared_var REC_STORY lStory
         lTmp = get_cleo_shared_var SV_SCORE

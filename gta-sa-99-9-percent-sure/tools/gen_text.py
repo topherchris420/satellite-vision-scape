@@ -37,6 +37,9 @@ GESTURES = {
     "examine":  (7, "IDLE_HBHB", "PED"),
     "wave":     (8, "wave_loop", "ON_LOOKERS"),
     "shrug":    (9, "IDLE_chat", "PED"),
+    # Christopher's habits, shared with the expansion (tools/gen_story.py)
+    "glasses":  (10, "smkcig_prtl", "GANGS"),
+    "scratch":  (11, "XPRESSscratch", "PED"),
 }
 
 # Speaking rate in words per second, by speaker.

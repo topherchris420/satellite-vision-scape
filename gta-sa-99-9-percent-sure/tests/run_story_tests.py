@@ -288,7 +288,14 @@ def save_and_load(vm, engine):
     vm.start_script("cleo\\99sure_launcher.cs", False)
 
 
-def run(sc, lib, fxt, models, anims, manifest, names):
+def frame_key(bot, tag):
+    L = bot.L
+    # on the rig the picture is the plate: which pattern, and how far it has formed
+    rig = L("gPeak") * 10 + L("gResp") // 34 if tag == "V3DHQ" and L("uMode") == 2 else 0
+    return (tag, L("uMode"), L("uPage"), L("uMenu"), L("uHud"), L("uTask"), L("iCardKind") > 0, L("fcFeedback"), rig)
+
+
+def run(sc, lib, fxt, models, anims, manifest, names, frames=None):
     vm, engine = load_world(sc, lib, fxt, models, anims, manifest)
     plan = dict(sc.get("plan", {}))
     bot = StoryBot(vm, engine, names, manifest, plan)
@@ -306,10 +313,20 @@ def run(sc, lib, fxt, models, anims, manifest, names):
         while vm.time < max_ms:
             bot.step()
             m_before = vm.mission()
+            # the HUD draws with the state the previous frame left behind
+            key = frame_key(bot, bot.script_tag(m_before)) if (frames is not None and m_before) else None
             vm.step_frame()
             m = vm.mission()
             if m is not None:
                 nm = bot.names
+                if key is not None and engine.frame_draws:
+                    if key not in frames["seen"]:
+                        frames["seen"].add(key)
+                        frames["list"].append(dict(time=vm.time, key=list(key), scenario=sc["name"],
+                                                   name=f"{sc['name']}_{len(frames['list']):03d}",
+                                                   draws=engine.frame_draws,
+                                                   messages={k: v for k, v in engine.messages.items()
+                                                             if v and v["until"] > vm.time}))
                 if u2i(vm.mission_locals[nm["dActive"][0]]):
                     line = u2i(vm.mission_locals[nm["dLine"][0]])
                     if line and (not said or said[-1] != line):
@@ -417,6 +434,8 @@ def main():
     ap.add_argument("-k", default="")
     ap.add_argument("--frame-ms", type=int, default=50, choices=(50, 100, 200))
     ap.add_argument("--json", default=os.path.join(ROOT, "build", "story_test_report.json"))
+    ap.add_argument("--frames", action="store_true",
+                    help="save each distinct interface state's draw calls to build/story_frames.json")
     args = ap.parse_args()
     lib = scm.Library.load(os.environ.get("SB_LIBRARY_JSON"))
     fxt = scm.load_fxt(os.path.join(BUILD, "CLEO_TEXT", "99sure.fxt"))
@@ -432,11 +451,12 @@ def main():
         if all(os.path.exists(f) for f in files):
             names[tag] = parse_names(*files)
     report, ok_all = [], True
+    frames = dict(seen=set(), list=[]) if args.frames else None
     for sc in scenarios():
         if args.k not in sc["name"]:
             continue
         sc["frame_ms"] = args.frame_ms
-        r = run(sc, lib, fxt, models, anims, manifest, names)
+        r = run(sc, lib, fxt, models, anims, manifest, names, frames=frames)
         problems = judge(sc, r)
         ok = not problems
         ok_all &= ok
@@ -458,6 +478,11 @@ def main():
     os.makedirs(os.path.dirname(args.json), exist_ok=True)
     with open(args.json, "w") as fh:
         json.dump(report, fh, indent=1, default=str)
+    if frames is not None:
+        out = os.path.join(ROOT, "build", "story_frames.json")
+        with open(out, "w") as fh:
+            json.dump(frames["list"], fh, default=list)
+        print(f"saved {len(frames['list'])} interface frames -> {out}")
     print(f"{sum(1 for x in report if x['ok'])}/{len(report)} scenarios passed")
     return 0 if ok_all else 1
 

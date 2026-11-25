@@ -471,6 +471,7 @@ const
     iSavedRight    = 323@
     iSavedTotal    = 324@
     iUploadStep    = 325@   // dispatch review time, derived from first-try decisions
+    iAmbStream     = 326@   // the lab's equipment room tone
 end
 
 var
@@ -536,4 +537,5 @@ var
     323@: int
     324@: int
     325@: int
+    326@: int
 end

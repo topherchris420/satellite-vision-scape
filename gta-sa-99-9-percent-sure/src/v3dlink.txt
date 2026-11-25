@@ -1244,22 +1244,23 @@ return
 
 // The correlation board: four links, the call on each, then R.A.I.N.'s grades.
 :DRAW_BOARD
-draw_rect 320.0 220.0 560.0 336.0 6 20 22 232
-draw_rect 320.0 66.0 560.0 28.0 11 93 99 255
+// (kept above the subtitle line)
+draw_rect 320.0 196.0 560.0 300.0 6 20 22 232
+draw_rect 320.0 60.0 560.0 28.0 11 93 99 255
 gosub @TS_TITLE
-display_text 56.0 56.0 'VECB0'
+display_text 56.0 50.0 'VECB0'
 uRow = 1
 :DRAW_BOARD_ROW
 uY =# uRow
-uY *= 56.0
+uY *= 50.0
 uY += 34.0
 if uRow == uSel
 then
     if uMenu == 40
     then
         uF = uY
-        uF += 18.0
-        draw_rect 320.0 uF 548.0 50.0 22 70 74 255
+        uF += 16.0
+        draw_rect 320.0 uF 548.0 44.0 22 70 74 255
     end
 end
 gosub @TS_HEAD
@@ -1329,14 +1330,14 @@ if uMenu == 40
 then
     if uSel == 5
     then
-        draw_rect 200.0 337.0 300.0 20.0 90 220 210 240
+        draw_rect 200.0 297.0 300.0 20.0 90 220 210 240
         gosub @TS_SEL
     else
         gosub @TS_HEAD
     end
-    display_text 60.0 330.0 'VECB9'
+    display_text 60.0 290.0 'VECB9'
     gosub @TS_HINT
-    display_text 320.0 366.0 'VECBE'
+    display_text 320.0 326.0 'VECBE'
 end
 return
 
