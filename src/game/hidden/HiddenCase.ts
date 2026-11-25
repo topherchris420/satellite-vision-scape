@@ -369,6 +369,7 @@ export class HiddenCase implements GameLayer {
     this.panel = this.dialogPanel(who, topic.answer);
     this.save();
     this.dirty = true;
+    this.publish();
   }
 
   private beginBearing(post: PostId): void {
@@ -430,6 +431,7 @@ export class HiddenCase implements GameLayer {
     if (toggleWeighed(this.data, id)) {
       this.save();
       this.dirty = true;
+      this.publish();
     }
   }
 
@@ -442,6 +444,7 @@ export class HiddenCase implements GameLayer {
     this.audio?.chirp(1);
     this.save();
     this.dirty = true;
+    this.publish();
   }
 
   /** Start again from the briefing (field notes and endings seen are kept). */
