@@ -1,0 +1,37 @@
+name: GTA San Andreas playtest
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'gta-sa-99-9-percent-sure/**'
+      - '.github/workflows/gta-playtest.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'gta-sa-99-9-percent-sure/**'
+      - '.github/workflows/gta-playtest.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: gta-sa-99-9-percent-sure
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: python tests/test_playtest.py
+      - run: python tools/package_playtest.py --out build/99sure-playtest.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 99sure-playtest
+          path: gta-sa-99-9-percent-sure/build/99sure-playtest.zip
+          if-no-files-found: error
