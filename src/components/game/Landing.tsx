@@ -61,9 +61,10 @@ export function Landing({
   return (
     <>
       <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.26em] text-sky-300">
-        <Flag size={11} /> Pine Gap · an AI&apos;s recorded run
+        <Flag size={11} /> 99.9% SURE · Chapter II: Pine Gap
       </div>
-      <h1 className="mt-2 font-sans text-4xl font-light tracking-[-.04em] sm:text-5xl">Beat the AI&apos;s time.</h1>
+      <h1 className="mt-2 font-sans text-4xl font-light tracking-[-.04em] sm:text-5xl">99.9% SURE</h1>
+      <p className="mt-2 font-sans text-sm text-white/80">What if the machine is certain, but wrong?</p>
       <p className="mt-3 max-w-xl font-sans text-[13px] leading-relaxed text-white/65">
         Jev is an AI agent that plays this game with the same avatar, vehicles and rules you have. Take a vehicle,
         reach the checkpoint and shake the site&apos;s response, on the same seed, with its recorded run beside you.
@@ -130,7 +131,7 @@ export function Landing({
 
       <p className="mt-5 border-t border-white/10 pt-3 font-sans text-[10px] leading-relaxed text-white/35">
         A fictionalised interpretation built from publicly observable exterior features. No interiors or operational
-        detail.
+        detail. The San Fierro chapter is a separate runtime; shared campaign progression is not yet available.
       </p>
     </>
   );
