@@ -1,6 +1,8 @@
-# Vers3Dynamics: 99.9% SURE and the San Fierro story
+# 99.9% SURE
 
-*An original storyline for Grand Theft Auto: San Andreas (PC, v1.0, CLEO 5).*
+**An original Vers3Dynamics game storyline.**
+
+*Requires Grand Theft Auto: San Andreas (PC, v1.0, CLEO 5) as its host runtime.*
 
 > **Vers3Dynamics**: Resonance as Substrate. Intelligence as a Layer.
 
