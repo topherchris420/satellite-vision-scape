@@ -171,7 +171,8 @@ seen from the front; UVs use the D3D convention.
   crotch vertex, so there is no overlap. Each leg has a ring at the knee and a
   hem lining.
 * **Sneakers:** lofted from heel to toe along Foot→Toe0.
-* **Hands:** mittens with a thumb.
+* **Hands:** a palm, a knuckle cap, a thumb and four separate fingers, each
+  one slightly curled segment weighted to the finger bone.
 * **Pendant:** a dodecahedron (flat-shaded, silver open-frame texture) on a
   black cord.
 
@@ -276,33 +277,36 @@ Synthetic build: Jaw 71 vertices, L Brow 12 and R Brow 12 (maximum weight
 
 | | |
 |---|---|
-| Triangles | **2,949** (limit 1,500–3,000): `chrisw_body` 1,334 · `chrisw_head` 1,221 · `chrisw_acc` 362 · `chrisw_lens` 32 |
-| Triangles by part | hair 629, jacket incl. lining/edges/collar 408, head+ears 396, glasses 320 incl. lenses, trousers 272, sleeves+cuffs 240, shoes 224, T-shirt 168, hands 148, pendant+cord 72, neck 48, mouth pocket 22, emblem 2 |
-| Vertices | 2,146 |
+| Triangles | **2,997** (limit 1,500–3,000): `chrisw_body` 1,334 · `chrisw_head` 1,269 · `chrisw_acc` 362 · `chrisw_lens` 32 |
+| Triangles by part | hair 629, jacket incl. lining/edges/collar 408, head+ears 396, glasses 320 incl. lenses, trousers 272, sleeves+cuffs 240, shoes 224, T-shirt 168, hands 196, pendant+cord 72, neck 48, mouth pocket 22, emblem 2 |
+| Vertices | 2,206 |
 | Skin | 32 bones, 26 used (including Jaw, L Brow and R Brow); at most 3 weights per vertex (format limit 4) |
 | Materials | 4, in draw order: `chrisw_body`, `chrisw_head`, `chrisw_acc`, `chrisw_lens` (the translucent lenses are drawn last) |
 | `chrisw_head` | 512×512 888, 10 mip levels: face, scalp, neck, ears, hands, hair |
 | `chrisw_body` | 256×256 888, 9 levels: clothes and the mouth interior |
 | `chrisw_acc` | 128×128 888, 8 levels: glasses frame, pendant, cord, emblem |
 | `chrisw_lens` | 64×64 8888 with alpha, 7 levels |
-| File sizes | `chrisw.txd` 1,857,520 bytes (uncompressed 32-bit, since the `rw` writer has no DXT encoder; stock ped TXDs are DXT and much smaller), `chrisw.dff` 177,639 bytes (synthetic build) |
+| File sizes | `chrisw.txd` 1,857,520 bytes (uncompressed 32-bit, since the `rw` writer has no DXT encoder; stock ped TXDs are DXT and much smaller), `chrisw.dff` 181,719 bytes (synthetic build) |
 
 ## What was verified, and how
 
 Run the checks with
 `DRAGONFF_DIR=… LIBRW_DIR=… LIBRW_LIB=… python3 -I tools/character/validate_chris.py`.
-The last run gave **49 passed, 0 failed, 0 skipped**:
+The last run with DragonFF and librw installed gave **49 passed, 0 failed,
+0 skipped**, before the fingers were added. With the fingers, the run without
+them gives **42 passed, 0 failed, 2 skipped** (the DragonFF and librw groups);
+the figures below are from that run:
 
 * **Read back with `rw`:**
   * The DFF and TXD re-serialise byte-identically.
   * The 32 SA bone IDs, one skinned atomic, and Right To Render (0x116, 1).
-  * Skin numBones is 32, at most 4 weights per vertex (the histogram is 1390 /
-    709 / 47 vertices with 1 / 2 / 3 weights), weights are ≥ 0 and sum to 1
+  * Skin numBones is 32, at most 4 weights per vertex (the histogram is 1448 /
+    711 / 47 vertices with 1 / 2 / 3 weights), weights are ≥ 0 and sum to 1
     (max error 3e-08), non-zero weights come first, and bone indices are valid.
   * There are two-bone-blended vertices at the neck, neck/head, shoulders,
     elbows, wrists, hips, knees and ankles.
   * Jaw, L Brow and R Brow carry vertices: 71, 12 and 12.
-  * 2,949 triangles, unit normals, UVs within 0..1, no degenerate triangles, and
+  * 2,997 triangles, unit normals, UVs within 0..1, no degenerate triangles, and
     99.9% of triangles wound consistently with their vertex normals.
   * The bind pose skins to itself (max move 2.7e-08 m), and the skin bind error
     is 4e-08.

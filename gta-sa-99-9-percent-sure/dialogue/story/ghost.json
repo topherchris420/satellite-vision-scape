@@ -1,0 +1,439 @@
+{
+  "title": "Ghost Frequency",
+  "prefix": "VGF",
+  "lines": [
+    {
+      "id": 101,
+      "speaker": "REX",
+      "text": "Radio Free Fierro, you're on the air. Tell me about the beeping."
+    },
+    {
+      "id": 102,
+      "speaker": "CALLER",
+      "text": "It's in my clock radio, Rex. Seven little beeps and a long one. Every night. My dog won't go in the kitchen."
+    },
+    {
+      "id": 103,
+      "speaker": "REX",
+      "text": "Friends, that is not interference. That is a message. San Fierro has a ghost, and it's trying to talk."
+    },
+    {
+      "id": 104,
+      "speaker": "CJ",
+      "text": "Your radio's haunted, man."
+    },
+    {
+      "id": 105,
+      "speaker": "CHRIS",
+      "text": "Listen.",
+      "gesture": "invite",
+      "direction": "he plays the tape"
+    },
+    {
+      "id": 106,
+      "speaker": "CHRIS",
+      "text": "Seven short, one long, every ninety seconds, on one-six-six megahertz. People hear it all over the city.",
+      "gesture": "talk"
+    },
+    {
+      "id": 107,
+      "speaker": "CJ",
+      "text": "So it's a ghost with a schedule."
+    },
+    {
+      "id": 108,
+      "speaker": "CHRIS",
+      "text": "Ghosts don't keep schedules. Transmitters do. A real ghost would have a favourite haunt. Let's find this one's.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 109,
+      "speaker": "CHRIS",
+      "text": "We take bearings from two places. Where the lines cross, that's where it lives. Roughly.",
+      "gesture": "point"
+    },
+    {
+      "id": 110,
+      "speaker": "CJ",
+      "text": "Roughly?"
+    },
+    {
+      "id": 111,
+      "speaker": "CHRIS",
+      "text": "Roughly is the honest version of exactly.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 201,
+      "speaker": "CHRIS",
+      "text": "The receiver turns the signal into a needle and a sound. Watch the needle, but trust your ears."
+    },
+    {
+      "id": 202,
+      "speaker": "CJ",
+      "text": "Why my ears?"
+    },
+    {
+      "id": 203,
+      "speaker": "CHRIS",
+      "text": "Because noise is loud and the pattern is quiet. Loud things like to pretend they're important."
+    },
+    {
+      "id": 204,
+      "speaker": "CJ",
+      "text": "Sounds like half the people I know."
+    },
+    {
+      "id": 205,
+      "speaker": "REX",
+      "text": "Callers say the beeping is loudest near Queens. Coincidence? I don't believe in coincidences. I believe in Queens."
+    },
+    {
+      "id": 221,
+      "speaker": "CHRIS",
+      "text": "Park on the marker and hold still. The antenna does the rest."
+    },
+    {
+      "id": 222,
+      "speaker": "CHRIS",
+      "text": "Bearing one. Strong, too."
+    },
+    {
+      "id": 223,
+      "speaker": "CHRIS",
+      "text": "Bearing two. The lines cross in Queens. Near a nightclub."
+    },
+    {
+      "id": 224,
+      "speaker": "CHRIS",
+      "text": "Hold still. You're smearing the bearing."
+    },
+    {
+      "id": 241,
+      "speaker": "CHRIS",
+      "text": "The needle's pinned here. But listen to it."
+    },
+    {
+      "id": 242,
+      "speaker": "CJ",
+      "text": "That's just buzzing."
+    },
+    {
+      "id": 243,
+      "speaker": "CHRIS",
+      "text": "That sign has a dying transformer. It sprays noise into every channel, ours included.",
+      "gesture": "point"
+    },
+    {
+      "id": 244,
+      "speaker": "CHRIS",
+      "text": "R.A.I.N. wants a verdict. Is this our ghost?"
+    },
+    {
+      "id": 261,
+      "speaker": "CHRIS",
+      "text": "Rejected. Loud isn't the same as the source. The pattern's still out there, under the buzz.",
+      "gesture": "nod"
+    },
+    {
+      "id": 262,
+      "speaker": "CHRIS",
+      "text": "Accept? Carl, it's buzzing. Our ghost beeps. Listen again.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 263,
+      "speaker": "CHRIS",
+      "text": "We can do better than abstain. The pattern isn't in this noise at all. That's a reject.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 264,
+      "speaker": "CJ",
+      "text": "So we followed the loudest thing in the city."
+    },
+    {
+      "id": 265,
+      "speaker": "CHRIS",
+      "text": "Everybody does. That's why it's a trap. New plan: on foot, with the handheld, away from the sign.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 301,
+      "speaker": "CHRIS",
+      "text": "Take the handheld. Turn slowly. When the beeps get clean and loud, hold it there."
+    },
+    {
+      "id": 302,
+      "speaker": "CHRIS",
+      "text": "That's a bearing. Back in the van."
+    },
+    {
+      "id": 303,
+      "speaker": "CHRIS",
+      "text": "Wait. This one points straight up at the bridge.",
+      "gesture": "point"
+    },
+    {
+      "id": 304,
+      "speaker": "CJ",
+      "text": "So the ghost lives on the Gant Bridge. Rex was right?"
+    },
+    {
+      "id": 305,
+      "speaker": "CHRIS",
+      "text": "Or the bridge is a mirror. The cables bounce the signal. We might be hearing an echo.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 306,
+      "speaker": "CHRIS",
+      "text": "Same question for R.A.I.N. Is the source on the bridge?"
+    },
+    {
+      "id": 321,
+      "speaker": "CHRIS",
+      "text": "Rejected. The bearing swings when we move. A real source holds still. An echo doesn't.",
+      "gesture": "nod"
+    },
+    {
+      "id": 322,
+      "speaker": "CHRIS",
+      "text": "If it was up there, the bearing wouldn't move when we did. It moved. Try again.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 323,
+      "speaker": "CHRIS",
+      "text": "We have the swing on record. That's evidence. It's an echo, so we can reject this.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 324,
+      "speaker": "CHRIS",
+      "text": "One more bearing from the Esplanade, away from the cables. Then we cross the lines properly."
+    },
+    {
+      "id": 325,
+      "speaker": "CHRIS",
+      "text": "There. Three clean bearings, one crossing. Downtown, by the parking structure.",
+      "gesture": "point"
+    },
+    {
+      "id": 401,
+      "speaker": "CHRIS",
+      "text": "That's a SureThing van. And that's a relay dish going into the back of it."
+    },
+    {
+      "id": 402,
+      "speaker": "TECH",
+      "text": "Oh, come on. I'm on my lunch."
+    },
+    {
+      "id": 403,
+      "speaker": "CHRIS",
+      "text": "He's leaving! If the relay goes with him, so does our evidence."
+    },
+    {
+      "id": 404,
+      "speaker": "CHRIS",
+      "text": "Stop the van. Don't hurt him. We need him talking."
+    },
+    {
+      "id": 405,
+      "speaker": "TECH",
+      "text": "Okay! Okay! I'm out! I just install the things, man!"
+    },
+    {
+      "id": 406,
+      "speaker": "CJ",
+      "text": "Install what?"
+    },
+    {
+      "id": 407,
+      "speaker": "TECH",
+      "text": "Relays. Upload boxes. They told me CERTAIN was switched off. They said these were for weather."
+    },
+    {
+      "id": 408,
+      "speaker": "CHRIS",
+      "text": "Weather with a CERTAIN header on every packet.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 409,
+      "speaker": "TECH",
+      "text": "Look, I don't get paid enough to have an opinion."
+    },
+    {
+      "id": 410,
+      "speaker": "CHRIS",
+      "text": "Grab the relay out of the back, Carl."
+    },
+    {
+      "id": 451,
+      "speaker": "CHRIS",
+      "text": "So. We could publish the recording right now. Everybody's listening. The timing's perfect.",
+      "gesture": "talk"
+    },
+    {
+      "id": 452,
+      "speaker": "CHRIS",
+      "text": "Or we take the relay to the lab and check it properly. But it's wiping its own memory. We'd have four minutes.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 453,
+      "speaker": "CJ",
+      "text": "And if we put it out now?"
+    },
+    {
+      "id": 454,
+      "speaker": "CHRIS",
+      "text": "Then SureThing says we faked a beep, and they'll pick at every gap. Your call, Carl.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 471,
+      "speaker": "CHRIS",
+      "text": "Shielded box in the lab. Four minutes. Drive the way you always drive, but on purpose."
+    },
+    {
+      "id": 472,
+      "speaker": "CHRIS",
+      "text": "Two minutes. The memory counter's falling."
+    },
+    {
+      "id": 473,
+      "speaker": "CHRIS",
+      "text": "We're here. Box, now!"
+    },
+    {
+      "id": 474,
+      "speaker": "CHRIS",
+      "text": "Wiped. We've still got the recording. It just won't carry the same weight.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 481,
+      "speaker": "CHRIS",
+      "text": "Uploading the recording to the registry. Done. Now it's everybody's ghost."
+    },
+    {
+      "id": 482,
+      "speaker": "CHRIS",
+      "text": "Let's take the relay back anyway. No rush."
+    },
+    {
+      "id": 501,
+      "speaker": "CHRIS",
+      "text": "Control run. Relay unplugged... silence. Plugged in... seven short, one long. It's the relay.",
+      "gesture": "nod"
+    },
+    {
+      "id": 502,
+      "speaker": "CHRIS",
+      "text": "And every packet says STC-CERT. CERTAIN was supposed to be switched off two weeks ago.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 503,
+      "speaker": "CJ",
+      "text": "So the ghost was a robot that didn't know it got fired."
+    },
+    {
+      "id": 504,
+      "speaker": "CHRIS",
+      "text": "That is honestly the best summary I've heard.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 505,
+      "speaker": "NEWS",
+      "text": "SureThing Technologies confirms a 'legacy relay' was left running in Downtown San Fierro. The company says it was a clerical error."
+    },
+    {
+      "id": 506,
+      "speaker": "NEWS",
+      "text": "SureThing calls a recording released by an independent lab 'unverifiable'. The lab has published its methods and invited anyone to check them."
+    },
+    {
+      "id": 507,
+      "speaker": "REX",
+      "text": "So it was a robot. Fine. But who's to say a robot can't be a ghost? Lines are open."
+    },
+    {
+      "id": 508,
+      "speaker": "CJ",
+      "text": "Man, this city."
+    }
+  ],
+  "claims": [
+    {
+      "id": 1,
+      "headline": "The ghost signal comes from this neon sign.",
+      "evidence": [
+        "Signal meter: maximum",
+        "Sound: broadband buzz",
+        "Seven-pulse pattern: absent",
+        "Pattern faint, still elsewhere"
+      ],
+      "answer": "REJECT",
+      "lines": {
+        "ACCEPT": 262,
+        "REJECT": 261,
+        "ABSTAIN": 263
+      },
+      "retry": true
+    },
+    {
+      "id": 2,
+      "headline": "The ghost transmitter is on the Gant Bridge.",
+      "evidence": [
+        "Bearing points at the cables",
+        "Bearing swings as we move",
+        "Pattern arrives twice (echo)",
+        "No hardware seen on the span"
+      ],
+      "answer": "REJECT",
+      "lines": {
+        "ACCEPT": 322,
+        "REJECT": 321,
+        "ABSTAIN": 323
+      },
+      "retry": true
+    }
+  ],
+  "ui": {
+    "VGF00": "GHOST FREQUENCY",
+    "VGFO1": "Drive to the first ~y~listening post~s~.",
+    "VGFO2": "Drive to the second ~y~listening post~s~.",
+    "VGFO3": "Go to where the bearings cross, in ~y~Queens~s~.",
+    "VGFO4": "Drive to the ~y~Gant Bridge~s~ approach and take a bearing on foot.",
+    "VGFO5": "Turn slowly until the ~g~pattern~s~ is clean and loud, then hold still.",
+    "VGFO6": "Take a bearing on foot from the ~y~Esplanade~s~.",
+    "VGFO7": "Get to where the bearings cross, ~y~Downtown~s~.",
+    "VGFO8": "Stop the ~r~SureThing van~s~. Don't hurt the technician.",
+    "VGFO9": "Take the ~g~relay~s~ from the back of the van.",
+    "VGFOA": "Get the relay to the ~y~lab~s~ before it wipes itself.",
+    "VGFOB": "Take Christopher and the relay back to the ~y~lab~s~.",
+    "VGFOC": "Get back in the ~b~van~s~.",
+    "VGFH1": "~k~~CONVERSATION_YES~ take it to the lab and verify it (4:00)   ~k~~CONVERSATION_NO~ publish the recording now",
+    "VGFH2": "Hold still on the marker to take a bearing.",
+    "VGFU1": "RECEIVER 166.25 MHz",
+    "VGFU2": "SIGNAL",
+    "VGFU3": "PATTERN",
+    "VGFU4": "NOISE",
+    "VGFU5": "BEARING ~1~ deg",
+    "VGFU6": "RELAY MEMORY ~1~:~1~",
+    "VGFU7": "BEARINGS ~1~/3",
+    "VGFF1": "~r~The technician is dead. Nobody is left to say who sent him.",
+    "VGFF2": "~r~The relay was destroyed.",
+    "VGFP1": "Relay verified in the lab. Reputation +8",
+    "VGFP2": "Recording published unverified. Reputation +2",
+    "VGFP3": "The relay wiped itself. The recording stands alone.",
+    "VGFDC": "R.A.I.N. FIELD VERDICT",
+    "VGFU8": "RELAY MEMORY ~1~:0~1~",
+    "VGFF3": "~r~The SureThing van got away with the relay."
+  }
+}

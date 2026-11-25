@@ -18,4 +18,8 @@ switch dGest
         task_play_anim_secondary dPed "wave_loop" "ON_LOOKERS" 4.0 0 0 0 0 -1
     case 9  // shrug
         task_play_anim_secondary dPed "IDLE_chat" "PED" 4.0 0 0 0 0 -1
+    case 10  // glasses
+        task_play_anim_secondary dPed "smkcig_prtl" "GANGS" 4.0 0 0 0 0 -1
+    case 11  // scratch
+        task_play_anim_secondary dPed "XPRESSscratch" "PED" 4.0 0 0 0 0 -1
 end

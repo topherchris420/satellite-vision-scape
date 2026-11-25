@@ -39,7 +39,7 @@ if os.name == "nt":
 COLOURS = {"r": (180, 25, 29), "g": (54, 104, 44), "b": (50, 60, 127), "y": (226, 192, 99),
            "p": (168, 110, 252), "w": (225, 225, 225), "l": (0, 0, 0), "h": (255, 255, 255)}
 KEYS = {"VEHICLE_ENTER_EXIT": "F", "PED_FIREWEAPON": "LMB", "GO_LEFT": "A", "GO_RIGHT": "D",
-        "CONVERSATION_YES": "Y", "PED_SPRINT": "Space"}
+        "CONVERSATION_YES": "Y", "CONVERSATION_NO": "N", "ACTION": "Tab", "PED_SPRINT": "Space"}
 _font_cache = {}
 
 
@@ -139,9 +139,15 @@ def render(frame, fxt, logo=None):
         elif kind == "sprite":
             _, sid, x, y, w, h, rgba = item
             box = [(x - w / 2) * S, (y - h / 2) * S, (x + w / 2) * S, (y + h / 2) * S]
-            if logo is not None:
-                lg = logo.resize((int(w * S), int(h * S)))
-                img.alpha_composite(lg, (int(box[0]), int(box[1])))
+            src = logo.get(sid) if isinstance(logo, dict) else logo
+            if src is not None:
+                sp = src.resize((max(1, int(w * S)), max(1, int(h * S))))
+                if rgba[3] < 255 or rgba[:3] != [255, 255, 255]:
+                    r, g, b, a = (v / 255.0 for v in rgba)
+                    ch = sp.split()
+                    sp = Image.merge("RGBA", [ch[0].point(lambda v: int(v * r)), ch[1].point(lambda v: int(v * g)),
+                                              ch[2].point(lambda v: int(v * b)), ch[3].point(lambda v: int(v * a))])
+                img.alpha_composite(sp, (int(box[0]), int(box[1])))
             else:
                 ImageDraw.Draw(img).rectangle(box, outline=(90, 220, 210, 255), width=2)
         elif kind == "text":
@@ -192,6 +198,18 @@ def wrap(text, n):
 
 
 NAMES = {0: "none", 2: "console", 3: "alert", 4: "news", 5: "terminal", 6: "feed", 7: "passed"}
+# sprite slot -> source image (slots as loaded by the scripts' INIT)
+SPRITES = {1: "v3dlogo", 2: "cymat", 3: "cym1", 4: "cym2", 5: "cym3", 6: "cym4", 7: "cym5", 8: "cym6",
+           9: "cymnoise", 10: "diagrain", 11: "diagcal", 12: "diagmode", 13: "diagmap"}
+
+
+def load_sprites():
+    out = {}
+    for sid, name in SPRITES.items():
+        path = os.path.join(ROOT, "assets", "ui", f"{name}.png")
+        if os.path.exists(path):
+            out[sid] = Image.open(path).convert("RGBA")
+    return out
 
 
 def main():
@@ -199,13 +217,13 @@ def main():
     out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(ROOT, "build", "ui_frames")
     os.makedirs(out, exist_ok=True)
     fxt = scm.load_fxt(os.path.join(ROOT, "build", "CLEO", "CLEO_TEXT", "99sure.fxt"))
-    logo_path = os.path.join(ROOT, "assets", "ui", "v3dlogo.png")
-    logo = Image.open(logo_path).convert("RGBA") if os.path.exists(logo_path) else None
+    logo = load_sprites()
     frames = json.load(open(src))
     written = []
     for i, fr in enumerate(frames):
         mode = fr["key"][0]
-        name = f"{i:02d}_{NAMES.get(mode, mode)}_t{fr['time'] // 1000:04d}.png"
+        name = fr.get("name") or f"{i:02d}_{NAMES.get(mode, mode)}_t{fr['time'] // 1000:04d}"
+        name += ".png"
         render(fr, fxt, logo).save(os.path.join(out, name))
         written.append(name)
     print(f"{len(written)} frames -> {out}")

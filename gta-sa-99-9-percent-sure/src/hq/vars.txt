@@ -1,0 +1,281 @@
+// ============================================================================
+// Vers3Dynamics HQ - variables of the free-roam visit (200@..239@, 300@..399@)
+// ============================================================================
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+    214@: int
+    215@: int
+    216@: int
+    217@: int
+    218@: int
+    219@: int
+    220@: int
+    221@: int
+    222@: int
+    223@: int
+    224@: int
+    225@: int
+    226@: int
+    227@: int
+    228@: int
+    229@: int
+    230@: int
+    231@: int
+    232@: int
+    233@: int
+    234@: int
+    235@: int
+    236@: int
+    237@: int
+    238@: int
+    239@: int
+    300@: int
+    301@: int
+    302@: int
+    303@: int
+    304@: int
+    305@: int
+    306@: int
+    307@: int
+    308@: int
+    309@: int
+    310@: int
+    311@: int
+    312@: int
+    313@: int
+    314@: int
+    315@: int
+    316@: int
+    317@: int
+    318@: int
+    319@: int
+    320@: int
+    321@: int
+    322@: int
+    323@: int
+    324@: int
+    325@: int
+    326@: int
+    327@: int
+    328@: int
+    329@: int
+    330@: int
+    331@: int
+    332@: int
+    333@: int
+    334@: int
+    335@: int
+    336@: int
+    337@: int
+    338@: int
+    339@: int
+    340@: int
+    341@: int
+    342@: int
+    343@: int
+    344@: int
+    345@: int
+    346@: int
+    347@: int
+    348@: int
+    349@: int
+    350@: float
+    351@: float
+    352@: float
+    353@: float
+    354@: float
+    355@: float
+    356@: float
+    357@: float
+    358@: float
+    359@: float
+    360@: int
+    361@: int
+    362@: int
+    363@: int
+    364@: int
+    365@: int
+    366@: int
+    367@: int
+    368@: int
+    369@: int
+end
+
+const
+    // ---- the visit -------------------------------------------------------------------
+    iStation       = 200@   // station CJ stands at: see STN_*
+    iPromptShown   = 201@   // station whose help prompt is on screen
+    iNextMission   = 202@   // story mission offered by Christopher (2..5), 0 none
+    iChrisStep     = 203@   // Christopher's routine: station index 0..4
+    iChrisT        = 204@   // when he moves on
+    iChrisPhase    = 205@   // 0 walking, 1 working, 2 facing CJ
+    iBarkT         = 206@
+    iBarkIdx       = 207@
+    iTalkIdx       = 208@
+    iExitReq       = 209@   // 1 leave, 2 start iNextMission
+    iFlourishT     = 210@
+    iTalking       = 211@   // a conversation with Christopher is queued
+    iFirstVisit    = 212@
+    iDoorClear     = 213@   // CJ has stepped off the door marker since arriving
+    iStartClear    = 214@   // ... and off the mission marker
+    iStationPrev   = 215@
+    iSeenMask      = 216@   // first-use lines already played: 1 terminal, 2 rig, 4 diagrams, 8 records, 16 hum
+
+    // ---- the research assignment on the terminal --------------------------------------
+    cId            = 217@
+    cInc           = 218@   // bit i-1: card i weighed
+    cTest          = 219@   // experiment run: 0 none, 1, 2
+    cS1            = 220@   // hypothesis scores
+    cS2            = 221@
+    cS3            = 222@
+    cRead          = 223@   // R.A.I.N.'s reading: 1 supported, 2 contradicted, 3 insufficient
+    cVerdict       = 224@
+    cQual          = 225@   // 1 careful, 2 right but sloppy, 3 wrong (retraction), 4 too cautious
+    cNotes         = 226@   // 1 counted a source twice, 2 coincidence, 4 opinion, 8 skipped the deciding test
+    cConf          = 227@   // support for the claim, percent
+    cAvail         = 228@   // bit c-1: assignment c is unlocked
+    cGrant         = 229@
+    cWasDone       = 230@
+
+    // ---- the cymatics rig -------------------------------------------------------------
+    gFreq          = 231@   // Hz
+    gOn            = 232@
+    gResp          = 233@   // plate response 0..100
+    gPeak          = 234@   // what dominates: 1..6 a plate mode, 7 mains hum, 0 nothing
+    gHold          = 235@   // ms the tuning stick has been held
+    gTone          = 236@   // generator tone stream
+    gPlate         = 237@   // plate hum stream
+    gMsg           = 238@   // message under the plate: 0 none, VHC07.. codes
+    gMsgT          = 239@
+
+    // ---- case table (gen/cases_data.txt) -------------------------------------------
+    kP1            = 300@
+    kP2            = 301@
+    kP3            = 302@
+    kW11           = 303@
+    kW12           = 304@
+    kW13           = 305@
+    kW21           = 306@
+    kW22           = 307@
+    kW23           = 308@
+    kW31           = 309@
+    kW32           = 310@
+    kW33           = 311@
+    kW41           = 312@
+    kW42           = 313@
+    kW43           = 314@
+    kSrc1          = 315@
+    kSrc2          = 316@
+    kSrc3          = 317@
+    kSrc4          = 318@
+    kKind1         = 319@
+    kKind2         = 320@
+    kKind3         = 321@
+    kKind4         = 322@
+    kT11           = 323@
+    kT12           = 324@
+    kT13           = 325@
+    kT21           = 326@
+    kT22           = 327@
+    kT23           = 328@
+    kHours1        = 329@
+    kHours2        = 330@
+    kTruth         = 331@
+    kMargin        = 332@
+    kBest          = 333@
+    kUnlock        = 334@
+    kLIntro        = 335@
+    kLCareful      = 336@
+    kLLucky        = 337@
+    kLWrong        = 338@
+    kLCautious     = 339@
+    kLTest1        = 340@
+    kLTest2        = 341@
+
+    gLogged        = 342@   // last frequency logged (repeat presses)
+    gHumSeen       = 343@
+    iDiag          = 344@   // diagram page 1..4
+    iRecShown      = 346@
+    iGreetLine     = 347@
+    iMoney         = 348@
+    iWaitChris     = 349@
+    fStX           = 350@   // station / waypoint positions (world)
+    fStY           = 351@
+    fStZ           = 352@
+    fStH           = 353@
+    fGenSpeed      = 354@
+    fResp          = 355@
+    fBest          = 356@
+    fDiff          = 357@
+    fPlateVol      = 358@
+    fToneVol       = 359@
+    iLvl1          = 360@   // audio levels being edited
+    iLvl2          = 361@
+    iLvl3          = 362@
+    iLvl4          = 363@
+    iProp2         = 364@   // milestone props built
+    iRow           = 365@
+    iRowCase       = 366@
+    iStat          = 367@
+    iVal           = 369@
+
+    // ---- stations ---------------------------------------------------------------------
+    STN_NONE       = 0
+    STN_TERMINAL   = 1
+    STN_RIG        = 2
+    STN_DIAGRAMS   = 3
+    STN_RECORDS    = 4
+    STN_DOOR       = 5
+    STN_START      = 6
+
+    // ---- states (published to SV_STATE, read by the test bot) ---------------------------
+    ST_ENTER       = 1
+    ST_FREE        = 2
+    ST_TERMINAL    = 3
+    ST_RIG         = 4
+    ST_DIAGRAMS    = 5
+    ST_LEAVE       = 6
+
+    // ---- terminal pages (uPage; uMenu mirrors it) ---------------------------------------
+    PG_MAIN        = 1
+    PG_LIST        = 2
+    PG_BRIEF       = 3
+    PG_EVID        = 4
+    PG_TEST        = 5
+    PG_RESULT      = 6
+    PG_VERDICT     = 7
+    PG_AUDIT       = 8
+    PG_RECORDS     = 9
+    PG_SETTINGS    = 10
+    PG_RIG         = 20     // cymatics rig (uMenu only)
+    PG_DIAGRAMS    = 21
+
+    // ---- the cymatics plate: modes at f = 34 Hz x (m^2 + n^2) -------------------------
+    GEN_MIN        = 40
+    GEN_MAX        = 1000
+    GEN_START      = 250
+    MODE1          = 170    // (1,2)
+    MODE2          = 340    // (1,3)
+    MODE3          = 442    // (2,3)
+    MODE4          = 578    // (1,4)
+    MODE5          = 850    // (3,4)
+    MODE6          = 986    // (2,5)
+    MODE_W         = 7.0    // half width of a plate resonance, Hz
+    HUM_W          = 4.0    // mains harmonics are narrow
+    LOG_MIN        = 45     // response needed to log a peak
+    ATLAS_ALL      = 63
+end

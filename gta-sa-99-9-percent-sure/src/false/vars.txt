@@ -1,0 +1,114 @@
+// ============================================================================
+// False Positive - mission variables (200@..239@, 300@..349@)
+// Speaker slots: hNpc1 Marisol (site A), hNpc2 the witness or the courier,
+// hNpc3 Ray (site C).
+// ============================================================================
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+    214@: int
+    215@: int
+    216@: int
+    217@: int
+    218@: int
+    219@: int
+    220@: int
+    300@: float
+    301@: float
+    302@: float
+    303@: float
+    304@: float
+    305@: float
+    306@: float
+    307@: float
+    308@: float
+    309@: float
+    310@: float
+    311@: float
+end
+
+const
+    iResolved      = 200@   // bit s-1: subject s is settled (filed or detained)
+    iDetained      = 201@   // bit s-1: Pacific Shield got there first
+    iSubj          = 202@   // the site CJ is working: 1 Marisol, 2 Dex, 3 Ray
+    iObsDone       = 203@
+    iEndA          = 204@   // when each countdown ends (game time)
+    iEndB          = 205@
+    iEndC          = 206@
+    iWarned        = 208@   // bit s-1: the two-minute warning was given
+    hBike          = 209@
+    hCar1          = 210@
+    hCar2          = 211@
+    iFiledInTime   = 212@
+    iRepGain       = 213@
+    iSpawned       = 214@   // the site whose people are out (0 none)
+    iBikeWait      = 216@
+    iUrgent        = 217@
+    iLeftT         = 219@
+    iDetCount      = 220@
+    fSAX           = 300@   // the three sites (snapped when CJ gets near)
+    fSAY           = 301@
+    fSAZ           = 302@
+    fSBX           = 303@
+    fSBY           = 304@
+    fSBZ           = 305@
+    fSCX           = 306@
+    fSCY           = 307@
+    fSCZ           = 308@
+    fDropX         = 309@   // the courier's next drop-off
+    fDropY         = 310@
+    fDropZ         = 311@
+
+    ST_INTRO       = 1
+    ST_TRIAGE      = 2
+    ST_SITE        = 3
+    ST_RETURN      = 4
+    ST_FINALE      = 5
+    ST_SUCCESS     = 10
+    ST_FAILURE     = 11
+
+    // checkpoints: 1 + settled bits + 8 x detained bits while triaging; then the drive home
+    CP_TRIAGE      = 1
+    CP_RETURN      = 100
+
+    FAIL_CHRIS     = 1
+    FAIL_VAN       = 2
+    FAIL_ABANDON   = 3
+    FAIL_DETAINED  = 4
+    FAIL_HURT      = 5
+
+    // [approx: picked inside the right district and snapped at runtime; docs/CALIBRATION.md]
+    SITE_A_X       = -2245.0    // Garcia, by the shops
+    SITE_A_Y       = 75.0
+    SITE_A_Z       = 35.0
+    SITE_B_X       = -1905.0    // Downtown
+    SITE_B_Y       = 835.0
+    SITE_B_Z       = 35.0
+    DROP_X         = -1760.0    // two blocks east
+    DROP_Y         = 760.0
+    DROP_Z         = 30.0
+    SITE_C_X       = -2175.0    // Chinatown
+    SITE_C_Y       = 690.0
+    SITE_C_Z       = 55.0
+
+    TIME_A         = 240000
+    TIME_B         = 330000
+    TIME_C         = 420000
+    WARN_MS        = 120000
+    SITE_RANGE     = 45.0
+    REWARD_BASE    = 4000
+    REWARD_PER     = 1500
+end

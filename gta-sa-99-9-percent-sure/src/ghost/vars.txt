@@ -1,0 +1,128 @@
+// ============================================================================
+// Ghost Frequency - mission variables (200@..239@, 300@..349@)
+// ============================================================================
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+    214@: int
+    215@: int
+    216@: int
+    217@: int
+    218@: int
+    219@: int
+    220@: int
+    221@: int
+    222@: int
+    300@: float
+    301@: float
+    302@: float
+    303@: float
+    304@: float
+    305@: float
+    306@: float
+    307@: float
+end
+
+const
+    hRelayVan      = 200@
+    hRelayDish     = 201@
+    iApparent      = 202@   // what the receiver locks on to: 1 the neon sign, 2 the bridge echo, 3 the relay
+    iBearings      = 203@
+    gSig           = 204@   // signal strength 0..100
+    gPat           = 205@   // share of it that is the seven-pulse pattern 0..100
+    gBear          = 206@   // bearing to what the receiver hears, degrees from north
+    gMeter         = 207@   // handheld: how squarely CJ faces it 0..100
+    rxStatic       = 208@
+    rxGhost        = 209@
+    iRxOn          = 210@   // 1 car receiver, 2 handheld
+    iVerify        = 211@   // 1 verify in the lab, 2 publish now
+    iVerified      = 212@
+    iHaveRelay     = 213@
+    iVanStopped    = 214@
+    iRepGain       = 215@
+    iWiped         = 216@
+    iSaidMid       = 217@
+    iSweepT        = 218@
+    iChaseT        = 219@
+    iSweepOk       = 220@
+    iRelayVanHp    = 221@
+    iTimerShown    = 222@
+    fSrcX          = 300@   // the point the receiver hears
+    fSrcY          = 301@
+    fSrcZ          = 302@
+    fGhostX        = 303@   // the real relay (snapped near the parking structure)
+    fGhostY        = 304@
+    fGhostZ        = 305@
+    fRelayX        = 306@
+    fRelayY        = 307@
+
+    // ---- states (iState, read by the test bot) ---------------------------------------
+    ST_INTRO       = 1
+    ST_POSTS       = 2
+    ST_NEON        = 3
+    ST_SWEEP       = 4
+    ST_RELAY       = 5
+    ST_CHOICE      = 6
+    ST_RETURN      = 7
+    ST_FINALE      = 8
+    ST_SUCCESS     = 10
+    ST_FAILURE     = 11
+
+    CP_POSTS       = 1
+    CP_SWEEP       = 2
+    CP_RELAY       = 3
+    CP_RETURN      = 4
+
+    FAIL_CHRIS     = 1
+    FAIL_VAN       = 2
+    FAIL_ABANDON   = 3
+    FAIL_TECH      = 4
+    FAIL_RELAY     = 5
+    FAIL_GOTAWAY   = 6
+
+    // ---- places [approx: hand-picked inside the right district, snapped to the
+    //      road or pavement at runtime; see docs/CALIBRATION.md] -------------------------
+    POST1_X        = -2105.0    // Calton Heights
+    POST1_Y        = 960.0
+    POST1_Z        = 70.0
+    POST2_X        = -2690.0    // Ocean Flats
+    POST2_Y        = -80.0
+    POST2_Z        = 8.0
+    NEON_X         = -2552.0    // the Queens nightclub strip
+    NEON_Y         = 193.0
+    NEON_Z         = 6.0
+    BRIDGE_X       = -2675.0    // Gant Bridge, south approach (pavement)
+    BRIDGE_Y       = 1275.0
+    BRIDGE_Z       = 50.0
+    ECHO_X         = -2670.0    // where the echo seems to come from: the cables overhead
+    ECHO_Y         = 1480.0
+    ECHO_Z         = 90.0
+    ESPL_X         = -1950.0    // Esplanade North
+    ESPL_Y         = 1340.0
+    ESPL_Z         = 7.0
+    RELAY_X        = -1795.0    // Downtown, by a parking structure
+    RELAY_Y        = 905.0
+    RELAY_Z        = 25.0
+
+    REWARD_VERIFIED = 6000
+    REWARD_PUBLISH = 3500
+    REWARD_WIPED   = 3000
+    VERIFY_MS      = 240000
+    POST_HOLD_MS   = 3000
+    SWEEP_HOLD_MS  = 1500
+    STOP_HEALTH    = 700
+    GOTAWAY_DIST   = 350.0
+end

@@ -152,6 +152,7 @@ class Engine:
         self.dead_task_warnings = set()
         self.respawn_point = (-2655.0, 635.0, 14.5)
         self.sounds = []
+        self.coronas = []
         self.handlers = {}
         for name in dir(self):
             if name.startswith("c_"):
@@ -257,6 +258,7 @@ class Engine:
 
     # ------------------------------------------------------------------ frame
     def begin_frame(self):
+        self.coronas = []
         self.last_draws = self.frame_draws
         self.frame_draws = []
         self.counts = {"text": 0, "rect": 0}
@@ -575,6 +577,7 @@ class Engine:
     def c_add_one_off_sound(self, s, x, y, z, sid): self.sounds.append((self.vm.time, sid))
     def c_play_mission_passed_tune(self, s, n): self.ev("passed_tune")
     def c_shake_cam(self, s, n): pass
+    def c_draw_corona(self, s, x, y, z, size, kind, flare, r, g, b): self.coronas.append((x, y, z))
     def c_script_name(self, s, name): s.name = name
     def c_save_this_custom_script(self, s): s.saving = True
     def c_mission_has_finished(self, s): self.ev("mission_has_finished")
@@ -734,7 +737,17 @@ class Engine:
         self.stream(h, "REMOVE_AUDIO_STREAM")
         del self.streams[h]
 
-    def c_set_audio_stream_volume(self, s, h, v): self.stream(h, "SET_AUDIO_STREAM_VOLUME")
+    def c_set_audio_stream_volume(self, s, h, v):
+        st = self.stream(h, "SET_AUDIO_STREAM_VOLUME")
+        if not 0.0 <= v <= 1.0:
+            self.finding("error", f"SET_AUDIO_STREAM_VOLUME {v} outside 0..1")
+        st["volume"] = v
+
+    def c_set_audio_stream_speed(self, s, h, v):
+        st = self.stream(h, "SET_AUDIO_STREAM_SPEED")
+        if not 0.05 <= v <= 8.0:
+            self.finding("error", f"SET_AUDIO_STREAM_SPEED {v} out of range")
+        st["speed"] = v
     def c_set_audio_stream_looped(self, s, h, on): self.stream(h, "SET_AUDIO_STREAM_LOOPED")["loop"] = bool(on)
 
     # ---- pads --------------------------------------------------------------------
@@ -1001,6 +1014,21 @@ class Engine:
         if a.car is None:
             a.heading = heading_of(bx - ax, by - ay)
 
+    def c_task_smart_flee_char(self, s, h, threat, radius, ms):
+        self.dead_task(h, "TASK_SMART_FLEE_CHAR")
+        self.ents[h].task = ("wander",)
+
+    def c_task_hands_up(self, s, h, ms):
+        self.dead_task(h, "TASK_HANDS_UP")
+        self.ents[h].task = None
+
+    def c_is_char_stopped(self, s, h):
+        e = self.ents[h]
+        if e is self.player:
+            self.cond(s, (e.car.speed if e.car else self.player_speed) < 0.05)
+        else:
+            self.cond(s, e.task is None and (e.car is None or e.car.speed < 0.05))
+
     def c_task_use_mobile_phone(self, s, h, on): self.dead_task(h, "TASK_USE_MOBILE_PHONE")
 
     def c_task_play_anim(self, s, h, anim, block, delta, loop, lx, ly, lf, ms):
@@ -1067,6 +1095,21 @@ class Engine:
     c_car_goto_coordinates_accurate = c_car_goto_coordinates
 
     def c_car_wander_randomly(self, s, h): self.ents[h].mode = "wander"
+    def c_get_offset_from_car_in_world_coords(self, s, h, ox, oy, oz):
+        c = self.ents[h]
+        a = math.radians(c.heading)
+        x = c.x + ox * math.cos(a) - oy * math.sin(a)
+        y = c.y + ox * math.sin(a) + oy * math.cos(a)
+        return f32(x), f32(y), f32(c.z + oz)
+
+    def c_store_car_char_is_in_no_save(self, s, h):
+        e = self.ents[h]
+        if e.car is None:
+            raise VMError("STORE_CAR_CHAR_IS_IN_NO_SAVE on a character who is not in a vehicle")
+        return e.car.h
+
+    def c_get_car_speed(self, s, h): return f32(self.ents[h].speed)
+
     def c_car_set_idle(self, s, h):
         c = self.ents[h]
         c.mode = "idle"
@@ -1125,6 +1168,14 @@ class Engine:
     def c_locate_stopped_char_on_foot_3d(self, s, h, x, y, z, rx, ry, rz, draw):
         e = self.ents[h]
         self.cond(s, e.car is None and self._speed(e) < 0.05 and self._in_box(e.pos, x, y, z, rx, ry, rz))
+
+    def c_locate_char_on_foot_2d(self, s, h, x, y, rx, ry, draw):
+        e = self.ents[h]
+        self.cond(s, e.car is None and abs(e.pos[0] - x) <= rx and abs(e.pos[1] - y) <= ry)
+
+    def c_locate_char_on_foot_char_2d(self, s, h, t, rx, ry, draw):
+        a, b = self.ents[h], self.ents[t]
+        self.cond(s, a.car is None and abs(a.pos[0] - b.pos[0]) <= rx and abs(a.pos[1] - b.pos[1]) <= ry)
 
     def c_locate_char_any_means_char_2d(self, s, h, t, rx, ry, draw):
         a, b = self.ents[h].pos, self.ents[t].pos

@@ -1,0 +1,193 @@
+// ============================================================================
+// R.A.I.N. field verdicts for the story missions (the console from mission 1).
+//
+// FIELD_DECIDE shows claim fcId (texts <uPrefix>C<id>H and ..1..4, data from the
+// script's :CLAIM_LOOKUP), takes accept / reject / abstain and scores the first
+// answer only: +10 right, -5 wrong. It returns with dLine set to Christopher's
+// reaction; the caller plays it with SAY and, if fcCorrect is 0 and fcRetry is 1,
+// asks again (the retry teaches, it cannot earn points). Call it from depth 2.
+// ============================================================================
+:FIELD_DECIDE
+gosub @CLAIM_LOOKUP
+fcSaved = iSkipOk
+iSkipOk = 0
+iSkipReq = 0
+set_player_control $player1 false
+uPrevMode = uMode
+uMode = 9
+uMenu = 30
+uSel = 2
+uCount = 3
+fcFeedback = 0
+oKind = OBJ_MENU
+gosub @MENU_ARM
+:FIELD_DECIDE_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    uMode = uPrevMode
+    iSkipOk = fcSaved
+    return
+end
+gosub @MENU_INPUT
+if uIn == 3
+then
+    uIn = 1
+end
+if uIn == 4
+then
+    uIn = 2
+end
+if uIn == 1
+then
+    if uSel > 1
+    then
+        uSel -= 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+if uIn == 2
+then
+    if 3 > uSel
+    then
+        uSel += 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+if uIn <> 5
+then
+    jump @FIELD_DECIDE_LOOP
+end
+fcChoice = uSel
+fcTries += 1
+if fcTries == 1
+then
+    iDecTotal += 1
+end
+if fcChoice == fcAns
+then
+    fcCorrect = 1
+    fcFeedback = 3
+    if fcTries == 1
+    then
+        iScore += 10
+        iDecRight += 1
+        fcFeedback = 1
+    end
+    iSfxId = SFX_ACCEPT
+else
+    fcCorrect = 0
+    fcFeedback = 4
+    if fcTries == 1
+    then
+        iScore -= 5
+        if 0 > iScore
+        then
+            iScore = 0
+        end
+        fcFeedback = 2
+    end
+    iSfxId = SFX_WARN
+end
+gosub @SFX_PLAY
+switch fcChoice
+    case 1
+        dLine = fcLineAcc
+    case 2
+        dLine = fcLineRej
+    default
+        dLine = fcLineAbs
+end
+uFlashT = iNow
+uMenu = 31
+oKind = OBJ_NONE
+iSkipOk = fcSaved
+return
+
+// After the reaction line: close the console (the caller decides on a retry).
+:FIELD_DECIDE_CLOSE
+uMode = uPrevMode
+uMenu = 0
+fcFeedback = 0
+if iInCs == 0
+then
+    set_player_control $player1 true
+end
+return
+
+:DRAW_DECIDE
+draw_rect 320.0 214.0 520.0 300.0 6 20 22 232
+draw_rect 320.0 76.0 520.0 26.0 11 93 99 255
+gosub @TS_TITLE
+display_text 72.0 66.0 'VGFDC'
+gosub @TS_BODY
+set_text_scale 0.32 1.30
+set_text_wrapx 570.0
+string_format uKey "%sC%dH" uPrefix fcId
+display_text 72.0 100.0 uKey
+uRow = 1
+:DRAW_DECIDE_EV
+uY =# uRow
+uY *= 20.0
+uY += 126.0
+gosub @TS_DIM
+set_text_scale 0.27 1.10
+string_format uKey "%sC%d%d" uPrefix fcId uRow
+display_text 84.0 uY uKey
+uRow += 1
+if 4 >= uRow
+then
+    jump @DRAW_DECIDE_EV
+end
+// accept / reject / abstain
+uRow = 1
+:DRAW_DECIDE_OPT
+uX =# uRow
+uX *= 150.0
+uX += 20.0
+if uRow == uSel
+then
+    draw_rect uX 286.0 132.0 24.0 90 220 210 240
+    gosub @TS_SEL
+else
+    draw_rect uX 286.0 132.0 24.0 22 54 58 255
+    gosub @TS_HEAD
+end
+set_text_centre true
+uY = 278.0
+switch uRow
+    case 1
+        display_text uX uY 'VHV01'
+    case 2
+        display_text uX uY 'VHV02'
+    default
+        display_text uX uY 'VHV03'
+end
+uRow += 1
+if 3 >= uRow
+then
+    jump @DRAW_DECIDE_OPT
+end
+switch fcFeedback
+    case 1
+        gosub @TS_GOOD
+        set_text_centre true
+        display_text 320.0 318.0 'VXD01'
+    case 2
+        gosub @TS_RED
+        set_text_centre true
+        display_text 320.0 318.0 'VXD02'
+    case 3
+        gosub @TS_AMBER
+        set_text_centre true
+        display_text 320.0 318.0 'VXD03'
+    case 4
+        gosub @TS_RED
+        set_text_centre true
+        display_text 320.0 318.0 'VXD04'
+end
+gosub @TS_HINT
+display_text 320.0 346.0 'VXD05'
+return

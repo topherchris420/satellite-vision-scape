@@ -1,0 +1,514 @@
+// ============================================================================
+// Vers3Dynamics expansion - shared local variable map (CLEO custom missions)
+//
+// Used by the HQ visit and story missions 2-5. Mission 1 (99sure.txt) keeps its
+// own map in inc/vars.txt. Same naming rules: h handle, b blip, i int, f float,
+// d dialogue, u interface, r persistent record, o objective (read by the test
+// bot as a player reads the HUD and radar). 32@/33@ are the engine timers.
+//   0@..199@    shared (this file)
+//   200@..239@  mission ints        (declared by each script)
+//   240@..299@  scene handles       (gen/<script>_scene_vars.txt)
+//   300@..399@  mission ints/floats (declared by each script)
+//   400@..419@  shared (this file, below)
+// ============================================================================
+
+var
+    0@: int
+    1@: int
+    2@: int
+    3@: int
+    4@: int
+    5@: int
+    6@: int
+    7@: int
+    8@: int
+    9@: int
+    10@: int
+    11@: int
+    12@: int
+    13@: int
+    14@: int
+    15@: int
+    16@: int
+    17@: int
+    18@: int
+    19@: int
+    20@: int
+    21@: int
+    22@: int
+    23@: int
+    24@: float
+    25@: float
+    26@: float
+    27@: float
+    28@: float
+    29@: float
+    30@: float
+    31@: float
+    34@: float
+    35@: float
+    36@: float
+    37@: float
+    38@: float
+    39@: float
+    40@: int
+    41@: int
+    42@: int
+    43@: int
+    44@: int
+    45@: int
+    46@: int
+    47@: int
+    48@: int
+    49@: int
+    50@: int
+    51@: int
+    54@: int
+    55@: int
+    56@: int
+    57@: int
+    58@: int
+    59@: int
+    60@: int
+    61@: int
+    62@: int
+    63@: int
+    64@: int
+    65@: int
+    66@: int
+    67@: int
+    68@: int
+    69@: int
+    70@: int
+    71@: int
+    72@: int
+    73@: int
+    74@: int
+    75@: int
+    76@: int
+    77@: int
+    78@: int
+    79@: int
+    80@: int
+    81@: int
+    82@: int
+    83@: int
+    84@: float
+    85@: float
+    86@: float
+    87@: float
+    88@: float
+    89@: float
+    90@: float
+    91@: int
+    92@: int
+    93@: int
+    94@: int
+    95@: int
+    96@: int
+    97@: int
+    98@: int
+    99@: int
+    104@: int
+    105@: int
+    106@: int
+    107@: int
+    108@: int
+    109@: int
+    110@: int
+    111@: int
+    112@: int
+    113@: int
+    114@: float
+    115@: float
+    116@: float
+    117@: float
+    118@: int
+    119@: int
+    120@: float
+    121@: float
+    122@: float
+    123@: int
+    124@: int
+    125@: int
+    126@: int
+    127@: int
+    128@: int
+    129@: int
+    130@: int
+    131@: int
+    132@: int
+    133@: int
+    134@: int
+    135@: int
+    136@: int
+    137@: int
+    138@: int
+    139@: int
+    140@: int
+    141@: int
+    142@: int
+    143@: int
+    144@: int
+    145@: int
+    146@: int
+    147@: int
+    148@: int
+    149@: int
+    150@: int
+    151@: int
+    152@: int
+    153@: int
+    154@: int
+    155@: int
+    156@: int
+    157@: int
+    158@: int
+    159@: int
+    160@: float
+    161@: float
+    162@: float
+    163@: float
+    164@: float
+    165@: float
+    166@: float
+    167@: float
+    168@: float
+    169@: float
+    170@: float
+    171@: float
+    172@: float
+    173@: float
+    174@: float
+    175@: float
+    176@: float
+    177@: float
+    178@: float
+    179@: float
+    180@: float
+    181@: float
+    182@: float
+    183@: float
+    184@: float
+    185@: float
+    186@: float
+    187@: float
+    188@: float
+    189@: float
+    190@: float
+    191@: float
+    192@: float
+    193@: float
+    194@: float
+    195@: float
+    196@: float
+    197@: float
+    198@: float
+    199@: float
+    404@: int
+    405@: int
+    406@: int
+    407@: int
+    408@: int
+    409@: int
+    410@: int
+    411@: int
+    412@: int
+    413@: int
+    414@: int
+    415@: int
+    416@: int
+    417@: int
+    418@: int
+    419@: int
+    420@: int
+    421@: int
+    422@: int
+    423@: int
+    426@: int
+    427@: int
+    428@: int
+    429@: int
+    430@: int
+    431@: int
+    432@: int
+    433@: int
+    434@: int
+    435@: int
+    436@: int
+    437@: int
+    438@: int
+    439@: int
+    440@: int
+    441@: int
+    442@: int
+    443@: int
+    444@: int
+    445@: int
+    446@: int
+    447@: int
+    448@: int
+end
+
+const
+    // ---- launcher arguments (same order as mission 1) -------------------------
+    iArgCheckpoint = 0@
+    iArgScore      = 1@
+    iArgRight      = 2@
+    iArgTotal      = 3@
+
+    // ---- mission state ------------------------------------------------------------
+    iState         = 4@     // published to SV_STATE; meaning is per script
+    iFail          = 5@     // failure reason, 0 = none, -1 = wasted/busted
+    iScore         = 6@
+    iDecRight      = 7@
+    iDecTotal      = 8@
+    iCheckpoint    = 9@
+    iCustomModel   = 10@    // 1 = chrisw.dff/txd are installed
+    iSpritesOk     = 11@    // 1 = models\txd\v3drain.txd is installed
+    hChris         = 12@
+    hVan           = 13@
+    hNpc1          = 14@    // speaker slot 3 (see dialogue/story/speakers.json)
+    iChrisModel    = 15@
+    hGroup         = 16@
+    iNeedChris     = 17@    // 1 = in a scene, 2 = in CJ's group
+    iNeedVan       = 18@
+    iNow           = 19@
+    iMdl           = 20@
+    iTmp           = 21@
+    iTmp2          = 22@
+    iTmp3          = 23@
+    fTmp           = 24@
+    fTmp2          = 25@
+    fTmp3          = 26@
+    fTmp4          = 27@
+    fTmp5          = 28@
+    fTmp6          = 29@
+    fTmp7          = 30@    // anchor offset: right
+    fTmp8          = 31@    // anchor offset: forward
+    fPX            = 34@
+    fPY            = 35@
+    fPZ            = 36@
+    fSX            = 37@
+    fSY            = 38@
+    fSZ            = 39@
+
+    // ---- dialogue ------------------------------------------------------------------------
+    dLine          = 40@
+    dStream        = 41@
+    dActive        = 42@
+    dT0            = 43@
+    dDur           = 44@
+    dWho           = 45@
+    dGest          = 46@
+    dQNext         = 47@
+    dQEnd          = 48@
+    dHasAudio      = 49@
+    dPed           = 50@
+    dAudioState    = 51@
+    dKey           = 52@s   // 52@ + 53@
+    dGapT          = 54@
+    dElapsed       = 55@
+    dLimit         = 56@
+    dDone          = 57@
+    iSkipOk        = 58@
+    iSkipReq       = 59@
+    iSkipPrev      = 60@
+    iAnimsReady    = 61@
+    iWaitEnd       = 62@
+    iWaitMs        = 63@
+
+    // ---- interface --------------------------------------------------------------------------
+    uMode          = 64@    // which full-screen panel is drawn (per script)
+    uHud           = 65@    // 1 = corner HUD
+    uTask          = 66@    // corner HUD meter kind
+    uTaskVal       = 67@
+    uPage          = 68@    // terminal page
+    uT0            = 69@
+    uSel           = 70@    // menu cursor
+    uCount         = 71@    // menu items
+    uStickPrev     = 72@
+    uBtnPrev       = 73@
+    uFlashT        = 74@
+    uFeedback      = 75@
+    uMenu          = 76@    // menu id, read by the test bot
+    uIn            = 77@    // MENU_INPUT: 0 none, 1 up, 2 down, 3 left, 4 right, 5 confirm, 6 back, 7 yes
+    uBackPrev      = 78@
+    uRow           = 79@
+    uI             = 80@
+    uI2            = 81@
+    uI3            = 82@
+    uWarn          = 83@
+    uX             = 84@
+    uY             = 85@
+    uW             = 86@
+    uH             = 87@
+    uF             = 88@
+    uF2            = 89@
+    uF3            = 90@
+    uR             = 91@
+    uG             = 92@
+    uB             = 93@
+    uA             = 94@
+    uV             = 95@
+    uPrevMode      = 96@
+    uStick         = 97@
+    uBtn           = 98@
+    uYesPrev       = 99@
+    uKey           = 100@s  // 100@ + 101@: a text key built with STRING_FORMAT
+    uKey2          = 102@s  // 102@ + 103@
+
+    // ---- the persistent Vers3Dynamics record (CLEO shared variables 960..970) ---------
+    rStory         = 104@   // bit n-1: story mission n passed; bits 8..9: mission 5 choice
+    rCases         = 105@   // bit c-1: research assignment c concluded
+    rVerdict       = 106@   // two bits per assignment: 1 accept, 2 reject, 3 abstain
+    rCareful       = 107@   // bit c-1: concluded carefully (right, clean evidence)
+    rRep           = 108@   // research reputation 0..100
+    rModes         = 109@   // bit m-1: cymatics mode m logged
+    rFlags         = 110@   // world consequences, see REC_F_* in v3d/config.txt
+    rAudio         = 111@   // volume levels 0..10: music bits 0-3, ambience 4-7, voices 8-11, effects 12-15
+    rBest          = 112@   // best mission 1 evidence score
+    rVisits        = 113@   // HQ visits
+    fMusicVol      = 114@
+    fAmbVol        = 115@
+    fVoiceVol      = 116@
+    fSfxVol        = 117@
+
+    // ---- objective channel: what the HUD and radar are asking for --------------------
+    oKind          = 118@   // 0 none, see OBJ_* in v3d/config.txt
+    oEnt           = 119@   // entity the objective is about (-1 none)
+    fOX            = 120@
+    fOY            = 121@
+    fOZ            = 122@
+    oArg           = 123@
+    oDone          = 124@
+
+    // ---- blips ----------------------------------------------------------------------------------
+    bDest          = 125@
+    bChris         = 126@
+    bVan           = 127@
+    bTarget        = 128@
+    bAux1          = 129@
+    bAux2          = 130@
+    bAux3          = 131@
+    bAux4          = 132@
+    bAux5          = 133@
+    bAux6          = 134@
+    iInside        = 135@   // standing in an interaction marker (latched)
+
+    // ---- misc ------------------------------------------------------------------------------------
+    iSub           = 136@
+    iCount         = 137@
+    iFlags         = 138@
+    iSaid          = 139@
+    iT1            = 140@
+    iT2            = 141@
+    iT3            = 142@
+    iProgress      = 143@
+    iLastWarnT     = 144@
+    iLostT         = 145@
+    iHealth0       = 146@
+    iHealth        = 147@
+    iSfxStream     = 148@   // the current one-shot effect
+    iMusicStream   = 149@
+    iAmbStream     = 150@
+    iWanted        = 151@
+    iReward        = 152@
+    iHoldT         = 153@
+    iDone1         = 154@
+    iDone2         = 155@
+    iDone3         = 156@
+    iPoint         = 157@
+    iSfxId         = 158@
+    iInCs          = 159@
+
+    // ---- floats -------------------------------------------------------------------------------
+    fAX            = 160@
+    fAY            = 161@
+    fAZ            = 162@
+    fAH            = 163@
+    fCos           = 164@
+    fSin           = 165@
+    fLabX          = 166@   // HQ door, outside
+    fLabY          = 167@
+    fLabZ          = 168@
+    fVanX          = 169@
+    fVanY          = 170@
+    fVanZ          = 171@
+    fVanH          = 172@
+    fM1X           = 173@
+    fM1Y           = 174@
+    fM1Z           = 175@
+    fM2X           = 176@
+    fM2Y           = 177@
+    fM2Z           = 178@
+    fM3X           = 179@
+    fM3Y           = 180@
+    fM3Z           = 181@
+    fDX            = 182@
+    fDY            = 183@
+    fDZ            = 184@
+    fWX            = 185@
+    fWY            = 186@
+    fWZ            = 187@
+    fDist          = 188@
+    fDist2         = 189@
+    fHead          = 190@
+    fHead2         = 191@
+    fCamX          = 192@
+    fCamY          = 193@
+    fCamZ          = 194@
+    fCamOX         = 195@
+    fCamOY         = 196@
+    fCamOZ         = 197@
+    fCamTZ         = 198@
+    fSpeed         = 199@
+
+    // ---- 400@.. ----------------------------------------------------------------------------------
+    dPath          = 400@v  // 400@..403@: voice file name
+    hPlayer        = 404@
+    iSavedScore    = 405@
+    iSavedRight    = 406@
+    iSavedTotal    = 407@
+    hNpc2          = 408@   // speaker slot 4
+    hNpc3          = 409@   // speaker slot 5
+    hCamTarget     = 410@
+    hCamFrom       = 411@
+    iLabSet        = 412@
+    iRoadsOff      = 413@
+    iMissionId     = 414@   // 1..5 story mission, 9 HQ
+    iResult        = 415@   // 1 passed, 2 failed, 3 handed over to another mission
+    iCardT         = 416@   // location card / title card start time
+    iCardKind      = 417@
+    iSfxT          = 418@
+    iPrevT         = 419@
+    hVanDish       = 420@
+    iDt            = 421@
+    iHintT         = 422@   // when the current help prompt was shown
+    iHintKind      = 423@
+    uPrefix        = 424@s  // 424@ + 425@: this script's text prefix, e.g. 'VGF'
+    // ---- R.A.I.N. field verdicts (v3d/decide.txt) ------------------------------------
+    fcId           = 426@
+    fcAns          = 427@
+    fcLineAcc      = 428@
+    fcLineRej      = 429@
+    fcLineAbs      = 430@
+    fcRetry        = 431@
+    fcChoice       = 432@
+    fcCorrect      = 433@
+    fcTries        = 434@
+    fcFeedback     = 435@   // 1 right, 2 wrong (first try), 3 right on a retry, 4 wrong again
+    fcSaved        = 436@
+    iTimerOn       = 437@   // a countdown on the HUD
+    iTimerEnd      = 438@
+    iTimerLeft     = 439@
+    hTmpCar        = 440@
+    iBit2          = 441@
+    iInLab         = 442@   // 1 while CJ is inside the lab interior
+    iBit           = 443@   // a single-bit mask (1 << n)
+    iCount2        = 444@   // a loop counter
+    iWeapon        = 445@
+    iCamGiven      = 446@   // the camera has been handed over
+    iShowT         = 447@
+    iPendLine      = 448@   // a line to say when nobody is talking (DRIVE_TO plays it)
+end

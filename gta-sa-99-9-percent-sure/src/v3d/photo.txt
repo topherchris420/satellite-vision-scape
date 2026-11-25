@@ -1,0 +1,91 @@
+// ============================================================================
+// Photographs with the game's camera (weapon 43). Load #CAMERA first.
+// ============================================================================
+// A photograph: camera out, on foot, close enough and facing the subject
+// (oEnt). iTmp3 = 1 when the shutter fires. Depth 4: calls nothing.
+:PHOTO_CHECK
+iTmp3 = 0
+if iCamGiven == 0
+then
+    give_weapon_to_char $scplayer 43 60
+    iCamGiven = 1
+end
+iWeapon = get_current_char_weapon $scplayer
+if iWeapon <> 43
+then
+    if iNow > iShowT
+    then
+        set_current_char_weapon $scplayer 43
+        iShowT = iNow
+        iShowT += 3000
+    end
+    return
+end
+if is_char_in_any_car $scplayer
+then
+    return
+end
+if not locate_char_any_means_char_2d $scplayer oEnt 14.0 14.0 false
+then
+    return
+end
+if not is_char_shooting $scplayer
+then
+    return
+end
+fPX, fPY, fPZ = get_char_coordinates $scplayer
+fSX, fSY, fSZ = get_char_coordinates oEnt
+fTmp = fSX
+fTmp -= fPX
+fTmp2 = fSY
+fTmp2 -= fPY
+fHead = get_heading_from_vector_2d fTmp fTmp2
+fHead2 = get_char_heading $scplayer
+fTmp = fHead2
+fTmp -= fHead
+if 0.0 > fTmp
+then
+    fTmp *= -1.0
+end
+if fTmp > 180.0
+then
+    fTmp2 = 360.0
+    fTmp2 -= fTmp
+    fTmp = fTmp2
+end
+if 50.0 > fTmp
+then
+    iTmp3 = 1
+    oKind = OBJ_NONE
+end
+return
+
+
+// USE_AT: walk up to fDX fDY fDZ on foot and press Enter/Exit. Depth 3.
+:USE_AT
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+oKind = OBJ_USE
+fOX = fDX
+fOY = fDY
+fOZ = fDZ
+gosub @MENU_INPUT
+if uIn <> 5
+then
+    jump @USE_AT
+end
+if is_char_in_any_car $scplayer
+then
+    jump @USE_AT
+end
+if not locate_char_on_foot_3d $scplayer fDX fDY fDZ 1.8 1.8 2.5 true
+then
+    jump @USE_AT
+end
+oKind = OBJ_NONE
+iSfxId = SFX_OK
+gosub @SFX_PLAY
+return

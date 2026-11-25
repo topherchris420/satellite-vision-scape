@@ -105,6 +105,18 @@ COMPARE = {
 }
 
 
+# CLEO bitwise extension (0B10..0B1D): (operation, in place). The result is
+# written to the third parameter, or back into the first for the compound forms.
+BITWISE = {
+    "BIT_AND": ("and", False), "BIT_OR": ("or", False), "BIT_XOR": ("xor", False),
+    "BIT_NOT": ("not", False), "MOD": ("mod", False), "BIT_SHR": ("shr", False),
+    "BIT_SHL": ("shl", False),
+    "BIT_AND_COMPOUND": ("and", True), "BIT_OR_COMPOUND": ("or", True), "BIT_XOR_COMPOUND": ("xor", True),
+    "BIT_NOT_COMPOUND": ("not", True), "MOD_COMPOUND": ("mod", True), "BIT_SHR_COMPOUND": ("shr", True),
+    "BIT_SHL_COMPOUND": ("shl", True),
+}
+
+
 class Script:
     def __init__(self, vm: "VM", name: str, code: bytes, is_mission: bool, path: str = ""):
         self.vm = vm
@@ -366,6 +378,9 @@ class VM:
         op = ARITH.get(name)
         if op:
             return self._arith(s, cmd, params, *op)
+        op = BITWISE.get(name)
+        if op:
+            return self._bitwise(s, params, *op)
         op = COMPARE.get(name)
         if op:
             return self._compare(s, cmd, params, *op)
@@ -435,6 +450,31 @@ class VM:
             else:
                 r = a / b if b != 0 else math.copysign(math.inf, a) if a else math.nan
             s.write(params[0], "float", f32(r))
+        return None
+
+    def _bitwise(self, s: Script, params, op: str, in_place: bool):
+        a = i2u(s.read(params[0], "int"))
+        unary = op == "not"
+        b = 0 if unary else i2u(s.read(params[1], "int"))
+        if op == "and":
+            r = a & b
+        elif op == "or":
+            r = a | b
+        elif op == "xor":
+            r = a ^ b
+        elif op == "not":
+            r = ~a & 0xFFFFFFFF
+        elif op == "shr":
+            r = a >> (b & 31)                    # unsigned shift, as CLEO's (DWORD) operands
+        elif op == "shl":
+            r = (a << (b & 31)) & 0xFFFFFFFF
+        else:
+            sa, sb = u2i(a), u2i(b)
+            if sb == 0:
+                raise VMError(f"{s.name}: modulo by zero")
+            r = i2u(sa - c_div(sa, sb) * sb)     # C remainder: sign of the dividend
+        out = params[0] if in_place else params[1 if unary else 2]
+        s.write(out, "int", u2i(r))
         return None
 
     def _compare(self, s: Script, cmd, params, op: str, kind: str):

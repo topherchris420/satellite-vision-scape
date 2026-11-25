@@ -1,0 +1,97 @@
+// ============================================================================
+// Vers3Dynamics expansion - interface building blocks
+//
+// 640 x 448 script space. The engine forgets text style after every line, so
+// each TS_* routine sets a complete style and the caller draws one line.
+// Palette as mission 1: teal (11,93,99), spectral (90,220,210), mint
+// (170,240,220), CERTAIN red (200,30,40), amber (240,170,40).
+// ============================================================================
+
+:TS_TITLE
+set_text_font 2
+set_text_scale 0.40 1.60
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_HEAD
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 90 220 210 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_BODY
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 235 245 245 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_DIM
+set_text_font 1
+set_text_scale 0.24 0.98
+set_text_colour 120 170 168 255
+set_text_proportional true
+set_text_edge 1 0 0 0 180
+return
+
+:TS_SEL
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 8 22 24 255
+set_text_proportional true
+return
+
+:TS_AMBER
+set_text_font 1
+set_text_scale 0.27 1.10
+set_text_colour 240 170 40 255
+set_text_proportional true
+set_text_edge 1 0 0 0 200
+return
+
+:TS_RED
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 225 60 60 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_GOOD
+set_text_font 2
+set_text_scale 0.30 1.22
+set_text_colour 120 230 150 255
+set_text_proportional true
+set_text_edge 1 0 0 0 220
+return
+
+:TS_HINT
+set_text_font 1
+set_text_scale 0.22 0.90
+set_text_colour 170 240 220 255
+set_text_proportional true
+set_text_centre true
+set_text_edge 1 0 0 0 200
+return
+
+// A horizontal meter: centre uX, uY, full width uW, value uV (0..100), colour uR uG uB.
+:DRAW_METER
+draw_rect uX uY uW 8.0 20 40 42 255
+uF =# uV
+uF /= 100.0
+uF *= uW
+uF2 = uW
+uF2 -= uF
+uF2 /= 2.0
+uF3 = uX
+uF3 -= uF2
+if uV > 0
+then
+    draw_rect uF3 uY uF 8.0 uR uG uB 255
+end
+return

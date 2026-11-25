@@ -1,0 +1,617 @@
+// ============================================================================
+//  Vers3Dynamics HQ - a free-roam visit to Christopher's lab in Doherty
+//
+//  CLEO custom mission (.cm), started by 99sure_launcher.cs when CJ walks into
+//  the lab door marker after 99.9% SURE has been passed. Inside: the R.A.I.N.
+//  research terminal (assignments, records, audio settings), the cymatics rig,
+//  the diagram wall, Christopher's own routine and conversations, and the
+//  marker for the next story mission. Leaving through the door ends the visit;
+//  starting a story mission hands over to the launcher (SV_HANDOFF).
+//  Compile with Sanny Builder 4, edit mode "GTA SA (v1.0 - SBL)". Needs CLEO 5.
+// ============================================================================
+{$CLEO .cm}
+{$NOSOURCE}
+{$INCLUDE v3d/vars.txt}
+{$INCLUDE hq/vars.txt}
+{$INCLUDE gen/hq_scene_vars.txt}
+{$INCLUDE v3d/config.txt}
+
+nop
+script_name 'V3DHQ'
+gosub @MISSION_START
+if has_deatharrest_been_executed
+then
+    iFail = -1
+end
+if iFail <> 0
+then
+    set_cleo_shared_var SV_RESULT 2
+end
+gosub @MISSION_CLEANUP
+terminate_this_script
+
+// ============================================================================
+:MISSION_START
+$onmission = 1
+iMissionId = 9
+gosub @INIT_COMMON
+gosub @HQ_INIT
+gosub @HQ_ENTER
+:HQ_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+if iExitReq > 0
+then
+    gosub @HQ_EXIT
+    return
+end
+oKind = OBJ_NONE
+gosub @CHRIS_UPDATE
+gosub @HQ_STATIONS
+// stations open their own loops here, at depth 2
+if uIn == 5
+then
+    switch iStation
+        case STN_TERMINAL
+            uIn = 0
+            gosub @TERM_RUN
+        case STN_RECORDS
+            uIn = 0
+            gosub @TERM_RUN
+        case STN_RIG
+            uIn = 0
+            gosub @RIG_RUN
+        case STN_DIAGRAMS
+            uIn = 0
+            gosub @DIAG_RUN
+    end
+end
+if uIn == 7
+then
+    uIn = 0
+    gosub @CHRIS_TALK
+end
+jump @HQ_LOOP
+
+// ============================================================================
+:HQ_INIT
+iState = ST_ENTER
+iStation = STN_NONE
+iStationPrev = STN_NONE
+iPromptShown = 0
+iExitReq = 0
+iTalking = 0
+iSeenMask = 0
+iDoorClear = 0
+iStartClear = 0
+iChrisStep = 0
+iChrisPhase = 0
+iBarkIdx = 0
+iTalkIdx = 0
+gTone = 0
+gPlate = 0
+iProp2 = 0
+gosub @SCN_HQBASE_RESET
+gosub @SCN_HQM2_RESET
+gosub @SCN_HQM3_RESET
+gosub @SCN_HQM4_RESET
+gosub @SCN_HQM5_RESET
+gosub @SCN_HQATLAS_RESET
+rVisits += 1
+iFirstVisit = 1
+iTmp = rFlags
+iTmp &= REC_F_WELCOMED
+if iTmp <> 0
+then
+    iFirstVisit = 0
+end
+// the next story mission: n is offered once n-1 is passed and its script is installed
+iNextMission = 0
+iTmp = rStory
+iTmp &= 1
+if iTmp <> 0
+then
+    iTmp = rStory
+    iTmp &= 2
+    if iTmp == 0
+    then
+        if does_file_exist "cleo\v3dghost.cm"
+        then
+            iNextMission = 2
+        end
+    else
+        iTmp = rStory
+        iTmp &= 4
+        if iTmp == 0
+        then
+            if does_file_exist "cleo\v3dfalse.cm"
+            then
+                iNextMission = 3
+            end
+        else
+            iTmp = rStory
+            iTmp &= 8
+            if iTmp == 0
+            then
+                if does_file_exist "cleo\v3dlink.cm"
+                then
+                    iNextMission = 4
+                end
+            else
+                iTmp = rStory
+                iTmp &= 16
+                if iTmp == 0
+                then
+                    if does_file_exist "cleo\v3dopen.cm"
+                    then
+                        iNextMission = 5
+                    end
+                end
+            end
+        end
+    end
+end
+gosub @REC_SAVE
+return
+
+// ============================================================================
+// Arrival: fade, build the room, Christopher at work, the ambience, a greeting.
+// ============================================================================
+:HQ_ENTER
+set_player_control $player1 false
+clear_wanted_level $player1
+gosub @FADE_OUT
+gosub @FIND_LAB_EXT
+gosub @LAB_ROOM_ENTER
+// CJ comes in a step from the door, facing into the room
+fTmp7 = 0.0
+fTmp8 = 1.3
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+set_char_heading $scplayer fAH
+gosub @HQ_STATION_POINTS
+gosub @SCN_HQBASE_CREATE
+gosub @HQ_MILESTONE_PROPS
+fTmp7 = 0.0
+fTmp8 = 3.55
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+fHead = fAH
+gosub @SPAWN_CHRIS
+set_char_area_visible hChris LAB_AREA
+set_char_never_targetted hChris true
+iChrisStep = 0
+gosub @CHRIS_GO_STATION
+gosub @AMB_START
+gosub @MUSIC_START
+restore_camera_jumpcut
+wait 400
+gosub @FADE_IN
+iCardKind = 1
+iCardT = get_game_timer
+iChrisT = get_game_timer
+iChrisT += 26000
+iBarkT = get_game_timer
+iBarkT += 30000
+if iFirstVisit == 1
+then
+    gosub @HQ_WELCOME
+else
+    set_player_control $player1 true
+    gosub @HQ_GREETING
+end
+if iCustomModel == 0
+then
+    if iFirstVisit == 1
+    then
+        print_help 'VHH08'
+    end
+end
+// CJ arrives clear of the door and the mission marker
+iDoorClear = 1
+iStartClear = 1
+iState = ST_FREE
+gosub @PUBLISH
+return
+
+// First visit after 99.9% SURE: a short scene, then the controls.
+:HQ_WELCOME
+gosub @CS_BEGIN
+fTmp7 = -3.2
+fTmp8 = 6.9
+fTmp6 = 2.5
+hCamTarget = hChris
+fCamTZ = 0.4
+gosub @CAM_ANCHOR
+iWaitMs = 1500
+gosub @WAIT_MS
+task_play_anim_non_interruptable hChris "OFF_Sit_2Idle_180" "INT_OFFICE" 4.0 false false false false -1
+iWaitMs = 2600
+gosub @WAIT_MS
+fTmp7 = 0.0
+fTmp8 = 2.8
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+clear_char_tasks_immediately hChris
+set_char_coordinates hChris fSX fSY fSZ
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.15
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 101
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 102
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.3
+fCamOY = 1.3
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 103
+gosub @SAY
+fTmp7 = 2.6
+fTmp8 = 1.2
+fTmp6 = 1.8
+hCamTarget = hChris
+fCamTZ = 0.5
+gosub @CAM_ANCHOR
+dLine = 104
+gosub @SAY
+dLine = 105
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 106
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.2
+fCamOY = 1.0
+fCamOZ = 0.64
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 107
+gosub @SAY
+gosub @CS_END
+rFlags |= REC_F_WELCOMED
+gosub @REC_SAVE
+iChrisStep = 1
+gosub @CHRIS_GO_STATION
+print_help 'VHH06'
+iHintT = get_game_timer
+return
+
+// Later visits: one line, chosen by what has happened since.
+:HQ_GREETING
+iGreetLine = 0
+if iNextMission > 0
+then
+    iGreetLine = 500
+    iGreetLine += iNextMission
+else
+    iTmp = rFlags
+    iTmp &= REC_F_RETRACT
+    if iTmp <> 0
+    then
+        iGreetLine = 115
+    else
+        iTmp = rFlags
+        iTmp &= REC_F_GOODNEWS
+        if iTmp <> 0
+        then
+            iGreetLine = 116
+        else
+            iTmp = rStory
+            iTmp &= 16
+            if iTmp <> 0
+            then
+                iGreetLine = 117
+            else
+                iTmp = rVisits
+                iTmp %= 4
+                iGreetLine = 111
+                iGreetLine += iTmp
+            end
+        end
+    end
+end
+dLine = iGreetLine
+dQEnd = iGreetLine
+gosub @SAY_QUEUE
+if iNextMission > 0
+then
+    print_help 'VHH07'
+    iHintT = get_game_timer
+end
+return
+
+// World positions of the stations (stored in spare floats while inside).
+//   terminal fM1X fM1Y, rig fM2X fM2Y, diagrams fM3X fM3Y, records fDX fDY,
+//   door fWX fWY, mission marker fM1Z fM2Z. fM3Z is the floor.
+:HQ_STATION_POINTS
+fTmp7 = 0.65
+fTmp8 = 3.35
+gosub @ANCHOR_TO_WORLD
+fM1X = fSX
+fM1Y = fSY
+fTmp7 = -2.55
+fTmp8 = 3.45
+gosub @ANCHOR_TO_WORLD
+fM2X = fSX
+fM2Y = fSY
+fTmp7 = 0.0
+fTmp8 = 6.45
+gosub @ANCHOR_TO_WORLD
+fM3X = fSX
+fM3Y = fSY
+fTmp7 = 3.65
+fTmp8 = 6.3
+gosub @ANCHOR_TO_WORLD
+fDX = fSX
+fDY = fSY
+fTmp7 = 0.0
+fTmp8 = -0.35
+gosub @ANCHOR_TO_WORLD
+fWX = fSX
+fWY = fSY
+fTmp7 = -1.15
+fTmp8 = 2.55
+gosub @ANCHOR_TO_WORLD
+fM1Z = fSX
+fM2Z = fSY
+fM3Z = fAZ
+return
+
+// Props that arrive with the story: the relay, the Sentinel binders, the
+// correlation screens, the demo rig, the framed atlas.
+:HQ_MILESTONE_PROPS
+iTmp = rStory
+iTmp &= 2
+if iTmp <> 0
+then
+    gosub @SCN_HQM2_CREATE
+end
+iTmp = rStory
+iTmp &= 4
+if iTmp <> 0
+then
+    gosub @SCN_HQM3_CREATE
+end
+iTmp = rStory
+iTmp &= 8
+if iTmp <> 0
+then
+    gosub @SCN_HQM4_CREATE
+end
+iTmp = rStory
+iTmp &= 16
+if iTmp <> 0
+then
+    gosub @SCN_HQM5_CREATE
+end
+iTmp = rFlags
+iTmp &= REC_F_ATLAS
+if iTmp <> 0
+then
+    gosub @SCN_HQATLAS_CREATE
+end
+return
+
+// ============================================================================
+// Leaving: through the door (iExitReq 1) or into a story mission (2).
+// ============================================================================
+:HQ_EXIT
+iState = ST_LEAVE
+gosub @PUBLISH
+set_player_control $player1 false
+clear_help
+// let Christopher finish what he is saying (up to eight seconds)
+iT1 = get_game_timer
+iT1 += 8000
+:HQ_EXIT_HUSH
+if dActive == 1
+then
+    gosub @TICK
+    if iT1 > iNow
+    then
+        jump @HQ_EXIT_HUSH
+    end
+end
+if dQNext > 0
+then
+    gosub @TICK
+    if iT1 > iNow
+    then
+        jump @HQ_EXIT_HUSH
+    end
+end
+gosub @DLG_CANCEL
+if iExitReq == 1
+then
+    if not is_char_dead hChris
+    then
+        if locate_char_any_means_char_2d $scplayer hChris 10.0 10.0 false
+        then
+            dLine = 506
+            iTmp = rVisits
+            iTmp %= 3
+            dLine += iTmp
+            gosub @SAY
+        end
+    end
+end
+gosub @FADE_OUT
+gosub @RIG_STREAMS_OFF
+gosub @MUSIC_STOP
+gosub @AMB_STOP
+gosub @HQ_DELETE_SCENES
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+gosub @LAB_ROOM_LEAVE
+wait 800
+if iExitReq == 2
+then
+    // the story mission fades back in on its own opening
+    iResult = 3
+    set_cleo_shared_var SV_HANDOFF iNextMission
+    set_cleo_shared_var SV_RESULT 3
+    return
+end
+iResult = 4
+set_cleo_shared_var SV_RESULT 4
+restore_camera_jumpcut
+gosub @FADE_IN
+gosub @HQ_NEWS
+return
+
+// A careful or careless conclusion makes the papers, once, on the way out.
+:HQ_NEWS
+iTmp = rFlags
+iTmp &= 3
+if iTmp == 0
+then
+    return
+end
+iTmp2 = rFlags
+iTmp2 >>= 9
+iTmp2 &= 15
+if iTmp2 > 0
+then
+    iTmp = rFlags
+    iTmp &= REC_F_RETRACT
+    if iTmp <> 0
+    then
+        string_format uKey "VK%02dNB" iTmp2
+    else
+        string_format uKey "VK%02dNG" iTmp2
+    end
+    print_now uKey 9000 1
+end
+// clear RETRACT, GOODNEWS and the case number (bits 0, 1 and 9..12)
+rFlags &= -7684
+gosub @REC_SAVE
+return
+
+:HQ_DELETE_SCENES
+gosub @SCN_HQBASE_DELETE
+gosub @SCN_HQM2_DELETE
+gosub @SCN_HQM3_DELETE
+gosub @SCN_HQM4_DELETE
+gosub @SCN_HQM5_DELETE
+gosub @SCN_HQATLAS_DELETE
+return
+
+// ============================================================================
+:MISSION_CLEANUP
+iState = ST_LEAVE
+gosub @RIG_STREAMS_OFF
+gosub @HQ_DELETE_SCENES
+if is_player_playing $player1
+then
+    // ended inside (wasted, busted or a failure): put CJ back on the street
+    if iInLab == 1
+    then
+        gosub @LAB_ROOM_LEAVE
+    end
+end
+gosub @REC_SAVE
+gosub @CLEANUP_COMMON
+return
+
+:WATCH_MISSION
+return
+
+:DLG_LOOKUP
+{$INCLUDE gen/hq_dialogue.txt}
+return
+
+:HUD_DRAW
+if uMode == 0
+then
+    if iCardKind == 0
+    then
+        return
+    end
+end
+use_text_commands true
+switch uMode
+    case 1
+        gosub @DRAW_FRAME
+        switch uPage
+            case PG_MAIN
+                gosub @DRAW_PG_MAIN
+            case PG_LIST
+                gosub @DRAW_PG_LIST
+            case PG_BRIEF
+                gosub @DRAW_PG_BRIEF
+            case PG_EVID
+                gosub @DRAW_PG_EVID
+                gosub @DRAW_SUPPORT
+            case PG_TEST
+                gosub @DRAW_PG_TEST
+                gosub @DRAW_SUPPORT
+            case PG_RESULT
+                gosub @DRAW_PG_RESULT
+                gosub @DRAW_SUPPORT
+            case PG_VERDICT
+                gosub @DRAW_PG_VERDICT
+                gosub @DRAW_SUPPORT
+            case PG_AUDIT
+                gosub @DRAW_PG_AUDIT
+            case PG_RECORDS
+                gosub @DRAW_PG_RECORDS
+            case PG_SETTINGS
+                gosub @DRAW_PG_SETTINGS
+        end
+    case 2
+        gosub @DRAW_RIG
+    case 3
+        gosub @DRAW_DIAGRAM
+end
+if iCardKind > 0
+then
+    if uMode == 0
+    then
+        gosub @DRAW_CARD
+    end
+end
+return
+
+{$INCLUDE v3d/core.txt}
+{$INCLUDE v3d/ui.txt}
+{$INCLUDE v3d/panels.txt}
+{$INCLUDE hq/stations.txt}
+{$INCLUDE hq/chris.txt}
+{$INCLUDE hq/terminal.txt}
+{$INCLUDE hq/rig.txt}
+{$INCLUDE gen/hq_scenes.txt}

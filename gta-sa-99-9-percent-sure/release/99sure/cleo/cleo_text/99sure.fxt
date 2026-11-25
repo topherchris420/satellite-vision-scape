@@ -401,3 +401,861 @@ V3U39 FACE THE GROUP
 V3U40 EQUIP CAMERA
 V3U41 HOLD THE SHOT
 V3U42 SUPPORT: ACCEPT / CONTRADICTION: REJECT / NO DATA: ABSTAIN
+VEC00 EVERYTHING IS CONNECTED
+VEC0101 ~p~RADIO FREE FIERRO:~w~ Radio Free Fierro. Friends, I've been putting the pieces together. The heat. The ice cream vans. The crime. The lottery. It's all one thing.
+VEC0102 ~p~RADIO FREE FIERRO:~w~ And I challenge those so-called scientists in Doherty to prove me wrong. Live, on my show, tonight.
+VEC0103 He's talking about you, man.
+VEC0104 He's talking about patterns. Some of them are real. That's what makes him convincing.
+VEC0105 So we collect our own observations, put them on a board, and sort the causes from the coincidences.
+VEC0106 And then we go on the radio with a crazy guy.
+VEC0107 With a crazy guy and a spreadsheet.
+VEC0201 First, the weather. There's a bank thermometer on the beachfront at Ocean Flats.
+VEC0202 Thirty-four degrees. Hottest day of the year.
+VEC0203 No wonder everybody's acting crazy.
+VEC0301 Rex says the ice cream vans are everywhere. Let's count a queue. Get a photo.
+VEC0302 Twelve people waiting. The driver says sales have tripled since Monday.
+VEC0303 I'd be in that line if we weren't working.
+VEC0304 ~b~SFPD:~w~ All units, high call volume citywide. Disturbances, noise complaints, two car fires. It's a hot one, people.
+VEC0305 And there's the crime half of Rex's chart. Calls are up too.
+VEC0401 Rex's favourite: three lottery winners, all on Paradiso Street. Check the board at the newsstand.
+VEC0402 Three winners on Paradiso this year. And nine thousand tickets sold there. The biggest seller in the city.
+VEC0403 So they win more 'cause they play more.
+VEC0404 Or Paradiso is magic. Let's put it on the board.
+VEC0501 Here's the board. Four connections Rex says are real. You call each one.
+VEC0502 Heat and ice cream: a cause. Hot afternoon, people want ice cream.
+VEC0503 Heat and ice cream is a cause, Carl. Sales jump the same afternoon the heat does.
+VEC0504 Ice cream and crime: common cause. The heat pushes both. Ice cream is innocent.
+VEC0505 Ice cream doesn't cause crime. Hot weather pushes both up. If we say that on air, the vans will hear it.
+VEC0506 Paradiso and the lottery: coincidence. More tickets, more winners. No magic.
+VEC0507 Paradiso isn't lucky. They buy nine thousand tickets. Of course they win more.
+VEC0508 The full moon: can't tell. One month of Rex's chart. Nobody can say from that.
+VEC0509 One month of data from Rex. Honestly, we can't tell either way.
+VEC0601 Radio Free Fierro broadcasts from a van on Missionary Hill. Of course it does.
+VEC0602 Well, well. The scientists came. Welcome to the truth, gentlemen. You're live.
+VEC0603 Thanks, Rex. You're right that these things go up together. We checked.
+VEC0604 Ha! You hear that, San Fierro? Connected!
+VEC0605 Some of them because one causes the other. Heat sells ice cream.
+VEC0606 Some because something else drives both. Heat pushes up ice cream and arguments at the same time.
+VEC0607 And some are just numbers bumping into each other. Paradiso buys more tickets, so it wins more.
+VEC0608 And the full moon?
+VEC0609 One month of your chart. Nobody can tell from that. Including you.
+VEC0610 ...Hot weather. Huh.
+VEC0611 So what you're saying is, the weather controls us all.
+VEC0612 That's... not what he said.
+VEC0613 Lines are open, people!
+VEC0651 Breaking news, San Fierro! Vers3Dynamics confirms it: ice cream causes crime!
+VEC0652 That's not... we didn't... Carl. Look outside.
+VEC0653 ~y~ICE CREAM VAN:~w~ Hey! You the guys who said ice cream causes crime?!
+VEC0654 Drive. Drive now.
+VEC0655 I think we lost them. And the ice cream union's goodwill.
+VEC0701 Four links. A cause, a common cause, a coincidence and a shrug. That's a good night's science.
+VEC0702 Next time we say 'common cause' slower. And louder. Near fewer ice cream vans.
+VEC0703 Man, that radio guy's gonna be talking about weather control for a year.
+VEC0704 Probably. But a few thousand people heard the difference between a cause and a coincidence tonight. That's not nothing.
+VEC0705 ~y~SFTV NEWS:~w~ Radio Free Fierro drew record ratings last night with an unusually calm debate about ice cream.
+VEC0706 ~y~SFTV NEWS:~w~ Ice cream vans protested outside a Doherty laboratory last night over remarks on pirate radio. No ice cream was harmed.
+VEC0707 Carl. Tomorrow we open the doors. Everything, in public. Ready?
+VEC0708 Ready for what?
+VEC0709 The open experiment.
+VECB0 CORRELATION BOARD
+VECB1 Heat  /  ice cream sales
+VECB2 Ice cream sales  /  crime calls
+VECB3 Paradiso St  /  lottery wins
+VECB4 Full moon  /  ER visits
+VECB5 Sales rise the same afternoon the heat does.
+VECB6 Both up this week. Scanner: hot days, more calls.
+VECB7 Three winners on one street. 9,000 tickets sold there.
+VECB8 Rex's chart: one month. No other months.
+VECB9 Submit the board
+VECBA CAUSES
+VECBB COMMON CAUSE
+VECBC COINCIDENCE
+VECBD CAN'T TELL
+VECBE Up/Down link   Left/Right call   ~k~~VEHICLE_ENTER_EXIT~ on the last row submits
+VECBF ?
+VECBG RIGHT  +10
+VECBH WRONG  -5
+VECF1 ~r~Rex Pattern is hurt. So much for the debate.
+VECO1 Read the bank ~y~thermometer~s~ on the beachfront at Ocean Flats.
+VECO2 Photograph the ~y~ice cream queue~s~.
+VECO3 Check the lottery board at the ~y~newsstand~s~.
+VECO4 Drive to Radio Free Fierro's ~y~van~s~ on Missionary Hill.
+VECO5 Lose the ~r~ice cream vans~s~.
+VECO6 Take Christopher back to the ~y~lab~s~.
+VECO7 Walk up to the ~y~thermometer~s~ and read it.
+VECO8 Walk up to the ~y~board~s~ and read it (~k~~VEHICLE_ENTER_EXIT~).
+VECP1 A clean board. Reputation +8
+VECP2 The vans came for you. Reputation +2
+VFP00 FALSE POSITIVE
+VFP0101 ~r~SENTINEL:~w~ SENTINEL alert. Three subjects flagged as imminent threats. Intercept windows are now open.
+VFP0102 Intercept? Who's doing the intercepting?
+VFP0103 Pacific Shield. Private security. They bought SENTINEL when the city dropped CERTAIN.
+VFP0104 When a countdown ends, their team picks the person up. No warrant, no review. Just a very confident van.
+VFP0105 So it's CERTAIN with a new paint job.
+VFP0106 Same engine, nicer font. Three people, three clocks. Two independent observations on each before their time runs out.
+VFP0107 And if one of them really is up to something?
+VFP0108 Then we say so. Being careful isn't the same as assuming everybody's innocent.
+VFP0109 You pick the order. Watch the clocks.
+VFP0201 ~r~SENTINEL:~w~ Subject Marisol Vega. Concealed weapon case. Loitering. Threat probability ninety-eight percent.
+VFP0202 That's her, by the shops. Get a photo of the case.
+VFP0203 The case is open. That's a saxophone. A nice one.
+VFP0204 Excuse me. You know the lady with the sax?
+VFP0205 Marisol? She's played outside my store every Saturday for six years. Customers love her.
+VFP0206 Wait, I'm a what? A threat? I play jazz standards!
+VFP0207 Don't worry about it. We're on it.
+VFP0251 Rejected. A saxophone, six years of Saturdays, and a very confused jazz musician.
+VFP0252 Accept? Carl, it's a saxophone. The only thing it threatens is silence.
+VFP0253 We don't need to abstain. Two independent observations, and they agree.
+VFP0301 ~r~SENTINEL:~w~ Subject Dex Okafor. Erratic route. Evasive movement. Threat probability ninety-six percent.
+VFP0302 He's a bike courier. Erratic is the job description. Follow him to his next drop.
+VFP0303 Not too close. We're watching, not chasing.
+VFP0304 He's stopping. Have a look at the manifest.
+VFP0305 Hey, hands off the... oh. You want the manifest? Knock yourself out. Four envelopes, two pizzas, one bag of cat food.
+VFP0306 Your route's evasive, man. That's what the computer says.
+VFP0307 My route is the fastest way between twelve addresses! That's called being good at my job!
+VFP0308 He's pulling away. Keep him in sight.
+VFP0351 Rejected. A route isn't a crime. Fast isn't evasive.
+VFP0352 Accept? We followed him. He delivered cat food.
+VFP0353 We watched the route and read the manifest. That's enough to say no.
+VFP0401 ~r~SENTINEL:~w~ Subject Ray Linares. Vehicle tampering. Threat probability ninety-one percent.
+VFP0402 Let's not assume anything. Watch him for a minute. Get a photo.
+VFP0403 He's trying the door handles. All of them.
+VFP0404 That guy? He's been at it all morning. Tried my car twice. I called the cops, nobody came.
+VFP0405 What? I'm looking for my car. It's one of these. Probably.
+VFP0406 Okay. This one's actually doing it.
+VFP0451 Accepted. Two independent observations, both say tampering. It goes to SFPD, not Pacific Shield.
+VFP0452 Reject? We photographed him doing it, and a witness saw him too.
+VFP0453 We have the photo and a witness. This one we can decide.
+VFP0455 ~b~SFPD:~w~ Units to Chinatown, vehicle tampering in progress. Evidence received from an independent lab.
+VFP0456 That's how it's supposed to work. Evidence first, then the people with badges.
+VFP0501 ~r~PACIFIC SHIELD:~w~ Pacific Shield to all teams: subject intercepted. Case closed.
+VFP0502 We were too slow. Somebody's spending tonight explaining themselves to a private company.
+VFP0503 Under two minutes on one of the clocks, Carl.
+VFP0511 Verdict filed. That clock's stopped. Next.
+VFP0601 All three filed. One real problem, and two people who were just living their lives.
+VFP0602 We lost one to the clock. That's on the system. Remembering it is on us.
+VFP0603 How'd SENTINEL get it so wrong?
+VFP0604 It learned from old arrest maps. It doesn't see what people do. It sees where they are.
+VFP0605 ~y~SFTV NEWS:~w~ The city has suspended Pacific Shield's SENTINEL contract after an independent lab cleared two flagged residents within minutes.
+VFP0606 ~y~SFTV NEWS:~w~ Pacific Shield detained one resident before the review and has since apologized. Its software, it says, was 'technically confident'.
+VFP0607 ~p~RADIO FREE FIERRO:~w~ Radio Free Fierro. Robots flagging buskers, ghosts on the bridge, ice cream vans everywhere. Friends, it is all connected. And I can prove it.
+VFP0608 Who's gonna tell him?
+VFP0609 We are. Eventually. With data.
+VFPC11 Photo: the case holds a saxophone
+VFPC12 Shopkeeper: plays here six years
+VFPC13 SENTINEL: loitering, 98%
+VFPC14 No weapon seen, no complaints
+VFPC1H Marisol Vega is an imminent threat.
+VFPC21 Route: every stop on the manifest
+VFPC22 Manifest: mail, pizza, cat food
+VFPC23 SENTINEL: erratic route, 96%
+VFPC24 Stopped and talked when asked
+VFPC2H Dex Okafor is evading the police.
+VFPC31 Photo: trying locked door handles
+VFPC32 Witness: he tried her car twice
+VFPC33 SENTINEL: tampering, 91%
+VFPC34 His story: looking for his car
+VFPC3H Ray Linares is breaking into cars.
+VFPF1 ~r~Two people were detained before you could file. SENTINEL made the decisions for you.
+VFPF2 ~r~A flagged civilian was hurt.
+VFPO1 Three people are flagged. Two observations on each, then file a verdict before their ~r~countdown~s~ ends.
+VFPO2 Photograph the ~y~subject~s~ with the camera.
+VFPO3 Talk to the ~b~witness~s~ (~k~~CONVERSATION_YES~).
+VFPO4 Follow the ~y~courier~s~ to his next drop. Close, but don't crowd him.
+VFPO5 Check the courier's ~g~manifest~s~.
+VFPO6 Take Christopher back to the ~y~lab~s~.
+VFPP1 All three filed in time. Reputation +9
+VFPP2 Filed, but somebody was detained before you got there.
+VFPU1 SENTINEL FLAGS
+VFPU2 Marisol, Garcia
+VFPU3 Dex, Downtown
+VFPU4 Ray, Chinatown
+VFPU5 ~1~:~1~
+VFPU6 ~1~:0~1~
+VFPU7 FILED
+VFPU8 DETAINED
+VGF00 GHOST FREQUENCY
+VGF0101 ~p~RADIO FREE FIERRO:~w~ Radio Free Fierro, you're on the air. Tell me about the beeping.
+VGF0102 ~p~CALLER:~w~ It's in my clock radio, Rex. Seven little beeps and a long one. Every night. My dog won't go in the kitchen.
+VGF0103 ~p~RADIO FREE FIERRO:~w~ Friends, that is not interference. That is a message. San Fierro has a ghost, and it's trying to talk.
+VGF0104 Your radio's haunted, man.
+VGF0105 Listen.
+VGF0106 Seven short, one long, every ninety seconds, on one-six-six megahertz. People hear it all over the city.
+VGF0107 So it's a ghost with a schedule.
+VGF0108 Ghosts don't keep schedules. Transmitters do. A real ghost would have a favourite haunt. Let's find this one's.
+VGF0109 We take bearings from two places. Where the lines cross, that's where it lives. Roughly.
+VGF0110 Roughly?
+VGF0111 Roughly is the honest version of exactly.
+VGF0201 The receiver turns the signal into a needle and a sound. Watch the needle, but trust your ears.
+VGF0202 Why my ears?
+VGF0203 Because noise is loud and the pattern is quiet. Loud things like to pretend they're important.
+VGF0204 Sounds like half the people I know.
+VGF0205 ~p~RADIO FREE FIERRO:~w~ Callers say the beeping is loudest near Queens. Coincidence? I don't believe in coincidences. I believe in Queens.
+VGF0221 Park on the marker and hold still. The antenna does the rest.
+VGF0222 Bearing one. Strong, too.
+VGF0223 Bearing two. The lines cross in Queens. Near a nightclub.
+VGF0224 Hold still. You're smearing the bearing.
+VGF0241 The needle's pinned here. But listen to it.
+VGF0242 That's just buzzing.
+VGF0243 That sign has a dying transformer. It sprays noise into every channel, ours included.
+VGF0244 R.A.I.N. wants a verdict. Is this our ghost?
+VGF0261 Rejected. Loud isn't the same as the source. The pattern's still out there, under the buzz.
+VGF0262 Accept? Carl, it's buzzing. Our ghost beeps. Listen again.
+VGF0263 We can do better than abstain. The pattern isn't in this noise at all. That's a reject.
+VGF0264 So we followed the loudest thing in the city.
+VGF0265 Everybody does. That's why it's a trap. New plan: on foot, with the handheld, away from the sign.
+VGF0301 Take the handheld. Turn slowly. When the beeps get clean and loud, hold it there.
+VGF0302 That's a bearing. Back in the van.
+VGF0303 Wait. This one points straight up at the bridge.
+VGF0304 So the ghost lives on the Gant Bridge. Rex was right?
+VGF0305 Or the bridge is a mirror. The cables bounce the signal. We might be hearing an echo.
+VGF0306 Same question for R.A.I.N. Is the source on the bridge?
+VGF0321 Rejected. The bearing swings when we move. A real source holds still. An echo doesn't.
+VGF0322 If it was up there, the bearing wouldn't move when we did. It moved. Try again.
+VGF0323 We have the swing on record. That's evidence. It's an echo, so we can reject this.
+VGF0324 One more bearing from the Esplanade, away from the cables. Then we cross the lines properly.
+VGF0325 There. Three clean bearings, one crossing. Downtown, by the parking structure.
+VGF0401 That's a SureThing van. And that's a relay dish going into the back of it.
+VGF0402 Oh, come on. I'm on my lunch.
+VGF0403 He's leaving! If the relay goes with him, so does our evidence.
+VGF0404 Stop the van. Don't hurt him. We need him talking.
+VGF0405 Okay! Okay! I'm out! I just install the things, man!
+VGF0406 Install what?
+VGF0407 Relays. Upload boxes. They told me CERTAIN was switched off. They said these were for weather.
+VGF0408 Weather with a CERTAIN header on every packet.
+VGF0409 Look, I don't get paid enough to have an opinion.
+VGF0410 Grab the relay out of the back, Carl.
+VGF0451 So. We could publish the recording right now. Everybody's listening. The timing's perfect.
+VGF0452 Or we take the relay to the lab and check it properly. But it's wiping its own memory. We'd have four minutes.
+VGF0453 And if we put it out now?
+VGF0454 Then SureThing says we faked a beep, and they'll pick at every gap. Your call, Carl.
+VGF0471 Shielded box in the lab. Four minutes. Drive the way you always drive, but on purpose.
+VGF0472 Two minutes. The memory counter's falling.
+VGF0473 We're here. Box, now!
+VGF0474 Wiped. We've still got the recording. It just won't carry the same weight.
+VGF0481 Uploading the recording to the registry. Done. Now it's everybody's ghost.
+VGF0482 Let's take the relay back anyway. No rush.
+VGF0501 Control run. Relay unplugged... silence. Plugged in... seven short, one long. It's the relay.
+VGF0502 And every packet says STC-CERT. CERTAIN was supposed to be switched off two weeks ago.
+VGF0503 So the ghost was a robot that didn't know it got fired.
+VGF0504 That is honestly the best summary I've heard.
+VGF0505 ~y~SFTV NEWS:~w~ SureThing Technologies confirms a 'legacy relay' was left running in Downtown San Fierro. The company says it was a clerical error.
+VGF0506 ~y~SFTV NEWS:~w~ SureThing calls a recording released by an independent lab 'unverifiable'. The lab has published its methods and invited anyone to check them.
+VGF0507 ~p~RADIO FREE FIERRO:~w~ So it was a robot. Fine. But who's to say a robot can't be a ghost? Lines are open.
+VGF0508 Man, this city.
+VGFC11 Signal meter: maximum
+VGFC12 Sound: broadband buzz
+VGFC13 Seven-pulse pattern: absent
+VGFC14 Pattern faint, still elsewhere
+VGFC1H The ghost signal comes from this neon sign.
+VGFC21 Bearing points at the cables
+VGFC22 Bearing swings as we move
+VGFC23 Pattern arrives twice (echo)
+VGFC24 No hardware seen on the span
+VGFC2H The ghost transmitter is on the Gant Bridge.
+VGFDC R.A.I.N. FIELD VERDICT
+VGFF1 ~r~The technician is dead. Nobody is left to say who sent him.
+VGFF2 ~r~The relay was destroyed.
+VGFF3 ~r~The SureThing van got away with the relay.
+VGFH1 ~k~~CONVERSATION_YES~ take it to the lab and verify it (4:00)   ~k~~CONVERSATION_NO~ publish the recording now
+VGFH2 Hold still on the marker to take a bearing.
+VGFO1 Drive to the first ~y~listening post~s~.
+VGFO2 Drive to the second ~y~listening post~s~.
+VGFO3 Go to where the bearings cross, in ~y~Queens~s~.
+VGFO4 Drive to the ~y~Gant Bridge~s~ approach and take a bearing on foot.
+VGFO5 Turn slowly until the ~g~pattern~s~ is clean and loud, then hold still.
+VGFO6 Take a bearing on foot from the ~y~Esplanade~s~.
+VGFO7 Get to where the bearings cross, ~y~Downtown~s~.
+VGFO8 Stop the ~r~SureThing van~s~. Don't hurt the technician.
+VGFO9 Take the ~g~relay~s~ from the back of the van.
+VGFOA Get the relay to the ~y~lab~s~ before it wipes itself.
+VGFOB Take Christopher and the relay back to the ~y~lab~s~.
+VGFOC Get back in the ~b~van~s~.
+VGFP1 Relay verified in the lab. Reputation +8
+VGFP2 Recording published unverified. Reputation +2
+VGFP3 The relay wiped itself. The recording stands alone.
+VGFU1 RECEIVER 166.25 MHz
+VGFU2 SIGNAL
+VGFU3 PATTERN
+VGFU4 NOISE
+VGFU5 BEARING ~1~ deg
+VGFU6 RELAY MEMORY ~1~:~1~
+VGFU7 BEARINGS ~1~/3
+VGFU8 RELAY MEMORY ~1~:0~1~
+VHA00 RESEARCH ASSIGNMENTS
+VHA01 NEW
+VHA02 CAREFUL
+VHA03 RIGHT, SLOPPY
+VHA04 RETRACTED
+VHA05 TOO CAUTIOUS
+VHA06 LOCKED
+VHA07 Unlocks after 99.9% SURE.
+VHA08 Unlocks after Ghost Frequency.
+VHA09 Unlocks after False Positive.
+VHA10 Unlocks after Everything Is Connected.
+VHA11 Unlocks after The Open Experiment.
+VHA12 Unlocks when five assignments are concluded.
+VHA13 Concluded carefully. The record stands.
+VHA14 Open it again to do it properly.
+VHA15 Not started.
+VHB00 THE CLAIM
+VHB01 COMPETING EXPLANATIONS
+VHB02 ~k~~VEHICLE_ENTER_EXIT~ go to the evidence board
+VHC00 CYMATICS RIG
+VHC01 ~1~ Hz
+VHC02 GENERATOR ON
+VHC03 GENERATOR OFF
+VHC04 PLATE RESPONSE
+VHC05 Modes logged ~1~/6
+VHC06 Left/Right tune   Up/Down fine   ~k~~CONVERSATION_YES~ generator   ~k~~VEHICLE_ENTER_EXIT~ log   ~k~~CONVERSATION_NO~ leave
+VHC07 Mode logged: ~1~ Hz
+VHC08 Nothing worth logging there.
+VHC09 A peak... but is it the plate? Try it with the generator off.
+VHC10 Logged as mains interference: ~1~ Hz
+VHC11 Already in the atlas.
+VHC12 Atlas complete. Research grant: $2000
+VHC13 Mode grant: $250
+VHD00 THE DIAGRAM WALL
+VHD01 R.A.I.N. - how it checks
+VHD02 Confidence is not evidence
+VHD03 Plate modes, measured
+VHD04 San Fierro: predicted vs checked
+VHD05 Each layer audits the one beneath it. The top layer
+VHD06 is allowed to say 'I don't know'. It often does.
+VHD07 CERTAIN's stated confidence (red) against how often
+VHD08 its alerts were right (blue). Calibration is the gap.
+VHD09 Square steel plate, 30 cm. Sand settles where the
+VHD10 plate stands still: the nodal lines of each mode.
+VHD11 Red: CERTAIN predictions. Blue: things we went and
+VHD12 looked at. The blue dots are fewer. They are right.
+VHD13 Left/Right page   ~k~~CONVERSATION_NO~ back
+VHD14 Diagram textures not installed: captions only.
+VHE00 EVIDENCE BOARD
+VHE01 WEIGH
+VHE02 ASIDE
+VHE03 Continue to the experiment
+VHE04 R.A.I.N. SUPPORT
+VHE05 ~k~~VEHICLE_ENTER_EXIT~ weigh or set aside. Weigh independent evidence only.
+VHE06 Source: ~1~
+VHG01 Research grant: $~1~
+VHH01 Press ~k~~VEHICLE_ENTER_EXIT~ to use the ~g~R.A.I.N. terminal~s~.
+VHH02 Press ~k~~VEHICLE_ENTER_EXIT~ to run the ~g~cymatics rig~s~.
+VHH03 Press ~k~~VEHICLE_ENTER_EXIT~ to look at the ~g~diagram wall~s~.
+VHH04 Press ~k~~VEHICLE_ENTER_EXIT~ to read the ~g~research notebooks~s~.
+VHH05 Press ~k~~CONVERSATION_YES~ to talk to ~b~Christopher~s~.
+VHH06 The ~g~teal lights~s~ mark the lab's stations. Walk into the door marker to leave.
+VHH07 Christopher has a new investigation. Walk into the ~y~marker~s~ by his desk to start it.
+VHH08 Christopher's model is not installed, so a stand-in plays him. See INSTALL.md.
+VHH09 ~r~Leave the lab first.~s~ The door is behind you.
+VHL01 Vers3Dynamics
+VHL02 Independent Research Laboratory
+VHL03 Doherty, San Fierro
+VHN01 SF GAZETTE: Independent Doherty lab keeps its findings public. 'Check our work,' says founder.
+VHQ0101 Carl. Welcome to Vers3Dynamics. Officially, this time.
+VHQ0102 Officially? What, you got a sign now?
+VHQ0103 I've got a doormat. It's a start.
+VHQ0104 R.A.I.N.'s got research assignments queued up. Small stuff. Good practice for the big stuff.
+VHQ0105 Use whatever you like. The plate, the terminal, the diagrams. Just not the red cable.
+VHQ0106 What's the red cable do?
+VHQ0107 That's what I'd like to know.
+VHQ0111 Carl. Pull up a chair. Not that one, it's load-bearing.
+VHQ0112 Back again? The coffee's terrible, but the data's good.
+VHQ0113 You're just in time. I was about to start arguing with myself.
+VHQ0114 Welcome back. Mind the cables. And the other cables.
+VHQ0115 We're in the paper again, Carl. Not the good page.
+VHQ0116 Good news: the paper liked our last result. I've framed it. Mentally.
+VHQ0117 The registry's had forty thousand visitors. Forty thousand and one, counting my mother.
+VHQ0201 So what do you actually do all day?
+VHQ0202 Mostly I try to prove myself wrong. It's going great.
+VHQ0203 Why'd you call the computer R.A.I.N.?
+VHQ0204 Recursive Architecture for Intelligent Nexus. Every layer checks the layer underneath.
+VHQ0205 And it spells rain. That's a coincidence?
+VHQ0206 Absolutely not. I'm not a monster.
+VHQ0207 You ever sleep, man?
+VHQ0208 I run a sleep experiment every night. The results are mixed.
+VHQ0209 That metal plate with the sand. What's that for?
+VHQ0210 Cymatics. Sound you can see. Every pattern is the fingerprint of a frequency.
+VHQ0211 Looks like somebody spilled sugar on a speaker.
+VHQ0212 That is exactly what it is, actually.
+VHQ0213 You still hearing that ghost beeping?
+VHQ0214 Every time I close my eyes. Seven short, one long.
+VHQ0215 Those people Sentinel flagged. They alright?
+VHQ0216 They're suing. Politely. With our data.
+VHQ0217 Man, I can't stop seeing patterns everywhere now.
+VHQ0218 Good. Now ask which ones survive a second look.
+VHQ0219 You could've been rich, you know.
+VHQ0220 I am rich. I've got a garage full of cables and a friend who drives like a lunatic.
+VHQ0221 Nice watch, Carl. New?
+VHQ0222 ...It was on sale.
+VHQ0223 How's my reputation looking?
+VHQ0224 Ours. And it's only as good as our last careful answer.
+VHQ0301 The whole city hums at sixty hertz. Somewhere between a B-flat and a bad mood.
+VHQ0302 If this works I'll be very surprised. That's how you know it's an experiment.
+VHQ0303 Note to self: label the cables. Note to self: you said that last week.
+VHQ0304 Calibration's drifting. Either that or I am.
+VHQ0305 Three independent readings. Not one reading three times.
+VHQ0306 Hm. Interesting. No. Wait. Yes. Interesting.
+VHQ0307 If you see smoke, that's normal. If you see flames, that's science.
+VHQ0308 A correlation is a rumour. A cause needs a witness.
+VHQ0309 The most dangerous number in the world is a confident one.
+VHQ0310 Who keeps moving my oscilloscope? Oh. Me.
+VHQ0401 R.A.I.N.'s all yours. Be nice to it. It remembers.
+VHQ0402 Signal generator, steel plate, a pinch of sand. Find the frequencies where the plate rings.
+VHQ0403 Careful: the building hums too. Switch the generator off and see what's still there.
+VHQ0404 There it is. Look at that.
+VHQ0405 Another one. The plate's singing now.
+VHQ0406 That's a beauty. Write it down.
+VHQ0407 Check it with the generator off. Still there? Then it's the wiring, not the plate.
+VHQ0408 So the building was lying to me.
+VHQ0409 Buildings do that. Now we know its voice.
+VHQ0410 Six modes. A complete atlas. Carl, that's publishable.
+VHQ0411 Do I get my name on it?
+VHQ0412 Second author. Right behind the sand.
+VHQ0413 Every result we've got. The good, the bad, and the burger.
+VHQ0414 That's R.A.I.N.'s architecture. Every layer checks the one below it.
+VHQ0415 CERTAIN's confidence against reality. Notice the two lines never touch.
+VHQ0416 The plate modes. Physics doesn't care what anybody believes.
+VHQ0417 Every red dot is a prediction. Every blue one is something we actually checked.
+VHQ0501 Carl. Something's come up. Meet me by the desk when you're ready.
+VHQ0502 There's a signal on the scanner nobody can explain. I'd like to explain it.
+VHQ0503 Somebody leaked me a SENTINEL dashboard. It's flagging people. Right now.
+VHQ0504 A radio host says everything in San Fierro is connected. I'd like to check his work.
+VHQ0505 We're going public. Properly. Everything open, everything checkable.
+VHQ0506 Drive safe. Or at least drive measurably.
+VHQ0507 See you, Carl.
+VHQ0508 Back to the field, then.
+VHQ1011 Burger Shot says Tuesday Doubles make you lucky. I say: show me the losers.
+VHQ1012 Rejected, cleanly. One caller quoted twice is still one caller.
+VHQ1013 Right answer. But you counted the same caller twice. Luck isn't a method.
+VHQ1014 We just told the city burgers cause luck. Burger Shot is on line one. They're delighted.
+VHQ1015 We had the survey and it said no. Abstaining here is just being shy.
+VHQ1016 Twenty-four winners, twenty-six losers. Same as any day.
+VHQ1017 I ate the Double. I lost twenty bucks. And I feel terrible.
+VHQ1021 Garcia says the new tower wrecks their TV. The timing matches. Timing matches a lot of things.
+VHQ1022 Rejected. The tower was off and the static came anyway. It's the hair dryer.
+VHQ1023 Right call, but a petition is a list of opinions, not observations.
+VHQ1024 We blamed the tower. SureThing's lawyers have written to us. In crayon, but still.
+VHQ1025 We switched the neighbour off and the picture came back. That's about as clear as it gets.
+VHQ1026 Neighbour unplugs at six, picture's perfect. Old man cried a little.
+VHQ1027 Sunny day, static anyway. Weather's off the hook.
+VHQ1031 CERTAIN said ninety-nine point nine percent. Let's see how often ninety-nine point nine was right.
+VHQ1032 Accepted. Overconfident everywhere, and two independent audits agree.
+VHQ1033 Right, but that TV special was just our own log on the news. Same data, new haircut.
+VHQ1034 We just vouched for CERTAIN. Max Certainty sent a fruit basket. I'm not eating it.
+VHQ1035 Two separate audits, same answer. We're allowed to say it out loud.
+VHQ1036 Wrong in every district. Even the fancy ones.
+VHQ1037 They said, quote, CERTAIN is certain. Then they hung up on me.
+VHQ1041 The Gant Bridge hums on windy nights. Rex Pattern says ghost. I say physics. One of us is annoying.
+VHQ1042 Accepted. The wind plays the cables like a string. The bridge is just singing.
+VHQ1043 Right answer, but one fisherman's bad night isn't data about a bridge.
+VHQ1044 We just published that the bridge is haunted. Rex Pattern is thrilled. I need a lie down.
+VHQ1045 The pitch follows the wind. That's a fingerprint. We can say this one.
+VHQ1046 Wind goes up, hum goes up. Like blowing across a bottle.
+VHQ1047 Cars come, cars go. The hum don't care.
+VHQ1051 Ice cream and crime go up together. Either ice cream is a gateway dessert, or something else is going on.
+VHQ1052 Rejected. Hot weather drives both. Ice cream is innocent.
+VHQ1053 Right, but the union statement wasn't evidence. They'd defend ice cream if it bit people.
+VHQ1054 We published that ice cream causes crime. There are ice cream vans outside. Several. Idling.
+VHQ1055 The strike week told us. No vans, same crime. That's our answer.
+VHQ1056 Hot days, crime goes up. Vans or no vans.
+VHQ1057 I ate the cone. Nobody robbed nobody. Science.
+VHQ1061 If we say this was CERTAIN, SureThing will check every byte. So let's check them first.
+VHQ1062 Accepted. Header, schedule, a second receiver and a control. That's airtight.
+VHQ1063 Right call, but Rex decoded BEWARE, then LUNCH. Leave him out of it.
+VHQ1064 We said it was a ham-radio beacon. The ham-radio club is very confused.
+VHQ1065 Unplug the relay and the bursts stop. We know where they come from.
+VHQ1066 Relay unplugged, silence. Plug it back in, beep beep.
+VHQ1067 Rex says it spells LUNCH now. Man's hungry.
+VHQ1071 SENTINEL flags Ganton nine times more than Downtown, for the same behaviour. Let's test that properly.
+VHQ1072 Accepted. It learned old arrest maps, not behaviour. Same walk, different street, different verdict.
+VHQ1073 Right, but the vans follow the flags, not the other way round. Watch the arrows.
+VHQ1074 We cleared SENTINEL. Pacific Shield put our quote on a billboard. Next to a lion.
+VHQ1075 Two identical walkers, seven flags against none. We can stand behind this.
+VHQ1076 Same dude, same walk. Ganton, flagged seven times. Downtown, nothing.
+VHQ1077 They said proprietary. That's corporate for don't look.
+VHQ1081 One reading under Mount Chiliad. One. I want it to be something, and that's exactly why I don't trust it.
+VHQ1082 Abstained. One echo and a drifting array isn't a chamber. It isn't nothing either. We go back.
+VHQ1083 Right to wait, but the hiker's lights aren't our echo. Different mystery.
+VHQ1084 We picked an answer the data can't carry. Either way, somebody's heading up Chiliad with a shovel.
+VHQ1085 Sometimes the bravest thing to say is: not yet.
+VHQ1086 Steady temperature, echo's weaker. Still something. Maybe.
+VHQ1087 I climbed up there. Found a rock. And a goat. Goat ain't talking.
+VHR00 INVESTIGATION RECORDS
+VHR01 STORY
+VHR02 RESEARCH
+VHR03 99.9% SURE
+VHR04 Ghost Frequency
+VHR05 False Positive
+VHR06 Everything Is Connected
+VHR07 The Open Experiment
+VHR10 PASSED
+VHR11 -
+VHR12 best evidence ~1~/100
+VHR13 relay verified
+VHR14 published unverified
+VHR15 nobody detained
+VHR16 someone was detained
+VHR17 clean board
+VHR18 the vans came
+VHR19 kept open
+VHR20 kept open, fee taken
+VHR21 Reputation ~1~/100
+VHR22 Cymatics atlas ~1~/6
+VHR23 Up/Down choose   ~k~~CONVERSATION_NO~ back
+VHS00 AUDIO SETTINGS
+VHS01 Lab music
+VHS02 Equipment ambience
+VHS03 Voices
+VHS04 Effects
+VHS05 ~1~/10
+VHS06 Left/Right adjust. Subtitles always show; voice files are optional.
+VHT00 R.A.I.N. RESEARCH TERMINAL
+VHT01 Research assignments
+VHT02 Investigation records
+VHT03 Audio settings
+VHT04 Log off
+VHT05 Up/Down choose   ~k~~VEHICLE_ENTER_EXIT~ open   ~k~~CONVERSATION_NO~ back
+VHT06 Reputation ~1~/100     Assignments concluded ~1~
+VHT07 RECURSIVE ARCHITECTURE FOR INTELLIGENT NEXUS
+VHU00 R.A.I.N. AUDIT
+VHU01 CAREFUL
+VHU02 RIGHT FOR THE WRONG REASONS
+VHU03 RETRACTION
+VHU04 TOO CAUTIOUS
+VHU05 Counted one source twice.
+VHU06 Weighed a coincidence as evidence.
+VHU07 Weighed an opinion as evidence.
+VHU08 The other experiment could have settled it.
+VHU09 Clean: independent evidence only.
+VHU10 Research grant: $~1~
+VHU11 Reputation ~1~/100
+VHU12 ~k~~VEHICLE_ENTER_EXIT~ file the result
+VHV00 VERDICT ON THE CLAIM
+VHV01 ACCEPT
+VHV02 REJECT
+VHV03 ABSTAIN
+VHV04 R.A.I.N. READS: SUPPORTED
+VHV05 R.A.I.N. READS: CONTRADICTED
+VHV06 R.A.I.N. READS: NOT ENOUGH TO SAY
+VHV07 Support for the claim ~1~%
+VHV08 R.A.I.N. only knows what you weighed.
+VHX00 LAB TIME FOR ONE EXPERIMENT
+VHX01 ~1~ h
+VHX02 Skip the experiment
+VHX03 RESULT
+VHX04 ~k~~VEHICLE_ENTER_EXIT~ continue to the verdict
+VK01C1 Burger Shot's Tuesday Double makes you
+VK01C2 lucky at the Four Dragons tables.
+VK01E1A WCTR caller: ate a Tuesday Double,
+VK01E1B won $900 at craps the same night.
+VK01E1S Caller #2, WCTR late call-in
+VK01E2A SF Gazette: 'Burger luck sweeps city'.
+VK01E2B Quotes one lucky diner.
+VK01E2S Same caller, quoted by the Gazette
+VK01E3A Flyer: 'Winners eat here!' $20 casino
+VK01E3B chip with every Tuesday Double.
+VK01E3S Burger Shot marketing, but checkable
+VK01E4A Four Dragons bulletin: Tuesday wins
+VK01E4B up 12% this month.
+VK01E4S Casino PR. One month, no other days
+VK01H1 The burger brings luck
+VK01H2 Winners talk, losers don't
+VK01H3 The meal comes with free chips
+VK01NB SF GAZETTE: Doherty lab confirms burger luck! Four Dragons queue reaches Chinatown.
+VK01NG SF GAZETTE: Doherty lab finds no 'burger luck'. Burger Shot: 'still delicious'.
+VK01T The Lucky Burger
+VK01X1A 24 won, 26 lost. The same split
+VK01X1B as any other day of the week.
+VK01X1L Survey 50 Tuesday diners
+VK01X2A CJ ate the Double and lost $20.
+VK01X2B One meal, one bet: no sample.
+VK01X2L Eat a Double, then gamble
+VK02C1 The new SureThing tower in Garcia is
+VK02C2 wrecking the neighbourhood's TV.
+VK02E1A Static starts every evening at six,
+VK02E1B when the tower switches on.
+VK02E1S Complainant's diary. Neighbour home at 6
+VK02E2A Tower log: switched off Thursday for
+VK02E2B repairs. The static came anyway.
+VK02E2S SureThing maintenance log, timestamped
+VK02E3A Petition: 'The tower ruined our TV'.
+VK02E3B Forty signatures.
+VK02E3S Signatures, not observations
+VK02E4A Repair receipt: next-door hair dryer,
+VK02E4B 'sparks when hot'.
+VK02E4S Garcia Electric, last month
+VK02H1 The tower causes the static
+VK02H2 A faulty appliance nearby
+VK02H3 The weather
+VK02NB SFTV: Lab blames SureThing tower for Garcia static. SureThing's lawyers 'thrilled'.
+VK02NG SFTV: Garcia static traced to a hair dryer. Tower cleared; hair dryer unavailable for comment.
+VK02T Static on Channel 9
+VK02X1A Static anyway, sun or no sun.
+VK02X1B Rules out weather, nothing else.
+VK02X1L Watch Channel 9 on a sunny day
+VK02X2A Picture perfect all evening.
+VK02X2B Plug the hair dryer in: static.
+VK02X2L Neighbour unplugs at six o'clock
+VK03C1 CERTAIN's 99.9% alerts were badly
+VK03C2 overconfident.
+VK03E1A Brochure: 'Independently verified
+VK03E1B accuracy: 99.9 percent.'
+VK03E1S Verifier is a SureThing subsidiary
+VK03E2A Our field log: CERTAIN alerts checked
+VK03E2B on the ground; most were wrong.
+VK03E2S Vers3Dynamics field log, mission one
+VK03E3A Dispatch archive: of 40 audited 99.9%
+VK03E3B alerts, 26 were wrong.
+VK03E3S SFPD records office, public request
+VK03E4A SFTV special: 'CERTAIN wrong again!'
+VK03E4B Graphics, music, our numbers.
+VK03E4S SFTV, reporting our field log
+VK03H1 Badly overconfident
+VK03H2 Calibrated; our sample unlucky
+VK03H3 Fine except in Doherty
+VK03NB SFTV: Independent lab vouches for CERTAIN accuracy. SureThing shares jump 9.99%.
+VK03NG SFTV: Audit finds CERTAIN's '99.9%' alerts wrong two times in three. Review board takes note.
+VK03T Ninety-Nine Point Nine
+VK03X1A Wrong 60 to 70 percent of the time
+VK03X1B in every district, Doherty included.
+VK03X1L Score 200 alerts by district
+VK03X2A 'CERTAIN is certain.' Then they
+VK03X2B hung up. No data attached.
+VK03X2L Ask SureThing for comment
+VK04C1 Wind makes the Gant Bridge cables
+VK04C2 sing on windy nights.
+VK04E1A Hum heard only on nights with wind
+VK04E1B between 30 and 45 km/h.
+VK04E1S Our logger, north tower, 30 nights
+VK04E2A Rex Pattern on air: 'It's the ghost
+VK04E2B of the man who built her!'
+VK04E2S Radio Free Fierro, Tuesday night
+VK04E3A 3 a.m. recording: the hum, and not
+VK04E3B one car on the bridge.
+VK04E3S Our microphone and the toll counter
+VK04E4A Fisherman: 'It hummed the night
+VK04E4B my boat sank.'
+VK04E4S One night, one boat, one memory
+VK04H1 Wind: the cables resonate
+VK04H2 Traffic on the deck
+VK04H3 A ghost (Rex Pattern's view)
+VK04NB RADIO FREE FIERRO: Scientists agree the Gant Bridge is haunted! Tours from $5.
+VK04NG SF GAZETTE: Gant Bridge hum is the wind in the cables. Ghost hunters 'disappointed'.
+VK04T The Bridge Hum
+VK04X1A Pitch rises in step with the wind,
+VK04X1B like air across a bottle.
+VK04X1L Plot hum pitch against wind speed
+VK04X2A Cars come and go.
+VK04X2B The hum doesn't care.
+VK04X2L Count cars during the hum
+VK05C1 Ice cream sales drive up crime
+VK05C2 in San Fierro.
+VK05E1A Monthly sales and crime rise and fall
+VK05E1B together. Correlation 0.81.
+VK05E1S City sales tax and SFPD figures, 1991
+VK05E2A Both peak every July and both dip
+VK05E2B every January.
+VK05E2S The same two tables, by month
+VK05E3A Truckers' strike week: no ice cream
+VK05E3B sold, crime still high on hot days.
+VK05E3S SFPD log for the strike week
+VK05E4A Ice cream van union: 'Our product
+VK05E4B is wholesome and American.'
+VK05E4S Press release. They would say that
+VK05H1 Ice cream causes crime
+VK05H2 Hot weather drives both
+VK05H3 Pure coincidence
+VK05NB SFTV: Lab links ice cream to crime! Ice cream vans circle Doherty in protest.
+VK05NG SFTV: It's the heat, not the ice cream. Lab clears soft-serve of all charges.
+VK05T Ice Cream and Crime
+VK05X1A CJ ate the cone. Nothing happened.
+VK05X1B Delicious, but not a study.
+VK05X1L Buy a cone and wait for a crime
+VK05X2A Crime follows the thermometer,
+VK05X2B vans or no vans.
+VK05X2L Hot days with and without vans
+VK06C1 The rooftop relay kept sending CERTAIN
+VK06C2 data after the suspension.
+VK06E1A Decoded header in every burst:
+VK06E1B 'STC-CERT'.
+VK06E1S Our receiver, the night of the chase
+VK06E2A Burst times match CERTAIN's old
+VK06E2B upload schedule to the second.
+VK06E2S SureThing schedule, read off the relay
+VK06E3A Rex Pattern: 'I decoded it too!
+VK06E3B It says BEWARE.'
+VK06E3S Radio Free Fierro, by ear
+VK06E4A A second receiver across town logged
+VK06E4B the same bursts.
+VK06E4S Ocean Flats ham-radio club
+VK06H1 It carried CERTAIN data
+VK06H2 A ham-radio beacon
+VK06H3 Our receiver invented it
+VK06NB SFTV: Lab says mystery signal was a ham-radio beacon. Ham-radio club 'very confused'.
+VK06NG SFTV: Lab proves CERTAIN relay kept transmitting after suspension. City orders hardware removed.
+VK06T The Relay Recording
+VK06X1A Silence. Plug the relay back in:
+VK06X1B beep, beep. It's the relay.
+VK06X1L Control run, relay unplugged
+VK06X2A Rex now says it spells LUNCH.
+VK06X2B He sounds hungry.
+VK06X2L Ask Rex to decode it again
+VK07C1 SENTINEL flags people for where they
+VK07C2 are, not for what they do.
+VK07E1A Same behaviour, nine times more flags
+VK07E1B in Ganton than Downtown.
+VK07E1S Leaked SENTINEL dashboard, one month
+VK07E2A Training data: arrest records from
+VK07E2B 1985 to 1991, heavy in Ganton.
+VK07E2S SENTINEL technical appendix
+VK07E3A Pacific Shield: 'Ganton is just
+VK07E3B more dangerous.'
+VK07E3S Press statement. No figures
+VK07E4A Flags spike on days a Pacific Shield
+VK07E4B van drives through.
+VK07E4S Our tally: vans go where the flags are
+VK07H1 It flags places, not deeds
+VK07H2 Flags follow real incidents
+VK07H3 Flags are random
+VK07NB PACIFIC SHIELD AD: 'Even the scientists agree: SENTINEL is fair.'
+VK07NG SFTV: SENTINEL flagged addresses, not actions. City suspends the Pacific Shield contract.
+VK07T Sentinel's Map
+VK07X1A 'Proprietary.' That is the
+VK07X1B whole reply.
+VK07X1L Ask Pacific Shield for the code
+VK07X2A Ganton walker flagged seven times.
+VK07X2B Downtown walker: zero.
+VK07X2L Identical walkers in both areas
+VK08C1 Our resonance array found a hidden
+VK08C2 chamber under Mount Chiliad.
+VK08E1A One scan: a strong echo 140 metres
+VK08E1B below the north face.
+VK08E1S Our array, one night, once
+VK08E2A Hiker's newsletter: 'Strange lights
+VK08E2B on Chiliad, again!'
+VK08E2S Lights are not echoes
+VK08E3A Array temperature drifted nine
+VK08E3B degrees that night.
+VK08E3S The array's own log
+VK08E4A SFTV: 'Lab finds chamber under
+VK08E4B Chiliad?' (our scan, on the news)
+VK08E4S Our one scan, retold
+VK08H1 A hidden chamber
+VK08H2 The array drifted
+VK08H3 A natural cave
+VK08NB SF GAZETTE: Lab's Chiliad claim draws crowds with shovels. Park rangers 'tired'.
+VK08NG SF GAZETTE: 'Not yet,' says lab of Chiliad echo. Second survey planned.
+VK08T Under Chiliad
+VK08X1A CJ found a rock. And a goat.
+VK08X1B The goat declined to comment.
+VK08X1L Hike up and look for a door
+VK08X2A Echo weaker, but still there.
+VK08X2B One more site is needed to say.
+VK08X2L Rescan at a steady temperature
+VLH01 ~g~Vers3Dynamics~s~: walk into the ~y~marker~s~ at the door to go into the lab.
+VLH02 ~g~Vers3Dynamics~s~ is open. Find the ~y~?~s~ at the lab door, down the street from the garage.
+VOE00 THE OPEN EXPERIMENT
+VOE0101 Tomorrow we run the plate experiment in public. Everything open: the method, the data, the mistakes.
+VOE0102 And three independent groups run the same experiment at the same time, across town. If they get our result, it's real.
+VOE0103 And if they don't?
+VOE0104 Then we were wrong in front of everybody, and we learn something. Win-win.
+VOE0105 Gentlemen! Lyle Bracket, Ovid Venture Partners. The door was open. I love an open door.
+VOE0106 Two hundred and fifty thousand dollars for an exclusive licence on R.A.I.N. We close the code, we polish the brand, everybody gets rich.
+VOE0107 That's generous. And no.
+VOE0108 Closed systems sell, Mister Woodyard. Open ones get copied. The offer stands. For your friend, too.
+VOE0109 He seems nice.
+VOE0110 He seems like a man who's never been told no by a garage. Let's get the kits out.
+VOE0201 Three replication kits: a plate, a generator, a pinch of sand, and instructions a teenager can follow.
+VOE0202 One to the physics teacher at Garcia High, one to the ham radio club in Ocean Flats, one to the kid who won the science fair.
+VOE0211 Real equipment? For my class? Oh, they are going to lose their minds.
+VOE0212 Four forty-two hertz, tomorrow at noon. Write down whatever you see.
+VOE0213 Even if it's nothing?
+VOE0214 Especially if it's nothing. That's what he says.
+VOE0221 A Chladni plate. We'll calibrate the generator against our frequency standard. To the hertz.
+VOE0222 Man, you're gonna be good at this.
+VOE0231 If your result doesn't replicate, I'm putting that in my report.
+VOE0232 Kid, that's exactly what he wants.
+VOE0241 Black sedan, three cars back. It's been there since Garcia.
+VOE0242 Ovid's people. If they rattle the van hard enough, the kits crack. Lose them.
+VOE0243 That knock broke a kit. One group fewer.
+VOE0244 They've dropped off. Good driving.
+VOE0301 The pier. Look at all these people. Some of them even came on purpose.
+VOE0302 Deputy Commissioner Halvorsen, procurement. This event has no permit for experimental equipment. Shut it down.
+VOE0303 It's a speaker and a metal plate, Commissioner. The schematics are on the registry. You're welcome to check them.
+VOE0304 I am not here to check things. I am here to stop things.
+VOE0305 Lady, that's the whole problem with this city.
+VOE0306 The generator's dead. Somebody pulled the fuse. There! The guy in the overalls!
+VOE0307 Carl, get that fuse back. Don't hurt him.
+VOE0308 Give it here, man! Now!
+VOE0309 Fuse is in. We're live.
+VOE0310 He got away. We'll run it off the van battery. It'll be quieter, but it'll work.
+VOE0401 Four hundred and forty-two hertz. Watch the sand.
+VOE0402 ~y~CROWD:~w~ Whoa! It's making a pattern!
+VOE0403 Garcia High here! Same pattern! Crosses and curves, exactly like your picture!
+VOE0404 Ocean Flats Amateur Radio Club. Mode confirmed at four forty-two, plus or minus one.
+VOE0405 It worked. I hate that it worked. It's in my report.
+VOE0406 R.A.I.N.'s question for all of us: does the result hold up?
+VOE0411 Accepted. Independent groups, independent equipment, same result. That's what real looks like.
+VOE0412 Reject it? Carl, they all got the pattern. On their own kit.
+VOE0413 We don't need to abstain. More than one independent replication. We can say it.
+VOE0414 Abstained. One replication is a promising start, not a confirmation. We publish it as exactly that.
+VOE0415 Accept, on one replication? I'd love to. That's exactly why we shouldn't.
+VOE0416 Reject? One group confirmed it. That's not nothing. It's not enough, either.
+VOE0417 ...The city will be reviewing its permit process.
+VOE0501 Carl. A word. Your friend won't sell. But friends can be persuaded.
+VOE0502 Fifty thousand dollars. Cash. All you have to do is talk him round.
+VOE0503 ...Fifty thousand?
+VOE0504 Pleasure doing business. Do your best with him. Or don't. I'll know.
+VOE0505 He already told you no. That's the only answer you're getting from either of us.
+VOE0506 Shame. Open systems get copied, you know.
+VOE0507 Yeah. That's the point, genius.
+VOE0601 ~y~SFTV NEWS:~w~ An independent San Fierro lab demonstrated a sound experiment live at the pier, while schools and a radio club across the city reproduced it at the same time.
+VOE0602 ~y~SFTV NEWS:~w~ The lab's code and data are freely available on an open registry. A venture firm's offer to license the work was declined.
+VOE0603 Forty thousand downloads. Three replications. Two of them by people under eighteen.
+VOE0604 So what now? More experiments?
+VOE0605 Always. The lab's open whenever you want it, Carl. R.A.I.N. has questions nobody's asked yet.
+VOE0606 Long as none of them gets the cops on me.
+VOE0607 I can't promise that. But I can promise we'll check the evidence first.
+VOEC11 Our plate: mode (2,3) at 442 Hz
+VOEC12 Independent groups: same pattern
+VOEC13 Different kits, different hands
+VOEC14 Methods and data on the registry
+VOEC1H The 442 Hz plate mode replicates.
+VOEC21 Our plate: mode (2,3) at 442 Hz
+VOEC22 Only one group got a working kit
+VOEC23 One replication, one set of hands
+VOEC24 Methods and data on the registry
+VOEC2H The 442 Hz plate mode replicates.
+VOEE1 Vers3Dynamics
+VOEE2 The experiment continues.
+VOEF1 ~r~Someone got hurt. That's not how you win an open experiment.
+VOEH1 ~k~~CONVERSATION_YES~ take Bracket's fifty thousand   ~k~~CONVERSATION_NO~ turn it down
+VOEO1 Deliver a replication kit to the ~y~physics teacher~s~ at Garcia High.
+VOEO2 Deliver a kit to the ~y~ham radio club~s~ in Ocean Flats.
+VOEO3 Deliver a kit to the ~y~science fair winner~s~ Downtown.
+VOEO4 Hand over the kit (~k~~CONVERSATION_YES~).
+VOEO5 Lose the ~r~black sedan~s~ before it wrecks the kits.
+VOEO6 Drive to the ~y~pier~s~ for the demonstration.
+VOEO7 Catch the ~r~saboteur~s~ and get the fuse back. Don't hurt him.
+VOEO8 Take Christopher back to the ~y~lab~s~.
+VOEP1 The experiment is open. Reputation +~1~
+VOEP2 Finder's fee: $50000
+VOEU1 REPLICATION KITS ~1~/3
+VOEU2 DELIVERED ~1~
+VXD01 FIRST ANSWER RIGHT  +10
+VXD02 WRONG: LOGGED  -5
+VXD03 RIGHT ON A RETRY: NO POINTS
+VXD04 STILL WRONG
+VXD05 Left/Right choose   ~k~~VEHICLE_ENTER_EXIT~ confirm
+VXF00 MISSION FAILED!
+VXF01 ~r~Christopher is dead.
+VXF02 ~r~The research van was destroyed.
+VXF03 ~r~You abandoned Christopher.
+VXO01 ~r~Christopher~s~ is getting left behind. Go back for him.
+VXO02 Get in the ~b~research van~s~.
+VXO03 Wait for ~b~Christopher~s~.
+VXP00 MISSION PASSED!~n~~w~$~1~
+VXT01 Hold still: ~1~%
+VXU00 ...
+VXU01 R.A.I.N.  evidence ~1~
+VXU02 ~1~:~1~

@@ -55,3 +55,33 @@ See [TESTING.md](TESTING.md) for measured results.
 **Still outstanding:** testing inside GTA, stock-skeleton fitting and visual
 checks for Christopher, and original/licensed voice recordings. No in-game
 verification or new functional 3D asset is claimed by this update.
+
+# The Vers3Dynamics storyline — 25 November 2026
+
+Mission 1 now opens a longer story. Design: [STORY.md](STORY.md).
+
+- **The lab stays open.** After mission 1 the **?** moves to the lab door,
+  and walking in starts a free-roam visit to Vers3Dynamics HQ: the R.A.I.N.
+  research terminal (eight assignments with evidence weighing, one
+  experiment, a verdict and an audit), the cymatics rig, the diagram wall,
+  investigation records, audio settings, and Christopher's routine and
+  conversations.
+- **Four more story missions**, each with its own mechanic: direction-finding
+  by ear (*Ghost Frequency*), triage against three clocks (*False Positive*),
+  a correlation board and a live debate (*Everything Is Connected*), and
+  public replication across town (*The Open Experiment*).
+- **A record** in CLEO's own save (shared variables 960-970) remembers
+  missions, endings, conclusions, reputation, the atlas and audio levels. The
+  game's save is never written.
+- **Mission 1** keeps its dialogue: all 62 lines marked immutable are
+  unchanged. Christopher now pushes his glasses up and scratches his head on
+  ten lines, the lab's room tone plays under the score, and both follow the
+  saved audio levels. The world script retries any mission from its last
+  checkpoint.
+- **Sound:** sixteen original synthesised effects and loops
+  (`tools/sound_design.py`) alongside the lab score from the playtest build.
+- **Christopher's hands** have four fingers and a thumb (2,997 triangles,
+  inside the 3,000 budget).
+
+Verified headlessly: 42 mission 1 scenarios and 75 for the HQ and missions
+2-5 (see [TESTING.md](TESTING.md)). **Not verified in the game.**

@@ -1,0 +1,690 @@
+// ============================================================================
+// The cymatics rig and the diagram wall.
+//
+// Rig: a signal generator drives a square steel plate. The plate rings at six
+// modes, f = 34 Hz x (m^2 + n^2): 170, 340, 442, 578, 850 and 986 Hz. The
+// building's wiring also shakes it at 60, 120 and 180 Hz whether the generator
+// is on or not; 180 Hz sits right next to the first mode. Switching the
+// generator off is the control experiment that tells the two apart.
+// The generator tone is one 220 Hz loop played faster or slower
+// (SET_AUDIO_STREAM_SPEED, CLEO 5); its pitch follows the dial up to 880 Hz.
+// ============================================================================
+
+:RIG_RUN
+iState = ST_RIG
+gosub @PUBLISH
+set_player_control $player1 false
+clear_help
+iPromptShown = STN_NONE
+uMode = 2
+uMenu = PG_RIG
+oKind = OBJ_MENU
+if gFreq == 0
+then
+    gFreq = GEN_START
+end
+iDone1 = 0
+gOn = 1
+gHold = 0
+gMsg = 0
+gLogged = 0
+gosub @MENU_ARM
+// look over CJ's shoulder at the bench
+fTmp7 = -1.2
+fTmp8 = 2.5
+fTmp6 = 1.95
+gosub @ANCHOR_TO_WORLD
+fCamX = fSX
+fCamY = fSY
+fCamZ = fAZ
+fCamZ += fTmp6
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+fTmp7 = -3.4
+fTmp8 = 3.55
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 0.95
+point_camera_at_point fSX fSY fSZ 2
+// the generator and the plate
+gTone = 0
+gPlate = 0
+set_current_directory "cleo\99sure\sfx"
+if load_audio_stream "gen_tone.ogg" gTone
+then
+    set_audio_stream_looped gTone true
+    set_audio_stream_volume gTone 0.0
+    set_audio_stream_state gTone 1
+end
+if load_audio_stream "plate_hum.ogg" gPlate
+then
+    set_audio_stream_looped gPlate true
+    set_audio_stream_volume gPlate 0.0
+    set_audio_stream_state gPlate 1
+end
+set_current_directory 0
+iTmp = iSeenMask
+iTmp &= 2
+if iTmp == 0
+then
+    iSeenMask |= 2
+    dLine = 402
+    dQEnd = 403
+    gosub @SAY_QUEUE
+end
+iPrevT = get_game_timer
+
+:RIG_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    jump @RIG_DONE
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+gosub @MENU_INPUT
+gosub @RIG_TUNE
+if uIn == 7
+then
+    if gOn == 1
+    then
+        gOn = 0
+    else
+        gOn = 1
+    end
+    iSfxId = SFX_OK
+    gosub @SFX_PLAY
+end
+gosub @RIG_RESPONSE
+if uIn == 5
+then
+    gosub @RIG_LOG
+end
+// the atlas is complete: Christopher's lines play in full, the rig stays on screen
+if iDone1 == -1
+then
+    gosub @DLG_CANCEL
+    dLine = 410
+    gosub @SAY
+    dLine = 411
+    gosub @SAY
+    dLine = 412
+    gosub @SAY
+    iDone1 = 0
+    gMsgT = iNow
+end
+// Christopher finishes his sentence before reacting to the next peak
+if iDone1 > 0
+then
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            dLine = iDone1
+            dQEnd = iDone2
+            gosub @SAY_QUEUE
+            iDone1 = 0
+        end
+    end
+end
+gosub @RIG_AUDIO
+if uIn == 6
+then
+    jump @RIG_DONE
+end
+jump @RIG_LOOP
+
+:RIG_DONE
+if iDone1 > 0
+then
+    dLine = iDone1
+    dQEnd = iDone2
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            gosub @SAY_QUEUE
+        end
+    end
+    iDone1 = 0
+end
+gosub @RIG_STREAMS_OFF
+restore_camera_jumpcut
+camera_reset_new_scriptables
+uMode = 0
+uMenu = 0
+oKind = OBJ_NONE
+set_player_control $player1 true
+iState = ST_FREE
+gosub @PUBLISH
+gosub @REC_SAVE
+gosub @MENU_ARM
+return
+
+:RIG_STREAMS_OFF
+if gTone <> 0
+then
+    set_audio_stream_state gTone 0
+    remove_audio_stream gTone
+    gTone = 0
+end
+if gPlate <> 0
+then
+    set_audio_stream_state gPlate 0
+    remove_audio_stream gPlate
+    gPlate = 0
+end
+return
+
+// Left/Right sweep (faster the longer it is held), Up/Down one hertz.
+:RIG_TUNE
+uI = get_pad_state 0 PAD_STICK_X
+if is_key_pressed KEY_LEFT
+then
+    uI = -128
+end
+if is_key_pressed KEY_RIGHT
+then
+    uI = 128
+end
+iTmp = 0
+if -60 > uI
+then
+    iTmp = -1
+end
+if uI > 60
+then
+    iTmp = 1
+end
+if iTmp == 0
+then
+    gHold = 0
+else
+    gHold += iDt
+    iTmp2 = 1
+    if gHold > 450
+    then
+        iTmp2 = 3
+    end
+    if gHold > 1400
+    then
+        iTmp2 = 8
+    end
+    iTmp *= iTmp2
+    gFreq += iTmp
+end
+if uIn == 1
+then
+    gFreq += 1
+end
+if uIn == 2
+then
+    gFreq -= 1
+end
+if GEN_MIN > gFreq
+then
+    gFreq = GEN_MIN
+end
+if gFreq > GEN_MAX
+then
+    gFreq = GEN_MAX
+end
+return
+
+// gResp (0..100) and gPeak: 1..6 a plate mode, 7 the mains hum, 0 nothing.
+:RIG_RESPONSE
+fBest = 0.0
+gPeak = 0
+iCount2 = 1
+if gOn == 0
+then
+    iCount2 = 7
+end
+:RIG_MODE_LOOP
+if 6 >= iCount2
+then
+    switch iCount2
+        case 1
+            iTmp = MODE1
+        case 2
+            iTmp = MODE2
+        case 3
+            iTmp = MODE3
+        case 4
+            iTmp = MODE4
+        case 5
+            iTmp = MODE5
+        default
+            iTmp = MODE6
+    end
+    iTmp -= gFreq
+    fDiff =# iTmp
+    fDiff *= fDiff
+    fTmp = MODE_W
+    fTmp *= MODE_W
+    fDiff += fTmp
+    fResp = fTmp
+    fResp /= fDiff
+    fResp *= 100.0
+    if fResp > fBest
+    then
+        fBest = fResp
+        gPeak = iCount2
+    end
+    iCount2 += 1
+    jump @RIG_MODE_LOOP
+end
+// the wiring: 60 Hz and its harmonics, generator or not
+iCount2 = 60
+:RIG_HUM_LOOP
+iTmp = iCount2
+iTmp -= gFreq
+fDiff =# iTmp
+fDiff *= fDiff
+fTmp = HUM_W
+fTmp *= HUM_W
+fDiff += fTmp
+fResp = fTmp
+fResp /= fDiff
+fResp *= 74.0
+if fResp > fBest
+then
+    fBest = fResp
+    gPeak = 7
+end
+iCount2 += 60
+if 180 >= iCount2
+then
+    jump @RIG_HUM_LOOP
+end
+gResp =# fBest
+if 6 > gResp
+then
+    gPeak = 0
+end
+return
+
+:RIG_LOG
+gMsgT = iNow
+if LOG_MIN > gResp
+then
+    gMsg = 8
+    iSfxId = SFX_BACK
+    gosub @SFX_PLAY
+    return
+end
+if gPeak == 7
+then
+    if gOn == 1
+    then
+        gMsg = 9
+        iSfxId = SFX_WARN
+        gosub @SFX_PLAY
+        iTmp = iSeenMask
+        iTmp &= 32
+        if iTmp == 0
+        then
+            iSeenMask |= 32
+            // the lesson of the rig: say it now, over any small talk
+            dLine = 407
+            dQEnd = 407
+            gosub @SAY_QUEUE
+            iDone1 = 0
+        end
+    else
+        gMsg = 10
+        gLogged = gFreq
+        iSfxId = SFX_OK
+        gosub @SFX_PLAY
+        if gHumSeen == 0
+        then
+            gHumSeen = 1
+            dLine = 408
+            dQEnd = 409
+            gosub @SAY_QUEUE
+            iDone1 = 0
+            add_score $player1 100
+        end
+    end
+    return
+end
+// a plate mode (only reachable with the generator on)
+gLogged = gFreq
+iBit = 1
+iTmp = gPeak
+iTmp -= 1
+iBit <<= iTmp
+iTmp = rModes
+iTmp &= iBit
+if iTmp <> 0
+then
+    gMsg = 11
+    iSfxId = SFX_OK
+    gosub @SFX_PLAY
+    return
+end
+rModes |= iBit
+gMsg = 7
+iSfxId = SFX_LOCK
+gosub @SFX_PLAY
+add_score $player1 250
+iTmp = rModes
+iTmp %= 3
+// a quick word, unless he is busy talking (or has more to say already)
+if iDone1 == 0
+then
+    iDone1 = 404
+    iDone1 += iTmp
+    iDone2 = iDone1
+end
+if rModes == ATLAS_ALL
+then
+    iTmp = rFlags
+    iTmp &= REC_F_ATLAS
+    if iTmp == 0
+    then
+        rFlags |= REC_F_ATLAS
+        rRep += 5
+        add_score $player1 2000
+        gMsg = 12
+        iDone1 = -1             // RIG_LOOP plays the atlas lines in full
+        gosub @SCN_HQATLAS_CREATE
+    end
+end
+gosub @REC_SAVE
+return
+
+:RIG_AUDIO
+fGenSpeed =# gFreq
+fGenSpeed /= 220.0
+if 0.25 > fGenSpeed
+then
+    fGenSpeed = 0.25
+end
+if fGenSpeed > 4.0
+then
+    fGenSpeed = 4.0
+end
+if gTone <> 0
+then
+    fToneVol = 0.0
+    if gOn == 1
+    then
+        fToneVol = fSfxVol
+        fToneVol *= 0.4
+    end
+    set_audio_stream_volume gTone fToneVol
+    set_audio_stream_speed gTone fGenSpeed
+end
+if gPlate <> 0
+then
+    fPlateVol =# gResp
+    fPlateVol /= 100.0
+    fPlateVol *= fSfxVol
+    fPlateVol *= 0.8
+    set_audio_stream_volume gPlate fPlateVol
+    set_audio_stream_speed gPlate fGenSpeed
+end
+return
+
+:DRAW_RIG
+draw_rect 488.0 226.0 264.0 396.0 6 20 22 226
+draw_rect 488.0 44.0 264.0 32.0 11 93 99 255
+draw_rect 488.0 410.0 640.0 24.0 4 14 16 240
+gosub @TS_TITLE
+display_text 370.0 34.0 'VHC00'
+gosub @TS_TITLE
+set_text_font 3
+set_text_scale 0.80 3.00
+set_text_colour 235 245 245 255
+display_text_with_number 370.0 64.0 'VHC01' gFreq
+if gOn == 1
+then
+    gosub @TS_GOOD
+    display_text 370.0 116.0 'VHC02'
+else
+    gosub @TS_RED
+    display_text 370.0 116.0 'VHC03'
+end
+gosub @TS_HEAD
+display_text 370.0 140.0 'VHC04'
+uX = 488.0
+uY = 166.0
+uW = 236.0
+uV = gResp
+uR = 90
+uG = 220
+uB = 210
+if gPeak == 7
+then
+    uR = 240
+    uG = 170
+    uB = 40
+end
+gosub @DRAW_METER
+// the plate seen from above
+draw_rect 488.0 266.0 150.0 150.0 70 72 74 255
+if iSpritesOk == 1
+then
+    uA = gResp
+    uA *= 255
+    uA /= 100
+    if gPeak > 0
+    then
+        if 7 > gPeak
+        then
+            uI = gPeak
+            uI += 2
+            draw_sprite uI 488.0 266.0 146.0 146.0 240 236 220 uA
+        end
+    end
+    uA = 255
+    uA -= gResp
+    if gPeak == 7
+    then
+        uA = 255
+    end
+    draw_sprite 9 488.0 266.0 146.0 146.0 240 236 220 uA
+end
+// modes in the atlas
+iCount2 = 0
+iTmp = rModes
+:DRAW_RIG_MODES
+uX =# iCount2
+uX *= 22.0
+uX += 433.0
+iTmp2 = iTmp
+iTmp2 &= 1
+if iTmp2 == 1
+then
+    draw_rect uX 356.0 16.0 10.0 90 220 210 255
+else
+    draw_rect uX 356.0 16.0 10.0 34 56 58 255
+end
+iTmp >>= 1
+iCount2 += 1
+if 6 > iCount2
+then
+    jump @DRAW_RIG_MODES
+end
+iTmp = 0
+iTmp2 = rModes
+:DRAW_RIG_COUNT
+if iTmp2 <> 0
+then
+    iTmp3 = iTmp2
+    iTmp3 &= 1
+    iTmp += iTmp3
+    iTmp2 >>= 1
+    jump @DRAW_RIG_COUNT
+end
+gosub @TS_BODY
+display_text_with_number 370.0 366.0 'VHC05' iTmp
+// the last message, for four seconds
+if gMsg > 0
+then
+    uI = iNow
+    uI -= gMsgT
+    if uI > 4000
+    then
+        gMsg = 0
+    else
+        gosub @TS_AMBER
+        set_text_wrapx 618.0
+        switch gMsg
+            case 7
+                display_text_with_number 370.0 384.0 'VHC07' gLogged
+            case 8
+                display_text 370.0 384.0 'VHC08'
+            case 9
+                display_text 370.0 384.0 'VHC09'
+            case 10
+                display_text_with_number 370.0 384.0 'VHC10' gLogged
+            case 11
+                display_text 370.0 384.0 'VHC11'
+            default
+                display_text 370.0 384.0 'VHC12'
+        end
+    end
+end
+gosub @TS_HINT
+display_text 320.0 404.0 'VHC06'
+return
+
+// ---------------------------------------------------------------------------
+// The diagram wall: four original diagrams with captions.
+// ---------------------------------------------------------------------------
+:DIAG_RUN
+iState = ST_DIAGRAMS
+gosub @PUBLISH
+set_player_control $player1 false
+clear_help
+iPromptShown = STN_NONE
+uMode = 3
+uMenu = PG_DIAGRAMS
+uSel = 1
+uCount = 4
+iDiag = 1
+oKind = OBJ_MENU
+gosub @MENU_ARM
+gosub @DIAG_SAY
+
+:DIAG_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    jump @DIAG_DONE
+end
+gosub @MENU_INPUT
+if uIn == 4
+then
+    uIn = 2
+end
+if uIn == 3
+then
+    uIn = 1
+end
+iTmp = uSel
+gosub @MENU_MOVE
+if iTmp <> uSel
+then
+    iDiag = uSel
+    gosub @DIAG_SAY
+end
+if uIn == 6
+then
+    jump @DIAG_DONE
+end
+if uIn == 5
+then
+    jump @DIAG_DONE
+end
+jump @DIAG_LOOP
+
+:DIAG_DONE
+gosub @DLG_CANCEL
+uMode = 0
+uMenu = 0
+oKind = OBJ_NONE
+set_player_control $player1 true
+iState = ST_FREE
+gosub @PUBLISH
+gosub @MENU_ARM
+return
+
+// Christopher explains each diagram the first time it is shown (lines 414..417).
+:DIAG_SAY
+iBit = 1
+iTmp = iDiag
+iTmp -= 1
+iBit <<= iTmp
+iTmp = iRecShown
+iTmp &= iBit
+if iTmp == 0
+then
+    iRecShown |= iBit
+    dLine = 413
+    dLine += iDiag
+    dQEnd = dLine
+    gosub @SAY_QUEUE
+end
+return
+
+:DRAW_DIAGRAM
+gosub @DRAW_FRAME
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHD00'
+gosub @TS_HEAD
+switch iDiag
+    case 1
+        display_text 40.0 72.0 'VHD01'
+    case 2
+        display_text 40.0 72.0 'VHD02'
+    case 3
+        display_text 40.0 72.0 'VHD03'
+    default
+        display_text 40.0 72.0 'VHD04'
+end
+if iSpritesOk == 1
+then
+    uI = iDiag
+    uI += 9
+    draw_rect 320.0 212.0 452.0 232.0 230 232 224 255
+    draw_sprite uI 320.0 212.0 444.0 222.0 255 255 255 255
+else
+    gosub @TS_DIM
+    display_text 40.0 120.0 'VHD14'
+end
+uI = iDiag
+uI *= 2
+uI += 3
+gosub @TS_BODY
+set_text_centre true
+string_format uKey "VHD%02d" uI
+display_text 320.0 340.0 uKey
+uI += 1
+gosub @TS_BODY
+set_text_centre true
+string_format uKey "VHD%02d" uI
+display_text 320.0 356.0 uKey
+// page dots
+iCount2 = 1
+:DRAW_DIAG_DOTS
+uX =# iCount2
+uX *= 16.0
+uX += 280.0
+if iCount2 == iDiag
+then
+    draw_rect uX 384.0 8.0 8.0 90 220 210 255
+else
+    draw_rect uX 384.0 8.0 8.0 40 70 72 255
+end
+iCount2 += 1
+if 4 >= iCount2
+then
+    jump @DRAW_DIAG_DOTS
+end
+gosub @TS_HINT
+display_text 320.0 404.0 'VHD13'
+return

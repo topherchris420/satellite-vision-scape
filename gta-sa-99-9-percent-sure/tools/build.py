@@ -8,6 +8,7 @@
 Steps
   1. text, subtitles and data tables     tools/gen_text.py, tools/gen_scenes.py
   2. UI sprites (v3drain.txd) and ring   tools/build_ui_assets.py
+     sound effects, ambience, lab score  tools/sound_design.py, tools/lab_score.py
   3. compile the scripts (with --sb4)    Sanny Builder 4, mode "GTA SA (v1.0 - SBL)";
                                          on Linux through Wine (tools/scm/sb4build.py)
   4. validate the bytecode               tools/scm/validate.py
@@ -34,7 +35,13 @@ BUILD = os.path.join(ROOT, "build")
 RELEASE = os.path.join(ROOT, "release", "99sure")
 MODELS = os.path.join(ROOT, "tests", "data", "models_used.json")
 SCRIPTS = [("99sure.txt", "99sure.cm"), ("99sure_launcher.txt", "99sure_launcher.cs"),
-           ("99sure_debug.txt", "99sure_debug.cs")]
+           ("99sure_debug.txt", "99sure_debug.cs"), ("v3dhq.txt", "v3dhq.cm"),
+           ("v3dghost.txt", "v3dghost.cm"), ("v3dfalse.txt", "v3dfalse.cm"),
+           ("v3dlink.txt", "v3dlink.cm"), ("v3dopen.txt", "v3dopen.cm")]
+# scenes: (data file, output prefix, first handle variable, last handle variable)
+SCENES = [("data/scenes.json", "", 240, 399), ("data/hq_scenes.json", "hq", 240, 299),
+          ("data/ghost_scenes.json", "ghost", 240, 299), ("data/false_scenes.json", "false", 240, 299),
+          ("data/link_scenes.json", "link", 240, 299), ("data/open_scenes.json", "open", 240, 299)]
 MODEL_INSTALL = os.path.join(BUILD, "models", "installable")   # build_chris.py --img
 MODEL_PREVIEW = os.path.join(BUILD, "models", "preview")       # build_chris.py --synthetic
 PREVIEW_NOTE = """Christopher (chrisw.dff / chrisw.txd) built on a SYNTHETIC skeleton.
@@ -60,11 +67,22 @@ def run(args, **kw):
 
 
 def compile_scripts(sb4):
-    pairs = [f"{os.path.join(ROOT, 'src', s)}={os.path.join(BUILD, 'CLEO', o)}" for s, o in SCRIPTS]
+    pairs = [f"{os.path.join(ROOT, 'src', s)}={os.path.join(BUILD, 'CLEO', o)}" for s, o in SCRIPTS
+             if os.path.exists(os.path.join(ROOT, "src", s))]
     work = os.path.join(BUILD, "sb4work")
     os.makedirs(work, exist_ok=True)
     run(PY + [os.path.join(ROOT, "tools", "scm", "sb4build.py"), "--sb4", sb4, "--models", MODELS,
               "--work", work] + pairs)
+
+
+AUDIO = os.path.join(BUILD, "CLEO", "99sure")
+
+
+def build_audio():
+    """Original sound effects and the lab score, generated into build/ so that every
+    full build packages them (regenerating them is quick and deterministic)."""
+    run([sys.executable, os.path.join(ROOT, "tools", "sound_design.py"), "--out", os.path.join(AUDIO, "sfx")])
+    run([sys.executable, os.path.join(ROOT, "tools", "lab_score.py"), "--out", os.path.join(AUDIO, "music", "lab.mp3")])
 
 
 def package():
@@ -73,6 +91,11 @@ def package():
     layout = {
         os.path.join(BUILD, "CLEO", "99sure.cm"): "cleo/99sure.cm",
         os.path.join(BUILD, "CLEO", "99sure_launcher.cs"): "cleo/99sure_launcher.cs",
+        os.path.join(BUILD, "CLEO", "v3dhq.cm"): "cleo/v3dhq.cm",
+        os.path.join(BUILD, "CLEO", "v3dghost.cm"): "cleo/v3dghost.cm",
+        os.path.join(BUILD, "CLEO", "v3dfalse.cm"): "cleo/v3dfalse.cm",
+        os.path.join(BUILD, "CLEO", "v3dlink.cm"): "cleo/v3dlink.cm",
+        os.path.join(BUILD, "CLEO", "v3dopen.cm"): "cleo/v3dopen.cm",
         os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"): "cleo/cleo_text/99sure.fxt",
         os.path.join(BUILD, "CLEO", "99sure", "audio", "sfx_ring.mp3"): "cleo/99sure/audio/sfx_ring.mp3",
         os.path.join(BUILD, "models", "txd", "v3drain.txd"): "models/txd/v3drain.txd",
@@ -92,13 +115,25 @@ def package():
         out = os.path.join(RELEASE, dst)
         os.makedirs(os.path.dirname(out), exist_ok=True)
         shutil.copyfile(src, out)
+    # original sound effects, ambience and the lab score (tools/sound_design.py, tools/lab_score.py)
+    for sub in ("sfx", "music"):
+        src_dir = os.path.join(AUDIO, sub)
+        if not os.path.isdir(src_dir):
+            missing.append(f"cleo/99sure/{sub}/")
+            continue
+        for name in sorted(os.listdir(src_dir)):
+            if name.lower().endswith((".mp3", ".ogg")):
+                out = os.path.join(RELEASE, "cleo", "99sure", sub, name)
+                os.makedirs(os.path.dirname(out), exist_ok=True)
+                shutil.copyfile(os.path.join(src_dir, name), out)
     # recorded voice lines, if any were prepared with tools/prepare_audio.py
     audio = os.path.join(BUILD, "CLEO", "99sure", "audio")
     if os.path.isdir(audio):
         for name in sorted(os.listdir(audio)):
             if name.upper().startswith("V3D") and name.lower().endswith(".mp3"):
                 shutil.copyfile(os.path.join(audio, name), os.path.join(RELEASE, "cleo", "99sure", "audio", name))
-    shutil.copyfile(os.path.join(ROOT, "docs", "INSTALL.md"), os.path.join(RELEASE, "INSTALL.md"))
+    for doc in ("INSTALL.md", "IMPROVEMENTS.md"):
+        shutil.copyfile(os.path.join(ROOT, "docs", doc), os.path.join(RELEASE, doc))
     if os.path.exists(os.path.join(RELEASE, "extras", "model-preview", "chrisw.dff")):
         with open(os.path.join(RELEASE, "extras", "model-preview", "README.txt"), "w", newline="\r\n") as fh:
             fh.write(PREVIEW_NOTE)
@@ -116,15 +151,21 @@ def main():
     args = ap.parse_args()
 
     run(PY + [os.path.join(ROOT, "tools", "gen_text.py")])
-    run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py")], env=dict(os.environ, SA_MODELS_JSON=MODELS))
+    for data, prefix, first, last in SCENES:
+        if os.path.exists(os.path.join(ROOT, data)):
+            run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py"), "--data", os.path.join(ROOT, data),
+                      "--prefix", prefix, "--first-var", str(first), "--last-var", str(last)],
+                env=dict(os.environ, SA_MODELS_JSON=MODELS))
     run([sys.executable, os.path.join(ROOT, "tools", "build_ui_assets.py")])
+    build_audio()
     if args.sb4:
         compile_scripts(args.sb4)
     run(PY + [os.path.join(ROOT, "tools", "scm", "validate.py"), "--fxt",
               os.path.join(BUILD, "CLEO", "CLEO_TEXT", "99sure.fxt"), "--models", MODELS]
-        + [os.path.join(BUILD, "CLEO", o) for _, o in SCRIPTS])
+        + [os.path.join(BUILD, "CLEO", o) for _, o in SCRIPTS if os.path.exists(os.path.join(BUILD, "CLEO", o))])
     if not args.no_tests:
         run(PY + [os.path.join(ROOT, "tests", "run_mission_tests.py")])
+        run(PY + [os.path.join(ROOT, "tests", "run_story_tests.py")])
     chris = os.path.join(ROOT, "tools", "character", "build_chris.py")
     run([sys.executable, chris, "--synthetic", "--out", MODEL_PREVIEW])
     if args.img:

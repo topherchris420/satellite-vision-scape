@@ -366,6 +366,27 @@
     }
    ]
   },
+  "0025": {
+   "name": "IS_FLOAT_LVAR_GREATER_THAN_FLOAT_LVAR",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
   "0029": {
    "name": "IS_INT_LVAR_GREATER_OR_EQUAL_TO_NUMBER",
    "extension": "default",
@@ -652,6 +673,25 @@
     }
    ]
   },
+  "006A": {
+   "name": "MULT_INT_LVAR_BY_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
   "006B": {
    "name": "MULT_FLOAT_LVAR_BY_FLOAT_LVAR",
    "extension": "default",
@@ -666,6 +706,25 @@
     {
      "name": "",
      "type": "float",
+     "source": "var_local",
+     "out": false
+    }
+   ]
+  },
+  "0072": {
+   "name": "DIV_INT_LVAR_BY_INT_LVAR",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_local",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
      "source": "var_local",
      "out": false
     }
@@ -1232,8 +1291,92 @@
     }
    ]
   },
+  "00ED": {
+   "name": "LOCATE_CHAR_ON_FOOT_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "00F2": {
    "name": "LOCATE_CHAR_ANY_MEANS_CHAR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "target",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "00F3": {
+   "name": "LOCATE_CHAR_ON_FOOT_CHAR_2D",
    "extension": "default",
    "attrs": {
     "is_condition": true
@@ -2659,6 +2802,70 @@
     }
    ]
   },
+  "024F": {
+   "name": "DRAW_CORONA",
+   "extension": "default",
+   "attrs": {
+    "is_static": true,
+    "is_positional": true
+   },
+   "params": [
+    {
+     "name": "x",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "size",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "coronaType",
+     "type": "CoronaType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "flareType",
+     "type": "FlareType",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "r",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "g",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "b",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "0256": {
    "name": "IS_PLAYER_PLAYING",
    "extension": "default",
@@ -2684,6 +2891,21 @@
     {
      "name": "slotId",
      "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "02A0": {
+   "name": "IS_CHAR_STOPPED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
      "source": null,
      "out": false
     }
@@ -3233,7 +3455,7 @@
    },
    "params": [
     {
-     "name": "spriteSlot",
+     "name": "memorySlot",
      "type": "int",
      "source": null,
      "out": false
@@ -3353,13 +3575,13 @@
    },
    "params": [
     {
-     "name": "spriteSlot",
+     "name": "memorySlot",
      "type": "int",
      "source": null,
      "out": false
     },
     {
-     "name": "textureName",
+     "name": "spriteName",
      "type": "string",
      "source": null,
      "out": false
@@ -3560,6 +3782,25 @@
     }
    ]
   },
+  "03C0": {
+   "name": "STORE_CAR_CHAR_IS_IN_NO_SAVE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Car",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
   "03CA": {
    "name": "DOES_OBJECT_EXIST",
    "extension": "default",
@@ -3712,6 +3953,55 @@
      "type": "bool",
      "source": null,
      "out": false
+    }
+   ]
+  },
+  "0407": {
+   "name": "GET_OFFSET_FROM_CAR_IN_WORLD_COORDS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
     }
    ]
   },
@@ -4210,6 +4500,27 @@
     }
    ]
   },
+  "05C4": {
+   "name": "TASK_HANDS_UP",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "05CA": {
    "name": "TASK_ENTER_CAR_AS_PASSENGER",
    "extension": "default",
@@ -4298,6 +4609,39 @@
     {
      "name": "speed",
      "type": "MoveState",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05DD": {
+   "name": "TASK_SMART_FLEE_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "threat",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "radius",
+     "type": "float",
      "source": null,
      "out": false
     },
@@ -4764,7 +5108,7 @@
      "out": false
     },
     {
-     "name": "slideSpeed",
+     "name": "radius",
      "type": "float",
      "source": null,
      "out": false
@@ -5545,6 +5889,164 @@
     {
      "name": "args",
      "type": "arguments",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B10": {
+   "name": "BIT_AND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
+  "0B17": {
+   "name": "BIT_AND_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B18": {
+   "name": "BIT_OR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B19": {
+   "name": "BIT_XOR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1B": {
+   "name": "MOD_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "number",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1C": {
+   "name": "BIT_SHR_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "n",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "0B1D": {
+   "name": "BIT_SHL_COMPOUND",
+   "extension": "bitwise",
+   "attrs": {},
+   "params": [
+    {
+     "name": "",
+     "type": "int",
+     "source": "var_any",
+     "out": false
+    },
+    {
+     "name": "n",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "2503": {
+   "name": "SET_AUDIO_STREAM_SPEED",
+   "extension": "audio",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "AudioStream",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "speed",
+     "type": "float",
      "source": null,
      "out": false
     }

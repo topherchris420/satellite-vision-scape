@@ -665,10 +665,9 @@ def add_hands(body, mb):
         wd = unit(np.cross(pn, t))                # across the knuckles
         if np.dot(wd, fwd) < 0:
             wd = -wd                              # thumb side = forward
-        # rings along the hand: (s, half width, half thickness, curl toward palm)
+        # the palm: rings from the wrist to the knuckles (s, half width, half thickness, curl)
         spec = [(-0.012 * s, 0.031 * s, 0.026 * s, 0.0), (0.030 * s, 0.045 * s, 0.021 * s, 0.0),
-                (Lk, 0.046 * s, 0.018 * s, 0.002 * s), (Lk + 0.040 * s, 0.043 * s, 0.016 * s, 0.010 * s),
-                (Lk + 0.070 * s, 0.038 * s, 0.013 * s, 0.012 * s)]
+                (Lk, 0.046 * s, 0.018 * s, 0.002 * s)]
         nang = 6
         ang = np.arange(nang) * 360.0 / nang
         rings = []
@@ -682,18 +681,17 @@ def add_hands(body, mb):
             rings.append(ring)
         rings = np.array(rings)
         nr = len(rings)
-        tip = rings[-1].mean(axis=0) + t * 0.009 * s           # blunt fingertip dome
+        knuck = rings[-1].mean(axis=0) + t * 0.004 * s          # the knuckle cap closes the palm
         Vg = np.concatenate([rings, rings[:, :1]], axis=1).reshape(-1, 3)
-        V = np.concatenate([Vg, tip[None]])
-        UV = np.array([region_uv(TEX_HEAD, "hand", k / nang * 0.62, i / (nr - 1) * 0.92)
+        V = np.concatenate([Vg, knuck[None]])
+        UV = np.array([region_uv(TEX_HEAD, "hand", k / nang * 0.62, i / (nr - 1) * 0.6)
                        for i in range(nr) for k in range(nang + 1)] +
-                      [region_uv(TEX_HEAD, "hand", 0.31, 0.98)])
+                      [region_uv(TEX_HEAD, "hand", 0.31, 0.62)])
         T = grid_triangles(nr, nang + 1)
         tip_i = len(V) - 1
-        sv_all = np.concatenate([np.repeat([x[0] for x in spec], nang + 1), [Lk + 0.079 * s]])
+        sv_all = np.concatenate([np.repeat([x[0] for x in spec], nang + 1), [Lk + 0.004 * s]])
         chain = [H - t * 0.05, H, H + t * Lk, H + t * (Lk + 0.2)]
         T = _orient_outward_tube(V, T, sv_all + 0.05, chain)
-        # fingertip cap: faces away from a point just behind the last ring
         last = (nr - 1) * (nang + 1)
         behind = rings[-1].mean(axis=0) - t * 0.01 * s
         cap = []
@@ -707,6 +705,42 @@ def add_hands(body, mb):
         W = chain_weights(sv_all, [-0.05, 0.0, Lk],
                           [body.b(side_bone(side, "ForeArm")), body.b(side_bone(side, "Hand")),
                            body.b(side_bone(side, "Finger"))], [0.030 * s, 0.014 * s], body.nb)
+        # four fingers from the knuckle line, index on the thumb side, the middle longest,
+        # each curling a little toward the palm (a relaxed hand rather than a mitten)
+        fing_V, fing_UV, fing_T, fing_W = [], [], [], []
+        for fi, (off, length, rad) in enumerate(((0.62, 0.064, 0.0080), (0.21, 0.072, 0.0083),
+                                                 (-0.21, 0.067, 0.0079), (-0.62, 0.052, 0.0070))):
+            fb = H + t * (Lk - 0.004 * s) + wd * (0.046 * s * off) + pn * 0.002 * s
+            fr = []
+            pts = (0.0, 1.0)                      # one segment per finger keeps the ped under 3000 triangles
+            for j, q in enumerate(pts):
+                d = t * (length * s * q) + pn * (0.012 * s * q * q)    # curl
+                c = fb + d
+                r = rad * s * (1.0 - 0.18 * q)
+                fr.append([c + r * (np.cos(np.radians(a)) * wd + np.sin(np.radians(a)) * (-pn))
+                           for a in (45, 135, 225, 315)])
+            fr = np.array(fr)
+            ftip = fb + t * (length * s + 0.006 * s) + pn * 0.015 * s
+            Vf = np.concatenate([np.concatenate([fr, fr[:, :1]], axis=1).reshape(-1, 3), ftip[None]])
+            UVf = np.array([region_uv(TEX_HEAD, "hand", 0.05 + 0.12 * fi + 0.025 * k, 0.64 + 0.3 * j)
+                            for j in range(2) for k in range(5)] +
+                           [region_uv(TEX_HEAD, "hand", 0.10 + 0.12 * fi, 0.97)])
+            Tf = grid_triangles(2, 5)
+            Tf = np.concatenate([Tf, np.array([(5 + k, 5 + k + 1, 10) for k in range(4)])])
+            stf = np.concatenate([np.repeat([length * s * q for q in pts], 5), [length * s + 0.006 * s]])
+            Tf = _orient_outward_tube(Vf, Tf, stf + 0.05, [fb - t * 0.05, fb, fb + t * 0.2])
+            Wf = np.zeros((len(Vf), body.nb))
+            Wf[:, body.b(side_bone(side, "Finger"))] = 1.0
+            base_i = sum(len(x) for x in fing_V)
+            fing_V.append(Vf)
+            fing_UV.append(UVf)
+            fing_T.append(Tf + base_i)
+            fing_W.append(Wf)
+        Vfing = np.concatenate(fing_V)
+        T = np.concatenate([T, np.concatenate(fing_T) + len(V)])
+        V = np.concatenate([V, Vfing])
+        UV = np.concatenate([UV, np.concatenate(fing_UV)])
+        W = np.concatenate([W, np.concatenate(fing_W)])
         # thumb: from the palm's thumb side toward the fingers
         base = H + t * 0.026 * s + wd * 0.030 * s + pn * 0.004 * s
         tdir = unit(t * 0.85 + wd * 0.25 + pn * 0.40)

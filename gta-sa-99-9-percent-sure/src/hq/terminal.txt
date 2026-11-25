@@ -1,0 +1,1654 @@
+// ============================================================================
+// The R.A.I.N. research terminal.
+//
+// TERM_RUN runs at depth 2 (opened from the free-roam loop). Page logic is
+// inline here; helpers it calls (CASE_*, MENU_MOVE) never wait. Spoken lines
+// are played from this loop with SAY (depth 3), so drawing stays within the
+// engine's gosub limit: SAY(3) > TICK(4) > HUD_DRAW(5) > DRAW_PG_*(6) > TS_*(7).
+//
+// An assignment: BRIEF (the claim and three explanations) > EVIDENCE (weigh
+// or set aside four cards; R.A.I.N.'s support bars follow what is weighed) >
+// TEST (lab time for one experiment) > RESULT > VERDICT (accept, reject or
+// abstain) > AUDIT (careful, right-but-sloppy, retraction or too cautious).
+// ============================================================================
+
+:TERM_RUN
+iState = ST_TERMINAL
+gosub @PUBLISH
+set_player_control $player1 false
+clear_help
+iPromptShown = STN_NONE
+// Christopher gives up the chair
+if iChrisStep == 0
+then
+    iChrisT = iNow
+end
+uMode = 1
+uPage = PG_MAIN
+uSel = 1
+uCount = 4
+if iStation == STN_RECORDS
+then
+    uPage = PG_RECORDS
+    uSel = 1
+    uCount = 1
+end
+uMenu = uPage
+oKind = OBJ_MENU
+gosub @MENU_ARM
+iSfxId = SFX_BOOT
+gosub @SFX_PLAY
+gosub @CASE_AVAIL_ALL
+iTmp = iSeenMask
+iTmp &= 1
+if iTmp == 0
+then
+    iSeenMask |= 1
+    dLine = 401
+    dQEnd = 401
+    gosub @SAY_QUEUE
+end
+if iStation == STN_RECORDS
+then
+    iTmp = iSeenMask
+    iTmp &= 8
+    if iTmp == 0
+    then
+        iSeenMask |= 8
+        dLine = 413
+        dQEnd = 413
+        gosub @SAY_QUEUE
+    end
+end
+
+:TERM_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    jump @TERM_DONE
+end
+gosub @MENU_INPUT
+uMenu = uPage
+oKind = OBJ_MENU
+switch uPage
+    case PG_MAIN
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            jump @TERM_DONE
+        end
+        if uIn == 5
+        then
+            switch uSel
+                case 1
+                    gosub @CASE_AVAIL_ALL
+                    uPage = PG_LIST
+                    uSel = 1
+                    uCount = 8
+                case 2
+                    uPage = PG_RECORDS
+                    uSel = 1
+                    uCount = 1
+                case 3
+                    gosub @AUDIO_TO_LEVELS
+                    uPage = PG_SETTINGS
+                    uSel = 1
+                    uCount = 4
+                default
+                    jump @TERM_DONE
+            end
+            iSfxId = SFX_OK
+            gosub @SFX_PLAY
+        end
+    case PG_LIST
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            gosub @TERM_BACK_MAIN
+        end
+        if uIn == 5
+        then
+            gosub @CASE_CAN_OPEN
+            if iTmp3 == 1
+            then
+                cId = uSel
+                gosub @CASE_OPEN
+                uPage = PG_BRIEF
+                uSel = 1
+                uCount = 1
+                iSfxId = SFX_OK
+                gosub @SFX_PLAY
+                dLine = kLIntro
+                gosub @SAY
+            else
+                iSfxId = SFX_BACK
+                gosub @SFX_PLAY
+            end
+        end
+    case PG_BRIEF
+        if uIn == 6
+        then
+            uPage = PG_LIST
+            uSel = cId
+            uCount = 8
+        end
+        if uIn == 5
+        then
+            uPage = PG_EVID
+            uSel = 1
+            uCount = 5
+            iSfxId = SFX_OK
+            gosub @SFX_PLAY
+        end
+    case PG_EVID
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            uPage = PG_BRIEF
+            uSel = 1
+            uCount = 1
+        end
+        if uIn == 5
+        then
+            if uSel == 5
+            then
+                if cTest == 0
+                then
+                    uPage = PG_TEST
+                    uSel = 1
+                    uCount = 3
+                else
+                    uPage = PG_VERDICT
+                    uSel = 3
+                    uCount = 3
+                end
+                iSfxId = SFX_OK
+                gosub @SFX_PLAY
+            else
+                iBit = 1
+                iTmp = uSel
+                iTmp -= 1
+                iBit <<= iTmp
+                cInc ^= iBit
+                gosub @CASE_SCORE
+                iSfxId = SFX_MOVE
+                gosub @SFX_PLAY
+            end
+        end
+    case PG_TEST
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            uPage = PG_EVID
+            uSel = 5
+            uCount = 5
+        end
+        if uIn == 5
+        then
+            if uSel == 3
+            then
+                cTest = 0
+                uPage = PG_VERDICT
+                uSel = 3
+                uCount = 3
+            else
+                cTest = uSel
+                gosub @CASE_SCORE
+                uPage = PG_RESULT
+                uSel = 1
+                uCount = 1
+                iSfxId = SFX_OK
+                gosub @SFX_PLAY
+                if cTest == 1
+                then
+                    dLine = kLTest1
+                else
+                    dLine = kLTest2
+                end
+                gosub @SAY
+            end
+        end
+    case PG_RESULT
+        if uIn == 5
+        then
+            uPage = PG_VERDICT
+            uSel = 3
+            uCount = 3
+        end
+        if uIn == 6
+        then
+            uPage = PG_EVID
+            uSel = 5
+            uCount = 5
+        end
+    case PG_VERDICT
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            uPage = PG_EVID
+            uSel = 5
+            uCount = 5
+        end
+        if uIn == 5
+        then
+            cVerdict = uSel
+            gosub @CASE_CONCLUDE
+            uPage = PG_AUDIT
+            uSel = 1
+            uCount = 1
+            gosub @SFX_PLAY
+            if cGrant > 0
+            then
+                add_score $player1 cGrant
+            end
+            gosub @SAY
+        end
+    case PG_AUDIT
+        if uIn == 5
+        then
+            gosub @CASE_AVAIL_ALL
+            uPage = PG_LIST
+            uSel = cId
+            uCount = 8
+            iSfxId = SFX_OK
+            gosub @SFX_PLAY
+        end
+    case PG_RECORDS
+        if uIn == 6
+        then
+            if iStation == STN_RECORDS
+            then
+                jump @TERM_DONE
+            end
+            gosub @TERM_BACK_MAIN
+        end
+        if uIn == 5
+        then
+            if iStation == STN_RECORDS
+            then
+                jump @TERM_DONE
+            end
+            gosub @TERM_BACK_MAIN
+        end
+    case PG_SETTINGS
+        gosub @MENU_MOVE
+        if uIn == 6
+        then
+            gosub @LEVELS_TO_AUDIO
+            gosub @TERM_BACK_MAIN
+        end
+        if uIn == 5
+        then
+            gosub @LEVELS_TO_AUDIO
+            gosub @TERM_BACK_MAIN
+        end
+        if uIn == 3
+        then
+            gosub @LEVEL_STEP_DOWN
+        end
+        if uIn == 4
+        then
+            gosub @LEVEL_STEP_UP
+        end
+end
+jump @TERM_LOOP
+
+:TERM_DONE
+gosub @DLG_CANCEL
+iSfxId = SFX_BACK
+gosub @SFX_PLAY
+uMode = 0
+uMenu = 0
+uPage = 0
+oKind = OBJ_NONE
+set_player_control $player1 true
+iState = ST_FREE
+gosub @PUBLISH
+gosub @REC_SAVE
+gosub @MENU_ARM
+return
+
+:TERM_BACK_MAIN
+uPage = PG_MAIN
+uSel = 1
+uCount = 4
+iSfxId = SFX_BACK
+gosub @SFX_PLAY
+return
+
+// Up/Down moves the cursor within 1..uCount.
+:MENU_MOVE
+if uIn == 1
+then
+    if uSel > 1
+    then
+        uSel -= 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+if uIn == 2
+then
+    if uCount > uSel
+    then
+        uSel += 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+return
+
+// ---------------------------------------------------------------------------
+// Assignments
+// ---------------------------------------------------------------------------
+:CASE_LOAD
+{$INCLUDE ../gen/cases_data.txt}
+return
+
+// cAvail: which assignments the terminal offers.
+:CASE_AVAIL_ALL
+iVal = cId
+cAvail = 0
+iCount2 = 0
+iTmp = rCases
+:CASE_COUNT_LOOP
+if iTmp <> 0
+then
+    iTmp2 = iTmp
+    iTmp2 &= 1
+    iCount2 += iTmp2
+    iTmp >>= 1
+    jump @CASE_COUNT_LOOP
+end
+cId = 1
+:CASE_AVAIL_LOOP
+gosub @CASE_LOAD
+iTmp3 = 0
+if kUnlock == 9
+then
+    if iCount2 >= 5
+    then
+        iTmp3 = 1
+    end
+    iTmp = rStory
+    iTmp &= 16
+    if iTmp <> 0
+    then
+        iTmp3 = 1
+    end
+else
+    iBit = 1
+    iTmp = kUnlock
+    iTmp -= 1
+    iBit <<= iTmp
+    iTmp = rStory
+    iTmp &= iBit
+    if iTmp <> 0
+    then
+        iTmp3 = 1
+    end
+end
+if iTmp3 == 1
+then
+    iBit = 1
+    iTmp = cId
+    iTmp -= 1
+    iBit <<= iTmp
+    cAvail |= iBit
+end
+cId += 1
+if 8 >= cId
+then
+    jump @CASE_AVAIL_LOOP
+end
+cId = iVal
+if cId > 0
+then
+    gosub @CASE_LOAD
+end
+return
+
+// Can the assignment under the cursor be opened? iTmp3 = 1 yes.
+// Locked ones cannot; ones concluded carefully stay closed.
+:CASE_CAN_OPEN
+iTmp3 = 0
+iBit = 1
+iTmp = uSel
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cAvail
+iTmp &= iBit
+if iTmp == 0
+then
+    return
+end
+iTmp3 = 1
+iTmp = rCases
+iTmp &= iBit
+if iTmp <> 0
+then
+    gosub @CASE_QUALITY_OF_SEL
+    if iStat == 1
+    then
+        iTmp3 = 0
+    end
+end
+return
+
+// iStat = recorded quality of assignment uSel (0 too cautious, 1 careful, 2 sloppy, 3 retracted).
+:CASE_QUALITY_OF_SEL
+iStat = rCareful
+iTmp = uSel
+iTmp -= 1
+iTmp *= 2
+iStat >>= iTmp
+iStat &= 3
+return
+
+:CASE_OPEN
+gosub @CASE_LOAD
+cInc = 0
+cTest = 0
+cVerdict = 0
+cQual = 0
+cNotes = 0
+cGrant = 0
+iBit = 1
+iTmp = cId
+iTmp -= 1
+iBit <<= iTmp
+cWasDone = rCases
+cWasDone &= iBit
+gosub @CASE_SCORE
+return
+
+// Hypothesis scores from what is weighed, and R.A.I.N.'s reading of them.
+:CASE_SCORE
+cS1 = kP1
+cS2 = kP2
+cS3 = kP3
+iTmp = cInc
+iTmp &= 1
+if iTmp <> 0
+then
+    cS1 += kW11
+    cS2 += kW12
+    cS3 += kW13
+end
+iTmp = cInc
+iTmp &= 2
+if iTmp <> 0
+then
+    cS1 += kW21
+    cS2 += kW22
+    cS3 += kW23
+end
+iTmp = cInc
+iTmp &= 4
+if iTmp <> 0
+then
+    cS1 += kW31
+    cS2 += kW32
+    cS3 += kW33
+end
+iTmp = cInc
+iTmp &= 8
+if iTmp <> 0
+then
+    cS1 += kW41
+    cS2 += kW42
+    cS3 += kW43
+end
+if cTest == 1
+then
+    cS1 += kT11
+    cS2 += kT12
+    cS3 += kT13
+end
+if cTest == 2
+then
+    cS1 += kT21
+    cS2 += kT22
+    cS3 += kT23
+end
+// the strongest rival
+iTmp = cS2
+if cS3 > iTmp
+then
+    iTmp = cS3
+end
+iTmp2 = cS1
+iTmp2 -= iTmp
+cRead = 3
+if iTmp2 >= kMargin
+then
+    cRead = 1
+end
+iTmp2 = iTmp
+iTmp2 -= cS1
+if iTmp2 >= kMargin
+then
+    cRead = 2
+end
+// support for the claim: its share of the positive scores
+iTmp = 0
+if cS1 > 0
+then
+    iTmp += cS1
+end
+if cS2 > 0
+then
+    iTmp += cS2
+end
+if cS3 > 0
+then
+    iTmp += cS3
+end
+cConf = 33
+if iTmp > 0
+then
+    cConf = 0
+    if cS1 > 0
+    then
+        cConf = cS1
+        cConf *= 100
+        cConf /= iTmp
+    end
+end
+return
+
+// Grade the verdict, write the record, choose the reaction (dLine, iSfxId).
+:CASE_CONCLUDE
+cNotes = 0
+// the same source weighed twice
+iTmp2 = 0
+iCount2 = 1
+:CASE_DUP_I
+iTmp3 = iCount2
+:CASE_DUP_J
+iTmp3 += 1
+if iTmp3 > 4
+then
+    iCount2 += 1
+    if 4 > iCount2
+    then
+        jump @CASE_DUP_I
+    end
+    jump @CASE_DUP_DONE
+end
+// both weighed?
+iBit = 1
+iTmp = iCount2
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cInc
+iTmp &= iBit
+if iTmp == 0
+then
+    jump @CASE_DUP_J
+end
+iBit = 1
+iTmp = iTmp3
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cInc
+iTmp &= iBit
+if iTmp == 0
+then
+    jump @CASE_DUP_J
+end
+// same source?
+switch iCount2
+    case 1
+        iVal = kSrc1
+    case 2
+        iVal = kSrc2
+    default
+        iVal = kSrc3
+end
+switch iTmp3
+    case 2
+        iTmp = kSrc2
+    case 3
+        iTmp = kSrc3
+    default
+        iTmp = kSrc4
+end
+if iTmp == iVal
+then
+    iTmp2 = 1
+end
+jump @CASE_DUP_J
+:CASE_DUP_DONE
+if iTmp2 == 1
+then
+    cNotes |= 1
+end
+// coincidences and opinions weighed as evidence
+iCount2 = 1
+:CASE_KIND_LOOP
+iBit = 1
+iTmp = iCount2
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cInc
+iTmp &= iBit
+if iTmp <> 0
+then
+    switch iCount2
+        case 1
+            iVal = kKind1
+        case 2
+            iVal = kKind2
+        case 3
+            iVal = kKind3
+        default
+            iVal = kKind4
+    end
+    if iVal == 1
+    then
+        cNotes |= 2
+    end
+    if iVal == 2
+    then
+        cNotes |= 4
+    end
+end
+iCount2 += 1
+if 4 >= iCount2
+then
+    jump @CASE_KIND_LOOP
+end
+if cTest <> kBest
+then
+    cNotes |= 8
+end
+// the grade
+if cVerdict == kTruth
+then
+    iTmp = cNotes
+    iTmp &= 7
+    if iTmp == 0
+    then
+        cQual = 1
+    else
+        cQual = 2
+    end
+else
+    if cVerdict == 3
+    then
+        cQual = 4
+    else
+        cQual = 3
+    end
+end
+// the record: concluded bit, verdict and grade (two bits each)
+iBit = 1
+iTmp = cId
+iTmp -= 1
+iBit <<= iTmp
+rCases |= iBit
+iTmp *= 2
+iVal = 3
+iVal <<= iTmp
+iVal ^= -1
+rVerdict &= iVal
+rCareful &= iVal
+iVal = cVerdict
+iVal <<= iTmp
+rVerdict |= iVal
+iVal = 0
+switch cQual
+    case 1
+        iVal = 1
+    case 2
+        iVal = 2
+    case 3
+        iVal = 3
+end
+iVal <<= iTmp
+rCareful |= iVal
+// reputation, the grant, the papers
+cGrant = 0
+switch cQual
+    case 1
+        rRep += 6
+        cGrant = 1500
+        if cWasDone <> 0
+        then
+            cGrant = 500
+        end
+        dLine = kLCareful
+        iSfxId = SFX_ACCEPT
+        rFlags |= REC_F_GOODNEWS
+        rFlags &= -2
+    case 2
+        rRep += 2
+        cGrant = 600
+        if cWasDone <> 0
+        then
+            cGrant = 0
+        end
+        dLine = kLLucky
+        iSfxId = SFX_ABSTAIN
+    case 3
+        rRep -= 5
+        dLine = kLWrong
+        iSfxId = SFX_WARN
+        rFlags |= REC_F_RETRACT
+        rFlags &= -3
+    default
+        rRep += 1
+        cGrant = 300
+        if cWasDone <> 0
+        then
+            cGrant = 0
+        end
+        dLine = kLCautious
+        iSfxId = SFX_REJECT
+end
+if cQual <> 2
+then
+    if cQual <> 4
+    then
+        // which assignment the news is about: bits 9..12
+        rFlags &= -7681
+        iVal = cId
+        iVal <<= 9
+        rFlags |= iVal
+    end
+end
+gosub @REC_SAVE
+return
+
+// ---------------------------------------------------------------------------
+// Audio settings: four levels 0..10 packed in rAudio
+// ---------------------------------------------------------------------------
+:AUDIO_TO_LEVELS
+iLvl1 = rAudio
+iLvl1 &= 15
+iLvl2 = rAudio
+iLvl2 >>= 4
+iLvl2 &= 15
+iLvl3 = rAudio
+iLvl3 >>= 8
+iLvl3 &= 15
+iLvl4 = rAudio
+iLvl4 >>= 12
+iLvl4 &= 15
+return
+
+:LEVELS_TO_AUDIO
+rAudio = iLvl4
+rAudio <<= 4
+rAudio |= iLvl3
+rAudio <<= 4
+rAudio |= iLvl2
+rAudio <<= 4
+rAudio |= iLvl1
+gosub @AUDIO_DECODE
+gosub @AUDIO_APPLY
+gosub @REC_SAVE
+return
+
+:LEVEL_STEP_DOWN
+switch uSel
+    case 1
+        if iLvl1 > 0
+        then
+            iLvl1 -= 1
+        end
+    case 2
+        if iLvl2 > 0
+        then
+            iLvl2 -= 1
+        end
+    case 3
+        if iLvl3 > 0
+        then
+            iLvl3 -= 1
+        end
+    default
+        if iLvl4 > 0
+        then
+            iLvl4 -= 1
+        end
+end
+gosub @LEVELS_TO_AUDIO
+iSfxId = SFX_MOVE
+gosub @SFX_PLAY
+return
+
+:LEVEL_STEP_UP
+switch uSel
+    case 1
+        if 10 > iLvl1
+        then
+            iLvl1 += 1
+        end
+    case 2
+        if 10 > iLvl2
+        then
+            iLvl2 += 1
+        end
+    case 3
+        if 10 > iLvl3
+        then
+            iLvl3 += 1
+        end
+    default
+        if 10 > iLvl4
+        then
+            iLvl4 += 1
+        end
+end
+gosub @LEVELS_TO_AUDIO
+iSfxId = SFX_MOVE
+gosub @SFX_PLAY
+return
+
+// New levels take effect at once.
+:AUDIO_APPLY
+if iMusicStream <> 0
+then
+    if fMusicVol > 0.0
+    then
+        set_audio_stream_volume iMusicStream fMusicVol
+    else
+        gosub @MUSIC_STOP
+    end
+else
+    gosub @MUSIC_START
+end
+if iAmbStream <> 0
+then
+    if fAmbVol > 0.0
+    then
+        set_audio_stream_volume iAmbStream fAmbVol
+    else
+        gosub @AMB_STOP
+    end
+else
+    gosub @AMB_START
+end
+return
+
+// ============================================================================
+// Drawing (called from HUD_DRAW, after DRAW_FRAME)
+// ============================================================================
+:DRAW_PG_MAIN
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHT00'
+gosub @TS_DIM
+display_text 40.0 70.0 'VHT07'
+uRow = 1
+:DRAW_PG_MAIN_ROW
+uY =# uRow
+uY *= 24.0
+uY += 76.0
+if uRow == uSel
+then
+    gosub @DRAW_ROW_BAR
+    gosub @TS_SEL
+else
+    gosub @TS_BODY
+end
+switch uRow
+    case 1
+        display_text 48.0 uY 'VHT01'
+    case 2
+        display_text 48.0 uY 'VHT02'
+    case 3
+        display_text 48.0 uY 'VHT03'
+    default
+        display_text 48.0 uY 'VHT04'
+end
+uRow += 1
+if 4 >= uRow
+then
+    jump @DRAW_PG_MAIN_ROW
+end
+// standing
+gosub @TS_HEAD
+display_text 396.0 100.0 'VHR00'
+iTmp = 0
+iTmp2 = rCases
+:DRAW_PG_MAIN_CNT
+if iTmp2 <> 0
+then
+    iTmp3 = iTmp2
+    iTmp3 &= 1
+    iTmp += iTmp3
+    iTmp2 >>= 1
+    jump @DRAW_PG_MAIN_CNT
+end
+gosub @TS_BODY
+display_text_with_2_numbers 396.0 122.0 'VHT06' rRep iTmp
+iTmp = 0
+iTmp2 = rModes
+:DRAW_PG_MAIN_MODES
+if iTmp2 <> 0
+then
+    iTmp3 = iTmp2
+    iTmp3 &= 1
+    iTmp += iTmp3
+    iTmp2 >>= 1
+    jump @DRAW_PG_MAIN_MODES
+end
+gosub @TS_BODY
+display_text_with_number 396.0 140.0 'VHR22' iTmp
+uX = 500.0
+uY = 168.0
+uW = 200.0
+uV = rRep
+uR = 90
+uG = 220
+uB = 210
+gosub @DRAW_METER
+gosub @TS_HINT
+display_text 320.0 404.0 'VHT05'
+return
+
+:DRAW_PG_LIST
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHA00'
+uRow = 1
+:DRAW_PG_LIST_ROW
+uY =# uRow
+uY *= 24.0
+uY += 52.0
+iBit = 1
+iTmp = uRow
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cAvail
+iTmp &= iBit
+if uRow == uSel
+then
+    gosub @DRAW_ROW_BAR
+end
+if iTmp == 0
+then
+    gosub @TS_DIM
+    display_text 48.0 uY 'VHA06'
+else
+    if uRow == uSel
+    then
+        gosub @TS_SEL
+    else
+        gosub @TS_BODY
+    end
+    string_format uKey "VK%02dT" uRow
+    display_text 48.0 uY uKey
+    // status tag
+    iTmp = rCases
+    iTmp &= iBit
+    if iTmp == 0
+    then
+        gosub @TS_AMBER
+        set_text_right_justify true
+        display_text 362.0 uY 'VHA01'
+    else
+        iStat = rCareful
+        iTmp = uRow
+        iTmp -= 1
+        iTmp *= 2
+        iStat >>= iTmp
+        iStat &= 3
+        gosub @TS_DIM
+        set_text_right_justify true
+        switch iStat
+            case 1
+                display_text 362.0 uY 'VHA02'
+            case 2
+                display_text 362.0 uY 'VHA03'
+            case 3
+                display_text 362.0 uY 'VHA04'
+            default
+                display_text 362.0 uY 'VHA05'
+        end
+    end
+end
+uRow += 1
+if 8 >= uRow
+then
+    jump @DRAW_PG_LIST_ROW
+end
+// the assignment under the cursor
+iBit = 1
+iTmp = uSel
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cAvail
+iTmp &= iBit
+if iTmp == 0
+then
+    gosub @TS_BODY
+    set_text_wrapx 610.0
+    // the unlock rule, from the case table
+    iVal = cId
+    cId = uSel
+    gosub @CASE_LOAD
+    switch kUnlock
+        case 1
+            display_text 396.0 76.0 'VHA07'
+        case 2
+            display_text 396.0 76.0 'VHA08'
+        case 3
+            display_text 396.0 76.0 'VHA09'
+        case 4
+            display_text 396.0 76.0 'VHA10'
+        case 5
+            display_text 396.0 76.0 'VHA11'
+        default
+            display_text 396.0 76.0 'VHA12'
+    end
+    cId = iVal
+else
+    gosub @TS_HEAD
+    display_text 396.0 76.0 'VHB00'
+    gosub @TS_BODY
+    set_text_wrapx 612.0
+    string_format uKey "VK%02dC1" uSel
+    display_text 396.0 96.0 uKey
+    gosub @TS_BODY
+    set_text_wrapx 612.0
+    string_format uKey "VK%02dC2" uSel
+    display_text 396.0 126.0 uKey
+    iTmp = rCases
+    iTmp &= iBit
+    gosub @TS_DIM
+    set_text_wrapx 612.0
+    if iTmp == 0
+    then
+        display_text 396.0 170.0 'VHA15'
+    else
+        iStat = rCareful
+        iTmp = uSel
+        iTmp -= 1
+        iTmp *= 2
+        iStat >>= iTmp
+        iStat &= 3
+        if iStat == 1
+        then
+            display_text 396.0 170.0 'VHA13'
+        else
+            display_text 396.0 170.0 'VHA14'
+        end
+    end
+end
+gosub @TS_HINT
+display_text 320.0 404.0 'VHT05'
+return
+
+:DRAW_PG_BRIEF
+gosub @TS_TITLE
+string_format uKey "VK%02dT" cId
+display_text 64.0 34.0 uKey
+gosub @TS_HEAD
+display_text 40.0 78.0 'VHB00'
+gosub @TS_BODY
+set_text_scale 0.32 1.30
+string_format uKey "VK%02dC1" cId
+display_text 40.0 100.0 uKey
+gosub @TS_BODY
+set_text_scale 0.32 1.30
+string_format uKey "VK%02dC2" cId
+display_text 40.0 120.0 uKey
+gosub @TS_HEAD
+display_text 40.0 164.0 'VHB01'
+draw_rect 48.0 193.0 8.0 8.0 90 220 210 255
+draw_rect 48.0 219.0 8.0 8.0 240 170 40 255
+draw_rect 48.0 245.0 8.0 8.0 190 140 230 255
+gosub @TS_BODY
+string_format uKey "VK%02dH1" cId
+display_text 62.0 186.0 uKey
+gosub @TS_BODY
+string_format uKey "VK%02dH2" cId
+display_text 62.0 212.0 uKey
+gosub @TS_BODY
+string_format uKey "VK%02dH3" cId
+display_text 62.0 238.0 uKey
+gosub @TS_HINT
+display_text 320.0 404.0 'VHB02'
+return
+
+:DRAW_PG_EVID
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHE00'
+uRow = 1
+:DRAW_PG_EVID_ROW
+uY =# uRow
+uY *= 70.0
+uY += 2.0
+if uRow == uSel
+then
+    uF = uY
+    uF += 24.0
+    draw_rect 200.0 uF 344.0 64.0 22 70 74 255
+    draw_rect 30.0 uF 4.0 64.0 90 220 210 255
+end
+gosub @TS_BODY
+string_format uKey "VK%02dE%dA" cId uRow
+display_text 40.0 uY uKey
+uF = uY
+uF += 15.0
+gosub @TS_BODY
+string_format uKey "VK%02dE%dB" cId uRow
+display_text 40.0 uF uKey
+uF += 17.0
+gosub @TS_DIM
+string_format uKey "VK%02dE%dS" cId uRow
+display_text 40.0 uF uKey
+// weighed or set aside
+iBit = 1
+iTmp = uRow
+iTmp -= 1
+iBit <<= iTmp
+iTmp = cInc
+iTmp &= iBit
+uF += 1.0
+if iTmp <> 0
+then
+    gosub @TS_GOOD
+    set_text_right_justify true
+    display_text 366.0 uF 'VHE01'
+else
+    gosub @TS_DIM
+    set_text_right_justify true
+    display_text 366.0 uF 'VHE02'
+end
+uRow += 1
+if 4 >= uRow
+then
+    jump @DRAW_PG_EVID_ROW
+end
+if uSel == 5
+then
+    uY = 366.0
+    gosub @DRAW_ROW_BAR
+    gosub @TS_SEL
+else
+    gosub @TS_HEAD
+end
+display_text 48.0 366.0 'VHE03'
+gosub @TS_HINT
+display_text 320.0 404.0 'VHE05'
+return
+
+:DRAW_PG_TEST
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHX00'
+uRow = 1
+:DRAW_PG_TEST_ROW
+uY =# uRow
+uY *= 26.0
+uY += 70.0
+if uRow == uSel
+then
+    gosub @DRAW_ROW_BAR
+    gosub @TS_SEL
+else
+    gosub @TS_BODY
+end
+switch uRow
+    case 1
+        string_format uKey "VK%02dX1L" cId
+        display_text 48.0 uY uKey
+        iTmp = kHours1
+    case 2
+        string_format uKey "VK%02dX2L" cId
+        display_text 48.0 uY uKey
+        iTmp = kHours2
+    default
+        display_text 48.0 uY 'VHX02'
+        iTmp = 0
+end
+if iTmp > 0
+then
+    if uRow == uSel
+    then
+        gosub @TS_SEL
+    else
+        gosub @TS_DIM
+    end
+    set_text_right_justify true
+    display_text_with_number 362.0 uY 'VHX01' iTmp
+end
+uRow += 1
+if 3 >= uRow
+then
+    jump @DRAW_PG_TEST_ROW
+end
+gosub @TS_DIM
+set_text_wrapx 360.0
+display_text 40.0 190.0 'VHV08'
+gosub @TS_HINT
+display_text 320.0 404.0 'VHT05'
+return
+
+:DRAW_PG_RESULT
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHX03'
+gosub @TS_HEAD
+if cTest == 1
+then
+    string_format uKey "VK%02dX1L" cId
+else
+    string_format uKey "VK%02dX2L" cId
+end
+display_text 40.0 80.0 uKey
+gosub @TS_BODY
+set_text_scale 0.32 1.30
+string_format uKey "VK%02dX%dA" cId cTest
+display_text 40.0 112.0 uKey
+gosub @TS_BODY
+set_text_scale 0.32 1.30
+string_format uKey "VK%02dX%dB" cId cTest
+display_text 40.0 132.0 uKey
+gosub @TS_HINT
+display_text 320.0 404.0 'VHX04'
+return
+
+:DRAW_PG_VERDICT
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHV00'
+gosub @TS_BODY
+string_format uKey "VK%02dC1" cId
+display_text 40.0 76.0 uKey
+gosub @TS_BODY
+string_format uKey "VK%02dC2" cId
+display_text 40.0 92.0 uKey
+switch cRead
+    case 1
+        gosub @TS_GOOD
+        display_text 40.0 122.0 'VHV04'
+    case 2
+        gosub @TS_RED
+        display_text 40.0 122.0 'VHV05'
+    default
+        gosub @TS_AMBER
+        display_text 40.0 122.0 'VHV06'
+end
+gosub @TS_DIM
+display_text 40.0 144.0 'VHV08'
+uRow = 1
+:DRAW_PG_VERDICT_ROW
+uY =# uRow
+uY *= 28.0
+uY += 150.0
+if uRow == uSel
+then
+    gosub @DRAW_ROW_BAR
+    gosub @TS_SEL
+else
+    gosub @TS_HEAD
+end
+switch uRow
+    case 1
+        display_text 48.0 uY 'VHV01'
+    case 2
+        display_text 48.0 uY 'VHV02'
+    default
+        display_text 48.0 uY 'VHV03'
+end
+uRow += 1
+if 3 >= uRow
+then
+    jump @DRAW_PG_VERDICT_ROW
+end
+gosub @TS_HINT
+display_text 320.0 404.0 'VHT05'
+return
+
+:DRAW_PG_AUDIT
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHU00'
+gosub @TS_HEAD
+string_format uKey "VK%02dT" cId
+display_text 40.0 76.0 uKey
+switch cQual
+    case 1
+        gosub @TS_GOOD
+        set_text_scale 0.46 1.80
+        display_text 40.0 100.0 'VHU01'
+    case 2
+        gosub @TS_AMBER
+        set_text_scale 0.40 1.60
+        display_text 40.0 100.0 'VHU02'
+    case 3
+        gosub @TS_RED
+        set_text_scale 0.46 1.80
+        display_text 40.0 100.0 'VHU03'
+    default
+        gosub @TS_AMBER
+        set_text_scale 0.40 1.60
+        display_text 40.0 100.0 'VHU04'
+end
+uY = 146.0
+iTmp = cNotes
+iTmp &= 15
+if iTmp == 0
+then
+    gosub @TS_BODY
+    display_text 40.0 uY 'VHU09'
+    uY += 20.0
+end
+iTmp = cNotes
+iTmp &= 1
+if iTmp <> 0
+then
+    gosub @TS_BODY
+    display_text 40.0 uY 'VHU05'
+    uY += 20.0
+end
+iTmp = cNotes
+iTmp &= 2
+if iTmp <> 0
+then
+    gosub @TS_BODY
+    display_text 40.0 uY 'VHU06'
+    uY += 20.0
+end
+iTmp = cNotes
+iTmp &= 4
+if iTmp <> 0
+then
+    gosub @TS_BODY
+    display_text 40.0 uY 'VHU07'
+    uY += 20.0
+end
+iTmp = cNotes
+iTmp &= 8
+if iTmp <> 0
+then
+    gosub @TS_DIM
+    display_text 40.0 uY 'VHU08'
+    uY += 20.0
+end
+uY += 16.0
+if cGrant > 0
+then
+    gosub @TS_GOOD
+    display_text_with_number 40.0 uY 'VHU10' cGrant
+    uY += 22.0
+end
+gosub @TS_BODY
+display_text_with_number 40.0 uY 'VHU11' rRep
+gosub @TS_HINT
+display_text 320.0 404.0 'VHU12'
+return
+
+:DRAW_PG_RECORDS
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHR00'
+gosub @TS_HEAD
+display_text 40.0 72.0 'VHR01'
+uRow = 1
+:DRAW_PG_REC_STORY
+uY =# uRow
+uY *= 34.0
+uY += 58.0
+iBit = 1
+iTmp = uRow
+iTmp -= 1
+iBit <<= iTmp
+iTmp = rStory
+iTmp &= iBit
+gosub @TS_BODY
+switch uRow
+    case 1
+        display_text 40.0 uY 'VHR03'
+    case 2
+        display_text 40.0 uY 'VHR04'
+    case 3
+        display_text 40.0 uY 'VHR05'
+    case 4
+        display_text 40.0 uY 'VHR06'
+    default
+        display_text 40.0 uY 'VHR07'
+end
+if iTmp == 0
+then
+    gosub @TS_DIM
+    set_text_right_justify true
+    display_text 362.0 uY 'VHR11'
+else
+    gosub @TS_GOOD
+    set_text_right_justify true
+    display_text 362.0 uY 'VHR10'
+    uF = uY
+    uF += 15.0
+    gosub @TS_DIM
+    switch uRow
+        case 1
+            display_text_with_number 52.0 uF 'VHR12' rBest
+        case 2
+            iTmp = rFlags
+            iTmp &= REC_F_M2_VERIFIED
+            if iTmp <> 0
+            then
+                display_text 52.0 uF 'VHR13'
+            else
+                display_text 52.0 uF 'VHR14'
+            end
+        case 3
+            iTmp = rFlags
+            iTmp &= REC_F_M3_DETAINED
+            if iTmp == 0
+            then
+                display_text 52.0 uF 'VHR15'
+            else
+                display_text 52.0 uF 'VHR16'
+            end
+        case 4
+            iTmp = rFlags
+            iTmp &= REC_F_M4_CHASED
+            if iTmp == 0
+            then
+                display_text 52.0 uF 'VHR17'
+            else
+                display_text 52.0 uF 'VHR18'
+            end
+        default
+            iTmp = rFlags
+            iTmp &= REC_F_M5_TOOK_FEE
+            if iTmp == 0
+            then
+                display_text 52.0 uF 'VHR19'
+            else
+                display_text 52.0 uF 'VHR20'
+            end
+    end
+end
+uRow += 1
+if 5 >= uRow
+then
+    jump @DRAW_PG_REC_STORY
+end
+gosub @TS_BODY
+display_text_with_number 40.0 266.0 'VHR21' rRep
+iTmp = 0
+iTmp2 = rModes
+:DRAW_PG_REC_MODES
+if iTmp2 <> 0
+then
+    iTmp3 = iTmp2
+    iTmp3 &= 1
+    iTmp += iTmp3
+    iTmp2 >>= 1
+    jump @DRAW_PG_REC_MODES
+end
+gosub @TS_BODY
+display_text_with_number 40.0 286.0 'VHR22' iTmp
+// research
+gosub @TS_HEAD
+display_text 396.0 72.0 'VHR02'
+uRow = 1
+:DRAW_PG_REC_CASE
+uY =# uRow
+uY *= 22.0
+uY += 70.0
+iBit = 1
+iTmp = uRow
+iTmp -= 1
+iBit <<= iTmp
+iTmp = rCases
+iTmp &= iBit
+if iTmp == 0
+then
+    gosub @TS_DIM
+    display_text 396.0 uY 'VHR11'
+else
+    gosub @TS_DIM
+    string_format uKey "VK%02dT" uRow
+    display_text 396.0 uY uKey
+    iStat = rCareful
+    iTmp = uRow
+    iTmp -= 1
+    iTmp *= 2
+    iStat >>= iTmp
+    iStat &= 3
+    switch iStat
+        case 1
+            gosub @TS_GOOD
+            set_text_scale 0.22 0.90
+            set_text_right_justify true
+            display_text 612.0 uY 'VHA02'
+        case 3
+            gosub @TS_RED
+            set_text_scale 0.22 0.90
+            set_text_right_justify true
+            display_text 612.0 uY 'VHA04'
+        default
+            gosub @TS_AMBER
+            set_text_scale 0.22 0.90
+            set_text_right_justify true
+            if iStat == 2
+            then
+                display_text 612.0 uY 'VHA03'
+            else
+                display_text 612.0 uY 'VHA05'
+            end
+    end
+end
+uRow += 1
+if 8 >= uRow
+then
+    jump @DRAW_PG_REC_CASE
+end
+gosub @TS_HINT
+display_text 320.0 404.0 'VHR23'
+return
+
+:DRAW_PG_SETTINGS
+gosub @TS_TITLE
+display_text 64.0 34.0 'VHS00'
+uRow = 1
+:DRAW_PG_SET_ROW
+uY =# uRow
+uY *= 30.0
+uY += 64.0
+if uRow == uSel
+then
+    gosub @DRAW_ROW_BAR
+    gosub @TS_SEL
+else
+    gosub @TS_BODY
+end
+switch uRow
+    case 1
+        display_text 48.0 uY 'VHS01'
+        iTmp = iLvl1
+    case 2
+        display_text 48.0 uY 'VHS02'
+        iTmp = iLvl2
+    case 3
+        display_text 48.0 uY 'VHS03'
+        iTmp = iLvl3
+    default
+        display_text 48.0 uY 'VHS04'
+        iTmp = iLvl4
+end
+if uRow == uSel
+then
+    gosub @TS_SEL
+else
+    gosub @TS_DIM
+end
+set_text_right_justify true
+display_text_with_number 362.0 uY 'VHS05' iTmp
+uX = 500.0
+uF = uY
+uF += 7.0
+uY = uF
+uW = 200.0
+uV = iTmp
+uV *= 10
+uR = 90
+uG = 220
+uB = 210
+gosub @DRAW_METER
+uRow += 1
+if 4 >= uRow
+then
+    jump @DRAW_PG_SET_ROW
+end
+gosub @TS_DIM
+set_text_wrapx 600.0
+display_text 40.0 210.0 'VHS06'
+gosub @TS_HINT
+display_text 320.0 404.0 'VHT05'
+return
+
+// R.A.I.N.'s support for each explanation, beside the evidence, test and verdict pages.
+:DRAW_SUPPORT
+gosub @TS_HEAD
+display_text 396.0 72.0 'VHE04'
+uRow = 1
+:DRAW_SUPPORT_ROW
+uY =# uRow
+uY *= 52.0
+uY += 42.0
+switch uRow
+    case 1
+        uV = cS1
+        uR = 90
+        uG = 220
+        uB = 210
+    case 2
+        uV = cS2
+        uR = 240
+        uG = 170
+        uB = 40
+    default
+        uV = cS3
+        uR = 190
+        uG = 140
+        uB = 230
+end
+gosub @TS_BODY
+string_format uKey "VK%02dH%d" cId uRow
+display_text 396.0 uY uKey
+// score -> bar: 6% per point, clamped
+uV *= 6
+if 0 > uV
+then
+    uV = 0
+end
+if uV > 100
+then
+    uV = 100
+end
+uX = 504.0
+uY += 22.0
+uW = 212.0
+gosub @DRAW_METER
+uRow += 1
+if 3 >= uRow
+then
+    jump @DRAW_SUPPORT_ROW
+end
+gosub @TS_BODY
+display_text_with_number 396.0 254.0 'VHV07' cConf
+return

@@ -21,6 +21,7 @@ import re
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 # gesture name -> (code, animation, IFP block). Names verified against the open.mp
@@ -36,6 +37,9 @@ GESTURES = {
     "examine":  (7, "IDLE_HBHB", "PED"),
     "wave":     (8, "wave_loop", "ON_LOOKERS"),
     "shrug":    (9, "IDLE_chat", "PED"),
+    # Christopher's habits, shared with the expansion (tools/gen_story.py)
+    "glasses":  (10, "smkcig_prtl", "GANGS"),
+    "scratch":  (11, "XPRESSscratch", "PED"),
 }
 
 # Speaking rate in words per second, by speaker.
@@ -130,6 +134,10 @@ def main() -> int:
     # ---- UI text -------------------------------------------------------------
     for key, text in ui_doc["text"].items():
         add(key, text)
+
+    # ---- the expansion: HQ, story missions 2-5, research assignments ----------
+    import gen_story
+    story = gen_story.build(add, seen_keys=fxt)
 
     # ---- FXT ---------------------------------------------------------------------
     fxt_path = os.path.join(ROOT, "build", "CLEO", "CLEO_TEXT", "99sure.fxt")
@@ -251,10 +259,12 @@ def main() -> int:
     with open(os.path.join(ROOT, "build", "dialogue_manifest.json"), "w", encoding="utf-8") as fh:
         json.dump({"lines": manifest, "claims": claims, "ui_keys": sorted(ui_doc["text"]),
                    "gestures": {k: list(v) for k, v in GESTURES.items()}}, fh, indent=1)
+    gen_story.write_outputs(story)
 
     total_ms = sum(m["duration_ms"] for m in manifest)
     print(f"{len(manifest)} voice lines ({total_ms / 60000:.1f} min of speech), {len(claims)} claims, "
           f"{len(fxt)} FXT keys -> {os.path.relpath(fxt_path, ROOT)}")
+    print(gen_story.summary(story))
     return 0
 
 

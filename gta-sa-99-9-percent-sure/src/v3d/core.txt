@@ -1,0 +1,1056 @@
+// ============================================================================
+// Vers3Dynamics expansion - core systems shared by the HQ and missions 2-5
+//
+// Each script provides: :DLG_LOOKUP (its generated line table), :HUD_DRAW,
+// :WATCH_MISSION (extra failure checks, may just return) and its own cleanup,
+// which ends with gosub @CLEANUP_COMMON.
+//
+// Gosub depth (the engine allows 8). Scripts keep their loops at depth 1-2 and
+// call helpers at depth 3, so TICK runs at 4 at most:
+//   TICK(4) > DLG_UPDATE(5) > DLG_START(6) > DLG_LOOKUP / DLG_STOP(7)
+//   TICK(4) > HUD_DRAW(5) > DRAW_*(6) > TS_* / helpers(7)
+//   TICK(4) > WATCHDOG(5) > WATCH_MISSION(6)
+// ============================================================================
+
+:TICK
+wait 0
+iNow = get_game_timer
+gosub @DLG_UPDATE
+gosub @HUD_DRAW
+gosub @WATCHDOG
+if iSkipOk == 1
+then
+    gosub @SKIP_CHECK
+end
+return
+
+:WAIT_MS
+iWaitEnd = get_game_timer
+iWaitEnd += iWaitMs
+:WAIT_MS_LOOP
+gosub @TICK
+if iSkipReq == 1
+then
+    return
+end
+if iFail <> 0
+then
+    return
+end
+if iWaitEnd > iNow
+then
+    jump @WAIT_MS_LOOP
+end
+return
+
+// ---------------------------------------------------------------------------
+// Cutscenes
+// ---------------------------------------------------------------------------
+:CS_BEGIN
+switch_widescreen true
+set_player_control $player1 false
+hide_char_weapon_for_scripted_cutscene $scplayer true
+set_everyone_ignore_player $player1 true
+clear_help
+iInCs = 1
+iSkipOk = 1
+iSkipReq = 0
+iSkipPrev = 1
+oKind = OBJ_NONE
+return
+
+:CS_END
+iInCs = 0
+iSkipOk = 0
+iSkipReq = 0
+gosub @DLG_CANCEL
+switch_widescreen false
+restore_camera_jumpcut
+camera_reset_new_scriptables
+hide_char_weapon_for_scripted_cutscene $scplayer false
+set_everyone_ignore_player $player1 false
+set_player_control $player1 true
+return
+
+:SKIP_CHECK
+uBtn = get_pad_state 0 PAD_TRIANGLE
+if is_key_pressed KEY_ENTER
+then
+    uBtn = 255
+end
+if uBtn > 0
+then
+    if iSkipPrev == 0
+    then
+        iSkipReq = 1
+        gosub @DLG_STOP
+    end
+    iSkipPrev = 1
+else
+    iSkipPrev = 0
+end
+return
+
+:FADE_OUT
+do_fade 600 0
+while get_fading_status
+    wait 0
+end
+return
+
+:FADE_IN
+do_fade 600 1
+while get_fading_status
+    wait 0
+end
+return
+
+// ---------------------------------------------------------------------------
+// Dialogue (same behaviour as mission 1; voice files are optional)
+// ---------------------------------------------------------------------------
+:SAY
+dQNext = 0
+if iSkipReq == 1
+then
+    return
+end
+gosub @DLG_START
+while dActive == 1
+    gosub @TICK
+    if iSkipReq == 1
+    then
+        break
+    end
+    if iFail <> 0
+    then
+        break
+    end
+end
+gosub @DLG_STOP
+return
+
+// Background conversation dLine..dQEnd (driving banter, ambient chatter).
+:SAY_QUEUE
+iTmp = dLine
+gosub @DLG_CANCEL
+dLine = iTmp
+dQNext = dLine
+dQNext += 1
+gosub @DLG_START
+return
+
+:DLG_CANCEL
+dQNext = 0
+gosub @DLG_STOP
+return
+
+:DLG_START
+if or
+    dActive == 1
+    dStream <> 0
+then
+    gosub @DLG_STOP
+end
+dHasAudio = 0
+dStream = 0
+gosub @DLG_LOOKUP
+string_format dPath "%s.mp3" dKey
+set_current_directory "cleo\99sure\audio"
+if load_audio_stream dPath dStream
+then
+    dHasAudio = 1
+end
+set_current_directory 0
+dLimit = dDur
+if dHasAudio == 1
+then
+    set_audio_stream_volume dStream fVoiceVol
+    set_audio_stream_state dStream 1
+    dLimit += 9000
+    iTmp = dLimit
+else
+    iTmp = dDur
+end
+iTmp += 500
+print_now dKey iTmp 1
+dT0 = get_game_timer
+dActive = 1
+dPed = -1
+switch dWho
+    case 1
+        dPed = hPlayer
+    case 2
+        dPed = hChris
+    case 3
+        dPed = hNpc1
+    case 4
+        dPed = hNpc2
+    case 5
+        dPed = hNpc3
+end
+if dPed <> -1
+then
+    if not is_char_dead dPed
+    then
+        start_char_facial_talk dPed dLimit
+        if dGest > 0
+        then
+            if iAnimsReady == 1
+            then
+                if is_char_on_foot dPed
+                then
+                    {$INCLUDE ../gen/v3d_gestures.txt}
+                end
+            end
+        end
+    end
+end
+return
+
+:DLG_STOP
+if dStream <> 0
+then
+    set_audio_stream_state dStream 0
+    remove_audio_stream dStream
+    dStream = 0
+end
+if dActive == 1
+then
+    dActive = 0
+    clear_small_prints
+    if dPed <> -1
+    then
+        if not is_char_dead dPed
+        then
+            stop_char_facial_talk dPed
+        end
+    end
+end
+return
+
+:DLG_UPDATE
+if dActive == 1
+then
+    dElapsed = iNow
+    dElapsed -= dT0
+    dDone = 0
+    if dHasAudio == 1
+    then
+        dAudioState = get_audio_stream_state dStream
+        if and
+            dAudioState == -1
+            dElapsed > 400
+        then
+            dDone = 1
+        end
+    end
+    if dElapsed > dLimit
+    then
+        dDone = 1
+    end
+    if dDone == 1
+    then
+        gosub @DLG_STOP
+        dGapT = iNow
+        dGapT += 350
+    end
+else
+    if dQNext > 0
+    then
+        if iNow > dGapT
+        then
+            if dQEnd >= dQNext
+            then
+                dLine = dQNext
+                dQNext += 1
+                gosub @DLG_START
+            else
+                dQNext = 0
+            end
+        end
+    end
+end
+return
+
+// ---------------------------------------------------------------------------
+// Failure conditions shared by every script.
+// ---------------------------------------------------------------------------
+:WATCHDOG
+if iFail <> 0
+then
+    return
+end
+if iNeedChris > 0
+then
+    if is_char_dead hChris
+    then
+        iFail = 1
+        return
+    end
+end
+if iNeedVan == 1
+then
+    if is_car_dead hVan
+    then
+        iFail = 2
+        return
+    end
+end
+if iNeedChris == 2
+then
+    if locate_char_any_means_char_2d $scplayer hChris ABANDON_WARN ABANDON_WARN false
+    then
+        if bChris <> -1
+        then
+            remove_blip bChris
+            bChris = -1
+        end
+    else
+        if bChris == -1
+        then
+            bChris = add_blip_for_char hChris
+            set_blip_as_friendly bChris true
+            print_now 'VXO01' 6000 1
+        end
+        if not locate_char_any_means_char_2d $scplayer hChris ABANDON_FAIL ABANDON_FAIL false
+        then
+            iFail = 3
+            return
+        end
+    end
+end
+gosub @WATCH_MISSION
+return
+
+// ---------------------------------------------------------------------------
+// Launcher state
+// ---------------------------------------------------------------------------
+:PUBLISH
+set_cleo_shared_var SV_STATE iState
+set_cleo_shared_var SV_CHECKPOINT iCheckpoint
+set_cleo_shared_var SV_SCORE iSavedScore
+set_cleo_shared_var SV_RIGHT iSavedRight
+set_cleo_shared_var SV_TOTAL iSavedTotal
+set_cleo_shared_var SV_MISSION iMissionId
+return
+
+// ---------------------------------------------------------------------------
+// The persistent record. A record that has never been written (or was written by
+// an incompatible build) starts empty, with default volumes.
+// ---------------------------------------------------------------------------
+:REC_LOAD
+iTmp = get_cleo_shared_var REC_MAGIC
+if iTmp <> REC_MAGIC_V1
+then
+    rStory = 0
+    rCases = 0
+    rVerdict = 0
+    rCareful = 0
+    rRep = 50
+    rModes = 0
+    rFlags = 0
+    rAudio = 35428          // music 4, ambience 6, voices 10, effects 8: 4 + 6*16 + 10*256 + 8*4096
+    rBest = 0
+    rVisits = 0
+    gosub @REC_SAVE
+else
+    rStory = get_cleo_shared_var REC_STORY
+    rCases = get_cleo_shared_var REC_CASES
+    rVerdict = get_cleo_shared_var REC_VERDICT
+    rCareful = get_cleo_shared_var REC_CAREFUL
+    rRep = get_cleo_shared_var REC_REP
+    rModes = get_cleo_shared_var REC_MODES
+    rFlags = get_cleo_shared_var REC_FLAGS
+    rAudio = get_cleo_shared_var REC_AUDIO
+    rBest = get_cleo_shared_var REC_BEST
+    rVisits = get_cleo_shared_var REC_VISITS
+end
+gosub @AUDIO_DECODE
+return
+
+:REC_SAVE
+if 0 > rRep
+then
+    rRep = 0
+end
+if rRep > 100
+then
+    rRep = 100
+end
+set_cleo_shared_var REC_STORY rStory
+set_cleo_shared_var REC_CASES rCases
+set_cleo_shared_var REC_VERDICT rVerdict
+set_cleo_shared_var REC_CAREFUL rCareful
+set_cleo_shared_var REC_REP rRep
+set_cleo_shared_var REC_MODES rModes
+set_cleo_shared_var REC_FLAGS rFlags
+set_cleo_shared_var REC_AUDIO rAudio
+set_cleo_shared_var REC_BEST rBest
+set_cleo_shared_var REC_VISITS rVisits
+set_cleo_shared_var REC_MAGIC REC_MAGIC_V1
+return
+
+// rAudio: four 4-bit levels (0..10). Level -> volume = level / 10.
+:AUDIO_DECODE
+iTmp = rAudio
+iTmp2 = iTmp
+iTmp2 = bit_and iTmp2 15
+gosub @AUDIO_CLAMP
+fMusicVol =# iTmp2
+fMusicVol /= 10.0
+iTmp2 = iTmp
+iTmp2 /= 16
+iTmp2 = bit_and iTmp2 15
+gosub @AUDIO_CLAMP
+fAmbVol =# iTmp2
+fAmbVol /= 10.0
+iTmp2 = iTmp
+iTmp2 /= 256
+iTmp2 = bit_and iTmp2 15
+gosub @AUDIO_CLAMP
+fVoiceVol =# iTmp2
+fVoiceVol /= 10.0
+iTmp2 = iTmp
+iTmp2 /= 4096
+iTmp2 = bit_and iTmp2 15
+gosub @AUDIO_CLAMP
+fSfxVol =# iTmp2
+fSfxVol /= 10.0
+return
+
+:AUDIO_CLAMP
+if iTmp2 > 10
+then
+    iTmp2 = 10
+end
+return
+
+// ---------------------------------------------------------------------------
+// Sound: one-shot effects (one at a time), the lab ambience and the lab score.
+// ---------------------------------------------------------------------------
+:SFX_PLAY
+if iSfxStream <> 0
+then
+    set_audio_stream_state iSfxStream 0
+    remove_audio_stream iSfxStream
+    iSfxStream = 0
+end
+set_current_directory "cleo\99sure\sfx"
+switch iSfxId
+    case SFX_MOVE
+        if load_audio_stream "ui_move.mp3" iSfxStream
+        then
+        end
+    case SFX_OK
+        if load_audio_stream "ui_ok.mp3" iSfxStream
+        then
+        end
+    case SFX_BACK
+        if load_audio_stream "ui_back.mp3" iSfxStream
+        then
+        end
+    case SFX_BOOT
+        if load_audio_stream "rain_boot.mp3" iSfxStream
+        then
+        end
+    case SFX_ACCEPT
+        if load_audio_stream "rain_acc.mp3" iSfxStream
+        then
+        end
+    case SFX_REJECT
+        if load_audio_stream "rain_rej.mp3" iSfxStream
+        then
+        end
+    case SFX_ABSTAIN
+        if load_audio_stream "rain_abs.mp3" iSfxStream
+        then
+        end
+    case SFX_WARN
+        if load_audio_stream "rain_warn.mp3" iSfxStream
+        then
+        end
+    case SFX_LOCK
+        if load_audio_stream "plate_lock.mp3" iSfxStream
+        then
+        end
+    case SFX_SENTINEL
+        if load_audio_stream "sentinel.mp3" iSfxStream
+        then
+        end
+end
+set_current_directory 0
+if iSfxStream <> 0
+then
+    set_audio_stream_volume iSfxStream fSfxVol
+    set_audio_stream_state iSfxStream 1
+else
+    // effects not installed: the game's own front-end blip
+    add_one_off_sound 0.0 0.0 0.0 1028
+end
+return
+
+:SFX_STOP
+if iSfxStream <> 0
+then
+    set_audio_stream_state iSfxStream 0
+    remove_audio_stream iSfxStream
+    iSfxStream = 0
+end
+return
+
+:MUSIC_START
+if iMusicStream == 0
+then
+    if fMusicVol > 0.0
+    then
+        if load_audio_stream "cleo\99sure\music\lab.mp3" iMusicStream
+        then
+            set_audio_stream_volume iMusicStream fMusicVol
+            set_audio_stream_looped iMusicStream true
+            set_audio_stream_state iMusicStream 1
+        end
+    end
+end
+return
+
+:MUSIC_STOP
+if iMusicStream <> 0
+then
+    set_audio_stream_state iMusicStream 0
+    remove_audio_stream iMusicStream
+    iMusicStream = 0
+end
+return
+
+:AMB_START
+if iAmbStream == 0
+then
+    if fAmbVol > 0.0
+    then
+        if load_audio_stream "cleo\99sure\sfx\amb_lab.ogg" iAmbStream
+        then
+            set_audio_stream_volume iAmbStream fAmbVol
+            set_audio_stream_looped iAmbStream true
+            set_audio_stream_state iAmbStream 1
+        end
+    end
+end
+return
+
+:AMB_STOP
+if iAmbStream <> 0
+then
+    set_audio_stream_state iAmbStream 0
+    remove_audio_stream iAmbStream
+    iAmbStream = 0
+end
+return
+
+// ---------------------------------------------------------------------------
+// Menu input with edge detection: uIn = 0 none, 1 up, 2 down, 3 left, 4 right,
+// 5 confirm (Enter/Exit or Enter), 6 back (Conversation - No, Backspace),
+// 7 Conversation - Yes. A held button or stick counts once.
+// ---------------------------------------------------------------------------
+:MENU_INPUT
+uIn = 0
+uStick = get_pad_state 0 PAD_STICK_Y
+if is_key_pressed KEY_UP
+then
+    uStick = -128
+end
+if is_key_pressed KEY_DOWN
+then
+    uStick = 128
+end
+uI = get_pad_state 0 PAD_STICK_X
+if is_key_pressed KEY_LEFT
+then
+    uI = -128
+end
+if is_key_pressed KEY_RIGHT
+then
+    uI = 128
+end
+uI2 = 0
+if -60 > uStick
+then
+    uI2 = 1
+end
+if uStick > 60
+then
+    uI2 = 2
+end
+if -60 > uI
+then
+    uI2 = 3
+end
+if uI > 60
+then
+    uI2 = 4
+end
+if uI2 > 0
+then
+    if uStickPrev == 0
+    then
+        uIn = uI2
+    end
+    uStickPrev = 1
+else
+    uStickPrev = 0
+end
+uBtn = get_pad_state 0 PAD_TRIANGLE
+if is_key_pressed KEY_ENTER
+then
+    uBtn = 255
+end
+if uBtn > 0
+then
+    if uBtnPrev == 0
+    then
+        uIn = 5
+    end
+    uBtnPrev = 1
+else
+    uBtnPrev = 0
+end
+uBtn = get_pad_state 0 PAD_DPAD_LEFT
+if is_key_pressed KEY_BACKSPACE
+then
+    uBtn = 255
+end
+if uBtn > 0
+then
+    if uBackPrev == 0
+    then
+        uIn = 6
+    end
+    uBackPrev = 1
+else
+    uBackPrev = 0
+end
+uBtn = get_pad_state 0 PAD_DPAD_RIGHT
+if uBtn > 0
+then
+    if uYesPrev == 0
+    then
+        uIn = 7
+    end
+    uYesPrev = 1
+else
+    uYesPrev = 0
+end
+return
+
+// Ignore whatever is held down at the moment a menu opens.
+:MENU_ARM
+uStickPrev = 1
+uBtnPrev = 1
+uBackPrev = 1
+uYesPrev = 1
+return
+
+// ---------------------------------------------------------------------------
+// Streaming
+// ---------------------------------------------------------------------------
+:LOAD_MODEL
+request_model iMdl
+while not has_model_loaded iMdl
+    wait 0
+end
+return
+
+:LOAD_ANIMS
+request_animation "GANGS"
+request_animation "COP_AMBIENT"
+request_animation "ON_LOOKERS"
+request_animation "MISC"
+request_animation "INT_OFFICE"
+request_animation "CARRY"
+request_animation "CAMERA"
+:LOAD_ANIMS_WAIT
+wait 0
+if or
+    not has_animation_loaded "GANGS"
+    not has_animation_loaded "COP_AMBIENT"
+    not has_animation_loaded "ON_LOOKERS"
+    not has_animation_loaded "MISC"
+then
+    jump @LOAD_ANIMS_WAIT
+end
+if or
+    not has_animation_loaded "INT_OFFICE"
+    not has_animation_loaded "CARRY"
+    not has_animation_loaded "CAMERA"
+then
+    jump @LOAD_ANIMS_WAIT
+end
+iAnimsReady = 1
+return
+
+:RELEASE_ANIMS
+if iAnimsReady == 1
+then
+    remove_animation "GANGS"
+    remove_animation "COP_AMBIENT"
+    remove_animation "ON_LOOKERS"
+    remove_animation "MISC"
+    remove_animation "INT_OFFICE"
+    remove_animation "CARRY"
+    remove_animation "CAMERA"
+    iAnimsReady = 0
+end
+return
+
+// ---------------------------------------------------------------------------
+// Christopher. In: fSX fSY fSZ fHead. Out: hChris.
+// ---------------------------------------------------------------------------
+:SPAWN_CHRIS
+if iCustomModel == 1
+then
+    load_special_character 1 'CHRISW'
+    while not has_special_character_loaded 1
+        wait 0
+    end
+    iChrisModel = #SPECIAL01
+else
+    iMdl = MDL_CHRIS_FALLBACK
+    gosub @LOAD_MODEL
+    iChrisModel = MDL_CHRIS_FALLBACK
+end
+hChris = create_char 24 iChrisModel fSX fSY fSZ
+set_char_heading hChris fHead
+set_char_health hChris 400
+set_char_only_damaged_by_player hChris true
+set_char_never_targetted hChris true
+set_char_suffers_critical_hits hChris false
+set_char_cant_be_dragged_out hChris true
+set_char_drops_weapons_when_dead hChris false
+set_char_signal_after_kill hChris false
+iNeedChris = 1
+return
+
+// ---------------------------------------------------------------------------
+// Positions and cameras
+// ---------------------------------------------------------------------------
+:GET_PLAYER_POS
+fPX, fPY, fPZ = get_char_coordinates $scplayer
+return
+
+:ANCHOR_PREP
+fCos = cos fAH
+fSin = sin fAH
+return
+
+// (fTmp7 right, fTmp8 forward) around the anchor -> fSX fSY
+:ANCHOR_TO_WORLD
+fSX = fTmp7
+fSX *= fCos
+fTmp = fTmp8
+fTmp *= fSin
+fSX -= fTmp
+fSX += fAX
+fSY = fTmp7
+fSY *= fSin
+fTmp = fTmp8
+fTmp *= fCos
+fSY += fTmp
+fSY += fAY
+return
+
+:CAM_SHOT
+if is_char_dead hCamFrom
+then
+    return
+end
+if is_char_dead hCamTarget
+then
+    return
+end
+fCamX, fCamY, fCamZ = get_offset_from_char_in_world_coords hCamFrom fCamOX fCamOY fCamOZ
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords hCamTarget 0.0 0.0 fCamTZ
+point_camera_at_point fSX fSY fSZ 2
+return
+
+// Camera at an anchor offset (fTmp7 right, fTmp8 forward, fTmp6 up) looking at hCamTarget.
+:CAM_ANCHOR
+gosub @ANCHOR_TO_WORLD
+fCamX = fSX
+fCamY = fSY
+fCamZ = fAZ
+fCamZ += fTmp6
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+if not is_char_dead hCamTarget
+then
+    fSX, fSY, fSZ = get_offset_from_char_in_world_coords hCamTarget 0.0 0.0 fCamTZ
+    point_camera_at_point fSX fSY fSZ 2
+end
+return
+
+// ---------------------------------------------------------------------------
+// The HQ door outside (pavement node) and a kerbside parking spot.
+// ---------------------------------------------------------------------------
+:FIND_LAB_EXT
+fLabX, fLabY, fLabZ = get_closest_char_node LAB_REF_X LAB_REF_Y LAB_REF_Z
+if fLabX == 0.0
+then
+    fLabX = LAB_REF_X
+    fLabY = LAB_REF_Y
+    fLabZ = LAB_REF_Z
+end
+fLabZ += 1.0
+fVanX, fVanY, fVanZ, fVanH = get_closest_car_node_with_heading fLabX fLabY fLabZ
+if fVanX == 0.0
+then
+    fVanX = fLabX
+    fVanX += 6.0
+    fVanY = fLabY
+    fVanZ = fLabZ
+    fVanH = 0.0
+else
+    fTmp = fLabX
+    fTmp -= fVanX
+    fTmp2 = fLabY
+    fTmp2 -= fVanY
+    fDist = get_distance_between_coords_2d fLabX fLabY fVanX fVanY
+    if fDist > 2.5
+    then
+        fTmp /= fDist
+        fTmp2 /= fDist
+        fTmp *= 1.8
+        fTmp2 *= 1.8
+        fVanX += fTmp
+        fVanY += fTmp2
+    end
+end
+iLabSet = 1
+return
+
+// Into interior 18; the anchor is where CJ stands, facing into the room.
+:LAB_ROOM_ENTER
+iInLab = 1
+if iLabSet == 0
+then
+    gosub @FIND_LAB_EXT
+end
+set_area_visible LAB_AREA
+set_char_area_visible $scplayer LAB_AREA
+set_char_coordinates $scplayer LAB_IN_X LAB_IN_Y LAB_IN_Z
+set_char_heading $scplayer LAB_IN_H
+load_scene LAB_IN_X LAB_IN_Y LAB_IN_Z
+request_collision LAB_IN_X LAB_IN_Y
+fAX = LAB_IN_X
+fAY = LAB_IN_Y
+fTmp = LAB_IN_Z
+fTmp += 0.5
+fAZ = get_ground_z_for_3d_coord LAB_IN_X LAB_IN_Y fTmp
+fTmp = fAZ
+fTmp -= LAB_FLOOR_Z
+if 0.0 > fTmp
+then
+    fTmp *= -1.0
+end
+if fTmp > 0.75
+then
+    fAZ = LAB_FLOOR_Z
+end
+fAH = LAB_IN_H
+gosub @ANCHOR_PREP
+return
+
+// Back outside, facing the kerb.
+:LAB_ROOM_LEAVE
+iInLab = 0
+set_area_visible 0
+set_char_area_visible $scplayer 0
+set_char_coordinates $scplayer fLabX fLabY fLabZ
+load_scene fLabX fLabY fLabZ
+request_collision fLabX fLabY
+fTmp = fVanX
+fTmp -= fLabX
+fTmp2 = fVanY
+fTmp2 -= fLabY
+fHead = get_heading_from_vector_2d fTmp fTmp2
+set_char_heading $scplayer fHead
+return
+
+// ---------------------------------------------------------------------------
+// Start and end of every script
+// ---------------------------------------------------------------------------
+:INIT_COMMON
+008B: hPlayer = $scplayer
+iFail = 0
+iResult = 0
+iScore = iArgScore
+iDecRight = iArgRight
+iDecTotal = iArgTotal
+iSavedScore = iScore
+iSavedRight = iDecRight
+iSavedTotal = iDecTotal
+if 0 > iArgCheckpoint
+then
+    iArgCheckpoint = 0
+end
+iCheckpoint = iArgCheckpoint
+hChris = -1
+hVan = -1
+hVanDish = -1
+hNpc1 = -1
+hNpc2 = -1
+hNpc3 = -1
+bDest = -1
+bChris = -1
+bVan = -1
+bTarget = -1
+bAux1 = -1
+bAux2 = -1
+bAux3 = -1
+bAux4 = -1
+bAux5 = -1
+bAux6 = -1
+dStream = 0
+dActive = 0
+dQNext = 0
+dPed = -1
+iSfxStream = 0
+iMusicStream = 0
+iAmbStream = 0
+iPendLine = 0
+uMode = 0
+uHud = 0
+uTask = 0
+uMenu = 0
+oKind = OBJ_NONE
+oEnt = -1
+iNeedChris = 0
+iNeedVan = 0
+iSkipOk = 0
+iSkipReq = 0
+iInCs = 0
+iLabSet = 0
+iInLab = 0
+iAnimsReady = 0
+iRoadsOff = 0
+iCustomModel = 0
+if and
+    does_file_exist "modloader.asi"
+    does_file_exist "modloader\99sure\chrisw.dff"
+then
+    iCustomModel = 1
+end
+if does_file_exist "cleo\99sure\chrisw_in_img.txt"
+then
+    iCustomModel = 1
+end
+iSpritesOk = 0
+if does_file_exist "models\txd\v3drain.txd"
+then
+    load_texture_dictionary 'v3drain'
+    load_sprite 1 'v3dlogo'
+    load_sprite 2 'cymat'
+    load_sprite 3 'cym1'
+    load_sprite 4 'cym2'
+    load_sprite 5 'cym3'
+    load_sprite 6 'cym4'
+    load_sprite 7 'cym5'
+    load_sprite 8 'cym6'
+    load_sprite 9 'cymnoise'
+    load_sprite 10 'diagrain'
+    load_sprite 11 'diagcal'
+    load_sprite 12 'diagmode'
+    load_sprite 13 'diagmap'
+    iSpritesOk = 1
+end
+iNow = get_game_timer
+gosub @REC_LOAD
+set_cleo_shared_var SV_RESULT 0
+set_cleo_shared_var SV_HANDOFF 0
+gosub @PUBLISH
+gosub @LOAD_ANIMS
+return
+
+// After the script's own entities are gone. Restores everything the game had.
+:CLEANUP_COMMON
+gosub @DLG_CANCEL
+gosub @SFX_STOP
+gosub @MUSIC_STOP
+gosub @AMB_STOP
+uMode = 0
+uHud = 0
+oKind = OBJ_NONE
+use_text_commands false
+if iSpritesOk == 1
+then
+    remove_texture_dictionary
+    iSpritesOk = 0
+end
+if iInCs == 1
+then
+    switch_widescreen false
+    restore_camera_jumpcut
+    iInCs = 0
+end
+camera_reset_new_scriptables
+set_area_visible 0
+if is_player_playing $player1
+then
+    set_char_area_visible $scplayer 0
+    set_player_control $player1 true
+    hide_char_weapon_for_scripted_cutscene $scplayer false
+end
+set_everyone_ignore_player $player1 false
+set_max_wanted_level 6
+set_player_group_recruitment $player1 true
+remove_blip bDest
+remove_blip bChris
+remove_blip bVan
+remove_blip bTarget
+remove_blip bAux1
+remove_blip bAux2
+remove_blip bAux3
+remove_blip bAux4
+remove_blip bAux5
+remove_blip bAux6
+bDest = -1
+bChris = -1
+bVan = -1
+bTarget = -1
+bAux1 = -1
+bAux2 = -1
+bAux3 = -1
+bAux4 = -1
+bAux5 = -1
+bAux6 = -1
+if does_char_exist hChris
+then
+    if not is_char_dead hChris
+    then
+        remove_char_from_group hChris
+    end
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+if iCustomModel == 1
+then
+    unload_special_character 1
+end
+mark_model_as_no_longer_needed MDL_CHRIS_FALLBACK
+iNeedVan = 0
+mark_car_as_no_longer_needed hVan
+mark_object_as_no_longer_needed hVanDish
+hVan = -1
+hVanDish = -1
+mark_char_as_no_longer_needed hNpc1
+mark_char_as_no_longer_needed hNpc2
+mark_char_as_no_longer_needed hNpc3
+hNpc1 = -1
+hNpc2 = -1
+hNpc3 = -1
+gosub @RELEASE_ANIMS
+set_cleo_shared_var SV_STATE 12
+$onmission = 0
+mission_has_finished
+return

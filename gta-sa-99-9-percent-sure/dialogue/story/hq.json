@@ -1,0 +1,891 @@
+{
+  "title": "Vers3Dynamics HQ (free roam)",
+  "prefix": "VHQ",
+  "lines": [
+    {
+      "id": 101,
+      "speaker": "CHRIS",
+      "text": "Carl. Welcome to Vers3Dynamics. Officially, this time.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 102,
+      "speaker": "CJ",
+      "text": "Officially? What, you got a sign now?"
+    },
+    {
+      "id": 103,
+      "speaker": "CHRIS",
+      "text": "I've got a doormat. It's a start.",
+      "gesture": "shrug",
+      "direction": "pleased with the doormat"
+    },
+    {
+      "id": 104,
+      "speaker": "CHRIS",
+      "text": "R.A.I.N.'s got research assignments queued up. Small stuff. Good practice for the big stuff.",
+      "gesture": "point"
+    },
+    {
+      "id": 105,
+      "speaker": "CHRIS",
+      "text": "Use whatever you like. The plate, the terminal, the diagrams. Just not the red cable.",
+      "gesture": "talk"
+    },
+    {
+      "id": 106,
+      "speaker": "CJ",
+      "text": "What's the red cable do?"
+    },
+    {
+      "id": 107,
+      "speaker": "CHRIS",
+      "text": "That's what I'd like to know.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 111,
+      "speaker": "CHRIS",
+      "text": "Carl. Pull up a chair. Not that one, it's load-bearing.",
+      "gesture": "wave"
+    },
+    {
+      "id": 112,
+      "speaker": "CHRIS",
+      "text": "Back again? The coffee's terrible, but the data's good.",
+      "gesture": "nod"
+    },
+    {
+      "id": 113,
+      "speaker": "CHRIS",
+      "text": "You're just in time. I was about to start arguing with myself.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 114,
+      "speaker": "CHRIS",
+      "text": "Welcome back. Mind the cables. And the other cables.",
+      "gesture": "wave"
+    },
+    {
+      "id": 115,
+      "speaker": "CHRIS",
+      "text": "We're in the paper again, Carl. Not the good page.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 116,
+      "speaker": "CHRIS",
+      "text": "Good news: the paper liked our last result. I've framed it. Mentally.",
+      "gesture": "nod"
+    },
+    {
+      "id": 117,
+      "speaker": "CHRIS",
+      "text": "The registry's had forty thousand visitors. Forty thousand and one, counting my mother.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 201,
+      "speaker": "CJ",
+      "text": "So what do you actually do all day?"
+    },
+    {
+      "id": 202,
+      "speaker": "CHRIS",
+      "text": "Mostly I try to prove myself wrong. It's going great.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 203,
+      "speaker": "CJ",
+      "text": "Why'd you call the computer R.A.I.N.?"
+    },
+    {
+      "id": 204,
+      "speaker": "CHRIS",
+      "text": "Recursive Architecture for Intelligent Nexus. Every layer checks the layer underneath.",
+      "gesture": "talk"
+    },
+    {
+      "id": 205,
+      "speaker": "CJ",
+      "text": "And it spells rain. That's a coincidence?"
+    },
+    {
+      "id": 206,
+      "speaker": "CHRIS",
+      "text": "Absolutely not. I'm not a monster.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 207,
+      "speaker": "CJ",
+      "text": "You ever sleep, man?"
+    },
+    {
+      "id": 208,
+      "speaker": "CHRIS",
+      "text": "I run a sleep experiment every night. The results are mixed.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 209,
+      "speaker": "CJ",
+      "text": "That metal plate with the sand. What's that for?"
+    },
+    {
+      "id": 210,
+      "speaker": "CHRIS",
+      "text": "Cymatics. Sound you can see. Every pattern is the fingerprint of a frequency.",
+      "gesture": "invite"
+    },
+    {
+      "id": 211,
+      "speaker": "CJ",
+      "text": "Looks like somebody spilled sugar on a speaker."
+    },
+    {
+      "id": 212,
+      "speaker": "CHRIS",
+      "text": "That is exactly what it is, actually.",
+      "gesture": "nod"
+    },
+    {
+      "id": 213,
+      "speaker": "CJ",
+      "text": "You still hearing that ghost beeping?"
+    },
+    {
+      "id": 214,
+      "speaker": "CHRIS",
+      "text": "Every time I close my eyes. Seven short, one long.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 215,
+      "speaker": "CJ",
+      "text": "Those people Sentinel flagged. They alright?"
+    },
+    {
+      "id": 216,
+      "speaker": "CHRIS",
+      "text": "They're suing. Politely. With our data.",
+      "gesture": "nod"
+    },
+    {
+      "id": 217,
+      "speaker": "CJ",
+      "text": "Man, I can't stop seeing patterns everywhere now."
+    },
+    {
+      "id": 218,
+      "speaker": "CHRIS",
+      "text": "Good. Now ask which ones survive a second look.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 219,
+      "speaker": "CJ",
+      "text": "You could've been rich, you know."
+    },
+    {
+      "id": 220,
+      "speaker": "CHRIS",
+      "text": "I am rich. I've got a garage full of cables and a friend who drives like a lunatic.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 221,
+      "speaker": "CHRIS",
+      "text": "Nice watch, Carl. New?",
+      "gesture": "glasses",
+      "direction": "knows exactly where it came from"
+    },
+    {
+      "id": 222,
+      "speaker": "CJ",
+      "text": "...It was on sale."
+    },
+    {
+      "id": 223,
+      "speaker": "CJ",
+      "text": "How's my reputation looking?"
+    },
+    {
+      "id": 224,
+      "speaker": "CHRIS",
+      "text": "Ours. And it's only as good as our last careful answer.",
+      "gesture": "talk"
+    },
+    {
+      "id": 301,
+      "speaker": "CHRIS",
+      "text": "The whole city hums at sixty hertz. Somewhere between a B-flat and a bad mood."
+    },
+    {
+      "id": 302,
+      "speaker": "CHRIS",
+      "text": "If this works I'll be very surprised. That's how you know it's an experiment."
+    },
+    {
+      "id": 303,
+      "speaker": "CHRIS",
+      "text": "Note to self: label the cables. Note to self: you said that last week."
+    },
+    {
+      "id": 304,
+      "speaker": "CHRIS",
+      "text": "Calibration's drifting. Either that or I am."
+    },
+    {
+      "id": 305,
+      "speaker": "CHRIS",
+      "text": "Three independent readings. Not one reading three times."
+    },
+    {
+      "id": 306,
+      "speaker": "CHRIS",
+      "text": "Hm. Interesting. No. Wait. Yes. Interesting."
+    },
+    {
+      "id": 307,
+      "speaker": "CHRIS",
+      "text": "If you see smoke, that's normal. If you see flames, that's science."
+    },
+    {
+      "id": 308,
+      "speaker": "CHRIS",
+      "text": "A correlation is a rumour. A cause needs a witness."
+    },
+    {
+      "id": 309,
+      "speaker": "CHRIS",
+      "text": "The most dangerous number in the world is a confident one."
+    },
+    {
+      "id": 310,
+      "speaker": "CHRIS",
+      "text": "Who keeps moving my oscilloscope? Oh. Me."
+    },
+    {
+      "id": 401,
+      "speaker": "CHRIS",
+      "text": "R.A.I.N.'s all yours. Be nice to it. It remembers.",
+      "gesture": "invite"
+    },
+    {
+      "id": 402,
+      "speaker": "CHRIS",
+      "text": "Signal generator, steel plate, a pinch of sand. Find the frequencies where the plate rings.",
+      "gesture": "invite"
+    },
+    {
+      "id": 403,
+      "speaker": "CHRIS",
+      "text": "Careful: the building hums too. Switch the generator off and see what's still there.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 404,
+      "speaker": "CHRIS",
+      "text": "There it is. Look at that."
+    },
+    {
+      "id": 405,
+      "speaker": "CHRIS",
+      "text": "Another one. The plate's singing now."
+    },
+    {
+      "id": 406,
+      "speaker": "CHRIS",
+      "text": "That's a beauty. Write it down."
+    },
+    {
+      "id": 407,
+      "speaker": "CHRIS",
+      "text": "Check it with the generator off. Still there? Then it's the wiring, not the plate.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 408,
+      "speaker": "CJ",
+      "text": "So the building was lying to me."
+    },
+    {
+      "id": 409,
+      "speaker": "CHRIS",
+      "text": "Buildings do that. Now we know its voice.",
+      "gesture": "nod"
+    },
+    {
+      "id": 410,
+      "speaker": "CHRIS",
+      "text": "Six modes. A complete atlas. Carl, that's publishable.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 411,
+      "speaker": "CJ",
+      "text": "Do I get my name on it?"
+    },
+    {
+      "id": 412,
+      "speaker": "CHRIS",
+      "text": "Second author. Right behind the sand.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 413,
+      "speaker": "CHRIS",
+      "text": "Every result we've got. The good, the bad, and the burger.",
+      "gesture": "point"
+    },
+    {
+      "id": 414,
+      "speaker": "CHRIS",
+      "text": "That's R.A.I.N.'s architecture. Every layer checks the one below it.",
+      "gesture": "point"
+    },
+    {
+      "id": 415,
+      "speaker": "CHRIS",
+      "text": "CERTAIN's confidence against reality. Notice the two lines never touch.",
+      "gesture": "point"
+    },
+    {
+      "id": 416,
+      "speaker": "CHRIS",
+      "text": "The plate modes. Physics doesn't care what anybody believes.",
+      "gesture": "talk"
+    },
+    {
+      "id": 417,
+      "speaker": "CHRIS",
+      "text": "Every red dot is a prediction. Every blue one is something we actually checked.",
+      "gesture": "point"
+    },
+    {
+      "id": 501,
+      "speaker": "CHRIS",
+      "text": "Carl. Something's come up. Meet me by the desk when you're ready.",
+      "gesture": "invite"
+    },
+    {
+      "id": 502,
+      "speaker": "CHRIS",
+      "text": "There's a signal on the scanner nobody can explain. I'd like to explain it.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 503,
+      "speaker": "CHRIS",
+      "text": "Somebody leaked me a SENTINEL dashboard. It's flagging people. Right now.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 504,
+      "speaker": "CHRIS",
+      "text": "A radio host says everything in San Fierro is connected. I'd like to check his work.",
+      "gesture": "talk"
+    },
+    {
+      "id": 505,
+      "speaker": "CHRIS",
+      "text": "We're going public. Properly. Everything open, everything checkable.",
+      "gesture": "nod"
+    },
+    {
+      "id": 506,
+      "speaker": "CHRIS",
+      "text": "Drive safe. Or at least drive measurably.",
+      "gesture": "wave"
+    },
+    {
+      "id": 507,
+      "speaker": "CHRIS",
+      "text": "See you, Carl.",
+      "gesture": "wave"
+    },
+    {
+      "id": 508,
+      "speaker": "CHRIS",
+      "text": "Back to the field, then.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1011,
+      "speaker": "CHRIS",
+      "text": "Burger Shot says Tuesday Doubles make you lucky. I say: show me the losers.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1012,
+      "speaker": "CHRIS",
+      "text": "Rejected, cleanly. One caller quoted twice is still one caller.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1013,
+      "speaker": "CHRIS",
+      "text": "Right answer. But you counted the same caller twice. Luck isn't a method.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1014,
+      "speaker": "CHRIS",
+      "text": "We just told the city burgers cause luck. Burger Shot is on line one. They're delighted.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1015,
+      "speaker": "CHRIS",
+      "text": "We had the survey and it said no. Abstaining here is just being shy.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1016,
+      "speaker": "CJ",
+      "text": "Twenty-four winners, twenty-six losers. Same as any day."
+    },
+    {
+      "id": 1017,
+      "speaker": "CJ",
+      "text": "I ate the Double. I lost twenty bucks. And I feel terrible."
+    },
+    {
+      "id": 1021,
+      "speaker": "CHRIS",
+      "text": "Garcia says the new tower wrecks their TV. The timing matches. Timing matches a lot of things.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 1022,
+      "speaker": "CHRIS",
+      "text": "Rejected. The tower was off and the static came anyway. It's the hair dryer.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1023,
+      "speaker": "CHRIS",
+      "text": "Right call, but a petition is a list of opinions, not observations.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1024,
+      "speaker": "CHRIS",
+      "text": "We blamed the tower. SureThing's lawyers have written to us. In crayon, but still.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1025,
+      "speaker": "CHRIS",
+      "text": "We switched the neighbour off and the picture came back. That's about as clear as it gets.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1026,
+      "speaker": "CJ",
+      "text": "Neighbour unplugs at six, picture's perfect. Old man cried a little."
+    },
+    {
+      "id": 1027,
+      "speaker": "CJ",
+      "text": "Sunny day, static anyway. Weather's off the hook."
+    },
+    {
+      "id": 1031,
+      "speaker": "CHRIS",
+      "text": "CERTAIN said ninety-nine point nine percent. Let's see how often ninety-nine point nine was right.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1032,
+      "speaker": "CHRIS",
+      "text": "Accepted. Overconfident everywhere, and two independent audits agree.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1033,
+      "speaker": "CHRIS",
+      "text": "Right, but that TV special was just our own log on the news. Same data, new haircut.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1034,
+      "speaker": "CHRIS",
+      "text": "We just vouched for CERTAIN. Max Certainty sent a fruit basket. I'm not eating it.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1035,
+      "speaker": "CHRIS",
+      "text": "Two separate audits, same answer. We're allowed to say it out loud.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1036,
+      "speaker": "CJ",
+      "text": "Wrong in every district. Even the fancy ones."
+    },
+    {
+      "id": 1037,
+      "speaker": "CJ",
+      "text": "They said, quote, CERTAIN is certain. Then they hung up on me."
+    },
+    {
+      "id": 1041,
+      "speaker": "CHRIS",
+      "text": "The Gant Bridge hums on windy nights. Rex Pattern says ghost. I say physics. One of us is annoying.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1042,
+      "speaker": "CHRIS",
+      "text": "Accepted. The wind plays the cables like a string. The bridge is just singing.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1043,
+      "speaker": "CHRIS",
+      "text": "Right answer, but one fisherman's bad night isn't data about a bridge.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1044,
+      "speaker": "CHRIS",
+      "text": "We just published that the bridge is haunted. Rex Pattern is thrilled. I need a lie down.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1045,
+      "speaker": "CHRIS",
+      "text": "The pitch follows the wind. That's a fingerprint. We can say this one.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1046,
+      "speaker": "CJ",
+      "text": "Wind goes up, hum goes up. Like blowing across a bottle."
+    },
+    {
+      "id": 1047,
+      "speaker": "CJ",
+      "text": "Cars come, cars go. The hum don't care."
+    },
+    {
+      "id": 1051,
+      "speaker": "CHRIS",
+      "text": "Ice cream and crime go up together. Either ice cream is a gateway dessert, or something else is going on.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 1052,
+      "speaker": "CHRIS",
+      "text": "Rejected. Hot weather drives both. Ice cream is innocent.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1053,
+      "speaker": "CHRIS",
+      "text": "Right, but the union statement wasn't evidence. They'd defend ice cream if it bit people.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1054,
+      "speaker": "CHRIS",
+      "text": "We published that ice cream causes crime. There are ice cream vans outside. Several. Idling.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1055,
+      "speaker": "CHRIS",
+      "text": "The strike week told us. No vans, same crime. That's our answer.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1056,
+      "speaker": "CJ",
+      "text": "Hot days, crime goes up. Vans or no vans."
+    },
+    {
+      "id": 1057,
+      "speaker": "CJ",
+      "text": "I ate the cone. Nobody robbed nobody. Science."
+    },
+    {
+      "id": 1061,
+      "speaker": "CHRIS",
+      "text": "If we say this was CERTAIN, SureThing will check every byte. So let's check them first.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1062,
+      "speaker": "CHRIS",
+      "text": "Accepted. Header, schedule, a second receiver and a control. That's airtight.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1063,
+      "speaker": "CHRIS",
+      "text": "Right call, but Rex decoded BEWARE, then LUNCH. Leave him out of it.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1064,
+      "speaker": "CHRIS",
+      "text": "We said it was a ham-radio beacon. The ham-radio club is very confused.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1065,
+      "speaker": "CHRIS",
+      "text": "Unplug the relay and the bursts stop. We know where they come from.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1066,
+      "speaker": "CJ",
+      "text": "Relay unplugged, silence. Plug it back in, beep beep."
+    },
+    {
+      "id": 1067,
+      "speaker": "CJ",
+      "text": "Rex says it spells LUNCH now. Man's hungry."
+    },
+    {
+      "id": 1071,
+      "speaker": "CHRIS",
+      "text": "SENTINEL flags Ganton nine times more than Downtown, for the same behaviour. Let's test that properly.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1072,
+      "speaker": "CHRIS",
+      "text": "Accepted. It learned old arrest maps, not behaviour. Same walk, different street, different verdict.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1073,
+      "speaker": "CHRIS",
+      "text": "Right, but the vans follow the flags, not the other way round. Watch the arrows.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1074,
+      "speaker": "CHRIS",
+      "text": "We cleared SENTINEL. Pacific Shield put our quote on a billboard. Next to a lion.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1075,
+      "speaker": "CHRIS",
+      "text": "Two identical walkers, seven flags against none. We can stand behind this.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1076,
+      "speaker": "CJ",
+      "text": "Same dude, same walk. Ganton, flagged seven times. Downtown, nothing."
+    },
+    {
+      "id": 1077,
+      "speaker": "CJ",
+      "text": "They said proprietary. That's corporate for don't look."
+    },
+    {
+      "id": 1081,
+      "speaker": "CHRIS",
+      "text": "One reading under Mount Chiliad. One. I want it to be something, and that's exactly why I don't trust it.",
+      "gesture": "scratch"
+    },
+    {
+      "id": 1082,
+      "speaker": "CHRIS",
+      "text": "Abstained. One echo and a drifting array isn't a chamber. It isn't nothing either. We go back.",
+      "gesture": "nod"
+    },
+    {
+      "id": 1083,
+      "speaker": "CHRIS",
+      "text": "Right to wait, but the hiker's lights aren't our echo. Different mystery.",
+      "gesture": "glasses"
+    },
+    {
+      "id": 1084,
+      "speaker": "CHRIS",
+      "text": "We picked an answer the data can't carry. Either way, somebody's heading up Chiliad with a shovel.",
+      "gesture": "facepalm"
+    },
+    {
+      "id": 1085,
+      "speaker": "CHRIS",
+      "text": "Sometimes the bravest thing to say is: not yet.",
+      "gesture": "shrug"
+    },
+    {
+      "id": 1086,
+      "speaker": "CJ",
+      "text": "Steady temperature, echo's weaker. Still something. Maybe."
+    },
+    {
+      "id": 1087,
+      "speaker": "CJ",
+      "text": "I climbed up there. Found a rock. And a goat. Goat ain't talking."
+    }
+  ],
+  "ui": {
+    "VXU00": "...",
+    "VXO01": "~r~Christopher~s~ is getting left behind. Go back for him.",
+    "VXO02": "Get in the ~b~research van~s~.",
+    "VXO03": "Wait for ~b~Christopher~s~.",
+    "VXF00": "MISSION FAILED!",
+    "VXF01": "~r~Christopher is dead.",
+    "VXF02": "~r~The research van was destroyed.",
+    "VXF03": "~r~You abandoned Christopher.",
+    "VXP00": "MISSION PASSED!~n~~w~$~1~",
+    "VHL01": "Vers3Dynamics",
+    "VHL02": "Independent Research Laboratory",
+    "VHL03": "Doherty, San Fierro",
+    "VHH01": "Press ~k~~VEHICLE_ENTER_EXIT~ to use the ~g~R.A.I.N. terminal~s~.",
+    "VHH02": "Press ~k~~VEHICLE_ENTER_EXIT~ to run the ~g~cymatics rig~s~.",
+    "VHH03": "Press ~k~~VEHICLE_ENTER_EXIT~ to look at the ~g~diagram wall~s~.",
+    "VHH04": "Press ~k~~VEHICLE_ENTER_EXIT~ to read the ~g~research notebooks~s~.",
+    "VHH05": "Press ~k~~CONVERSATION_YES~ to talk to ~b~Christopher~s~.",
+    "VHH06": "The ~g~teal lights~s~ mark the lab's stations. Walk into the door marker to leave.",
+    "VHH07": "Christopher has a new investigation. Walk into the ~y~marker~s~ by his desk to start it.",
+    "VHH08": "Christopher's model is not installed, so a stand-in plays him. See INSTALL.md.",
+    "VHH09": "~r~Leave the lab first.~s~ The door is behind you.",
+    "VHT00": "R.A.I.N. RESEARCH TERMINAL",
+    "VHT01": "Research assignments",
+    "VHT02": "Investigation records",
+    "VHT03": "Audio settings",
+    "VHT04": "Log off",
+    "VHT05": "Up/Down choose   ~k~~VEHICLE_ENTER_EXIT~ open   ~k~~CONVERSATION_NO~ back",
+    "VHT06": "Reputation ~1~/100     Assignments concluded ~1~",
+    "VHT07": "RECURSIVE ARCHITECTURE FOR INTELLIGENT NEXUS",
+    "VHA00": "RESEARCH ASSIGNMENTS",
+    "VHA01": "NEW",
+    "VHA02": "CAREFUL",
+    "VHA03": "RIGHT, SLOPPY",
+    "VHA04": "RETRACTED",
+    "VHA05": "TOO CAUTIOUS",
+    "VHA06": "LOCKED",
+    "VHA07": "Unlocks after 99.9% SURE.",
+    "VHA08": "Unlocks after Ghost Frequency.",
+    "VHA09": "Unlocks after False Positive.",
+    "VHA10": "Unlocks after Everything Is Connected.",
+    "VHA11": "Unlocks after The Open Experiment.",
+    "VHA12": "Unlocks when five assignments are concluded.",
+    "VHA13": "Concluded carefully. The record stands.",
+    "VHA14": "Open it again to do it properly.",
+    "VHA15": "Not started.",
+    "VHB00": "THE CLAIM",
+    "VHB01": "COMPETING EXPLANATIONS",
+    "VHB02": "~k~~VEHICLE_ENTER_EXIT~ go to the evidence board",
+    "VHE00": "EVIDENCE BOARD",
+    "VHE01": "WEIGH",
+    "VHE02": "ASIDE",
+    "VHE03": "Continue to the experiment",
+    "VHE04": "R.A.I.N. SUPPORT",
+    "VHE05": "~k~~VEHICLE_ENTER_EXIT~ weigh or set aside. Weigh independent evidence only.",
+    "VHE06": "Source: ~1~",
+    "VHX00": "LAB TIME FOR ONE EXPERIMENT",
+    "VHX01": "~1~ h",
+    "VHX02": "Skip the experiment",
+    "VHX03": "RESULT",
+    "VHX04": "~k~~VEHICLE_ENTER_EXIT~ continue to the verdict",
+    "VHV00": "VERDICT ON THE CLAIM",
+    "VHV01": "ACCEPT",
+    "VHV02": "REJECT",
+    "VHV03": "ABSTAIN",
+    "VHV04": "R.A.I.N. READS: SUPPORTED",
+    "VHV05": "R.A.I.N. READS: CONTRADICTED",
+    "VHV06": "R.A.I.N. READS: NOT ENOUGH TO SAY",
+    "VHV07": "Support for the claim ~1~%",
+    "VHV08": "R.A.I.N. only knows what you weighed.",
+    "VHU00": "R.A.I.N. AUDIT",
+    "VHU01": "CAREFUL",
+    "VHU02": "RIGHT FOR THE WRONG REASONS",
+    "VHU03": "RETRACTION",
+    "VHU04": "TOO CAUTIOUS",
+    "VHU05": "Counted one source twice.",
+    "VHU06": "Weighed a coincidence as evidence.",
+    "VHU07": "Weighed an opinion as evidence.",
+    "VHU08": "The other experiment could have settled it.",
+    "VHU09": "Clean: independent evidence only.",
+    "VHU10": "Research grant: $~1~",
+    "VHU11": "Reputation ~1~/100",
+    "VHU12": "~k~~VEHICLE_ENTER_EXIT~ file the result",
+    "VHR00": "INVESTIGATION RECORDS",
+    "VHR01": "STORY",
+    "VHR02": "RESEARCH",
+    "VHR03": "99.9% SURE",
+    "VHR04": "Ghost Frequency",
+    "VHR05": "False Positive",
+    "VHR06": "Everything Is Connected",
+    "VHR07": "The Open Experiment",
+    "VHR10": "PASSED",
+    "VHR11": "-",
+    "VHR12": "best evidence ~1~/100",
+    "VHR13": "relay verified",
+    "VHR14": "published unverified",
+    "VHR15": "nobody detained",
+    "VHR16": "someone was detained",
+    "VHR17": "clean board",
+    "VHR18": "the vans came",
+    "VHR19": "kept open",
+    "VHR20": "kept open, fee taken",
+    "VHR21": "Reputation ~1~/100",
+    "VHR22": "Cymatics atlas ~1~/6",
+    "VHR23": "Up/Down choose   ~k~~CONVERSATION_NO~ back",
+    "VHS00": "AUDIO SETTINGS",
+    "VHS01": "Lab music",
+    "VHS02": "Equipment ambience",
+    "VHS03": "Voices",
+    "VHS04": "Effects",
+    "VHS05": "~1~/10",
+    "VHS06": "Left/Right adjust. Subtitles always show; voice files are optional.",
+    "VHC00": "CYMATICS RIG",
+    "VHC01": "~1~ Hz",
+    "VHC02": "GENERATOR ON",
+    "VHC03": "GENERATOR OFF",
+    "VHC04": "PLATE RESPONSE",
+    "VHC05": "Modes logged ~1~/6",
+    "VHC06": "Left/Right tune   Up/Down fine   ~k~~CONVERSATION_YES~ generator   ~k~~VEHICLE_ENTER_EXIT~ log   ~k~~CONVERSATION_NO~ leave",
+    "VHC07": "Mode logged: ~1~ Hz",
+    "VHC08": "Nothing worth logging there.",
+    "VHC09": "A peak... but is it the plate? Try it with the generator off.",
+    "VHC10": "Logged as mains interference: ~1~ Hz",
+    "VHC11": "Already in the atlas.",
+    "VHC12": "Atlas complete. Research grant: $2000",
+    "VHC13": "Mode grant: $250",
+    "VHD00": "THE DIAGRAM WALL",
+    "VHD01": "R.A.I.N. - how it checks",
+    "VHD02": "Confidence is not evidence",
+    "VHD03": "Plate modes, measured",
+    "VHD04": "San Fierro: predicted vs checked",
+    "VHD05": "Each layer audits the one beneath it. The top layer",
+    "VHD06": "is allowed to say 'I don't know'. It often does.",
+    "VHD07": "CERTAIN's stated confidence (red) against how often",
+    "VHD08": "its alerts were right (blue). Calibration is the gap.",
+    "VHD09": "Square steel plate, 30 cm. Sand settles where the",
+    "VHD10": "plate stands still: the nodal lines of each mode.",
+    "VHD11": "Red: CERTAIN predictions. Blue: things we went and",
+    "VHD12": "looked at. The blue dots are fewer. They are right.",
+    "VHD13": "Left/Right page   ~k~~CONVERSATION_NO~ back",
+    "VHD14": "Diagram textures not installed: captions only.",
+    "VHN01": "SF GAZETTE: Independent Doherty lab keeps its findings public. 'Check our work,' says founder.",
+    "VHG01": "Research grant: $~1~",
+    "VLH01": "~g~Vers3Dynamics~s~: walk into the ~y~marker~s~ at the door to go into the lab.",
+    "VXD01": "FIRST ANSWER RIGHT  +10",
+    "VXD02": "WRONG: LOGGED  -5",
+    "VXD03": "RIGHT ON A RETRY: NO POINTS",
+    "VXD04": "STILL WRONG",
+    "VXD05": "Left/Right choose   ~k~~VEHICLE_ENTER_EXIT~ confirm",
+    "VXU01": "R.A.I.N.  evidence ~1~",
+    "VXU02": "~1~:~1~",
+    "VXT01": "Hold still: ~1~%",
+    "VLH02": "~g~Vers3Dynamics~s~ is open. Find the ~y~?~s~ at the lab door, down the street from the garage."
+  }
+}
