@@ -65,7 +65,9 @@ The audit notes call out the echo, the number of lines and calibration (a 99.9% 
 
 ## Save
 
-One `localStorage` key, `99sure.hidden.v1`, separate from Pine Gap's own progress keys. It holds whether the case was found, its stage, evidence, bearings, conversations, notes read, verdict and the endings seen. Parsing never throws and keeps only known values; a blocked or missing store just means nothing is remembered. "Replay the case" resets the investigation but keeps notes, endings seen and the found flag.
+One `localStorage` key, `99sure.hidden.v1`, separate from Pine Gap's own progress keys. It holds whether the case was found, its stage, evidence, bearings, conversations, notes read, verdict and the endings seen. It also keeps the cards weighed when the verdict on file was handed in, so reopening a filed verdict shows the audit it was given, not one recomputed from evidence found later. Parsing never throws and keeps only known values; a blocked or missing store just means nothing is remembered.
+
+Two tabs can play the same file. Before every save the case reads the file again and, if another tab saved in the meantime, merges: found evidence, bearings, notes and endings only accumulate, and the verdict comes from whichever copy got further. Each replay bumps an `epoch`, so an older copy cannot bring back evidence a replay cleared. "Replay the case" resets the investigation but keeps notes, endings seen and the found flag.
 
 ## What is not built yet
 

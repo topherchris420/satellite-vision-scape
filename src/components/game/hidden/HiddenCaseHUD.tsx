@@ -9,6 +9,7 @@ import {
   FIELD_NOTES,
   LATER_CASES,
   POSTS,
+  RADIO,
   SPEAKERS,
   TITLE,
   independentLines,
@@ -330,6 +331,7 @@ function Board({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap: Ca
         <div className="mt-1 font-sans text-[13px] text-white/90">{CLAIM.title}</div>
         <p className="mt-1 font-sans text-[11px] leading-relaxed text-white/55">{CLAIM.summary}</p>
       </div>
+      <p className="mt-3 font-sans text-[11.5px] leading-relaxed text-white/65">{RADIO.board}</p>
       {snap.board.length === 0 ? (
         <p className="mt-3 font-sans text-[12px] text-white/50">
           Nothing on the board yet. You can still hand in a verdict on the claim alone.

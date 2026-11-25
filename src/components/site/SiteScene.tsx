@@ -552,6 +552,11 @@ export function SiteScene() {
     },
     [game],
   );
+  // Leaving play for a survey view (2, 3 or 4) hides the case's fictional props
+  // without ending the investigation; returning to play shows them again.
+  useEffect(() => {
+    hiddenCase?.setViewing(playing);
+  }, [hiddenCase, playing]);
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",
     entities: 0,

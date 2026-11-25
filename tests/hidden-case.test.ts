@@ -5,8 +5,10 @@ import {
   beginInvestigation,
   collect,
   emptyCase,
+  auditOnFile,
   logBearing,
   markFound,
+  mergeCase,
   objectives,
   observationsComplete,
   parseCase,
@@ -164,7 +166,64 @@ describe("hidden case: the file", () => {
   });
 });
 
+describe("hidden case: two tabs, one file", () => {
+  test("a stale tab's save keeps what the other tab found", () => {
+    const first = investigating();
+    const second = parseCase(serialiseCase(first));
+    collect(first, "witness");
+    collect(second, "logger");
+    const merged = mergeCase(second, parseCase(serialiseCase(first)));
+    expect(merged.collected.sort()).toEqual(["logger", "witness"]);
+    expect(merged.weighed.sort()).toEqual(["logger", "witness"]);
+  });
+
+  test("a verdict filed in either tab survives the merge", () => {
+    const first = investigating();
+    const second = parseCase(serialiseCase(first));
+    collect(first, "witness");
+    collect(first, "logger");
+    submitVerdict(first, "reject", 80);
+    readDocument(second, "echo");
+    const merged = mergeCase(second, parseCase(serialiseCase(first)));
+    expect(merged.stage).toBe("closed");
+    expect(merged.ending).toBe("quiet-correction");
+    expect(merged.documents).toContain("echo");
+  });
+
+  test("a replay is not undone by an older copy, but notes and endings are kept", () => {
+    const old = investigating();
+    collect(old, "witness");
+    readDocument(old, "echo");
+    const replayed = parseCase(serialiseCase(old));
+    replayCase(replayed);
+    const merged = mergeCase(old, parseCase(serialiseCase(replayed)));
+    expect(merged.collected).toEqual([]);
+    expect(merged.stage).toBe("briefing");
+    expect(merged.documents).toContain("echo");
+    expect(mergeCase(replayed, old).collected).toEqual([]);
+  });
+});
+
 describe("hidden case: the verdict", () => {
+  test("the verdict on file is graded on what was weighed when it was handed in", () => {
+    const data = investigating();
+    submitVerdict(data, "reject", 95);
+    expect(data.ending).toBe("wrong-reasons");
+    collect(data, "witness");
+    collect(data, "logger");
+    const audit = auditOnFile(parseCase(serialiseCase(data)));
+    expect(audit?.ending).toBe("wrong-reasons");
+    expect(audit?.lines).toBe(0);
+  });
+
+  test("accepting against your own evidence is never called a fair number", () => {
+    const audit = gradeVerdict({ verdict: "accept", weighed: ["logger", "sonde"], confidence: 95 });
+    const text = audit.notes.join(" ");
+    expect(text).not.toMatch(/fair/);
+    expect(text).toMatch(/against your own evidence/);
+    expect(ENDINGS["confidently-wrong"].rain).not.toMatch(/so were you/);
+  });
+
   test("every evidence card has a line and the order lists each once", () => {
     expect([...EVIDENCE_ORDER].sort()).toEqual(Object.keys(EVIDENCE).sort());
     for (const id of EVIDENCE_ORDER) expect(EVIDENCE[id].id).toBe(id);

@@ -213,7 +213,7 @@ export const ENDINGS: Record<EndingId, Ending> = {
     title: "Confidently Wrong",
     epilogue:
       "U-2 is pulled from service and Mara is stood down pending review. At 09:00 the carrier is still keyed, from half a kilometre north. A retraction goes out at noon, with her name in it.",
-    rain: "The machine was 99.9% sure and so were you. Two certainties, one mistake. The carrier never moved.",
+    rain: "The machine was 99.9% sure, and you put your name beside it. One mistake, signed twice. The carrier never moved.",
     closes: true,
   },
   "long-pause": {
@@ -277,6 +277,10 @@ export function gradeVerdict(input: VerdictInput): Audit {
       "The re-run read the same sensor feed as the first run. Asking one instrument twice is one observation, not two.",
     );
   if (lines === 0) notes.push("Nothing you weighed came from outside the classifier itself.");
+  else if (input.verdict === "accept")
+    notes.push(
+      `Every line you weighed points away from U-2 (${describeLines(input.weighed)}). The verdict went against your own evidence.`,
+    );
   else if (lines === 1) notes.push("One independent line of evidence. Enough to doubt, not enough to show.");
   else notes.push(`${lines} independent lines of evidence: ${describeLines(input.weighed)}.`);
   if (input.confidence === 99.9)
@@ -285,9 +289,11 @@ export function gradeVerdict(input: VerdictInput): Audit {
         ? "You matched the machine's number exactly. That is agreement, not checking."
         : "You said 99.9% too. Careful: that is the number that started this.",
     );
-  else if (input.verdict !== "abstain" && lines >= 2 && input.confidence >= 80)
+  else if (input.verdict === "accept")
+    notes.push(`${input.confidence}% sure of a claim nothing you found supports.`);
+  else if (input.verdict === "reject" && lines >= 2 && input.confidence >= 80)
     notes.push(`${input.confidence}% on that evidence is a fair number to put your name to.`);
-  else if (input.verdict !== "abstain" && lines < 2 && input.confidence >= 95)
+  else if (input.verdict === "reject" && lines < 2 && input.confidence >= 95)
     notes.push(`${input.confidence}% is more certainty than one line can carry.`);
   return { ending, lines, notes };
 }

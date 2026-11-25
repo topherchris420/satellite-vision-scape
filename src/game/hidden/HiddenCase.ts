@@ -12,6 +12,7 @@ import {
   collect,
   logBearing,
   markFound,
+  mergeCase,
   objectives,
   observationsComplete,
   parseCase,
@@ -106,6 +107,10 @@ export class HiddenCase implements GameLayer {
   private crossingPoint: { x: number; z: number } | null = null;
   private crossingShown: number | null = null;
   private dirty = true;
+  /** The file text this tab last read or wrote, to notice another tab's save. */
+  private lastText: string | null = null;
+  /** Whether play is on screen (switching to a survey view hides the case's props). */
+  private viewing = true;
   private readonly offer: InteractionOffer = { label: "", distance: 0, priority: true, act: () => undefined };
   private readonly poses: Record<"christopher" | "mara" | "tobin", PersonPose> = {
     christopher: { x: CHRISTOPHER.x, z: CHRISTOPHER.z, yaw: CHRISTOPHER.yaw, speed: 0 },
@@ -122,13 +127,8 @@ export class HiddenCase implements GameLayer {
     private readonly storage: KeyValueStorage | null,
     visuals: boolean,
   ) {
-    let saved: string | null = null;
-    try {
-      saved = storage?.getItem(CASE_STORAGE_KEY) ?? null;
-    } catch {
-      saved = null;
-    }
-    this.data = parseCase(saved);
+    this.lastText = this.readStored();
+    this.data = parseCase(this.lastText);
     this.hud = new CaseHudStore(this.buildSnapshot());
     this.visuals = visuals ? new HiddenCaseVisuals((x, z) => game.ground.heightAt(x, z)) : null;
     if (this.visuals) game.root.add(this.visuals.root);
@@ -143,12 +143,13 @@ export class HiddenCase implements GameLayer {
     const g = this.game;
     if (g.freeRoam.active) g.roam.stop();
     if (g.afterHours.active) g.afterHours.stop();
+    this.syncFromStorage();
     markFound(this.data);
     g.resetForScenario(VAN_STAND);
     this.removeLayer = g.addLayer(this);
     if (!g.interaction.providers.includes(this.provide)) g.interaction.providers.push(this.provide);
-    this.visuals?.setActive(true);
     this.active = true;
+    this.visuals?.setActive(this.viewing);
     this.flaggedDrivenThisVisit = false;
     this.sondeNearSaid = this.data.collected.includes("sonde");
     this.ensureAudio();
@@ -191,6 +192,12 @@ export class HiddenCase implements GameLayer {
     this.save();
     this.dirty = true;
     this.publish();
+  }
+
+  /** Show or hide the case's props with play (a survey view shows Pine Gap alone). */
+  setViewing(viewing: boolean): void {
+    this.viewing = viewing;
+    this.visuals?.setActive(this.active && viewing);
   }
 
   dispose(): void {
@@ -417,13 +424,19 @@ export class HiddenCase implements GameLayer {
     this.openPanel({ kind: "board" });
     if (!this.data.asked.includes("van:board")) {
       ask(this.data, "van:board");
-      this.say("rain", RADIO.board, 4.5);
       this.save();
     }
   }
 
   openFile(): void {
-    if (this.active && this.titleLeft <= 0) this.openPanel({ kind: "file" });
+    if (!this.active || this.titleLeft > 0) return;
+    // A panel holds the player still on foot, but not a truck: read the file parked and out.
+    if (this.game.vehicles.vehicles.some((v) => v.driven)) {
+      this.showToast("Step out of the vehicle to read the case file.");
+      this.publish();
+      return;
+    }
+    this.openPanel({ kind: "file" });
   }
 
   toggleWeigh(id: EvidenceId): void {
@@ -597,7 +610,8 @@ export class HiddenCase implements GameLayer {
   }
 
   private advanceCaptions(dt: number): void {
-    if (this.titleLeft > 0) return;
+    // Captions wait while the title card or a panel hides them, so none expires unseen.
+    if (this.titleLeft > 0 || this.panel) return;
     if (this.caption) {
       this.caption.left -= dt;
       if (this.caption.left > 0) return;
@@ -648,9 +662,33 @@ export class HiddenCase implements GameLayer {
     };
   }
 
-  private save(): void {
+  private readStored(): string | null {
     try {
-      this.storage?.setItem(CASE_STORAGE_KEY, serialiseCase(this.data));
+      return this.storage?.getItem(CASE_STORAGE_KEY) ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Fold in a save another tab made since this one last read or wrote, so a
+   * stale tab never overwrites newer progress.
+   */
+  private syncFromStorage(): void {
+    const stored = this.readStored();
+    if (stored === null || stored === this.lastText) return;
+    Object.assign(this.data, mergeCase(this.data, parseCase(stored)));
+    this.lastText = stored;
+    this.crossingPoint = this.data.bearings.length >= 2 ? this.computeCrossing() : null;
+    this.dirty = true;
+  }
+
+  private save(): void {
+    this.syncFromStorage();
+    const text = serialiseCase(this.data);
+    try {
+      this.storage?.setItem(CASE_STORAGE_KEY, text);
+      this.lastText = text;
     } catch {
       // Storage full or blocked: the case still plays, it just won't be there next visit.
     }

@@ -39,6 +39,8 @@ describe("hidden case: a whole playthrough (headless)", () => {
   const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 9000);
   const storage = new MemoryStorage();
   const hidden = new HiddenCase(game, storage, false);
+  // A second copy opened before any progress, like a forgotten tab.
+  const stale = new HiddenCase(game, storage, false);
   const snap = () => hidden.hud.getSnapshot();
   const file = () => parseCase(storage.getItem(CASE_STORAGE_KEY));
 
@@ -118,9 +120,18 @@ describe("hidden case: a whole playthrough (headless)", () => {
     expect(file().endingsSeen).toContain("quiet-correction");
   });
 
-  test("leaving and coming back resumes from the file", () => {
+  test("a stale copy of the case does not erase newer progress", () => {
     hidden.closePanel();
     hidden.stop();
+    stale.start();
+    expect(stale.data.stage).toBe("closed");
+    stale.stop();
+    stale.dispose();
+    expect(file().stage).toBe("closed");
+    expect(file().collected.sort()).toEqual(["bearings", "logger", "rerun", "sonde", "witness"]);
+  });
+
+  test("leaving and coming back resumes from the file", () => {
     expect(snap().active).toBe(false);
     expect(game.interaction.providers.some((p) => p(VAN_STAND.x, 0, VAN_STAND.z)?.id?.startsWith("case:"))).toBe(
       false,

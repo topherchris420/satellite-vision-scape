@@ -43,6 +43,10 @@ export interface CaseData {
   endingsSeen: EndingId[];
   /** Verdicts handed in (a "not yet" sends the case back out). */
   attempts: number;
+  /** The cards weighed when the verdict on file was handed in. */
+  filed: EvidenceId[];
+  /** Bumped by each replay, so an older copy of the file can't undo one. */
+  epoch: number;
 }
 
 export function emptyCase(): CaseData {
@@ -60,6 +64,8 @@ export function emptyCase(): CaseData {
     verdict: null,
     endingsSeen: [],
     attempts: 0,
+    filed: [],
+    epoch: 0,
   };
 }
 
@@ -73,6 +79,10 @@ function list<T extends string>(value: unknown, allowed: Set<string> | ((s: stri
   const out: T[] = [];
   for (const v of value) if (typeof v === "string" && ok(v) && !out.includes(v as T)) out.push(v as T);
   return out;
+}
+
+function count(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.min(999, Math.floor(value)) : 0;
 }
 
 /** Read a saved case, keeping whatever is valid and dropping the rest. */
@@ -108,7 +118,9 @@ export function parseCase(text: string | null): CaseData {
     confidence,
     verdict,
     endingsSeen: list<EndingId>(r.endingsSeen, ENDING_IDS),
-    attempts: typeof r.attempts === "number" && r.attempts >= 0 ? Math.min(999, Math.floor(r.attempts)) : 0,
+    attempts: count(r.attempts),
+    filed: list<EvidenceId>(r.filed, EVIDENCE_IDS),
+    epoch: count(r.epoch),
   };
 }
 
@@ -210,6 +222,7 @@ export function submitVerdict(data: CaseData, verdict: Verdict, confidence: Conf
   data.verdict = verdict;
   data.confidence = confidence;
   data.ending = audit.ending;
+  data.filed = [...data.weighed];
   if (!data.endingsSeen.includes(audit.ending)) data.endingsSeen.push(audit.ending);
   data.stage = ENDINGS[audit.ending].closes ? "closed" : "investigating";
   return audit;
@@ -217,12 +230,74 @@ export function submitVerdict(data: CaseData, verdict: Verdict, confidence: Conf
 
 /** Start the case again from the briefing, keeping the notes and endings found. */
 export function replayCase(data: CaseData): void {
-  const keep = { documents: data.documents, endingsSeen: data.endingsSeen, attempts: data.attempts };
+  const keep = {
+    documents: data.documents,
+    endingsSeen: data.endingsSeen,
+    attempts: data.attempts,
+    epoch: data.epoch + 1,
+  };
   Object.assign(data, emptyCase(), { found: true }, keep);
 }
 
-/** The audit for the verdict on file, if any. */
+/**
+ * The audit for the verdict on file, if any, graded on the cards weighed when
+ * it was handed in (not on evidence found afterwards).
+ */
 export function auditOnFile(data: CaseData): Audit | null {
   if (!data.verdict || !data.confidence) return null;
-  return gradeVerdict({ verdict: data.verdict, weighed: data.weighed, confidence: data.confidence });
+  return gradeVerdict({ verdict: data.verdict, weighed: data.filed, confidence: data.confidence });
+}
+
+const STAGE_RANK: Record<CaseStage, number> = { briefing: 0, investigating: 1, closed: 2 };
+
+function union<T>(first: readonly T[], second: readonly T[]): T[] {
+  const out = [...first];
+  for (const v of second) if (!out.includes(v)) out.push(v);
+  return out;
+}
+
+/**
+ * Combine this tab's file with a newer copy another tab saved, so neither
+ * loses what it found. Found things only accumulate; a replay (a higher
+ * epoch) wins over an older copy and keeps only the notes and endings seen.
+ */
+export function mergeCase(mine: CaseData, theirs: CaseData): CaseData {
+  if (theirs.epoch !== mine.epoch) {
+    const [newer, older] = theirs.epoch > mine.epoch ? [theirs, mine] : [mine, theirs];
+    return {
+      ...newer,
+      found: true,
+      documents: union(newer.documents, older.documents),
+      endingsSeen: union(newer.endingsSeen, older.endingsSeen),
+      attempts: Math.max(newer.attempts, older.attempts),
+    };
+  }
+  const collected = union(mine.collected, theirs.collected);
+  // Keep this tab's weighing; take the other's only for cards this tab hadn't found.
+  const weighed = union(
+    mine.weighed,
+    theirs.weighed.filter((id) => !mine.collected.includes(id)),
+  );
+  const stageMine = STAGE_RANK[mine.stage];
+  const stageTheirs = STAGE_RANK[theirs.stage];
+  // The verdict on file comes from whichever copy got furthest, then the later attempt.
+  const verdictFrom =
+    stageTheirs > stageMine || (stageTheirs === stageMine && theirs.attempts > mine.attempts) ? theirs : mine;
+  return {
+    v: 1,
+    found: mine.found || theirs.found,
+    stage: stageTheirs > stageMine ? theirs.stage : mine.stage,
+    collected,
+    weighed,
+    bearings: union(mine.bearings, theirs.bearings),
+    asked: union(mine.asked, theirs.asked).slice(0, 32),
+    documents: union(mine.documents, theirs.documents),
+    ending: verdictFrom.ending,
+    confidence: verdictFrom.confidence,
+    verdict: verdictFrom.verdict,
+    endingsSeen: union(mine.endingsSeen, theirs.endingsSeen),
+    attempts: Math.max(mine.attempts, theirs.attempts),
+    filed: [...verdictFrom.filed],
+    epoch: mine.epoch,
+  };
 }
