@@ -516,6 +516,7 @@ export function SiteScene() {
         c = new Case(game, browserStorage(), true);
         hiddenCaseRef.current = c;
         setHiddenCase(c);
+        if (import.meta.env.DEV) (window as unknown as { __pineGapCase?: HiddenCase }).__pineGapCase = c;
       }
       c.onPointer = (free) => {
         if (free) sessionRef.current.releasePointer();

@@ -1,0 +1,51 @@
+# Temporary: plays the hidden case in headless Chromium and pushes the
+# screenshots and results to the playtest/hidden-case branch. Removed before merge.
+name: Hidden case playtest
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [hidden-case-pine-gap]
+
+permissions:
+  contents: write
+
+jobs:
+  playtest:
+    # Playwright ships Chromium for 24.04, not the newer default image.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright install --with-deps chromium
+      - name: Start the dev server
+        run: |
+          nohup bun run dev --host 127.0.0.1 --port 5173 > /tmp/vite.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://127.0.0.1:5173/ > /dev/null && break; sleep 2; done
+      - name: Play the case
+        id: play
+        continue-on-error: true
+        run: node scripts/playtest-hidden-case.mjs --url http://127.0.0.1:5173/ --out /tmp/playtest 2>&1 | tee /tmp/playtest-log.txt; exit ${PIPESTATUS[0]}
+      - if: always()
+        run: tail -60 /tmp/vite.log
+      - name: Push the results
+        if: always()
+        run: |
+          mkdir -p /tmp/playtest
+          cp /tmp/playtest-log.txt /tmp/playtest/log.txt || true
+          cd /tmp/playtest
+          git init -q -b playtest/hidden-case
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Playtest of ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:playtest/hidden-case
+      - if: steps.play.outcome == 'failure'
+        run: exit 1

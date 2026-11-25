@@ -506,8 +506,8 @@ function Controls({ isMobile }: { isMobile: boolean }) {
   return (
     <p className="mt-4 border-t border-white/10 pt-3 font-sans text-[11px] leading-relaxed text-white/40">
       {isMobile
-        ? "Left thumb to move, drag to look, Interact to talk, read and take bearings. Any utility truck is yours to drive."
-        : "WASD to move, Shift to sprint, Space to jump, F to take a vehicle, E to talk, read and take bearings, J for the case file, Esc to pause."}
+        ? "Left thumb to move, drag to look. Interact talks, reads, takes a bearing or a vehicle. Any utility truck is yours to drive."
+        : "WASD to move, Shift to sprint, Space to jump. E (or F) talks, reads, takes a bearing or a vehicle. J opens the case file, Esc pauses."}
     </p>
   );
 }
