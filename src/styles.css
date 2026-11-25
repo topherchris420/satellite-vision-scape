@@ -354,3 +354,21 @@
     animation: none;
   }
 }
+
+/* The survey's unlisted carrier: a readout that won't quite hold still. */
+@keyframes signal-flicker {
+  0%, 100% { opacity: 0.9; }
+  47% { opacity: 0.9; }
+  48% { opacity: 0.35; }
+  50% { opacity: 0.85; }
+  73% { opacity: 0.6; }
+  74% { opacity: 0.95; }
+}
+.signal-anomaly {
+  animation: signal-flicker 4.8s steps(1, end) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .signal-anomaly {
+    animation: none;
+  }
+}

@@ -1,5 +1,6 @@
 import {
   Suspense,
+  lazy,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -8,7 +9,6 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { CHAPTER_HREF } from "@/lib/chapters";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import { EffectComposer, EffectGroup, Bloom, N8AO, SMAA } from "@react-three/postprocessing";
@@ -43,6 +43,9 @@ import { GameplayState } from "@/game/core/GameState";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
 import { warmScene, type WarmupOptions, type WarmupProgress } from "@/lib/shader-warmup";
+import { SignalAnomaly } from "@/components/game/hidden/SignalAnomaly";
+import type { HiddenCase } from "@/game/hidden/HiddenCase";
+import { browserStorage } from "@/game/afterhours/progress";
 import {
   FPS_BOUNDS,
   RESOLUTION_STEPS,
@@ -56,6 +59,18 @@ import {
 
 const noSubscribe = () => () => undefined;
 const noSnapshot = () => null;
+
+// The hidden case and its screens load only when someone follows the signal.
+const loadHiddenCase = () => import("@/game/hidden/HiddenCase");
+const HiddenCaseHUD = lazy(() => import("@/components/game/hidden/HiddenCaseHUD"));
+const noCase = () => false;
+
+/** Whether the hidden case is running (it may be paused behind the survey). */
+function useCaseActive(hiddenCase: HiddenCase | null): boolean {
+  const hud = hiddenCase?.hud;
+  const read = useCallback(() => hud?.getSnapshot().active ?? false, [hud]);
+  return useSyncExternalStore(hud ? hud.subscribe : noSubscribe, hud ? read : noCase, hud ? read : noCase);
+}
 
 /** After Hours' discrete state, or null before the game exists. */
 function useAfterHoursSnapshot(game: Game | null): AfterHoursSnapshot | null {
@@ -392,6 +407,8 @@ export function SiteScene() {
   gameRef.current = game;
   const playing = mode === "play" && gameError === null;
   const session = usePlaySession(game, canvas, playing);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
   const immersive = playing && session.status === "running";
   const afterHours = useAfterHoursSnapshot(game);
   // The concert borrows midnight; the player's own choice returns afterwards.
@@ -469,6 +486,77 @@ export function SiteScene() {
     [game, session.startUnlocked],
   );
   const leaveFreeRoam = useCallback(() => game?.roam.stop(), [game]);
+
+  // The hidden case. Nothing of it is fetched until the signal shows in the survey.
+  const [hiddenCase, setHiddenCase] = useState<HiddenCase | null>(null);
+  const hiddenCaseRef = useRef<HiddenCase | null>(null);
+  hiddenCaseRef.current = hiddenCase;
+  const caseActive = useCaseActive(hiddenCase);
+  const [inspected, setInspected] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => {
+    if (!selected) return;
+    setInspected((seen) => (seen.has(selected.name) ? seen : new Set(seen).add(selected.name)));
+  }, [selected]);
+  const prefetchCase = useCallback(() => {
+    void loadHiddenCase().catch(() => undefined);
+    void import("@/components/game/hidden/HiddenCaseHUD").catch(() => undefined);
+  }, []);
+  const acceptCase = useCallback(() => {
+    if (!game) return;
+    // Audio and pointer lock may only start inside the click that asked.
+    game.unlockAudio();
+    setSelected(null);
+    setMode("play");
+    if (isMobile) session.startUnlocked();
+    else session.start();
+    game.setPaused(false);
+    void loadHiddenCase().then(({ HiddenCase: Case }) => {
+      let c = hiddenCaseRef.current;
+      if (!c) {
+        c = new Case(game, browserStorage(), true);
+        hiddenCaseRef.current = c;
+        setHiddenCase(c);
+        if (import.meta.env.DEV) (window as unknown as { __pineGapCase?: HiddenCase }).__pineGapCase = c;
+      }
+      c.onPointer = (free) => {
+        if (free) sessionRef.current.releasePointer();
+      };
+      c.start();
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game, isMobile, session.start, session.startUnlocked]);
+  const leaveCase = useCallback(() => {
+    hiddenCaseRef.current?.stop();
+    if (isMobile) session.startUnlocked();
+    else session.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, session.start, session.startUnlocked]);
+  const caseToSurvey = useCallback(() => {
+    hiddenCaseRef.current?.stop();
+    setMode("fly");
+  }, []);
+  const resumeCase = useCallback(
+    (unlocked: boolean) => (unlocked ? session.startUnlocked() : session.start()),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [session.start, session.startUnlocked],
+  );
+  const recaptureCase = useCallback(() => {
+    if (!isMobile) session.start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMobile, session.start]);
+  useEffect(
+    () => () => {
+      hiddenCaseRef.current?.dispose();
+      hiddenCaseRef.current = null;
+      setHiddenCase(null);
+    },
+    [game],
+  );
+  // Leaving play for a survey view (2, 3 or 4) hides the case's fictional props
+  // without ending the investigation; returning to play shows them again.
+  useEffect(() => {
+    hiddenCase?.setViewing(playing);
+  }, [hiddenCase, playing]);
   const [contextStatus, setContextStatus] = useState<ContextStatus>({
     state: "loading",
     entities: 0,
@@ -479,8 +567,6 @@ export function SiteScene() {
   const [captureClean, setCaptureClean] = useState(false);
   const sessionStatus = useRef(session.status);
   sessionStatus.current = session.status;
-  const sessionRef = useRef(session);
-  sessionRef.current = session;
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const w = window as unknown as { __pineGapCapture?: unknown };
@@ -617,6 +703,17 @@ export function SiteScene() {
         telemetryRef={telemetryRef}
         isMobile={isMobile}
         immersive={immersive}
+        signal={
+          ready && game && !gameError ? (
+            <SignalAnomaly
+              surveying={!playing}
+              inspections={inspected.size}
+              caseActive={caseActive}
+              onPrefetch={prefetchCase}
+              onAccept={acceptCase}
+            />
+          ) : null
+        }
       />
 
       {playing && game && ready && (
@@ -638,7 +735,22 @@ export function SiteScene() {
           isMobile={isMobile}
           markerRef={markerRef}
           vehicleMarkersRef={vehicleMarkersRef}
+          caseActive={caseActive}
         />
+      )}
+
+      {playing && hiddenCase && caseActive && (
+        <Suspense fallback={null}>
+          <HiddenCaseHUD
+            hiddenCase={hiddenCase}
+            status={session.status}
+            isMobile={isMobile}
+            onResume={resumeCase}
+            onRecapture={recaptureCase}
+            onReturnToSurvey={caseToSurvey}
+            onLeave={leaveCase}
+          />
+        </Suspense>
       )}
 
       {showDebug && <TerrainDebugHUD onClose={() => setShowDebug(false)} />}
@@ -730,12 +842,6 @@ export function SiteScene() {
         <p className="relative mt-5 max-w-xs px-6 text-center font-sans text-[12px] leading-relaxed text-white/55">
           Next: race an AI agent&apos;s recorded run through this site, or walk it in your own time.
         </p>
-        <a
-          href={CHAPTER_HREF["san-fierro"]}
-          className="relative mt-4 rounded-lg border border-teal-300/40 px-4 py-2 font-sans text-[11px] text-teal-200 transition hover:bg-teal-400/10"
-        >
-          Or play Chapter I: San Fierro now
-        </a>
       </div>
 
       {deviceProfile && <Canvas

@@ -1,4 +1,4 @@
-import { useEffect, useState, type RefObject } from "react";
+import { useEffect, useState, type ReactNode, type RefObject } from "react";
 import {
   Aperture,
   ChevronDown,
@@ -80,6 +80,7 @@ export function HUD({
   telemetryRef,
   isMobile,
   immersive = false,
+  signal,
 }: {
   mode: ControlMode;
   onModeChange: (m: ControlMode) => void;
@@ -103,6 +104,8 @@ export function HUD({
   isMobile: boolean;
   /** Active gameplay: only the telemetry strip remains; the game HUD takes over. */
   immersive?: boolean;
+  /** One quiet line under the site card; empty on an ordinary visit. */
+  signal?: ReactNode;
 }) {
   const [infoOpen, setInfoOpen] = useState(true);
   // Play mode keeps the mission overview tucked away to leave the view clear.
@@ -185,6 +188,7 @@ export function HUD({
               <ChevronRight size={13} className="text-white/35" />
             </button>
           )}
+          {signal}
         </div>
 
         <div className="pointer-events-auto flex flex-col items-end gap-2">

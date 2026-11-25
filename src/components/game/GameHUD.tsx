@@ -218,6 +218,7 @@ export function GameHUD({
   isMobile,
   markerRef,
   vehicleMarkersRef,
+  caseActive = false,
 }: {
   game: Game;
   status: PlayStatus;
@@ -243,6 +244,8 @@ export function GameHUD({
   isMobile: boolean;
   markerRef: RefObject<SVGGElement | null>;
   vehicleMarkersRef: RefObject<SVGGElement | null>;
+  /** Another layer (the hidden case) draws its own briefing and pause cards. */
+  caseActive?: boolean;
 }) {
   const hud = useSyncExternalStore(game.hud.subscribe, game.hud.getSnapshot, game.hud.getSnapshot);
   const after = useAfterHours(game);
@@ -445,7 +448,7 @@ export function GameHUD({
         </>
       )}
 
-      {status === "briefing" && (
+      {status === "briefing" && !caseActive && (
         <Card>
           <Landing
             isMobile={isMobile}
@@ -493,7 +496,7 @@ export function GameHUD({
         </Card>
       )}
 
-      {status === "paused" && (
+      {status === "paused" && !caseActive && (
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>

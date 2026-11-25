@@ -40,6 +40,23 @@ import { browserStorage, type CharacterKind, type KeyValueStorage } from "./afte
 
 export type TimeOfDay = "day" | "dusk" | "night";
 
+/**
+ * A system added to the running game from outside it (loaded on demand, so
+ * an ordinary visit never downloads it). Each hook runs right after the
+ * built-in systems of the same phase; none may change how movement,
+ * vehicle physics or collision work.
+ */
+export interface GameLayer {
+  /** Once per simulated frame, after the built-in input handling. */
+  update?(dt: number, input: InputState): void;
+  /** Each fixed physics step. */
+  fixedStep?(dt: number): void;
+  /** Once per rendered frame (dt is 0 while the world is frozen). */
+  present?(dt: number, camera: THREE.PerspectiveCamera | null): void;
+  /** Drive the camera this frame instead of the follow camera; true when it did. */
+  cinematic?(dt: number, camera: THREE.PerspectiveCamera): boolean;
+}
+
 export interface GameOptions {
   /** Build meshes, lights, particles and audio. False for headless tests. */
   visuals: boolean;
@@ -128,6 +145,8 @@ export class Game {
   private readonly dustCarry = [0, 0];
   private readonly wheelWorld = new THREE.Vector3();
   private readonly unsubscribers: (() => void)[] = [];
+  private readonly layers: GameLayer[] = [];
+  private layerCinematic = false;
 
   constructor(options: GameOptions) {
     this.root.name = "game";
@@ -414,6 +433,16 @@ export class Game {
     this.dust?.setTint(this.dustOverride ?? DUST_TINT[time]);
   }
 
+  /** Add a layer; the returned function removes it again. */
+  addLayer(layer: GameLayer): () => void {
+    if (!this.layers.includes(layer)) this.layers.push(layer);
+    return () => {
+      const at = this.layers.indexOf(layer);
+      if (at >= 0) this.layers.splice(at, 1);
+      this.layerCinematic = false;
+    };
+  }
+
   /** Called from the user gesture that starts play (enables audio). */
   unlockAudio(): void {
     this.audio?.unlock();
@@ -481,6 +510,7 @@ export class Game {
     this.interaction.update(dt, input, locked);
     this.afterHours.update(dt, input);
     this.freeRoam.update(dt, input);
+    for (const layer of this.layers) layer.update?.(dt, input);
 
     const driven = this.interaction.driven;
     if (driven && input.wasPressed("headlights")) {
@@ -543,6 +573,7 @@ export class Game {
     this.vehicles.fixedStep(dt);
     this.afterHours.fixedStep(dt);
     this.freeRoam.fixedStep(dt);
+    for (const layer of this.layers) layer.fixedStep?.(dt);
 
     const sensors = this.world.sensors;
     sensors.length = 0;
@@ -586,7 +617,10 @@ export class Game {
     if (options.camera) {
       if (options.establishing) {
         this.camera.updateEstablishing(cameraDt, this.focus, options.camera);
-      } else if (!this.afterHours.updateCinematic(cameraDt, options.camera)) {
+      } else if (
+        !this.afterHours.updateCinematic(cameraDt, options.camera) &&
+        !this.updateLayerCinematic(cameraDt, options.camera)
+      ) {
         this.look.x = options.simulate ? this.agent.controls.input.lookX : 0;
         this.look.y = options.simulate ? this.agent.controls.input.lookY : 0;
         this.look.zoom = options.simulate ? this.agent.controls.input.zoom : 0;
@@ -594,7 +628,8 @@ export class Game {
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
       if (this.characterVisual)
-        this.characterVisual.visible = this.afterHours.cinematic || !this.camera.characterOccluded;
+        this.characterVisual.visible =
+          this.afterHours.cinematic || this.layerCinematic || !this.camera.characterOccluded;
       this.updateListener(options.camera);
     }
     this.freeRoamAudio?.frame(dt);
@@ -602,7 +637,19 @@ export class Game {
     this.updateAudio();
     this.afterHours.present(dt, options.camera);
     this.freeRoam.present(dt, this.alpha);
+    for (const layer of this.layers) layer.present?.(dt, options.camera);
     this.updateHud(dt);
+  }
+
+  private updateLayerCinematic(dt: number, camera: THREE.PerspectiveCamera): boolean {
+    this.layerCinematic = false;
+    for (const layer of this.layers) {
+      if (layer.cinematic?.(dt, camera)) {
+        this.layerCinematic = true;
+        return true;
+      }
+    }
+    return false;
   }
 
   private readonly isResponseUnit = (v: Vehicle): boolean => v.spec === RESPONSE_UNIT;
@@ -779,6 +826,7 @@ export class Game {
   }
 
   dispose(): void {
+    this.layers.length = 0;
     this.freeRoamAudio?.dispose();
     this.agent.dispose();
     this.roam.dispose();

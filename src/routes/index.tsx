@@ -6,13 +6,13 @@ import { SiteScene } from "@/components/site/SiteScene";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "99.9% SURE · Pine Gap" },
+      { title: "Beat the AI's time · Pine Gap, a playable reconstruction" },
       {
         name: "description",
         content:
           "Race an AI agent's recorded run through a playable 3D reconstruction of Pine Gap, in your browser, with no account or key. Then watch what the agent actually did.",
       },
-      { property: "og:title", content: "99.9% SURE · Pine Gap" },
+      { property: "og:title", content: "Beat the AI's time" },
       {
         property: "og:description",
         content:
