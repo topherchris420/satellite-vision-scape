@@ -1,0 +1,28 @@
+{
+  "about": "Voices of the Vers3Dynamics expansion. 'who' picks the ped whose mouth moves: 1 CJ, 2 Christopher, 3..5 the script's hNpc1..hNpc3, 0 nobody on screen (radio, system voices). 'tag' prefixes the subtitle for voices without a face.",
+  "speakers": {
+    "CJ":        {"who": 1, "tag": "", "voice": "Carl Johnson. Original performance; do not imitate the game's actor."},
+    "CHRIS":     {"who": 2, "tag": "", "voice": "Christopher Woodyard. Calm, curious, dry; delighted by being wrong in an interesting way. Never lectures."},
+    "RAIN":      {"who": 0, "tag": "~g~R.A.I.N.:~w~ ", "voice": "R.A.I.N. terminal voice. Warm, unhurried, a little formal; says 'I don't know' without embarrassment."},
+    "CERTAIN":   {"who": 0, "tag": "~r~CERTAIN:~w~ ", "voice": "The old CERTAIN system voice. Synthetic, pleasant, overconfident."},
+    "SENTINEL":  {"who": 0, "tag": "~r~SENTINEL:~w~ ", "voice": "SENTINEL, CERTAIN's successor. Even smoother. Even surer."},
+    "DISPATCH":  {"who": 0, "tag": "~b~SFPD:~w~ ", "voice": "Police radio dispatcher. Flat, procedural, radio-filtered."},
+    "SHIELD":    {"who": 0, "tag": "~r~PACIFIC SHIELD:~w~ ", "voice": "Private security dispatcher. Clipped, corporate, eager."},
+    "NEWS":      {"who": 0, "tag": "~y~SFTV NEWS:~w~ ", "voice": "TV news anchor. Measured broadcast cadence."},
+    "REX":       {"who": 0, "tag": "~p~RADIO FREE FIERRO:~w~ ", "voice": "Rex Pattern, late-night talk host. Gravel, conviction, every sentence a revelation."},
+    "REXLIVE":   {"who": 3, "tag": "", "voice": "Rex Pattern in person. Same voice, less reverb."},
+    "CALLER":    {"who": 0, "tag": "~p~CALLER:~w~ ", "voice": "Late-night radio caller. Sincere, a bit spooked."},
+    "TECH":      {"who": 3, "tag": "", "voice": "SureThing field technician. Tired, underpaid, not a villain."},
+    "MUSICIAN":  {"who": 3, "tag": "", "voice": "Street saxophonist, Garcia. Easygoing until accused of terrorism."},
+    "COURIER":   {"who": 4, "tag": "", "voice": "Bike courier, Downtown. Talks fast, rides faster."},
+    "PROWLER":   {"who": 5, "tag": "", "voice": "Car prowler in Chinatown. Shifty, defensive."},
+    "WITNESS":   {"who": 4, "tag": "", "voice": "Shopkeeper or bystander, helpful."},
+    "TEACHER":   {"who": 3, "tag": "", "voice": "Garcia high-school physics teacher. Thrilled to get real equipment."},
+    "HAM":       {"who": 4, "tag": "", "voice": "Ham-radio club president, Ocean Flats. Precise, proud of his antenna."},
+    "KID":       {"who": 5, "tag": "", "voice": "Teenage science-fair winner. Unimpressed by everything except data."},
+    "BRACKET":   {"who": 3, "tag": "", "voice": "Lyle Bracket, Ovid Venture Partners. Smiles in every sentence; means none of them."},
+    "OFFICIAL":  {"who": 4, "tag": "", "voice": "Deputy Commissioner Halvorsen, city procurement. Exhausted by permits."},
+    "CROWD":     {"who": 0, "tag": "~y~CROWD:~w~ ", "voice": "A few voices from the audience."},
+    "TRUCKER":   {"who": 0, "tag": "~y~ICE CREAM VAN:~w~ ", "voice": "Angry ice-cream van driver over a loudspeaker."}
+  }
+}

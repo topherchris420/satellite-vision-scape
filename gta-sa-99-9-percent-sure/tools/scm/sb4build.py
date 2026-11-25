@@ -66,6 +66,15 @@ def compile_one(sb4: str, work: str, src: str, out: str, timeout: int = 180) -> 
     env = dict(os.environ)
     env["WINEDEBUG"] = "-all"
     env["WINEPREFIX"] = os.path.join(work, "wineprefix")
+    if os.name != "nt":
+        # Wine 9's wineserver aborts ("free(): invalid pointer") when the runtime
+        # directory it expects does not exist, as in many containers and CI images.
+        runtime = env.get("XDG_RUNTIME_DIR", "")
+        if not runtime or not os.path.isdir(runtime):
+            runtime = os.path.join(work, "xdg-runtime")
+            os.makedirs(runtime, exist_ok=True)
+            os.chmod(runtime, 0o700)
+            env["XDG_RUNTIME_DIR"] = runtime
     log = os.path.join(sb4, "compile.log")
     if os.path.exists(log):
         os.remove(log)

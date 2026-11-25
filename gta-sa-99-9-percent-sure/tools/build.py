@@ -8,6 +8,7 @@
 Steps
   1. text, subtitles and data tables     tools/gen_text.py, tools/gen_scenes.py
   2. UI sprites (v3drain.txd) and ring   tools/build_ui_assets.py
+     sound effects, ambience, lab score  tools/sound_design.py, tools/lab_score.py
   3. compile the scripts (with --sb4)    Sanny Builder 4, mode "GTA SA (v1.0 - SBL)";
                                          on Linux through Wine (tools/scm/sb4build.py)
   4. validate the bytecode               tools/scm/validate.py
@@ -67,6 +68,16 @@ def compile_scripts(sb4):
               "--work", work] + pairs)
 
 
+AUDIO = os.path.join(BUILD, "CLEO", "99sure")
+
+
+def build_audio():
+    """Original sound effects and the lab score, generated into build/ so that every
+    full build packages them (regenerating them is quick and deterministic)."""
+    run([sys.executable, os.path.join(ROOT, "tools", "sound_design.py"), "--out", os.path.join(AUDIO, "sfx")])
+    run([sys.executable, os.path.join(ROOT, "tools", "lab_score.py"), "--out", os.path.join(AUDIO, "music", "lab.mp3")])
+
+
 def package():
     if os.path.isdir(RELEASE):
         shutil.rmtree(RELEASE)
@@ -92,6 +103,17 @@ def package():
         out = os.path.join(RELEASE, dst)
         os.makedirs(os.path.dirname(out), exist_ok=True)
         shutil.copyfile(src, out)
+    # original sound effects, ambience and the lab score (tools/sound_design.py, tools/lab_score.py)
+    for sub in ("sfx", "music"):
+        src_dir = os.path.join(AUDIO, sub)
+        if not os.path.isdir(src_dir):
+            missing.append(f"cleo/99sure/{sub}/")
+            continue
+        for name in sorted(os.listdir(src_dir)):
+            if name.lower().endswith((".mp3", ".ogg")):
+                out = os.path.join(RELEASE, "cleo", "99sure", sub, name)
+                os.makedirs(os.path.dirname(out), exist_ok=True)
+                shutil.copyfile(os.path.join(src_dir, name), out)
     # recorded voice lines, if any were prepared with tools/prepare_audio.py
     audio = os.path.join(BUILD, "CLEO", "99sure", "audio")
     if os.path.isdir(audio):
@@ -118,6 +140,7 @@ def main():
     run(PY + [os.path.join(ROOT, "tools", "gen_text.py")])
     run(PY + [os.path.join(ROOT, "tools", "gen_scenes.py")], env=dict(os.environ, SA_MODELS_JSON=MODELS))
     run([sys.executable, os.path.join(ROOT, "tools", "build_ui_assets.py")])
+    build_audio()
     if args.sb4:
         compile_scripts(args.sb4)
     run(PY + [os.path.join(ROOT, "tools", "scm", "validate.py"), "--fxt",
