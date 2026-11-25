@@ -34,9 +34,11 @@ A human and an agent share the world's controls, physics, collisions and task ru
 
 In San Fierro, CERTAIN claims to know what people will do. In the proposed continuation at Pine Gap, R.A.I.N. asks whether the evidence warrants that confidence. The player moves from investigating predictions in a city to investigating signals and competing explanations in a fictional research setting.
 
-**Integration status:** the two environments currently run independently. A proposed [campaign bridge](docs/CAMPAIGN_BRIDGE.md) defines how player conclusions and mission progress could travel between them without requiring a shared engine. Pine Gap's existing Race Jev, After Hours and Free Roam remain independently playable.
+**Integration status:** the first San Fierro browser prototype and Pine Gap share a local case dossier. Full five-mission adaptation and reactive Pine Gap objectives remain future work. [Campaign bridge design](docs/CAMPAIGN_BRIDGE.md). Pine Gap's existing Race Jev, After Hours and Free Roam remain independently playable.
 
 ## Chapter I · San Fierro
+
+[**Play the browser prototype**](https://geotwn.vercel.app/?chapter=san-fierro) (once deployed). Walk or drive through a compact original 3D district, collect three independent observations and return to R.A.I.N. to submit a verdict. WASD/arrow keys, E to interact, and touch controls. Your conclusion appears in Pine Gap's landing menu. No installed game or API key is required for the browser prototype. The full five-mission CLEO edition below still requires its host game.
 
 **An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab.
 
@@ -298,7 +300,7 @@ The simulation uses stylised vehicle dynamics and simplified collision geometry.
 | Terrain, spatial coordinates and data pipelines | [Terrain architecture](docs/TERRAIN_ARCHITECTURE.md) · [Spatial context](docs/SPATIAL_CONTEXT_ARCHITECTURE.md) · [Offline pipeline](docs/OFFLINE_TERRAIN_PIPELINE.md) |
 | Music and asset permissions | [Soundtrack](docs/SOUNDTRACK.md) · [Attributions](ATTRIBUTIONS.md) · [Data and licence notes](docs/ATTRIBUTION_AND_LICENSES.md) · [Notice](NOTICE) |
 
-**San Fierro runtime:** [Chapter I](gta-sa-99-9-percent-sure/README.md) requires a separately installed GTA: San Andreas PC game. It shares the intended game universe with Pine Gap, but cross-runtime progression is not implemented yet.
+**San Fierro runtimes:** the browser prototype needs no installed game. The [full CLEO edition](gta-sa-99-9-percent-sure/README.md) requires a separately installed GTA: San Andreas PC game; CLEO-to-browser save transfer is not implemented.
 
 ### Credits and reuse
 
