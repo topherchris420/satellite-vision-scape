@@ -43,7 +43,7 @@ function District({ keys, position, car, driving, onNear, campaign }: {
     camera.position.lerp(cameraTarget.current, 1 - Math.exp(-dt * 8));
     camera.lookAt(p.x, 0.8, p.z - 3);
     const e = evidence.find((v) => !campaign.collected.includes(v.id) && near(p, v));
-    const id: Interaction = driving || near(p, car.current) ? "car" : e?.id ?? (near(p, HQ) ? "hq" : null);
+    const id: Interaction = driving ? "car" : e?.id ?? (near(p, HQ) ? "hq" : near(p, car.current) ? "car" : null);
     if (id !== last.current) { last.current = id; onNear(id); }
   });
   return <>
@@ -115,7 +115,7 @@ export function SanFierro() {
   useEffect(() => { action.current = interact; });
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLElement && ["INPUT", "TEXTAREA", "BUTTON", "A"].includes(e.target.tagName)) return;
+      if (e.target instanceof HTMLElement && ["INPUT", "TEXTAREA"].includes(e.target.tagName)) return;
       if (movementKeys.includes(e.code)) { e.preventDefault(); keys.current.add(e.code); }
       if (e.code === "KeyE" && !e.repeat) action.current();
     };
@@ -158,7 +158,7 @@ export function SanFierro() {
     </aside>
     <section className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3 sm:p-5">
       <div className="grid grid-cols-3 gap-1 touch-none" aria-label="Movement controls">
-        {["", "KeyW", "", "KeyA", "KeyS", "KeyD"].map((code, i) => code ? <button key={i} aria-label={{ KeyW: "Forward", KeyA: "Left", KeyS: "Back", KeyD: "Right" }[code]} className="h-12 w-12 rounded-lg bg-black/75 text-xl" onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); keys.current.add(code); }} onPointerUp={() => keys.current.delete(code)} onPointerCancel={() => keys.current.delete(code)} onLostPointerCapture={() => keys.current.delete(code)}>{{ KeyW: "↑", KeyA: "←", KeyS: "↓", KeyD: "→" }[code]}</button> : <span key={i} />)}
+        {(["", "KeyW", "", "KeyA", "KeyS", "KeyD"] as const).map((code, i) => code ? <button key={i} aria-label={{ KeyW: "Forward", KeyA: "Left", KeyS: "Back", KeyD: "Right" }[code]} className="h-12 w-12 rounded-lg bg-black/75 text-xl" onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); keys.current.add(code); }} onPointerUp={() => keys.current.delete(code)} onPointerCancel={() => keys.current.delete(code)} onLostPointerCapture={() => keys.current.delete(code)}>{{ KeyW: "↑", KeyA: "←", KeyS: "↓", KeyD: "→" }[code]}</button> : <span key={i} />)}
       </div>
       <div className="max-w-[55%] rounded-lg bg-black/80 p-3 text-xs">
         {campaign.verdict ? <>
