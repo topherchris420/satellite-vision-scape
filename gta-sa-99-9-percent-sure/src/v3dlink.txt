@@ -1,0 +1,1348 @@
+// ============================================================================
+//  EVERYTHING IS CONNECTED - Vers3Dynamics story mission 4
+//
+//  Rex Pattern of Radio Free Fierro says the heat, the ice cream vans, the crime,
+//  the lottery and the full moon are one big pattern, and dares the lab to prove
+//  him wrong on air. CJ gathers the observations (a beach thermometer, a photo
+//  of an ice cream queue, the police scanner, a lottery board), then calls four
+//  links on the correlation board: causes, common cause, coincidence or can't
+//  tell. Then the live debate on Missionary Hill. Call ice cream a cause of
+//  crime and Rex broadcasts it, and the city's ice cream vans come looking.
+//
+//  CLEO custom mission. 0@ = checkpoint (1..6; +10 on 5 and 6 when the board was
+//  careless), 1@ score, 2@ first-try right, 3@ verdicts.
+//  Compile with Sanny Builder 4 (GTA SA v1.0 - SBL). Needs CLEO 5.
+// ============================================================================
+{$CLEO .cm}
+{$NOSOURCE}
+{$INCLUDE v3d/vars.txt}
+{$INCLUDE link/vars.txt}
+{$INCLUDE gen/link_scene_vars.txt}
+{$INCLUDE v3d/config.txt}
+
+nop
+script_name 'V3DLINK'
+gosub @MISSION_START
+if has_deatharrest_been_executed
+then
+    iFail = -1
+end
+if iFail <> 0
+then
+    gosub @MISSION_FAILED
+end
+gosub @MISSION_CLEANUP
+terminate_this_script
+
+// ============================================================================
+:MISSION_START
+$onmission = 1
+iMissionId = 4
+gosub @INIT_COMMON
+gosub @LINK_INIT
+if iArgCheckpoint > 0
+then
+    gosub @LINK_RESUME
+end
+if iArgCheckpoint <= 0
+then
+    gosub @PH_INTRO
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= CP_VANS
+then
+    gosub @PH_GATHER
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= CP_BOARD
+then
+    gosub @PH_BOARD
+    if iFail <> 0
+    then
+        return
+    end
+end
+iTmp = iArgCheckpoint
+iTmp %= 10
+if iTmp <= CP_RADIO
+then
+    gosub @PH_RADIO
+    if iFail <> 0
+    then
+        return
+    end
+end
+gosub @PH_RETURN
+if iFail <> 0
+then
+    return
+end
+gosub @PH_FINALE
+if iFail <> 0
+then
+    return
+end
+gosub @LINK_PASSED
+return
+
+:LINK_INIT
+uPrefix = 'VEC'
+hWhoopee = -1
+hRadioVan = -1
+hChase1 = -1
+hChase2 = -1
+hChaser1 = -1
+hChaser2 = -1
+iBoard1 = 0
+iBoard2 = 0
+iBoard3 = 0
+iBoard4 = 0
+iGraded = 0
+iShown = 0
+iCareless = 0
+iChased = 0
+iQueueOut = 0
+iLinkRight = 0
+gosub @SCN_LLAB_RESET
+gosub @SCN_LSTAND_RESET
+gosub @SCN_LRADIO_RESET
+iMdl = #CAMERA
+gosub @LOAD_MODEL
+iState = ST_INTRO
+gosub @PUBLISH
+return
+
+:LINK_RESUME
+gosub @FADE_OUT
+set_player_control $player1 false
+clear_wanted_level $player1
+fSX = LAB_REF_X
+fSY = LAB_REF_Y
+fSZ = LAB_REF_Z
+fSZ += 1.0
+fHead = 0.0
+gosub @TELEPORT_PLAYER
+gosub @FIND_LAB_EXT
+if iArgCheckpoint >= 10
+then
+    iCareless = 1
+end
+iTmp = iArgCheckpoint
+iTmp %= 10
+switch iTmp
+    case CP_THERMO
+        fSX = fLabX
+        fSY = fLabY
+        fSZ = fLabZ
+    case CP_VANS
+        fSX = THERMO_X
+        fSY = THERMO_Y
+        fSZ = THERMO_Z
+    case CP_LOTTERY
+        fSX = QUEUE_X
+        fSY = QUEUE_Y
+        fSZ = QUEUE_Z
+    case CP_BOARD
+        fSX = LOTTO_X
+        fSY = LOTTO_Y
+        fSZ = LOTTO_Z
+    case CP_RADIO
+        fSX = LOTTO_X
+        fSY = LOTTO_Y
+        fSZ = LOTTO_Z
+    default
+        fSX = RADIO_X
+        fSY = RADIO_Y
+        fSZ = RADIO_Z
+        if iArgCheckpoint >= 10
+        then
+            iChased = 1
+        end
+end
+fHead = 0.0
+gosub @RESUME_IN_VAN
+set_player_control $player1 true
+restore_camera_jumpcut
+gosub @FADE_IN
+if iCustomModel == 0
+then
+    print_help 'VHH08'
+end
+return
+
+// ============================================================================
+:PH_INTRO
+iState = ST_INTRO
+iCheckpoint = 0
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @FIND_LAB_EXT
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.6
+fTmp8 = 2.2
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+set_char_heading $scplayer fAH
+gosub @SCN_LLAB_CREATE
+fTmp7 = 0.9
+fTmp8 = 6.3
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+fHead = fAH
+gosub @SPAWN_CHRIS
+set_char_area_visible hChris LAB_AREA
+task_play_anim hChris "Coplook_think" "COP_AMBIENT" 4.0 true false false false -1
+fTmp7 = -2.8
+fTmp8 = 1.4
+fTmp6 = 2.0
+hCamTarget = hChris
+fCamTZ = 0.45
+gosub @CAM_ANCHOR
+gosub @AMB_START
+gosub @MUSIC_START
+wait 300
+gosub @FADE_IN
+print_big 'VEC00' 3500 2
+dLine = 101
+gosub @SAY
+dLine = 102
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = -0.3
+fCamOY = 1.2
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 103
+gosub @SAY
+fTmp7 = 0.4
+fTmp8 = 4.6
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+clear_char_tasks_immediately hChris
+set_char_coordinates hChris fSX fSY fSZ
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 104
+gosub @SAY
+dLine = 105
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 106
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.2
+fCamOY = 1.0
+fCamOZ = 0.64
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 107
+gosub @SAY
+gosub @FADE_OUT
+gosub @AMB_STOP
+gosub @MUSIC_STOP
+gosub @SCN_LLAB_DELETE
+gosub @LAB_ROOM_LEAVE
+clear_char_tasks_immediately hChris
+set_char_area_visible hChris 0
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.3 0.3 0.0
+set_char_coordinates hChris fSX fSY fSZ
+gosub @SPAWN_VAN
+gosub @CHRIS_JOIN_GROUP
+gosub @CS_END
+wait 500
+gosub @FADE_IN
+return
+
+// ============================================================================
+// The observations: a thermometer, a queue, the scanner, a lottery board.
+// ============================================================================
+:PH_GATHER
+iTmp = iArgCheckpoint
+if iTmp <= CP_THERMO
+then
+    iCheckpoint = CP_THERMO
+    iState = ST_THERMO
+    gosub @SAVE_CHECKPOINT
+    gosub @BOARD_VAN
+    if iFail <> 0
+    then
+        return
+    end
+    dLine = 201
+    dQEnd = 201
+    gosub @SAY_QUEUE
+    print_now 'VECO1' 7000 1
+    fDX = THERMO_X
+    fDY = THERMO_Y
+    fDZ = THERMO_Z
+    iTmp3 = 2
+    fDist2 = 12.0
+    gosub @DRIVE_TO
+    if iFail <> 0
+    then
+        return
+    end
+    print_now 'VECO7' 6000 1
+    gosub @USE_AT
+    if iFail <> 0
+    then
+        return
+    end
+    dLine = 202
+    gosub @SAY
+    dLine = 203
+    gosub @SAY
+end
+// the queue
+iCheckpoint = CP_VANS
+iState = ST_VANS
+gosub @SAVE_CHECKPOINT
+dLine = 301
+dQEnd = 301
+gosub @SAY_QUEUE
+print_now 'VECO2' 7000 1
+fDX = QUEUE_X
+fDY = QUEUE_Y
+fDZ = QUEUE_Z
+iTmp3 = 1
+fDist2 = 40.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+gosub @SPAWN_QUEUE
+:GATHER_PHOTO
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+oKind = OBJ_PHOTO
+oEnt = hNpc2
+gosub @PHOTO_CHECK
+if iTmp3 == 0
+then
+    jump @GATHER_PHOTO
+end
+dLine = 302
+gosub @SAY
+dLine = 303
+gosub @SAY
+dLine = 304
+gosub @SAY
+dLine = 305
+gosub @SAY
+gosub @QUEUE_RELEASE
+return
+
+:SPAWN_QUEUE
+iMdl = #MRWHOOP
+gosub @LOAD_MODEL
+iMdl = #WMYST
+gosub @LOAD_MODEL
+iMdl = #HFYST
+gosub @LOAD_MODEL
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading fDX fDY fDZ
+hWhoopee = create_car #MRWHOOP fSX fSY fSZ
+set_car_heading hWhoopee fHead
+hNpc3 = create_char_inside_car hWhoopee 4 #WMYST
+fSX, fSY, fSZ = get_offset_from_car_in_world_coords hWhoopee 2.4 0.0 0.0
+hNpc2 = create_char 4 #HFYST fSX fSY fSZ
+task_play_anim hNpc2 "lkaround_loop" "ON_LOOKERS" 4.0 true false false false -1
+fSX, fSY, fSZ = get_offset_from_car_in_world_coords hWhoopee 2.6 -1.4 0.0
+hNpc1 = create_char 4 #WMYST fSX fSY fSZ
+mark_model_as_no_longer_needed #MRWHOOP
+mark_model_as_no_longer_needed #WMYST
+mark_model_as_no_longer_needed #HFYST
+car_set_idle hWhoopee
+iQueueOut = 1
+return
+
+:QUEUE_RELEASE
+if iQueueOut == 0
+then
+    return
+end
+if not is_char_dead hNpc1
+then
+    task_wander_standard hNpc1
+end
+if not is_char_dead hNpc2
+then
+    clear_char_tasks hNpc2
+    task_wander_standard hNpc2
+end
+mark_char_as_no_longer_needed hNpc1
+mark_char_as_no_longer_needed hNpc2
+mark_char_as_no_longer_needed hNpc3
+mark_car_as_no_longer_needed hWhoopee
+hNpc1 = -1
+hNpc2 = -1
+hNpc3 = -1
+hWhoopee = -1
+iQueueOut = 0
+return
+
+// ============================================================================
+// The lottery board, then the correlation board in the van.
+// ============================================================================
+:PH_BOARD
+iTmp = iArgCheckpoint
+if iTmp <= CP_LOTTERY
+then
+    iCheckpoint = CP_LOTTERY
+    iState = ST_LOTTERY
+    gosub @SAVE_CHECKPOINT
+    gosub @BOARD_VAN
+    if iFail <> 0
+    then
+        return
+    end
+    dLine = 401
+    dQEnd = 401
+    gosub @SAY_QUEUE
+    print_now 'VECO3' 7000 1
+    fDX = LOTTO_X
+    fDY = LOTTO_Y
+    fDZ = LOTTO_Z
+    iTmp3 = 2
+    fDist2 = 14.0
+    gosub @DRIVE_TO
+    if iFail <> 0
+    then
+        return
+    end
+    fAX = fDX
+    fAY = fDY
+    fAZ = fDZ
+    fAH = 0.0
+    gosub @SCN_LSTAND_CREATE
+    fDY += 0.6
+    print_now 'VECO8' 6000 1
+    gosub @USE_AT
+    if iFail <> 0
+    then
+        return
+    end
+    dLine = 402
+    gosub @SAY
+    dLine = 403
+    gosub @SAY
+    dLine = 404
+    gosub @SAY
+end
+iCheckpoint = CP_BOARD
+iState = ST_BOARD
+gosub @SAVE_CHECKPOINT
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+dLine = 501
+gosub @SAY
+gosub @BOARD_RUN
+if iFail <> 0
+then
+    return
+end
+gosub @SCN_LSTAND_DELETE
+return
+
+// The correlation board. Depth 3.
+:BOARD_RUN
+set_player_control $player1 false
+uMode = 10
+uMenu = 40
+uSel = 1
+uCount = 5
+oKind = OBJ_MENU
+gosub @MENU_ARM
+:BOARD_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    uMode = 0
+    return
+end
+gosub @MENU_INPUT
+if uIn == 1
+then
+    if uSel > 1
+    then
+        uSel -= 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+if uIn == 2
+then
+    if 5 > uSel
+    then
+        uSel += 1
+        iSfxId = SFX_MOVE
+        gosub @SFX_PLAY
+    end
+end
+if uIn == 3
+then
+    gosub @BOARD_CYCLE_DOWN
+end
+if uIn == 4
+then
+    gosub @BOARD_CYCLE_UP
+end
+if uIn == 5
+then
+    if uSel == 5
+    then
+        if iBoard1 > 0
+        then
+            if iBoard2 > 0
+            then
+                if iBoard3 > 0
+                then
+                    if iBoard4 > 0
+                    then
+                        jump @BOARD_GRADE
+                    end
+                end
+            end
+        end
+        iSfxId = SFX_BACK
+        gosub @SFX_PLAY
+    else
+        gosub @BOARD_CYCLE_UP
+    end
+end
+jump @BOARD_LOOP
+
+:BOARD_GRADE
+uMenu = 41
+oKind = OBJ_NONE
+iSfxId = SFX_OK
+gosub @SFX_PLAY
+iGraded = 0
+iShown = 0
+iDecTotal += 4
+iCount2 = 1
+:BOARD_GRADE_LINK
+switch iCount2
+    case 1
+        iTmp = iBoard1
+        iTmp2 = ANS_LINK1
+    case 2
+        iTmp = iBoard2
+        iTmp2 = ANS_LINK2
+    case 3
+        iTmp = iBoard3
+        iTmp2 = ANS_LINK3
+    default
+        iTmp = iBoard4
+        iTmp2 = ANS_LINK4
+end
+iShown = iCount2
+dLine = iCount2
+dLine *= 2
+dLine += 500
+if iTmp == iTmp2
+then
+    iBit = 1
+    iTmp3 = iCount2
+    iTmp3 -= 1
+    iBit <<= iTmp3
+    iGraded |= iBit
+    iScore += 10
+    iDecRight += 1
+    iLinkRight += 1
+    iSfxId = SFX_ACCEPT
+else
+    iScore -= 5
+    if 0 > iScore
+    then
+        iScore = 0
+    end
+    dLine += 1
+    iSfxId = SFX_WARN
+    if iCount2 == 2
+    then
+        // ice cream "causes" crime is the one that goes on air
+        if iTmp == 1
+        then
+            iCareless = 1
+        end
+    end
+end
+gosub @SFX_PLAY
+gosub @SAY
+iCount2 += 1
+if 4 >= iCount2
+then
+    jump @BOARD_GRADE_LINK
+end
+iWaitMs = 1200
+gosub @WAIT_MS
+uMode = 0
+uMenu = 0
+set_player_control $player1 true
+return
+
+:BOARD_CYCLE_UP
+if 5 > uSel
+then
+    switch uSel
+        case 1
+            iBoard1 += 1
+            if iBoard1 > 4
+            then
+                iBoard1 = 1
+            end
+        case 2
+            iBoard2 += 1
+            if iBoard2 > 4
+            then
+                iBoard2 = 1
+            end
+        case 3
+            iBoard3 += 1
+            if iBoard3 > 4
+            then
+                iBoard3 = 1
+            end
+        default
+            iBoard4 += 1
+            if iBoard4 > 4
+            then
+                iBoard4 = 1
+            end
+    end
+    iSfxId = SFX_MOVE
+    gosub @SFX_PLAY
+end
+return
+
+:BOARD_CYCLE_DOWN
+if 5 > uSel
+then
+    switch uSel
+        case 1
+            iBoard1 -= 1
+            if 1 > iBoard1
+            then
+                iBoard1 = 4
+            end
+        case 2
+            iBoard2 -= 1
+            if 1 > iBoard2
+            then
+                iBoard2 = 4
+            end
+        case 3
+            iBoard3 -= 1
+            if 1 > iBoard3
+            then
+                iBoard3 = 4
+            end
+        default
+            iBoard4 -= 1
+            if 1 > iBoard4
+            then
+                iBoard4 = 4
+            end
+    end
+    iSfxId = SFX_MOVE
+    gosub @SFX_PLAY
+end
+return
+
+// ============================================================================
+// Live on Radio Free Fierro, and what the city heard.
+// ============================================================================
+:PH_RADIO
+iCheckpoint = CP_RADIO
+if iCareless == 1
+then
+    iCheckpoint += 10
+end
+iState = ST_RADIO
+gosub @SAVE_CHECKPOINT
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+dLine = 601
+dQEnd = 601
+gosub @SAY_QUEUE
+print_now 'VECO4' 7000 1
+fDX = RADIO_X
+fDY = RADIO_Y
+fDZ = RADIO_Z
+iTmp3 = 1
+fDist2 = 30.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+gosub @SPAWN_RADIO
+gosub @CS_BEGIN
+gosub @CHRIS_LEAVE_GROUP
+if is_char_in_any_car $scplayer
+then
+    hTmpCar = store_car_char_is_in_no_save $scplayer
+    task_leave_car $scplayer hTmpCar
+end
+if not is_char_dead hChris
+then
+    if is_char_in_any_car hChris
+    then
+        hTmpCar = store_car_char_is_in_no_save hChris
+        task_leave_car hChris hTmpCar
+    end
+end
+fCamX, fCamY, fCamZ = get_offset_from_car_in_world_coords hRadioVan 6.0 7.0 2.4
+camera_reset_new_scriptables
+set_fixed_camera_position fCamX fCamY fCamZ 0.0 0.0 0.0
+fSX, fSY, fSZ = get_char_coordinates hNpc1
+fSZ += 0.5
+point_camera_at_point fSX fSY fSZ 2
+iWaitMs = 1500
+gosub @WAIT_MS
+dLine = 602
+gosub @SAY
+hCamFrom = hNpc1
+hCamTarget = hChris
+fCamOX = 0.4
+fCamOY = 1.6
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 603
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hNpc1
+fCamOX = -0.3
+fCamOY = 1.8
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 604
+gosub @SAY
+hCamFrom = hNpc1
+hCamTarget = hChris
+fCamOX = 0.4
+fCamOY = 1.6
+fCamOZ = 0.6
+fCamTZ = 0.6
+gosub @CAM_SHOT
+if iCareless == 1
+then
+    dLine = 605
+    gosub @SAY
+    hCamFrom = hChris
+    hCamTarget = hNpc1
+    fCamOX = -0.3
+    fCamOY = 1.8
+    fCamOZ = 0.6
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 651
+    gosub @SAY
+    hCamFrom = hPlayer
+    hCamTarget = hChris
+    fCamOX = 0.5
+    fCamOY = -1.1
+    fCamOZ = 0.75
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 652
+    gosub @SAY
+else
+    dLine = 605
+    gosub @SAY
+    dLine = 606
+    gosub @SAY
+    dLine = 607
+    gosub @SAY
+    hCamFrom = hChris
+    hCamTarget = hNpc1
+    fCamOX = -0.3
+    fCamOY = 1.8
+    fCamOZ = 0.6
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 608
+    gosub @SAY
+    hCamFrom = hNpc1
+    hCamTarget = hChris
+    fCamOX = 0.4
+    fCamOY = 1.6
+    fCamOZ = 0.6
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 609
+    gosub @SAY
+    hCamFrom = hChris
+    hCamTarget = hNpc1
+    fCamOX = -0.3
+    fCamOY = 1.8
+    fCamOZ = 0.6
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 610
+    gosub @SAY
+    dLine = 611
+    gosub @SAY
+    hCamFrom = hPlayer
+    hCamTarget = hPlayer
+    fCamOX = -0.3
+    fCamOY = 1.2
+    fCamOZ = 0.62
+    fCamTZ = 0.62
+    gosub @CAM_SHOT
+    dLine = 612
+    gosub @SAY
+    dLine = 613
+    gosub @SAY
+end
+gosub @CS_END
+gosub @CHRIS_JOIN_GROUP
+if iCareless == 1
+then
+    gosub @PH_CHASE
+end
+return
+
+:SPAWN_RADIO
+iMdl = #RUMPO
+gosub @LOAD_MODEL
+iMdl = #WMORI
+gosub @LOAD_MODEL
+fSX, fSY, fSZ, fHead = get_closest_car_node_with_heading fDX fDY fDZ
+hRadioVan = create_car #RUMPO fSX fSY fSZ
+set_car_heading hRadioVan fHead
+change_car_colour hRadioVan 6 1
+fAX = fSX
+fAY = fSY
+fAZ = fSZ
+fAH = fHead
+gosub @SCN_LRADIO_CREATE
+fRexX, fRexY, fRexZ = get_offset_from_car_in_world_coords hRadioVan 2.2 0.6 0.0
+hNpc1 = create_char 4 #WMORI fRexX fRexY fRexZ
+set_char_heading hNpc1 fHead
+mark_model_as_no_longer_needed #RUMPO
+mark_model_as_no_longer_needed #WMORI
+return
+
+// The vans heard it too. Lose them. Depth 3 (from PH_RADIO).
+:PH_CHASE
+iState = ST_CHASE
+iChased = 1
+gosub @PUBLISH
+iMdl = #MRWHOOP
+gosub @LOAD_MODEL
+iMdl = #WMYST
+gosub @LOAD_MODEL
+gosub @GET_PLAYER_POS
+fSX, fSY, fSZ = get_nth_closest_car_node fPX fPY fPZ 6
+hChase1 = create_car #MRWHOOP fSX fSY fSZ
+hChaser1 = create_char_inside_car hChase1 4 #WMYST
+fSX, fSY, fSZ = get_nth_closest_car_node fPX fPY fPZ 9
+hChase2 = create_car #MRWHOOP fSX fSY fSZ
+hChaser2 = create_char_inside_car hChase2 4 #WMYST
+mark_model_as_no_longer_needed #MRWHOOP
+mark_model_as_no_longer_needed #WMYST
+set_car_cruise_speed hChase1 22.0
+set_car_cruise_speed hChase2 20.0
+bAux1 = add_blip_for_car hChase1
+bAux2 = add_blip_for_car hChase2
+dLine = 653
+gosub @SAY
+dLine = 654
+dQEnd = 654
+gosub @SAY_QUEUE
+print_now 'VECO5' 7000 1
+iEscapeT = 0
+iPrevT = get_game_timer
+iT2 = 0
+:CHASE_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+gosub @GET_PLAYER_POS
+// steer the vans at CJ, twice a second
+if iNow > iT2
+then
+    iT2 = iNow
+    iT2 += 500
+    if not is_car_dead hChase1
+    then
+        car_goto_coordinates hChase1 fPX fPY fPZ
+    end
+    if not is_car_dead hChase2
+    then
+        car_goto_coordinates hChase2 fPX fPY fPZ
+    end
+end
+oKind = OBJ_DRIVE
+gosub @FIND_LAB_EXT
+fOX = fLabX
+fOY = fLabY
+fOZ = fLabZ
+iTmp = 1
+if not is_car_dead hChase1
+then
+    if locate_char_any_means_car_2d $scplayer hChase1 ESCAPE_DIST ESCAPE_DIST false
+    then
+        iTmp = 0
+    end
+end
+if not is_car_dead hChase2
+then
+    if locate_char_any_means_car_2d $scplayer hChase2 ESCAPE_DIST ESCAPE_DIST false
+    then
+        iTmp = 0
+    end
+end
+if iTmp == 1
+then
+    iEscapeT += iDt
+else
+    iEscapeT = 0
+end
+uTask = 7
+uTaskVal = iEscapeT
+uTaskVal *= 100
+uTaskVal /= ESCAPE_MS
+if ESCAPE_MS > iEscapeT
+then
+    jump @CHASE_LOOP
+end
+// lost them
+uTask = 0
+remove_blip bAux1
+remove_blip bAux2
+bAux1 = -1
+bAux2 = -1
+gosub @CHASE_RELEASE
+dLine = 655
+dQEnd = 655
+gosub @SAY_QUEUE
+return
+
+:CHASE_RELEASE
+if not is_car_dead hChase1
+then
+    car_wander_randomly hChase1
+end
+if not is_car_dead hChase2
+then
+    car_wander_randomly hChase2
+end
+mark_char_as_no_longer_needed hChaser1
+mark_char_as_no_longer_needed hChaser2
+mark_car_as_no_longer_needed hChase1
+mark_car_as_no_longer_needed hChase2
+hChaser1 = -1
+hChaser2 = -1
+hChase1 = -1
+hChase2 = -1
+return
+
+// ============================================================================
+:PH_RETURN
+iCheckpoint = CP_RETURN
+if iChased == 1
+then
+    iCheckpoint += 10
+end
+iState = ST_RETURN
+gosub @SAVE_CHECKPOINT
+gosub @RADIO_RELEASE
+print_now 'VECO6' 7000 1
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+gosub @FIND_LAB_EXT
+fDX = fLabX
+fDY = fLabY
+fDZ = fLabZ
+iTmp3 = 0
+fDist2 = 5.0
+gosub @DRIVE_TO
+return
+
+:RADIO_RELEASE
+gosub @SCN_LRADIO_DELETE
+if not is_char_dead hNpc1
+then
+    task_wander_standard hNpc1
+end
+mark_char_as_no_longer_needed hNpc1
+hNpc1 = -1
+mark_car_as_no_longer_needed hRadioVan
+hRadioVan = -1
+return
+
+:PH_FINALE
+iState = ST_FINALE
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @CHRIS_LEAVE_GROUP
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.6
+fTmp8 = 2.2
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+gosub @SCN_LLAB_CREATE
+fTmp7 = -0.4
+fTmp8 = 3.3
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+if not is_char_dead hChris
+then
+    if is_char_in_any_car hChris
+    then
+        warp_char_from_car_to_coord hChris fSX fSY fSZ
+    end
+    set_char_coordinates hChris fSX fSY fSZ
+    set_char_area_visible hChris LAB_AREA
+    task_turn_char_to_face_char hChris $scplayer
+    task_turn_char_to_face_char $scplayer hChris
+end
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.3
+fCamOY = 1.3
+fCamOZ = 0.6
+fCamTZ = 0.62
+gosub @CAM_SHOT
+gosub @AMB_START
+wait 300
+gosub @FADE_IN
+if iChased == 1
+then
+    dLine = 702
+else
+    dLine = 701
+end
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 703
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 704
+gosub @SAY
+if iChased == 1
+then
+    dLine = 706
+else
+    dLine = 705
+end
+gosub @SAY
+dLine = 707
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 708
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.2
+fCamOY = 1.0
+fCamOZ = 0.64
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 709
+gosub @SAY
+gosub @FADE_OUT
+gosub @AMB_STOP
+gosub @SCN_LLAB_DELETE
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+gosub @LAB_ROOM_LEAVE
+gosub @CS_END
+wait 400
+gosub @FADE_IN
+return
+
+:LINK_PASSED
+iState = ST_SUCCESS
+iReward = REWARD_BASE
+iTmp = iScore
+iTmp *= 25
+iReward += iTmp
+iRepGain = iLinkRight
+iRepGain *= 2
+if iChased == 1
+then
+    iRepGain -= 3
+    rFlags |= REC_F_M4_CHASED
+    print_now 'VECP2' 6000 1
+else
+    print_now 'VECP1' 6000 1
+end
+rRep += iRepGain
+gosub @MISSION_PASSED_COMMON
+register_mission_passed 'VEC00'
+return
+
+:MISSION_FAILED
+iState = ST_FAILURE
+set_cleo_shared_var SV_RESULT 2
+gosub @PUBLISH
+gosub @DLG_CANCEL
+print_big 'VXF00' 5000 1
+switch iFail
+    case FAIL_CHRIS
+        print_now 'VXF01' 5000 1
+    case FAIL_VAN
+        print_now 'VXF02' 5000 1
+    case FAIL_ABANDON
+        print_now 'VXF03' 5000 1
+    case FAIL_REX
+        print_now 'VECF1' 5000 1
+end
+return
+
+:MISSION_CLEANUP
+iState = 12
+uMode = 0
+uTask = 0
+gosub @SCN_LLAB_DELETE
+gosub @SCN_LSTAND_DELETE
+gosub @QUEUE_RELEASE
+gosub @RADIO_RELEASE
+gosub @CHASE_RELEASE
+if is_player_playing $player1
+then
+    if iInLab == 1
+    then
+        gosub @LAB_ROOM_LEAVE
+    end
+end
+mark_model_as_no_longer_needed #CAMERA
+mark_model_as_no_longer_needed #MRWHOOP
+mark_model_as_no_longer_needed #WMYST
+mark_model_as_no_longer_needed #HFYST
+mark_model_as_no_longer_needed #RUMPO
+mark_model_as_no_longer_needed #WMORI
+gosub @CLEANUP_COMMON
+return
+
+:WATCH_MISSION
+if hNpc1 <> -1
+then
+    if iState == ST_RADIO
+    then
+        if is_char_dead hNpc1
+        then
+            iFail = FAIL_REX
+        end
+    end
+end
+return
+
+:DLG_LOOKUP
+{$INCLUDE gen/link_dialogue.txt}
+return
+
+:HUD_DRAW
+if uMode == 0
+then
+    if uTask == 0
+    then
+        return
+    end
+end
+use_text_commands true
+if uMode == 10
+then
+    gosub @DRAW_BOARD
+end
+if uTask == 7
+then
+    gosub @DRAW_ESCAPE
+end
+return
+
+// Losing the vans: how long CJ has kept clear of them.
+:DRAW_ESCAPE
+uX = 320.0
+uY = 396.0
+uW = 220.0
+uV = uTaskVal
+uR = 240
+uG = 170
+uB = 40
+gosub @DRAW_METER
+gosub @TS_BODY
+set_text_centre true
+display_text 320.0 376.0 'VECO5'
+return
+
+// The correlation board: four links, the call on each, then R.A.I.N.'s grades.
+:DRAW_BOARD
+draw_rect 320.0 220.0 560.0 336.0 6 20 22 232
+draw_rect 320.0 66.0 560.0 28.0 11 93 99 255
+gosub @TS_TITLE
+display_text 56.0 56.0 'VECB0'
+uRow = 1
+:DRAW_BOARD_ROW
+uY =# uRow
+uY *= 56.0
+uY += 34.0
+if uRow == uSel
+then
+    if uMenu == 40
+    then
+        uF = uY
+        uF += 18.0
+        draw_rect 320.0 uF 548.0 50.0 22 70 74 255
+    end
+end
+gosub @TS_HEAD
+string_format uKey "VECB%d" uRow
+display_text 56.0 uY uKey
+uF = uY
+uF += 18.0
+gosub @TS_DIM
+uI = uRow
+uI += 4
+string_format uKey "VECB%d" uI
+display_text 56.0 uF uKey
+switch uRow
+    case 1
+        uI = iBoard1
+    case 2
+        uI = iBoard2
+    case 3
+        uI = iBoard3
+    default
+        uI = iBoard4
+end
+gosub @TS_AMBER
+set_text_right_justify true
+switch uI
+    case 1
+        display_text 586.0 uY 'VECBA'
+    case 2
+        display_text 586.0 uY 'VECBB'
+    case 3
+        display_text 586.0 uY 'VECBC'
+    case 4
+        display_text 586.0 uY 'VECBD'
+    default
+        display_text 586.0 uY 'VECBF'
+end
+// graded links
+if uMenu == 41
+then
+    if iShown >= uRow
+    then
+        iBit = 1
+        uI2 = uRow
+        uI2 -= 1
+        iBit <<= uI2
+        uI2 = iGraded
+        uI2 &= iBit
+        uF += 1.0
+        if uI2 <> 0
+        then
+            gosub @TS_GOOD
+            set_text_right_justify true
+            display_text 586.0 uF 'VECBG'
+        else
+            gosub @TS_RED
+            set_text_right_justify true
+            display_text 586.0 uF 'VECBH'
+        end
+    end
+end
+uRow += 1
+if 4 >= uRow
+then
+    jump @DRAW_BOARD_ROW
+end
+if uMenu == 40
+then
+    if uSel == 5
+    then
+        draw_rect 200.0 337.0 300.0 20.0 90 220 210 240
+        gosub @TS_SEL
+    else
+        gosub @TS_HEAD
+    end
+    display_text 60.0 330.0 'VECB9'
+    gosub @TS_HINT
+    display_text 320.0 366.0 'VECBE'
+end
+return
+
+{$INCLUDE v3d/core.txt}
+{$INCLUDE v3d/field.txt}
+{$INCLUDE v3d/photo.txt}
+{$INCLUDE v3d/ui.txt}
+{$INCLUDE v3d/ground.txt}
+{$INCLUDE gen/link_scenes.txt}

@@ -1,0 +1,101 @@
+// ============================================================================
+// Everything Is Connected - mission variables (200@..239@, 300@..349@)
+// Speaker slots: hNpc1 Rex Pattern, hNpc2 the ice cream queue, hNpc3 the driver.
+// ============================================================================
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+    214@: int
+    215@: int
+    216@: int
+    217@: int
+    300@: float
+    301@: float
+    302@: float
+end
+
+const
+    hWhoopee       = 200@   // the ice cream van at the queue
+    iBoard1        = 201@   // the call on each link: 0 none, 1 causes, 2 common cause, 3 coincidence, 4 can't tell
+    iBoard2        = 202@
+    iBoard3        = 203@
+    iBoard4        = 204@
+    iGraded        = 205@   // bit k-1: link k is graded right (shown once graded)
+    iCareless      = 206@   // 1 = ice cream "causes" crime went on air
+    hRadioVan      = 207@
+    hChase1        = 208@
+    hChase2        = 209@
+    hChaser1       = 210@
+    hChaser2       = 211@
+    iLinkRight     = 212@
+    iRepGain       = 213@
+    iShown         = 214@   // grading revealed up to link n
+    iEscapeT       = 215@
+    iChased        = 216@
+    iQueueOut      = 217@
+    fRexX          = 300@
+    fRexY          = 301@
+    fRexZ          = 302@
+
+    ST_INTRO       = 1
+    ST_THERMO      = 2
+    ST_VANS        = 3
+    ST_LOTTERY     = 4
+    ST_BOARD       = 5
+    ST_RADIO       = 6
+    ST_CHASE       = 7
+    ST_RETURN      = 8
+    ST_FINALE      = 9
+    ST_SUCCESS     = 10
+    ST_FAILURE     = 11
+
+    // checkpoints; +10 on the last two when the board was careless / the vans came
+    CP_THERMO      = 1
+    CP_VANS        = 2
+    CP_LOTTERY     = 3
+    CP_BOARD       = 4
+    CP_RADIO       = 5
+    CP_RETURN      = 6
+
+    FAIL_CHRIS     = 1
+    FAIL_VAN       = 2
+    FAIL_ABANDON   = 3
+    FAIL_REX       = 4
+
+    // the board's right answers
+    ANS_LINK1      = 1      // heat causes ice cream sales
+    ANS_LINK2      = 2      // heat drives both ice cream and crime
+    ANS_LINK3      = 3      // more tickets, more winners
+    ANS_LINK4      = 4      // one month of data
+
+    // [approx; snapped at runtime - docs/CALIBRATION.md]
+    THERMO_X       = -2890.0    // Ocean Flats beachfront
+    THERMO_Y       = 35.0
+    THERMO_Z       = 8.0
+    QUEUE_X        = -2470.0    // by the park in Queens
+    QUEUE_Y        = 475.0
+    QUEUE_Z        = 35.0
+    LOTTO_X        = -2215.0    // a newsstand in Chinatown
+    LOTTO_Y        = 610.0
+    LOTTO_Z        = 35.0
+    RADIO_X        = -2530.0    // Missionary Hill
+    RADIO_Y        = -620.0
+    RADIO_Z        = 130.0
+
+    ESCAPE_DIST    = 160.0
+    ESCAPE_MS      = 6000
+    REWARD_BASE    = 5000
+end

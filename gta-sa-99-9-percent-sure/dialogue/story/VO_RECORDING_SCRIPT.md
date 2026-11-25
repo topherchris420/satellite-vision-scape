@@ -274,6 +274,61 @@ Original performances only: do not imitate the original game cast.
 
 | File | Speaker | Target | Line | Notes |
 |---|---|---|---|---|
+| `VEC0101.mp3` | REX | 9.3 s | Radio Free Fierro. Friends, I've been putting the pieces together. The heat. The ice cream vans. The crime. The lottery. It's all one thing. |  |
+| `VEC0102.mp3` | REX | 6.6 s | And I challenge those so-called scientists in Doherty to prove me wrong. Live, on my show, tonight. |  |
+| `VEC0103.mp3` | CJ | 2.5 s | He's talking about you, man. |  |
+| `VEC0104.mp3` | CHRIS | 6.7 s | He's talking about patterns. Some of them are real. That's what makes him convincing. |  |
+| `VEC0105.mp3` | CHRIS | 8.2 s | So we collect our own observations, put them on a board, and sort the causes from the coincidences. |  |
+| `VEC0106.mp3` | CJ | 4.6 s | And then we go on the radio with a crazy guy. |  |
+| `VEC0107.mp3` | CHRIS | 3.5 s | With a crazy guy and a spreadsheet. |  |
+| `VEC0201.mp3` | CHRIS | 6.2 s | First, the weather. There's a bank thermometer on the beachfront at Ocean Flats. |  |
+| `VEC0202.mp3` | CHRIS | 4.0 s | Thirty-four degrees. Hottest day of the year. |  |
+| `VEC0203.mp3` | CJ | 2.4 s | No wonder everybody's acting crazy. |  |
+| `VEC0301.mp3` | CHRIS | 7.1 s | Rex says the ice cream vans are everywhere. Let's count a queue. Get a photo. |  |
+| `VEC0302.mp3` | CHRIS | 5.2 s | Twelve people waiting. The driver says sales have tripled since Monday. |  |
+| `VEC0303.mp3` | CJ | 3.9 s | I'd be in that line if we weren't working. |  |
+| `VEC0304.mp3` | DISPATCH | 7.5 s | All units, high call volume citywide. Disturbances, noise complaints, two car fires. It's a hot one, people. |  |
+| `VEC0305.mp3` | CHRIS | 5.7 s | And there's the crime half of Rex's chart. Calls are up too. |  |
+| `VEC0401.mp3` | CHRIS | 7.0 s | Rex's favourite: three lottery winners, all on Paradiso Street. Check the board at the newsstand. |  |
+| `VEC0402.mp3` | CHRIS | 8.3 s | Three winners on Paradiso this year. And nine thousand tickets sold there. The biggest seller in the city. |  |
+| `VEC0403.mp3` | CJ | 3.5 s | So they win more 'cause they play more. |  |
+| `VEC0404.mp3` | CHRIS | 4.8 s | Or Paradiso is magic. Let's put it on the board. |  |
+| `VEC0501.mp3` | CHRIS | 6.2 s | Here's the board. Four connections Rex says are real. You call each one. |  |
+| `VEC0502.mp3` | CHRIS | 5.8 s | Heat and ice cream: a cause. Hot afternoon, people want ice cream. |  |
+| `VEC0503.mp3` | CHRIS | 7.4 s | Heat and ice cream is a cause, Carl. Sales jump the same afternoon the heat does. |  |
+| `VEC0504.mp3` | CHRIS | 6.7 s | Ice cream and crime: common cause. The heat pushes both. Ice cream is innocent. |  |
+| `VEC0505.mp3` | CHRIS | 9.7 s | Ice cream doesn't cause crime. Hot weather pushes both up. If we say that on air, the vans will hear it. |  |
+| `VEC0506.mp3` | CHRIS | 5.5 s | Paradiso and the lottery: coincidence. More tickets, more winners. No magic. |  |
+| `VEC0507.mp3` | CHRIS | 6.2 s | Paradiso isn't lucky. They buy nine thousand tickets. Of course they win more. |  |
+| `VEC0508.mp3` | CHRIS | 7.1 s | The full moon: can't tell. One month of Rex's chart. Nobody can say from that. |  |
+| `VEC0509.mp3` | CHRIS | 5.8 s | One month of data from Rex. Honestly, we can't tell either way. |  |
+| `VEC0601.mp3` | CHRIS | 6.5 s | Radio Free Fierro broadcasts from a van on Missionary Hill. Of course it does. |  |
+| `VEC0602.mp3` | REXLIVE | 5.7 s | Well, well. The scientists came. Welcome to the truth, gentlemen. You're live. |  |
+| `VEC0603.mp3` | CHRIS | 6.0 s | Thanks, Rex. You're right that these things go up together. We checked. |  |
+| `VEC0604.mp3` | REXLIVE | 3.6 s | Ha! You hear that, San Fierro? Connected! |  |
+| `VEC0605.mp3` | CHRIS | 5.7 s | Some of them because one causes the other. Heat sells ice cream. |  |
+| `VEC0606.mp3` | CHRIS | 7.7 s | Some because something else drives both. Heat pushes up ice cream and arguments at the same time. |  |
+| `VEC0607.mp3` | CHRIS | 7.8 s | And some are just numbers bumping into each other. Paradiso buys more tickets, so it wins more. |  |
+| `VEC0608.mp3` | REXLIVE | 2.0 s | And the full moon? |  |
+| `VEC0609.mp3` | CHRIS | 5.8 s | One month of your chart. Nobody can tell from that. Including you. |  |
+| `VEC0610.mp3` | REXLIVE | 2.4 s | ...Hot weather. Huh. | a long pause first |
+| `VEC0611.mp3` | REXLIVE | 4.3 s | So what you're saying is, the weather controls us all. |  |
+| `VEC0612.mp3` | CJ | 3.0 s | That's... not what he said. |  |
+| `VEC0613.mp3` | REXLIVE | 2.1 s | Lines are open, people! |  |
+| `VEC0651.mp3` | REXLIVE | 4.9 s | Breaking news, San Fierro! Vers3Dynamics confirms it: ice cream causes crime! |  |
+| `VEC0652.mp3` | CHRIS | 4.7 s | That's not... we didn't... Carl. Look outside. |  |
+| `VEC0653.mp3` | TRUCKER | 4.6 s | Hey! You the guys who said ice cream causes crime?! |  |
+| `VEC0654.mp3` | CHRIS | 2.0 s | Drive. Drive now. |  |
+| `VEC0655.mp3` | CHRIS | 5.2 s | I think we lost them. And the ice cream union's goodwill. |  |
+| `VEC0701.mp3` | CHRIS | 8.1 s | Four links. A cause, a common cause, a coincidence and a shrug. That's a good night's science. |  |
+| `VEC0702.mp3` | CHRIS | 6.7 s | Next time we say 'common cause' slower. And louder. Near fewer ice cream vans. |  |
+| `VEC0703.mp3` | CJ | 5.4 s | Man, that radio guy's gonna be talking about weather control for a year. |  |
+| `VEC0704.mp3` | CHRIS | 8.7 s | Probably. But a few thousand people heard the difference between a cause and a coincidence tonight. That's not nothing. |  |
+| `VEC0705.mp3` | NEWS | 6.5 s | Radio Free Fierro drew record ratings last night with an unusually calm debate about ice cream. |  |
+| `VEC0706.mp3` | NEWS | 8.2 s | Ice cream vans protested outside a Doherty laboratory last night over remarks on pirate radio. No ice cream was harmed. |  |
+| `VEC0707.mp3` | CHRIS | 5.3 s | Carl. Tomorrow we open the doors. Everything, in public. Ready? |  |
+| `VEC0708.mp3` | CJ | 1.7 s | Ready for what? |  |
+| `VEC0709.mp3` | CHRIS | 1.9 s | The open experiment. |  |
 
 ## The Open Experiment
 

@@ -34,7 +34,7 @@ SV_RESULT, SV_MISSION, SV_HANDOFF = 952, 958, 959
 REC = dict(MAGIC=960, STORY=961, CASES=962, VERDICT=963, CAREFUL=964, REP=965, MODES=966, FLAGS=967,
            AUDIO=968, BEST=969, VISITS=970)
 REC_MAGIC_V1 = 39931
-F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_M3_DETAINED, F_WELCOMED = 1, 2, 4, 8, 16, 128
+F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_M3_DETAINED, F_M4_CHASED, F_WELCOMED = 1, 2, 4, 8, 16, 32, 128
 SCRIPTS = {"99sure.cm": True, "99sure_launcher.cs": False, "v3dhq.cm": True, "v3dghost.cm": True,
            "v3dfalse.cm": True, "v3dlink.cm": True, "v3dopen.cm": True}
 
@@ -171,6 +171,32 @@ def scenarios():
         plan=dict(inject=[dict(what="kill_player", when=lambda b: b.L("iState") == 3)]))
     add("false_from_hq_handoff", record=record_preset(story=3), via_launcher=True, launches=2,
         plan=dict(tasks=[("start",)]), expect="pass", expect_results=[3, 1], expect_rec=dict(STORY=7))
+
+    # ---- Everything Is Connected (story mission 4) --------------------------------------------
+    m3 = record_preset(story=7)
+    lk = dict(start="v3dlink", record=m3)
+    add("link_clean_board", **lk, expect="pass", expect_rec=dict(STORY=15, REP=58), expect_score=(40, 4, 4),
+        expect_flags_clear=F_M4_CHASED, expect_money=5000 + 40 * 25,
+        expect_lines=[101, 107, 202, 302, 304, 402, 501, 502, 504, 506, 508, 602, 609, 610, 613, 701, 705, 709])
+    add("link_careless_board_brings_the_vans", **lk, plan=dict(board={2: 1}), expect="pass",
+        expect_rec=dict(STORY=15, REP=53), expect_score=(25, 3, 4), expect_flags_set=F_M4_CHASED,
+        expect_money=5000 + 25 * 25, expect_lines=[505, 651, 652, 653, 655, 702, 706])
+    add("link_everything_wrong", **lk, plan=dict(board={1: 3, 2: 3, 3: 1, 4: 1}), expect="pass",
+        expect_score=(0, 0, 4), expect_flags_clear=F_M4_CHASED, expect_lines=[503, 505, 507, 509])
+    add("link_skip_cutscenes", **lk, plan=dict(skip=True), expect="pass", expect_rec=dict(STORY=15))
+    for cp in (1, 2, 3, 4, 5, 15, 6, 16):
+        add(f"link_from_checkpoint_{cp}", start="v3dlink", checkpoint=cp, record=m3, expect="pass",
+            expect_rec=dict(STORY=15), **({"expect_flags_set": F_M4_CHASED} if cp in (15, 16) else {}))
+    add("link_fail_rex_hurt", **lk, expect="fail:4",
+        plan=dict(inject=[dict(what="kill:hNpc1", when=lambda b: b.L("iState") == 6 and b.L("hNpc1") != -1)]))
+    add("link_fail_chris_killed", **lk, expect="fail:1",
+        plan=dict(inject=[dict(what="kill:hChris", when=lambda b: b.L("iState") == 3)]))
+    add("link_fail_van_wrecked", **lk, expect="fail:2",
+        plan=dict(inject=[dict(what="wreck:hVan", when=lambda b: b.L("iState") == 4)]))
+    add("link_wasted_in_the_chase", **lk, plan=dict(board={2: 1},
+        inject=[dict(what="kill_player", when=lambda b: b.L("iState") == 7)]), expect="death")
+    add("link_from_hq_handoff", record=record_preset(story=7), via_launcher=True, launches=2,
+        plan=dict(tasks=[("start",)]), expect="pass", expect_results=[3, 1], expect_rec=dict(STORY=15))
     return s
 
 

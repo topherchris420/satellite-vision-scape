@@ -426,6 +426,9 @@ class StoryBot:
         if self.L("uMode") == 9 and self.L("uMenu") == 30:
             self.field_decide(script)
             return
+        if self.L("uMode") == 10 and self.L("uMenu") == 40:
+            self.correlation_board()
+            return
         if self.plan.get("idle_until") and self.plan["idle_until"](self):
             self.stop()
             return
@@ -523,6 +526,22 @@ class StoryBot:
             self.tap(PAD_STICK_X, -128 if sel > want else 128)
         elif self.tap(PAD_ENTER):
             self.decisions.append((script, fc, want, want == right))
+
+    def correlation_board(self):
+        """Call each link (1 causes, 2 common cause, 3 coincidence, 4 can't tell), then submit."""
+        want = {1: 1, 2: 2, 3: 3, 4: 4}
+        want.update(self.plan.get("board", {}))
+        for row in (1, 2, 3, 4):
+            if self.L(f"iBoard{row}") != want[row]:
+                if self.L("uSel") != row:
+                    self.tap(PAD_STICK_Y, -128 if self.L("uSel") > row else 128)
+                else:
+                    self.tap(PAD_STICK_X, 128)
+                return
+        if self.L("uSel") != 5:
+            self.tap(PAD_STICK_Y, 128)
+        else:
+            self.tap(PAD_ENTER)
 
     def board(self, car):
         p = self.p

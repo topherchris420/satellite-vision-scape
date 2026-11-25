@@ -857,65 +857,6 @@ iObsDone = 1
 uTaskVal = 100
 return
 
-// A photograph: camera out, on foot, close enough and facing the subject
-// (oEnt). iTmp3 = 1 when the shutter fires. Depth 4: calls nothing.
-:PHOTO_CHECK
-iTmp3 = 0
-if iCamGiven == 0
-then
-    give_weapon_to_char $scplayer 43 60
-    iCamGiven = 1
-end
-iWeapon = get_current_char_weapon $scplayer
-if iWeapon <> 43
-then
-    if iNow > iShowT
-    then
-        set_current_char_weapon $scplayer 43
-        iShowT = iNow
-        iShowT += 3000
-    end
-    return
-end
-if is_char_in_any_car $scplayer
-then
-    return
-end
-if not locate_char_any_means_char_2d $scplayer oEnt PHOTO_RANGE PHOTO_RANGE false
-then
-    return
-end
-if not is_char_shooting $scplayer
-then
-    return
-end
-fPX, fPY, fPZ = get_char_coordinates $scplayer
-fSX, fSY, fSZ = get_char_coordinates oEnt
-fTmp = fSX
-fTmp -= fPX
-fTmp2 = fSY
-fTmp2 -= fPY
-fHead = get_heading_from_vector_2d fTmp fTmp2
-fHead2 = get_char_heading $scplayer
-fTmp = fHead2
-fTmp -= fHead
-if 0.0 > fTmp
-then
-    fTmp *= -1.0
-end
-if fTmp > 180.0
-then
-    fTmp2 = 360.0
-    fTmp2 -= fTmp
-    fTmp = fTmp2
-end
-if 50.0 > fTmp
-then
-    iTmp3 = 1
-    oKind = OBJ_NONE
-end
-return
-
 // The people at the last site go back to their day.
 :SITE_RELEASE
 if iSpawned == 0
@@ -1410,5 +1351,6 @@ return
 {$INCLUDE v3d/core.txt}
 {$INCLUDE v3d/field.txt}
 {$INCLUDE v3d/decide.txt}
+{$INCLUDE v3d/photo.txt}
 {$INCLUDE v3d/ui.txt}
 {$INCLUDE gen/false_scenes.txt}

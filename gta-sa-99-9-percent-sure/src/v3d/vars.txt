@@ -245,6 +245,8 @@ var
     443@: int
     444@: int
     445@: int
+    446@: int
+    447@: int
 end
 
 const
@@ -505,4 +507,6 @@ const
     iBit           = 443@   // a single-bit mask (1 << n)
     iCount2        = 444@   // a loop counter
     iWeapon        = 445@
+    iCamGiven      = 446@   // the camera has been handed over
+    iShowT         = 447@
 end

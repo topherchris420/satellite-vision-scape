@@ -56,10 +56,8 @@ const
     iFiledInTime   = 212@
     iRepGain       = 213@
     iSpawned       = 214@   // the site whose people are out (0 none)
-    iCamGiven      = 215@
     iBikeWait      = 216@
     iUrgent        = 217@
-    iShowT         = 218@
     iLeftT         = 219@
     iDetCount      = 220@
     fSAX           = 300@   // the three sites (snapped when CJ gets near)
@@ -112,7 +110,6 @@ const
     TIME_C         = 420000
     WARN_MS        = 120000
     SITE_RANGE     = 45.0
-    PHOTO_RANGE    = 14.0
     REWARD_BASE    = 4000
     REWARD_PER     = 1500
 end
