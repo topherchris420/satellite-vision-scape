@@ -215,6 +215,60 @@ Original performances only: do not imitate the original game cast.
 
 | File | Speaker | Target | Line | Notes |
 |---|---|---|---|---|
+| `VFP0101.mp3` | SENTINEL | 6.2 s | SENTINEL alert. Three subjects flagged as imminent threats. Intercept windows are now open. |  |
+| `VFP0102.mp3` | CJ | 2.6 s | Intercept? Who's doing the intercepting? |  |
+| `VFP0103.mp3` | CHRIS | 5.8 s | Pacific Shield. Private security. They bought SENTINEL when the city dropped CERTAIN. |  |
+| `VFP0104.mp3` | CHRIS | 8.9 s | When a countdown ends, their team picks the person up. No warrant, no review. Just a very confident van. |  |
+| `VFP0105.mp3` | CJ | 3.5 s | So it's CERTAIN with a new paint job. |  |
+| `VFP0106.mp3` | CHRIS | 8.5 s | Same engine, nicer font. Three people, three clocks. Two independent observations on each before their time runs out. |  |
+| `VFP0107.mp3` | CJ | 4.2 s | And if one of them really is up to something? |  |
+| `VFP0108.mp3` | CHRIS | 6.1 s | Then we say so. Being careful isn't the same as assuming everybody's innocent. |  |
+| `VFP0109.mp3` | CHRIS | 3.6 s | You pick the order. Watch the clocks. |  |
+| `VFP0201.mp3` | SENTINEL | 6.0 s | Subject Marisol Vega. Concealed weapon case. Loitering. Threat probability ninety-eight percent. |  |
+| `VFP0202.mp3` | CHRIS | 5.3 s | That's her, by the shops. Get a photo of the case. |  |
+| `VFP0203.mp3` | CHRIS | 5.0 s | The case is open. That's a saxophone. A nice one. |  |
+| `VFP0204.mp3` | CJ | 4.0 s | Excuse me. You know the lady with the sax? |  |
+| `VFP0205.mp3` | WITNESS | 6.0 s | Marisol? She's played outside my store every Saturday for six years. Customers love her. |  |
+| `VFP0206.mp3` | MUSICIAN | 4.7 s | Wait, I'm a what? A threat? I play jazz standards! |  |
+| `VFP0207.mp3` | CJ | 3.4 s | Don't worry about it. We're on it. |  |
+| `VFP0301.mp3` | SENTINEL | 6.0 s | Subject Dex Okafor. Erratic route. Evasive movement. Threat probability ninety-six percent. |  |
+| `VFP0302.mp3` | CHRIS | 7.1 s | He's a bike courier. Erratic is the job description. Follow him to his next drop. |  |
+| `VFP0303.mp3` | CHRIS | 3.8 s | Not too close. We're watching, not chasing. |  |
+| `VFP0304.mp3` | CHRIS | 4.0 s | He's stopping. Have a look at the manifest. |  |
+| `VFP0305.mp3` | COURIER | 9.6 s | Hey, hands off the... oh. You want the manifest? Knock yourself out. Four envelopes, two pizzas, one bag of cat food. |  |
+| `VFP0306.mp3` | CJ | 4.2 s | Your route's evasive, man. That's what the computer says. |  |
+| `VFP0307.mp3` | COURIER | 6.6 s | My route is the fastest way between twelve addresses! That's called being good at my job! |  |
+| `VFP0308.mp3` | CHRIS | 3.6 s | He's pulling away. Keep him in sight. |  |
+| `VFP0401.mp3` | SENTINEL | 5.0 s | Subject Ray Linares. Vehicle tampering. Threat probability ninety-one percent. |  |
+| `VFP0402.mp3` | CHRIS | 5.8 s | Let's not assume anything. Watch him for a minute. Get a photo. |  |
+| `VFP0403.mp3` | CHRIS | 4.0 s | He's trying the door handles. All of them. |  |
+| `VFP0404.mp3` | WITNESS | 7.8 s | That guy? He's been at it all morning. Tried my car twice. I called the cops, nobody came. |  |
+| `VFP0405.mp3` | PROWLER | 5.2 s | What? I'm looking for my car. It's one of these. Probably. |  |
+| `VFP0406.mp3` | CJ | 3.0 s | Okay. This one's actually doing it. |  |
+| `VFP0251.mp3` | CHRIS | 6.2 s | Rejected. A saxophone, six years of Saturdays, and a very confused jazz musician. |  |
+| `VFP0252.mp3` | CHRIS | 6.0 s | Accept? Carl, it's a saxophone. The only thing it threatens is silence. |  |
+| `VFP0253.mp3` | CHRIS | 5.3 s | We don't need to abstain. Two independent observations, and they agree. |  |
+| `VFP0351.mp3` | CHRIS | 4.7 s | Rejected. A route isn't a crime. Fast isn't evasive. |  |
+| `VFP0352.mp3` | CHRIS | 4.2 s | Accept? We followed him. He delivered cat food. |  |
+| `VFP0353.mp3` | CHRIS | 6.1 s | We watched the route and read the manifest. That's enough to say no. |  |
+| `VFP0451.mp3` | CHRIS | 6.8 s | Accepted. Two independent observations, both say tampering. It goes to SFPD, not Pacific Shield. |  |
+| `VFP0452.mp3` | CHRIS | 5.8 s | Reject? We photographed him doing it, and a witness saw him too. |  |
+| `VFP0453.mp3` | CHRIS | 5.7 s | We have the photo and a witness. This one we can decide. |  |
+| `VFP0455.mp3` | DISPATCH | 5.6 s | Units to Chinatown, vehicle tampering in progress. Evidence received from an independent lab. |  |
+| `VFP0456.mp3` | CHRIS | 6.2 s | That's how it's supposed to work. Evidence first, then the people with badges. |  |
+| `VFP0501.mp3` | SHIELD | 4.0 s | Pacific Shield to all teams: subject intercepted. Case closed. |  |
+| `VFP0502.mp3` | CHRIS | 6.1 s | We were too slow. Somebody's spending tonight explaining themselves to a private company. |  |
+| `VFP0503.mp3` | CHRIS | 4.3 s | Under two minutes on one of the clocks, Carl. |  |
+| `VFP0511.mp3` | CHRIS | 3.4 s | Verdict filed. That clock's stopped. Next. |  |
+| `VFP0601.mp3` | CHRIS | 7.0 s | All three filed. One real problem, and two people who were just living their lives. |  |
+| `VFP0602.mp3` | CHRIS | 7.1 s | We lost one to the clock. That's on the system. Remembering it is on us. |  |
+| `VFP0603.mp3` | CJ | 2.8 s | How'd SENTINEL get it so wrong? |  |
+| `VFP0604.mp3` | CHRIS | 7.9 s | It learned from old arrest maps. It doesn't see what people do. It sees where they are. |  |
+| `VFP0605.mp3` | NEWS | 7.2 s | The city has suspended Pacific Shield's SENTINEL contract after an independent lab cleared two flagged residents within minutes. |  |
+| `VFP0606.mp3` | NEWS | 8.0 s | Pacific Shield detained one resident before the review and has since apologized. Its software, it says, was 'technically confident'. |  |
+| `VFP0607.mp3` | REX | 8.9 s | Radio Free Fierro. Robots flagging buskers, ghosts on the bridge, ice cream vans everywhere. Friends, it is all connected. And I can prove it. |  |
+| `VFP0608.mp3` | CJ | 2.0 s | Who's gonna tell him? |  |
+| `VFP0609.mp3` | CHRIS | 3.0 s | We are. Eventually. With data. |  |
 
 ## Everything Is Connected
 

@@ -209,7 +209,6 @@ const
     gLogged        = 342@   // last frequency logged (repeat presses)
     gHumSeen       = 343@
     iDiag          = 344@   // diagram page 1..4
-    iCount2        = 345@
     iRecShown      = 346@
     iGreetLine     = 347@
     iMoney         = 348@
@@ -232,7 +231,6 @@ const
     iRow           = 365@
     iRowCase       = 366@
     iStat          = 367@
-    iBit           = 368@
     iVal           = 369@
 
     // ---- stations ---------------------------------------------------------------------

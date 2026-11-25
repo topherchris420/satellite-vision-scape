@@ -1014,6 +1014,10 @@ class Engine:
         if a.car is None:
             a.heading = heading_of(bx - ax, by - ay)
 
+    def c_task_smart_flee_char(self, s, h, threat, radius, ms):
+        self.dead_task(h, "TASK_SMART_FLEE_CHAR")
+        self.ents[h].task = ("wander",)
+
     def c_task_hands_up(self, s, h, ms):
         self.dead_task(h, "TASK_HANDS_UP")
         self.ents[h].task = None
@@ -1168,6 +1172,10 @@ class Engine:
     def c_locate_char_on_foot_2d(self, s, h, x, y, rx, ry, draw):
         e = self.ents[h]
         self.cond(s, e.car is None and abs(e.pos[0] - x) <= rx and abs(e.pos[1] - y) <= ry)
+
+    def c_locate_char_on_foot_char_2d(self, s, h, t, rx, ry, draw):
+        a, b = self.ents[h], self.ents[t]
+        self.cond(s, a.car is None and abs(a.pos[0] - b.pos[0]) <= rx and abs(a.pos[1] - b.pos[1]) <= ry)
 
     def c_locate_char_any_means_char_2d(self, s, h, t, rx, ry, draw):
         a, b = self.ents[h].pos, self.ents[t].pos

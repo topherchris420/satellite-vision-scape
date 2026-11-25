@@ -176,69 +176,6 @@ then
 end
 jump @DRIVE_TO_LOOP
 
-// HOLD_STILL: stay stopped (on foot or in a vehicle) within fDist2 of fDX fDY
-// for iWaitMs. uTask = 6 shows the progress. Returns when done.
-:HOLD_STILL
-iHoldT = 0
-iPrevT = get_game_timer
-uTask = 6
-:HOLD_STILL_LOOP
-gosub @TICK
-if iFail <> 0
-then
-    uTask = 0
-    return
-end
-iDt = iNow
-iDt -= iPrevT
-iPrevT = iNow
-oKind = OBJ_HOLD
-fOX = fDX
-fOY = fDY
-fOZ = fDZ
-iTmp = 0
-if locate_char_any_means_3d $scplayer fDX fDY fDZ fDist2 fDist2 8.0 true
-then
-    if is_char_in_any_car $scplayer
-    then
-        hTmpCar = store_car_char_is_in_no_save $scplayer
-        if is_car_stopped hTmpCar
-        then
-            iTmp = 1
-        end
-    else
-        if is_char_stopped $scplayer
-        then
-            iTmp = 1
-        end
-    end
-end
-if iTmp == 1
-then
-    iHoldT += iDt
-else
-    if iHoldT > 0
-    then
-        if iNow > iLastWarnT
-        then
-            iLastWarnT = iNow
-            iLastWarnT += 6000
-            print_now 'VGFH2' 3000 1
-        end
-    end
-    iHoldT = 0
-end
-uTaskVal = iHoldT
-uTaskVal *= 100
-uTaskVal /= iWaitMs
-if iHoldT >= iWaitMs
-then
-    uTask = 0
-    oKind = OBJ_NONE
-    return
-end
-jump @HOLD_STILL_LOOP
-
 // Teleport CJ (and whatever he drives) for a checkpoint restart. In: fSX fSY fSZ fHead.
 :TELEPORT_PLAYER
 set_area_visible 0

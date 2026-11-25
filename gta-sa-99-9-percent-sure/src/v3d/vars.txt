@@ -242,6 +242,9 @@ var
     440@: int
     441@: int
     442@: int
+    443@: int
+    444@: int
+    445@: int
 end
 
 const
@@ -499,4 +502,7 @@ const
     hTmpCar        = 440@
     iBit2          = 441@
     iInLab         = 442@   // 1 while CJ is inside the lab interior
+    iBit           = 443@   // a single-bit mask (1 << n)
+    iCount2        = 444@   // a loop counter
+    iWeapon        = 445@
 end

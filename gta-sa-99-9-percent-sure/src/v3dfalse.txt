@@ -1,0 +1,1414 @@
+// ============================================================================
+//  FALSE POSITIVE - Vers3Dynamics story mission 3
+//
+//  SENTINEL, CERTAIN's successor, now run by Pacific Shield Security, flags three
+//  San Fierro residents as imminent threats. When a person's countdown ends a
+//  private team picks them up. CJ chooses the order: two independent
+//  observations on each (photograph, witness, tail a courier, read a manifest),
+//  then a R.A.I.N. verdict that stops the clock. Two of the three are innocent;
+//  one really is trying car doors, and the careful answer says so.
+//
+//  CLEO custom mission. 0@ = checkpoint (1 + settled bits + 8 x detained bits,
+//  100 = the drive home), 1@ score, 2@ first-try right, 3@ verdicts.
+//  Compile with Sanny Builder 4 (GTA SA v1.0 - SBL). Needs CLEO 5.
+// ============================================================================
+{$CLEO .cm}
+{$NOSOURCE}
+{$INCLUDE v3d/vars.txt}
+{$INCLUDE false/vars.txt}
+{$INCLUDE gen/false_scene_vars.txt}
+{$INCLUDE v3d/config.txt}
+
+nop
+script_name 'V3DFALS'
+gosub @MISSION_START
+if has_deatharrest_been_executed
+then
+    iFail = -1
+end
+if iFail <> 0
+then
+    gosub @MISSION_FAILED
+end
+gosub @MISSION_CLEANUP
+terminate_this_script
+
+// ============================================================================
+:MISSION_START
+$onmission = 1
+iMissionId = 3
+gosub @INIT_COMMON
+gosub @FALSE_INIT
+if iArgCheckpoint > 0
+then
+    gosub @FALSE_RESUME
+end
+if iArgCheckpoint <= 0
+then
+    gosub @PH_INTRO
+    if iFail <> 0
+    then
+        return
+    end
+end
+if CP_RETURN > iArgCheckpoint
+then
+    gosub @PH_TRIAGE
+    if iFail <> 0
+    then
+        return
+    end
+end
+gosub @PH_RETURN
+if iFail <> 0
+then
+    return
+end
+gosub @PH_FINALE
+if iFail <> 0
+then
+    return
+end
+gosub @FALSE_PASSED
+return
+
+:FALSE_INIT
+uPrefix = 'VFP'
+iResolved = 0
+iDetained = 0
+iSubj = 0
+iSpawned = 0
+iWarned = 0
+iPendLine = 0
+iFiledInTime = 0
+iCamGiven = 0
+hBike = -1
+hCar1 = -1
+hCar2 = -1
+iEndA = 0
+iEndB = 0
+iEndC = 0
+fcTries = 0
+fSAX = SITE_A_X
+fSAY = SITE_A_Y
+fSAZ = SITE_A_Z
+fSBX = SITE_B_X
+fSBY = SITE_B_Y
+fSBZ = SITE_B_Z
+fSCX = SITE_C_X
+fSCY = SITE_C_Y
+fSCZ = SITE_C_Z
+gosub @SCN_FLAB_RESET
+iMdl = #CAMERA
+gosub @LOAD_MODEL
+iState = ST_INTRO
+gosub @PUBLISH
+return
+
+:FALSE_RESUME
+gosub @FADE_OUT
+set_player_control $player1 false
+clear_wanted_level $player1
+fSX = LAB_REF_X
+fSY = LAB_REF_Y
+fSZ = LAB_REF_Z
+fSZ += 1.0
+fHead = 0.0
+gosub @TELEPORT_PLAYER
+gosub @FIND_LAB_EXT
+if CP_RETURN > iArgCheckpoint
+then
+    iTmp = iArgCheckpoint
+    iTmp -= 1
+    iResolved = iTmp
+    iResolved &= 7
+    iDetained = iTmp
+    iDetained >>= 3
+    iDetained &= 7
+end
+fSX = fLabX
+fSY = fLabY
+fSZ = fLabZ
+fHead = 0.0
+gosub @RESUME_IN_VAN
+set_player_control $player1 true
+restore_camera_jumpcut
+gosub @FADE_IN
+if iCustomModel == 0
+then
+    print_help 'VHH08'
+end
+return
+
+// ============================================================================
+// The leak: a SENTINEL dashboard on Christopher's screen.
+// ============================================================================
+:PH_INTRO
+iState = ST_INTRO
+iCheckpoint = 0
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @FIND_LAB_EXT
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.6
+fTmp8 = 2.3
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+set_char_heading $scplayer fAH
+gosub @SCN_FLAB_CREATE
+fTmp7 = -0.3
+fTmp8 = 3.1
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+fHead = fAH
+gosub @SPAWN_CHRIS
+set_char_area_visible hChris LAB_AREA
+task_play_anim hChris "Copbrowse_loop" "COP_AMBIENT" 4.0 true false false false -1
+fTmp7 = 2.2
+fTmp8 = 6.2
+fTmp6 = 2.2
+hCamTarget = hChris
+fCamTZ = 0.45
+gosub @CAM_ANCHOR
+gosub @AMB_START
+gosub @MUSIC_START
+wait 300
+gosub @FADE_IN
+print_big 'VFP00' 3500 2
+iSfxId = SFX_SENTINEL
+gosub @SFX_PLAY
+dLine = 101
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 102
+gosub @SAY
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 103
+gosub @SAY
+dLine = 104
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 105
+gosub @SAY
+fTmp7 = -2.4
+fTmp8 = 1.6
+fTmp6 = 1.8
+hCamTarget = hChris
+fCamTZ = 0.5
+gosub @CAM_ANCHOR
+dLine = 106
+gosub @SAY
+dLine = 107
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.2
+fCamOY = 1.0
+fCamOZ = 0.64
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 108
+gosub @SAY
+dLine = 109
+gosub @SAY
+gosub @FADE_OUT
+gosub @AMB_STOP
+gosub @MUSIC_STOP
+gosub @SCN_FLAB_DELETE
+gosub @LAB_ROOM_LEAVE
+clear_char_tasks_immediately hChris
+set_char_area_visible hChris 0
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.3 0.3 0.0
+set_char_coordinates hChris fSX fSY fSZ
+gosub @SPAWN_VAN
+gosub @CHRIS_JOIN_GROUP
+gosub @CS_END
+wait 500
+gosub @FADE_IN
+return
+
+// ============================================================================
+// Triage: three clocks, any order.
+// ============================================================================
+:PH_TRIAGE
+iState = ST_TRIAGE
+gosub @TRIAGE_CHECKPOINT
+iNow = get_game_timer
+iTmp = iResolved
+iTmp &= 1
+if iTmp == 0
+then
+    iEndA = iNow
+    iEndA += TIME_A
+    bAux1 = add_blip_for_coord fSAX fSAY fSAZ
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp == 0
+then
+    iEndB = iNow
+    iEndB += TIME_B
+    bAux2 = add_blip_for_coord fSBX fSBY fSBZ
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp == 0
+then
+    iEndC = iNow
+    iEndC += TIME_C
+    bAux3 = add_blip_for_coord fSCX fSCY fSCZ
+end
+uHud = 1
+print_now 'VFPO1' 8000 1
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+:TRIAGE_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+gosub @TRIAGE_BLIPS
+// a radio line held back until nobody is talking (an interception is
+// followed by Christopher's reaction)
+if iPendLine > 0
+then
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            dLine = iPendLine
+            dQEnd = iPendLine
+            gosub @SAY_QUEUE
+            if iPendLine == 501
+            then
+                iPendLine = 502
+            else
+                iPendLine = 0
+            end
+        end
+    end
+end
+if iResolved == 7
+then
+    uHud = 0
+    return
+end
+// which site is CJ at?
+gosub @GET_PLAYER_POS
+iSubj = 0
+iTmp = iResolved
+iTmp &= 1
+if iTmp == 0
+then
+    fDist = get_distance_between_coords_2d fPX fPY fSAX fSAY
+    if SITE_RANGE > fDist
+    then
+        iSubj = 1
+    end
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp == 0
+then
+    fDist = get_distance_between_coords_2d fPX fPY fSBX fSBY
+    if SITE_RANGE > fDist
+    then
+        iSubj = 2
+    end
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp == 0
+then
+    fDist = get_distance_between_coords_2d fPX fPY fSCX fSCY
+    if SITE_RANGE > fDist
+    then
+        iSubj = 3
+    end
+end
+if iSubj == 0
+then
+    gosub @TRIAGE_GUIDE
+    jump @TRIAGE_LOOP
+end
+iState = ST_SITE
+gosub @PUBLISH
+iObsDone = 0
+uTaskVal = 0
+switch iSubj
+    case 1
+        gosub @SITE_A
+    case 2
+        gosub @SITE_B
+    default
+        gosub @SITE_C
+end
+if iFail <> 0
+then
+    return
+end
+iState = ST_TRIAGE
+gosub @PUBLISH
+if iObsDone == 0
+then
+    // the clock ran out while we were there
+    gosub @SITE_RELEASE
+    gosub @TRIAGE_CHECKPOINT
+    jump @TRIAGE_LOOP
+end
+fcId = iSubj
+fcTries = 0
+:TRIAGE_DECIDE
+gosub @FIELD_DECIDE
+if iFail <> 0
+then
+    return
+end
+gosub @SAY
+gosub @FIELD_DECIDE_CLOSE
+if fcCorrect == 0
+then
+    if fcRetry == 1
+    then
+        jump @TRIAGE_DECIDE
+    end
+end
+iBit = 1
+iTmp = iSubj
+iTmp -= 1
+iBit <<= iTmp
+iTmp = iDetained
+iTmp &= iBit
+if iTmp == 0
+then
+    iResolved |= iBit
+    iFiledInTime += 1
+    iSfxId = SFX_OK
+    gosub @SFX_PLAY
+    if iSubj == 3
+    then
+        dLine = 455
+        gosub @SAY
+        dLine = 456
+        gosub @SAY
+        if not is_char_dead hNpc3
+        then
+            task_smart_flee_char hNpc3 $scplayer 80.0 -1
+        end
+    else
+        dLine = 511
+        dQEnd = 511
+        gosub @SAY_QUEUE
+    end
+end
+gosub @SITE_RELEASE
+gosub @TRIAGE_CHECKPOINT
+jump @TRIAGE_LOOP
+
+:TRIAGE_CHECKPOINT
+iCheckpoint = iDetained
+iCheckpoint *= 8
+iCheckpoint += iResolved
+iCheckpoint += 1
+gosub @SAVE_CHECKPOINT
+return
+
+// blips only for the people still waiting
+:TRIAGE_BLIPS
+iTmp = iResolved
+iTmp &= 1
+if iTmp <> 0
+then
+    remove_blip bAux1
+    bAux1 = -1
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp <> 0
+then
+    remove_blip bAux2
+    bAux2 = -1
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp <> 0
+then
+    remove_blip bAux3
+    bAux3 = -1
+end
+return
+
+// Point the objective at whoever has least time left.
+:TRIAGE_GUIDE
+iUrgent = 0
+iTmp2 = 999999999
+iTmp = iResolved
+iTmp &= 1
+if iTmp == 0
+then
+    if iTmp2 > iEndA
+    then
+        iTmp2 = iEndA
+        iUrgent = 1
+    end
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp == 0
+then
+    if iTmp2 > iEndB
+    then
+        iTmp2 = iEndB
+        iUrgent = 2
+    end
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp == 0
+then
+    if iTmp2 > iEndC
+    then
+        iTmp2 = iEndC
+        iUrgent = 3
+    end
+end
+oKind = OBJ_DRIVE
+switch iUrgent
+    case 1
+        fOX = fSAX
+        fOY = fSAY
+        fOZ = fSAZ
+    case 2
+        fOX = fSBX
+        fOY = fSBY
+        fOZ = fSBZ
+    default
+        fOX = fSCX
+        fOY = fSCY
+        fOZ = fSCZ
+end
+// in the van without Christopher while he is close: wait for him
+if is_char_in_any_car $scplayer
+then
+    hTmpCar = store_car_char_is_in_no_save $scplayer
+    if not is_char_in_car hChris hTmpCar
+    then
+        if locate_char_any_means_char_2d $scplayer hChris 30.0 30.0 false
+        then
+            oKind = OBJ_HOLD
+            fOX = fPX
+            fOY = fPY
+            fOZ = fPZ
+        end
+    end
+end
+return
+
+// ============================================================================
+// Site A: Marisol and her saxophone case.
+// ============================================================================
+:SITE_A
+if iSpawned <> 1
+then
+    gosub @SITE_RELEASE
+    iMdl = #SBFYST
+    gosub @LOAD_MODEL
+    iMdl = #OMOKUNG
+    gosub @LOAD_MODEL
+    fSAX, fSAY, fSAZ = get_closest_char_node SITE_A_X SITE_A_Y SITE_A_Z
+    hNpc1 = create_char 4 #SBFYST fSAX fSAY fSAZ
+    task_play_anim hNpc1 "leanIDLE" "GANGS" 4.0 true false false false -1
+    fTmp = fSAX
+    fTmp += 5.0
+    fTmp2 = fSAY
+    fTmp2 += 2.0
+    hNpc2 = create_char 4 #OMOKUNG fTmp fTmp2 fSAZ
+    task_play_anim hNpc2 "Coplook_loop" "COP_AMBIENT" 4.0 true false false false -1
+    mark_model_as_no_longer_needed #SBFYST
+    mark_model_as_no_longer_needed #OMOKUNG
+    iSpawned = 1
+end
+dLine = 201
+gosub @SAY
+dLine = 202
+dQEnd = 202
+gosub @SAY_QUEUE
+print_now 'VFPO2' 6000 1
+:SITE_A_PHOTO
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 1
+if iTmp <> 0
+then
+    return
+end
+oKind = OBJ_PHOTO
+oEnt = hNpc1
+gosub @PHOTO_CHECK
+if iTmp3 == 0
+then
+    jump @SITE_A_PHOTO
+end
+uTaskVal = 50
+dLine = 203
+gosub @SAY
+print_now 'VFPO3' 6000 1
+:SITE_A_TALK
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 1
+if iTmp <> 0
+then
+    return
+end
+oKind = OBJ_TALK
+oEnt = hNpc2
+gosub @MENU_INPUT
+if uIn <> 7
+then
+    jump @SITE_A_TALK
+end
+if not locate_char_on_foot_char_2d $scplayer hNpc2 2.6 2.6 false
+then
+    jump @SITE_A_TALK
+end
+oKind = OBJ_NONE
+task_turn_char_to_face_char hNpc2 $scplayer
+dLine = 204
+gosub @SAY
+dLine = 205
+gosub @SAY
+dLine = 206
+gosub @SAY
+dLine = 207
+gosub @SAY
+iObsDone = 1
+uTaskVal = 100
+return
+
+// ============================================================================
+// Site B: Dex the courier, his route, his manifest.
+// ============================================================================
+:SITE_B
+if iSpawned <> 2
+then
+    gosub @SITE_RELEASE
+    iMdl = #BMX
+    gosub @LOAD_MODEL
+    iMdl = #BMYST
+    gosub @LOAD_MODEL
+    fSBX, fSBY, fSBZ, fHead = get_closest_car_node_with_heading SITE_B_X SITE_B_Y SITE_B_Z
+    hBike = create_car #BMX fSBX fSBY fSBZ
+    set_car_heading hBike fHead
+    hNpc2 = create_char_inside_car hBike 4 #BMYST
+    mark_model_as_no_longer_needed #BMX
+    mark_model_as_no_longer_needed #BMYST
+    fDropX = DROP_X
+    fDropY = DROP_Y
+    fDropZ = DROP_Z
+    iSpawned = 2
+end
+dLine = 301
+gosub @SAY
+dLine = 302
+gosub @SAY
+dLine = 303
+dQEnd = 303
+gosub @SAY_QUEUE
+print_now 'VFPO4' 7000 1
+car_goto_coordinates hBike fDropX fDropY fDropZ
+set_car_cruise_speed hBike 9.0
+iBikeWait = 0
+iLeftT = 0
+:SITE_B_FOLLOW
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp <> 0
+then
+    return
+end
+oKind = OBJ_FOLLOW
+oEnt = hBike
+oArg = 60
+// the drop: the courier gets off
+if locate_car_2d hBike fDropX fDropY 8.0 8.0 false
+then
+    jump @SITE_B_ARRIVED
+end
+if locate_char_any_means_car_2d $scplayer hBike 90.0 90.0 false
+then
+    if iBikeWait == 1
+    then
+        car_goto_coordinates hBike fDropX fDropY fDropZ
+        iBikeWait = 0
+    end
+else
+    if iNow > iLeftT
+    then
+        iLeftT = iNow
+        iLeftT += 9000
+        dLine = 308
+        dQEnd = 308
+        gosub @SAY_QUEUE
+    end
+    // far behind: he waits at a light until CJ catches up
+    if not locate_char_any_means_car_2d $scplayer hBike 200.0 200.0 false
+    then
+        if iBikeWait == 0
+        then
+            car_set_idle hBike
+            iBikeWait = 1
+        end
+    end
+end
+jump @SITE_B_FOLLOW
+
+:SITE_B_ARRIVED
+car_set_idle hBike
+if not is_char_dead hNpc2
+then
+    task_leave_car hNpc2 hBike
+end
+uTaskVal = 50
+dLine = 304
+dQEnd = 304
+gosub @SAY_QUEUE
+print_now 'VFPO5' 6000 1
+:SITE_B_MANIFEST
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 2
+if iTmp <> 0
+then
+    return
+end
+fOX, fOY, fOZ = get_offset_from_car_in_world_coords hBike 0.0 -1.3 0.0
+oKind = OBJ_USE
+gosub @MENU_INPUT
+if uIn <> 5
+then
+    jump @SITE_B_MANIFEST
+end
+if is_char_in_any_car $scplayer
+then
+    jump @SITE_B_MANIFEST
+end
+if not locate_char_on_foot_3d $scplayer fOX fOY fOZ 1.8 1.8 2.5 false
+then
+    jump @SITE_B_MANIFEST
+end
+oKind = OBJ_NONE
+if not is_char_dead hNpc2
+then
+    task_turn_char_to_face_char hNpc2 $scplayer
+end
+dLine = 305
+gosub @SAY
+dLine = 306
+gosub @SAY
+dLine = 307
+gosub @SAY
+iObsDone = 1
+uTaskVal = 100
+return
+
+// ============================================================================
+// Site C: Ray, the door handles, and a witness who has had enough.
+// ============================================================================
+:SITE_C
+if iSpawned <> 3
+then
+    gosub @SITE_RELEASE
+    iMdl = #SWMYST
+    gosub @LOAD_MODEL
+    iMdl = #WFYRI
+    gosub @LOAD_MODEL
+    iMdl = #PONY
+    gosub @LOAD_MODEL
+    iMdl = #MOONBEAM
+    gosub @LOAD_MODEL
+    fSCX, fSCY, fSCZ, fHead = get_closest_car_node_with_heading SITE_C_X SITE_C_Y SITE_C_Z
+    hCar1 = create_car #PONY fSCX fSCY fSCZ
+    set_car_heading hCar1 fHead
+    lock_car_doors hCar1 2
+    fTmp = fSCX
+    fTmp += 6.0
+    hCar2 = create_car #MOONBEAM fTmp fSCY fSCZ
+    set_car_heading hCar2 fHead
+    lock_car_doors hCar2 2
+    fSX, fSY, fSZ = get_offset_from_car_in_world_coords hCar1 -1.6 0.4 0.0
+    hNpc3 = create_char 4 #SWMYST fSX fSY fSZ
+    task_play_anim hNpc3 "CAR_doorlocked_LHS" "PED" 4.0 true false false false -1
+    fSX, fSY, fSZ = get_offset_from_car_in_world_coords hCar2 3.5 4.0 0.0
+    hNpc2 = create_char 4 #WFYRI fSX fSY fSZ
+    task_play_anim hNpc2 "Coplook_loop" "COP_AMBIENT" 4.0 true false false false -1
+    mark_model_as_no_longer_needed #SWMYST
+    mark_model_as_no_longer_needed #WFYRI
+    mark_model_as_no_longer_needed #PONY
+    mark_model_as_no_longer_needed #MOONBEAM
+    iSpawned = 3
+end
+dLine = 401
+gosub @SAY
+dLine = 402
+dQEnd = 402
+gosub @SAY_QUEUE
+print_now 'VFPO2' 6000 1
+:SITE_C_PHOTO
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp <> 0
+then
+    return
+end
+oKind = OBJ_PHOTO
+oEnt = hNpc3
+gosub @PHOTO_CHECK
+if iTmp3 == 0
+then
+    jump @SITE_C_PHOTO
+end
+uTaskVal = 50
+dLine = 403
+gosub @SAY
+print_now 'VFPO3' 6000 1
+:SITE_C_TALK
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iTmp = iResolved
+iTmp &= 4
+if iTmp <> 0
+then
+    return
+end
+oKind = OBJ_TALK
+oEnt = hNpc2
+gosub @MENU_INPUT
+if uIn <> 7
+then
+    jump @SITE_C_TALK
+end
+if not locate_char_on_foot_char_2d $scplayer hNpc2 2.6 2.6 false
+then
+    jump @SITE_C_TALK
+end
+oKind = OBJ_NONE
+task_turn_char_to_face_char hNpc2 $scplayer
+dLine = 404
+gosub @SAY
+dLine = 405
+gosub @SAY
+dLine = 406
+gosub @SAY
+iObsDone = 1
+uTaskVal = 100
+return
+
+// A photograph: camera out, on foot, close enough and facing the subject
+// (oEnt). iTmp3 = 1 when the shutter fires. Depth 4: calls nothing.
+:PHOTO_CHECK
+iTmp3 = 0
+if iCamGiven == 0
+then
+    give_weapon_to_char $scplayer 43 60
+    iCamGiven = 1
+end
+iWeapon = get_current_char_weapon $scplayer
+if iWeapon <> 43
+then
+    if iNow > iShowT
+    then
+        set_current_char_weapon $scplayer 43
+        iShowT = iNow
+        iShowT += 3000
+    end
+    return
+end
+if is_char_in_any_car $scplayer
+then
+    return
+end
+if not locate_char_any_means_char_2d $scplayer oEnt PHOTO_RANGE PHOTO_RANGE false
+then
+    return
+end
+if not is_char_shooting $scplayer
+then
+    return
+end
+fPX, fPY, fPZ = get_char_coordinates $scplayer
+fSX, fSY, fSZ = get_char_coordinates oEnt
+fTmp = fSX
+fTmp -= fPX
+fTmp2 = fSY
+fTmp2 -= fPY
+fHead = get_heading_from_vector_2d fTmp fTmp2
+fHead2 = get_char_heading $scplayer
+fTmp = fHead2
+fTmp -= fHead
+if 0.0 > fTmp
+then
+    fTmp *= -1.0
+end
+if fTmp > 180.0
+then
+    fTmp2 = 360.0
+    fTmp2 -= fTmp
+    fTmp = fTmp2
+end
+if 50.0 > fTmp
+then
+    iTmp3 = 1
+    oKind = OBJ_NONE
+end
+return
+
+// The people at the last site go back to their day.
+:SITE_RELEASE
+if iSpawned == 0
+then
+    return
+end
+if not is_char_dead hNpc1
+then
+    clear_char_tasks hNpc1
+    task_wander_standard hNpc1
+end
+if not is_char_dead hNpc2
+then
+    if not is_char_in_any_car hNpc2
+    then
+        clear_char_tasks hNpc2
+        task_wander_standard hNpc2
+    end
+end
+mark_char_as_no_longer_needed hNpc1
+mark_char_as_no_longer_needed hNpc2
+mark_char_as_no_longer_needed hNpc3
+mark_car_as_no_longer_needed hBike
+mark_car_as_no_longer_needed hCar1
+mark_car_as_no_longer_needed hCar2
+hNpc1 = -1
+hNpc2 = -1
+hNpc3 = -1
+hBike = -1
+hCar1 = -1
+hCar2 = -1
+iSpawned = 0
+return
+
+// ============================================================================
+:PH_RETURN
+iState = ST_RETURN
+iCheckpoint = CP_RETURN
+gosub @SAVE_CHECKPOINT
+uHud = 0
+// anything the radio still had to say, after the line in progress
+:PH_RETURN_PENDING
+if dActive == 1
+then
+    gosub @TICK
+    jump @PH_RETURN_PENDING
+end
+if dQNext > 0
+then
+    gosub @TICK
+    jump @PH_RETURN_PENDING
+end
+if iFail <> 0
+then
+    return
+end
+if iPendLine > 0
+then
+    dLine = iPendLine
+    gosub @SAY
+    if iPendLine == 501
+    then
+        iPendLine = 502
+    else
+        iPendLine = 0
+    end
+    jump @PH_RETURN_PENDING
+end
+print_now 'VFPO6' 7000 1
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+gosub @FIND_LAB_EXT
+fDX = fLabX
+fDY = fLabY
+fDZ = fLabZ
+iTmp3 = 0
+fDist2 = 5.0
+gosub @DRIVE_TO
+return
+
+:PH_FINALE
+iState = ST_FINALE
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @CHRIS_LEAVE_GROUP
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.6
+fTmp8 = 2.2
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+gosub @SCN_FLAB_CREATE
+fTmp7 = -0.4
+fTmp8 = 3.3
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+if not is_char_dead hChris
+then
+    if is_char_in_any_car hChris
+    then
+        warp_char_from_car_to_coord hChris fSX fSY fSZ
+    end
+    set_char_coordinates hChris fSX fSY fSZ
+    set_char_area_visible hChris LAB_AREA
+    task_turn_char_to_face_char hChris $scplayer
+    task_turn_char_to_face_char $scplayer hChris
+end
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.3
+fCamOY = 1.3
+fCamOZ = 0.6
+fCamTZ = 0.62
+gosub @CAM_SHOT
+gosub @AMB_START
+wait 300
+gosub @FADE_IN
+if iDetained == 0
+then
+    dLine = 601
+else
+    dLine = 602
+end
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.4
+fCamOY = -0.9
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 603
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 604
+gosub @SAY
+if iDetained == 0
+then
+    dLine = 605
+else
+    dLine = 606
+end
+gosub @SAY
+dLine = 607
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = -0.3
+fCamOY = 1.2
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 608
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.2
+fCamOY = 1.0
+fCamOZ = 0.64
+fCamTZ = 0.64
+gosub @CAM_SHOT
+dLine = 609
+gosub @SAY
+gosub @FADE_OUT
+gosub @AMB_STOP
+gosub @SCN_FLAB_DELETE
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+gosub @LAB_ROOM_LEAVE
+gosub @CS_END
+wait 400
+gosub @FADE_IN
+return
+
+:FALSE_PASSED
+iState = ST_SUCCESS
+iReward = iFiledInTime
+iReward *= REWARD_PER
+iReward += REWARD_BASE
+iTmp = iScore
+iTmp *= 25
+iReward += iTmp
+gosub @COUNT_DETAINED
+iRepGain = iFiledInTime
+iRepGain *= 3
+iTmp = iDetCount
+iTmp *= 4
+iRepGain -= iTmp
+rRep += iRepGain
+if iDetained <> 0
+then
+    rFlags |= REC_F_M3_DETAINED
+    print_now 'VFPP2' 6000 1
+else
+    print_now 'VFPP1' 6000 1
+end
+gosub @MISSION_PASSED_COMMON
+register_mission_passed 'VFP00'
+return
+
+:COUNT_DETAINED
+iDetCount = 0
+iTmp = iDetained
+iTmp &= 1
+iDetCount += iTmp
+iTmp = iDetained
+iTmp >>= 1
+iTmp &= 1
+iDetCount += iTmp
+iTmp = iDetained
+iTmp >>= 2
+iTmp &= 1
+iDetCount += iTmp
+return
+
+:MISSION_FAILED
+iState = ST_FAILURE
+set_cleo_shared_var SV_RESULT 2
+gosub @PUBLISH
+gosub @DLG_CANCEL
+print_big 'VXF00' 5000 1
+switch iFail
+    case FAIL_CHRIS
+        print_now 'VXF01' 5000 1
+    case FAIL_VAN
+        print_now 'VXF02' 5000 1
+    case FAIL_ABANDON
+        print_now 'VXF03' 5000 1
+    case FAIL_DETAINED
+        print_now 'VFPF1' 6000 1
+    case FAIL_HURT
+        print_now 'VFPF2' 5000 1
+end
+return
+
+:MISSION_CLEANUP
+iState = 12
+uHud = 0
+gosub @SCN_FLAB_DELETE
+gosub @SITE_RELEASE
+if is_player_playing $player1
+then
+    if iInLab == 1
+    then
+        gosub @LAB_ROOM_LEAVE
+    end
+end
+mark_model_as_no_longer_needed #CAMERA
+// a site interrupted while its people were still loading
+mark_model_as_no_longer_needed #SBFYST
+mark_model_as_no_longer_needed #OMOKUNG
+mark_model_as_no_longer_needed #BMX
+mark_model_as_no_longer_needed #BMYST
+mark_model_as_no_longer_needed #SWMYST
+mark_model_as_no_longer_needed #WFYRI
+mark_model_as_no_longer_needed #PONY
+mark_model_as_no_longer_needed #MOONBEAM
+gosub @CLEANUP_COMMON
+return
+
+// ============================================================================
+// Every frame: the clocks, and nobody gets hurt.
+// ============================================================================
+:WATCH_MISSION
+if iSpawned == 1
+then
+    if is_char_dead hNpc1
+    then
+        iFail = FAIL_HURT
+        return
+    end
+end
+if iSpawned == 3
+then
+    if is_char_dead hNpc3
+    then
+        iFail = FAIL_HURT
+        return
+    end
+end
+if iSpawned > 0
+then
+    if hNpc2 <> -1
+    then
+        if is_char_dead hNpc2
+        then
+            iFail = FAIL_HURT
+            return
+        end
+    end
+end
+if ST_TRIAGE > iState
+then
+    return
+end
+if iState > ST_SITE
+then
+    return
+end
+iCount2 = 1
+:WATCH_CLOCKS
+iBit = 1
+iTmp = iCount2
+iTmp -= 1
+iBit <<= iTmp
+iTmp = iResolved
+iTmp &= iBit
+if iTmp == 0
+then
+    switch iCount2
+        case 1
+            iTmp2 = iEndA
+        case 2
+            iTmp2 = iEndB
+        default
+            iTmp2 = iEndC
+    end
+    iTmp2 -= iNow
+    if 0 >= iTmp2
+    then
+        // Pacific Shield's team picks them up
+        iResolved |= iBit
+        iDetained |= iBit
+        iPendLine = 501
+        gosub @COUNT_DETAINED
+        if iDetCount >= 2
+        then
+            iFail = FAIL_DETAINED
+            return
+        end
+    else
+        if WARN_MS > iTmp2
+        then
+            iTmp = iWarned
+            iTmp &= iBit
+            if iTmp == 0
+            then
+                iWarned |= iBit
+                if iPendLine == 0
+                then
+                    iPendLine = 503
+                end
+            end
+        end
+    end
+end
+iCount2 += 1
+if 3 >= iCount2
+then
+    jump @WATCH_CLOCKS
+end
+return
+
+:DLG_LOOKUP
+{$INCLUDE gen/false_dialogue.txt}
+return
+
+:CLAIM_LOOKUP
+{$INCLUDE gen/false_claims.txt}
+return
+
+:HUD_DRAW
+if uMode == 0
+then
+    if uHud == 0
+    then
+        return
+    end
+end
+use_text_commands true
+if uMode == 9
+then
+    gosub @DRAW_DECIDE
+    return
+end
+if uHud == 1
+then
+    gosub @DRAW_FLAGS
+end
+return
+
+// The three clocks, top right.
+:DRAW_FLAGS
+draw_rect 548.0 172.0 168.0 92.0 6 20 22 210
+draw_rect 548.0 128.0 168.0 4.0 200 30 40 255
+gosub @TS_HEAD
+set_text_scale 0.26 1.06
+set_text_colour 225 80 80 255
+display_text 468.0 134.0 'VFPU1'
+uRow = 1
+:DRAW_FLAGS_ROW
+uY =# uRow
+uY *= 20.0
+uY += 132.0
+gosub @TS_BODY
+set_text_scale 0.24 0.98
+switch uRow
+    case 1
+        display_text 468.0 uY 'VFPU2'
+        uI = iEndA
+    case 2
+        display_text 468.0 uY 'VFPU3'
+        uI = iEndB
+    default
+        display_text 468.0 uY 'VFPU4'
+        uI = iEndC
+end
+iBit = 1
+iTmp = uRow
+iTmp -= 1
+iBit <<= iTmp
+iTmp = iDetained
+iTmp &= iBit
+if iTmp <> 0
+then
+    gosub @TS_RED
+    set_text_scale 0.24 0.98
+    set_text_right_justify true
+    display_text 628.0 uY 'VFPU8'
+else
+    iTmp = iResolved
+    iTmp &= iBit
+    if iTmp <> 0
+    then
+        gosub @TS_GOOD
+        set_text_scale 0.24 0.98
+        set_text_right_justify true
+        display_text 628.0 uY 'VFPU7'
+    else
+        uI -= iNow
+        if 0 > uI
+        then
+            uI = 0
+        end
+        uI /= 1000
+        uI2 = uI
+        uI2 /= 60
+        uI3 = uI2
+        uI3 *= 60
+        uI -= uI3
+        gosub @TS_AMBER
+        set_text_scale 0.26 1.06
+        set_text_right_justify true
+        if 2 > uI2
+        then
+            // under two minutes: red
+            set_text_colour 230 70 60 255
+        end
+        if 10 > uI
+        then
+            display_text_with_2_numbers 628.0 uY 'VFPU6' uI2 uI
+        else
+            display_text_with_2_numbers 628.0 uY 'VFPU5' uI2 uI
+        end
+    end
+end
+uRow += 1
+if 3 >= uRow
+then
+    jump @DRAW_FLAGS_ROW
+end
+// observations at the current site: none, one, both
+if iState == ST_SITE
+then
+    uX = 548.0
+    uY = 228.0
+    uW = 152.0
+    uV = uTaskVal
+    uR = 90
+    uG = 220
+    uB = 210
+    gosub @DRAW_METER
+end
+return
+
+{$INCLUDE v3d/core.txt}
+{$INCLUDE v3d/field.txt}
+{$INCLUDE v3d/decide.txt}
+{$INCLUDE v3d/ui.txt}
+{$INCLUDE gen/false_scenes.txt}

@@ -114,17 +114,26 @@ class StoryBot:
             self.apply_inputs()
             return
         m = self.vm.mission()
-        if m is not None and self.names_by_script:
-            key = m.name.upper()[:7]
-            self.names = self.names_by_script.get(key, self.names)
+        tag = None
+        if m is not None:
+            tag = self.script_tag(m)
+            self.names = self.names_by_script.get(tag, self.names)
         self.inject_planned()
         if m is None:
             self.outside()
-        elif m.name.upper().startswith("V3DHQ"):
+        elif tag == "V3DHQ":
             self.hq()
         else:
-            self.field(m.name.upper()[:7])
+            self.field(tag)
         self.apply_inputs()
+
+    FILE_TAGS = {"v3dhq.cm": "V3DHQ", "v3dghost.cm": "V3DGHST", "v3dfalse.cm": "V3DFALS",
+                 "v3dlink.cm": "V3DLINK", "v3dopen.cm": "V3DOPEN"}
+
+    def script_tag(self, script):
+        """The script_name a mission gives itself (before it runs, the VM knows only its file)."""
+        base = script.name.replace("/", "\\").split("\\")[-1].lower()
+        return self.FILE_TAGS.get(base, script.name.upper()[:7])
 
     def inject_planned(self):
         for step in self.plan.get("inject", []):
@@ -420,6 +429,19 @@ class StoryBot:
         if self.plan.get("idle_until") and self.plan["idle_until"](self):
             self.stop()
             return
+        if script == "V3DFALS" and self.plan.get("order") and kind == 2 and self.L("iState") == 2:
+            # a player who picks their own order instead of the most urgent clock
+            done = self.L("iResolved")
+            nxt = next((s for s in self.plan["order"] if not (done >> (s - 1)) & 1), None)
+            if nxt is not None:
+                fx, fy = {1: (self.F("fSAX"), self.F("fSAY")), 2: (self.F("fSBX"), self.F("fSBY")),
+                          3: (self.F("fSCX"), self.F("fSCY"))}[nxt]
+                van = self.e.ent(self.L("hVan"))
+                if self.p.car is None and van is not None and not van.dead:
+                    self.board(van)
+                else:
+                    self.move_to(fx, fy, None, stop_at=1.0)
+                return
         p = self.p
         fx, fy, fz = self.F("fOX"), self.F("fOY"), self.F("fOZ")
         van = self.e.ent(self.L("hVan"))
@@ -461,6 +483,25 @@ class StoryBot:
             self.leave_car()
             if self.move_to(fx, fy, fz + 1.0, stop_at=0.3):
                 self.tap(PAD_ENTER)
+        elif kind == 8:                                       # photograph oEnt
+            ent = self.e.ent(self.L("oEnt"))
+            if ent is None:
+                return
+            self.leave_car()
+            if self.move_to(ent.x + 5.0, ent.y, None, stop_at=0.5):
+                p.heading = math.degrees(math.atan2(-(ent.x - p.x), ent.y - p.y)) % 360.0
+                self.stop()
+                if self.vm.time >= self.ram_t:
+                    self.e.shooting = True                    # press fire with the camera out
+                    self.ram_t = self.vm.time + 600
+        elif kind == 11:                                      # follow oEnt, not too close
+            ent = self.e.ent(self.L("oEnt"))
+            if ent is None:
+                return
+            if p.car is None and van is not None and not van.dead:
+                self.board(van)
+                return
+            self.move_to(ent.x, ent.y, ent.z, stop_at=25.0, speed=14.0)
         elif kind == 13:                                      # Y / N
             self.tap(PAD_YES if self.plan.get("choice", "yes") == "yes" else PAD_NO)
         elif kind == 7:                                       # talk to someone
@@ -472,17 +513,15 @@ class StoryBot:
 
     def field_decide(self, script):
         fc = self.L("fcId")
-        tries = self.plan.setdefault("_tries", {})
         claim = self.claims[self.SCRIPT_JSON[script]][fc]
         right = ANSWER[claim["answer"]]
         n_wrong = self.plan.get("wrong", {}).get(fc, 0)
-        done = tries.get(fc, 0)
+        done = self.L("fcTries")                  # answers the console has actually taken
         want = right if done >= n_wrong else (1 if right != 1 else 2)
         sel = self.L("uSel")
         if sel != want:
             self.tap(PAD_STICK_X, -128 if sel > want else 128)
         elif self.tap(PAD_ENTER):
-            tries[fc] = done + 1
             self.decisions.append((script, fc, want, want == right))
 
     def board(self, car):

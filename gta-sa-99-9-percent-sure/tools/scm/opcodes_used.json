@@ -1375,6 +1375,45 @@
     }
    ]
   },
+  "00F3": {
+   "name": "LOCATE_CHAR_ON_FOOT_CHAR_2D",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "target",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yRadius",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "drawSphere",
+     "type": "bool",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "00FE": {
    "name": "LOCATE_CHAR_ANY_MEANS_3D",
    "extension": "default",
@@ -4570,6 +4609,39 @@
     {
      "name": "speed",
      "type": "MoveState",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05DD": {
+   "name": "TASK_SMART_FLEE_CHAR",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "threat",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "radius",
+     "type": "float",
      "source": null,
      "out": false
     },

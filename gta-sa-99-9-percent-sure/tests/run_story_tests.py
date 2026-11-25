@@ -34,7 +34,7 @@ SV_RESULT, SV_MISSION, SV_HANDOFF = 952, 958, 959
 REC = dict(MAGIC=960, STORY=961, CASES=962, VERDICT=963, CAREFUL=964, REP=965, MODES=966, FLAGS=967,
            AUDIO=968, BEST=969, VISITS=970)
 REC_MAGIC_V1 = 39931
-F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_WELCOMED = 1, 2, 4, 8, 128
+F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_M3_DETAINED, F_WELCOMED = 1, 2, 4, 8, 16, 128
 SCRIPTS = {"99sure.cm": True, "99sure_launcher.cs": False, "v3dhq.cm": True, "v3dghost.cm": True,
            "v3dfalse.cm": True, "v3dlink.cm": True, "v3dopen.cm": True}
 
@@ -140,6 +140,37 @@ def scenarios():
         plan=dict(tasks=[("start",)], choice="yes", retry=True,
                   inject=[dict(what="kill:hChris", when=lambda b: b.L("iState") == 5 and b.L("oKind") == 9)]),
         expect="pass", expect_results=[3, 2, 1], expect_retry_checkpoint=3, expect_rec=dict(STORY=3))
+
+    # ---- False Positive (story mission 3) ------------------------------------------------------
+    m2 = record_preset(story=3)
+    f = dict(start="v3dfalse", record=m2)
+    add("false_all_filed_in_time", **f, expect="pass", expect_rec=dict(STORY=7, REP=59),
+        expect_flags_clear=F_M3_DETAINED, expect_money=4000 + 3 * 1500 + 30 * 25, expect_score=(30, 3, 3),
+        expect_lines=[101, 108, 201, 203, 205, 251, 301, 305, 351, 401, 403, 404, 451, 455, 456, 601, 605, 607, 609])
+    add("false_one_detained", **f, expect="pass",
+        plan=dict(order=[2, 3, 1],
+                  idle_until=lambda b: b.L("iState") == 2 and b.L("iResolved") == 6 and b.L("iDetained") == 0),
+        expect_rec=dict(STORY=7, REP=52), expect_flags_set=F_M3_DETAINED, expect_money=4000 + 2 * 1500 + 20 * 25,
+        expect_lines=[501, 502, 602, 606])
+    add("false_two_detained_fails", **f, expect="fail:4",
+        plan=dict(idle_until=lambda b: b.L("iState") == 2))
+    add("false_wrong_on_the_prowler", **f, plan=dict(wrong={3: 1}), expect="pass", expect_score=(15, 2, 3),
+        expect_lines=[452, 451])
+    add("false_skip_cutscenes", **f, plan=dict(skip=True), expect="pass", expect_rec=dict(STORY=7))
+    add("false_from_checkpoint_marisol_filed", start="v3dfalse", checkpoint=2, record=m2, expect="pass",
+        expect_rec=dict(STORY=7))
+    add("false_from_checkpoint_return", start="v3dfalse", checkpoint=100, record=m2, expect="pass",
+        expect_rec=dict(STORY=7))
+    add("false_fail_subject_hurt", **f, expect="fail:5",
+        plan=dict(inject=[dict(what="kill:hNpc1", when=lambda b: b.L("iSpawned") == 1)]))
+    add("false_fail_witness_hurt", **f, expect="fail:5",
+        plan=dict(inject=[dict(what="kill:hNpc2", when=lambda b: b.L("iSpawned") == 3)]))
+    add("false_fail_chris_killed", **f, expect="fail:1",
+        plan=dict(inject=[dict(what="kill:hChris", when=lambda b: b.L("iSpawned") == 2)]))
+    add("false_wasted_at_a_site", **f, expect="death",
+        plan=dict(inject=[dict(what="kill_player", when=lambda b: b.L("iState") == 3)]))
+    add("false_from_hq_handoff", record=record_preset(story=3), via_launcher=True, launches=2,
+        plan=dict(tasks=[("start",)]), expect="pass", expect_results=[3, 1], expect_rec=dict(STORY=7))
     return s
 
 

@@ -1370,6 +1370,7 @@ return
 
 {$INCLUDE v3d/core.txt}
 {$INCLUDE v3d/field.txt}
+{$INCLUDE v3d/hold.txt}
 {$INCLUDE v3d/decide.txt}
 {$INCLUDE v3d/ui.txt}
 {$INCLUDE gen/ghost_scenes.txt}
