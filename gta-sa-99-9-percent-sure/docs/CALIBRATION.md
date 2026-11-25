@@ -49,8 +49,44 @@ district from public map references.
 | `R_COP1..3_*` | three points around Doherty/Garcia | approx | Act IV patrol cars |
 | `D_*` | -1822, 640, 35.2 | approx, near the Cluckin' Bell entrance (game data -1815.84, 618.68) | Act V stage |
 
+### The HQ and missions 2-5
+
+The expansion uses the same runtime safety: every outdoor point is snapped to
+a pavement or road node once its area is streamed in, and props are placed by
+ground probe. Mission files define them in `src/<mission>/vars.txt`; the lab
+in `src/v3d/config.txt`. All mission points are *approx*, chosen inside the
+named district from public map references.
+
+| Script | Name | Value | Used for |
+|---|---|---|---|
+| HQ | `LAB_REF_*`, `LAB_IN_*` | as mission 1 | the HQ door down the street from CJ's garage, the lab interior (18) |
+| HQ | `data/hq_scenes.json` | offsets from the door | the lab furniture (`HQBASE`), the story props (`HQM2`-`HQM5`), the atlas display (`HQATLAS`); stations and Christopher's routine are relative to the same anchor |
+| Ghost Frequency | `POST1_*` | -2105, 960, 70 (Calton Heights) | first listening post |
+| | `POST2_*` | -2690, -80, 8 (Ocean Flats) | second listening post |
+| | `NEON_*` | -2552, 193, 6 (Queens) | the buzzing neon sign the bearings cross at |
+| | `BRIDGE_*`, `ECHO_*` | -2675, 1275, 50 (Gant Bridge south approach); the cables above at -2670, 1480, 90 | first on-foot sweep and the echo it points at |
+| | `ESPL_*` | -1950, 1340, 7 (Esplanade North) | second sweep |
+| | `RELAY_*` | -1795, 905, 25 (Downtown parking structure) | the relay and the technician's van |
+| False Positive | `SITE_A_*` | -2245, 75, 35 (Garcia shops) | Marisol |
+| | `SITE_B_*`, `DROP_*` | -1905, 835, 35 (Downtown); the drop two blocks east at -1760, 760, 30 | Dex and his drop |
+| | `SITE_C_*` | -2175, 690, 55 (Chinatown) | Ray |
+| Everything Is Connected | `THERMO_*` | -2890, 35, 8 (Ocean Flats beachfront) | the thermometer |
+| | `QUEUE_*` | -2470, 475, 35 (Queens, by the park) | the ice cream queue |
+| | `LOTTO_*` | -2215, 610, 35 (Chinatown newsstand) | the lottery board |
+| | `RADIO_*` | -2530, -620, 130 (Missionary Hill) | the debate |
+| The Open Experiment | `KIT1_*`, `KIT2_*`, `KIT3_*` | -2260, 140, 35 (Garcia High); -2680, -60, 8 (Ocean Flats); -1960, 660, 40 (Downtown) | kit deliveries |
+| | `PIER_*` | -1640, 1320, 7 (Esplanade East pier) | the public demonstration |
+
+Things to look at first in the expansion: the lab door marker and the HQ
+entry after mission 1; the rig's driver cabinet and the diagram wall screen in
+the lab (`data/hq_scenes.json`); the Gant Bridge sweep point (the bridge deck
+is far above the water, so its node must be on the deck's pavement); the
+Missionary Hill debate spot (steep ground); and the pier, where the stage must
+sit on the boardwalk.
+
 Scene layouts (props and extras around each anchor) are in `data/scenes.json`
-and are turned into script code by `tools/gen_scenes.py`. Offsets are in
+(mission 1) and `data/<script>_scenes.json` (the expansion), and are turned
+into script code by `tools/gen_scenes.py`. Offsets are in
 metres: `dx` to the anchor's right, `dy` forward, `dz` up, `dh` heading
 relative to the anchor.
 
@@ -64,7 +100,7 @@ relative to the anchor.
    want the tai chi class) and save the position.
 4. Put the numbers into `src/inc/config.txt` (or the offsets into
    `data/scenes.json`), rebuild with `python3 tools/build.py --sb4 <Sanny Builder 4>`,
-   and copy the new `cleo\99sure.cm`.
+   and copy the new `cleo\99sure.cm` (or the expansion's `cleo\v3d*.cm`).
 5. Remove `99sure_debug.cs` from `cleo\` when you are done.
 
 Z values from the overlay are the ped's position, about 1 m above the ground.

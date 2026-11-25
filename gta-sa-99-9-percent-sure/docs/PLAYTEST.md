@@ -1,48 +1,59 @@
-# 99.9% SURE: first playable build with lab score
+# Vers3Dynamics for GTA: San Andreas: playtest package
 
-**Evidence in the Quiet** is a new, original 48-second procedural ambient
-composition for the Vers3Dynamics laboratory: a low synth bed, restrained
-minor-key harmony and delayed glass tones. It uses the mission's existing
-optional music hook, so the compiled CLEO mission is unchanged. No licensed
-album recording or original GTA audio is redistributed.
+This ZIP holds the whole storyline: mission 1 (*99.9% SURE*), the
+Vers3Dynamics HQ, missions 2-5, the world script that ties them together,
+subtitles, interface textures, the lab score *Evidence in the Quiet* and the
+original sound effects. It contains no game files and no licensed recordings.
+`MANIFEST.json` lists a SHA-256 hash for every file.
+
+**What has been checked:** every script compiles with Sanny Builder 4.2,
+passes bytecode validation, and plays through every ending, failure,
+checkpoint and save/update case in a headless script VM against a mocked
+engine (42 scenarios for mission 1, 75 for the HQ and missions 2-5).
+**What has not:** any of it inside GTA: San Andreas. This package is the
+first real-game test, not a claim that one has happened.
 
 ## Get the build
 
-The GTA playtest workflow produces a ZIP containing the existing compiled
-mission, launcher, subtitles, UI textures, phone ring and the new music.
-Alternatively, with Python 3.10+ and ffmpeg on PATH, run from the mod root:
+Download the `99sure-vers3dynamics` artifact from the **GTA San Andreas
+expansion** workflow run, or build it from the mod folder (Python 3.10+,
+numpy, Pillow, ffmpeg with libvorbis):
 
-    python tools/package_playtest.py --out build/99sure-playtest.zip
+    python tools/build.py
+    python tools/package_playtest.py --out build/99sure-vers3dynamics.zip
 
-To generate just the music:
+## Install
 
-    python tools/lab_score.py --out release/99sure/cleo/99sure/music/lab.mp3
+1. Back up the game folder and the save folder.
+2. GTA: San Andreas PC v1.0 US, CLEO 5 (5.4 or later recommended), Silent's
+   ASI Loader. The expansion needs CLEO 5's audio commands.
+3. Extract the ZIP to a staging folder and copy `cleo\` and `models\` into
+   the game folder.
+4. Christopher appears as a stock stand-in until you build his model from your
+   own `gta3.img` (INSTALL.md, section 4). The ZIP leaves out the preview
+   model built on a synthetic skeleton.
 
-Back up the game and saves first. Follow INSTALL.md for GTA SA PC 1.0 US
-and CLEO 5.4+. Extract the ZIP to a staging folder and copy the cleo and
-models folders into the game folder. The ZIP intentionally omits synthetic
-preview models; use the stand-in or build Christopher from your own stock
-skeleton using the source repository. No game executable or assets are included.
-MANIFEST.json provides SHA-256 hashes for every packaged file.
+## First session
 
-## First real-game session
+Record the executable version, CLEO version, resolution, and whether the
+stand-in or the custom model was used. Keep `cleo.log` and, if you can, a
+screen recording.
 
-Record the exact executable version, CLEO version, display resolution, and
-whether the stock stand-in or custom model was used. Keep a copy of cleo.log
-and a screen recording, if possible.
-
-| Check | Expected result | Observed |
+| Check | Expected | Observed |
 |---|---|---|
-| Start at Doherty garage | Marker starts the mission | Not run |
-| First pursuit | Losing wanted level advances the mission | Not run |
-| Lab entrance | Camera, props and character visible | Not run |
-| Lab audio | Music audible at a comfortable level, subtitles readable | Not run |
-| Lab exit or skip | Music stops; no lingering stream | Not run |
-| R.A.I.N. decisions | Accept, reject, abstain and scoring work | Not run |
-| All checkpoints | Each restart restores the checkpoint score | Not run |
-| Final return | Reward and cleanup complete | Not run |
-| Normal GTA play | No leftover mission entities or broken controls | Not run |
+| Start at the Doherty garage | **?** marker on the pavement starts mission 1 | Not run |
+| Mission 1 | Lab, R.A.I.N. console, three sites, rescue, demo, pass card | Not run |
+| After mission 1 | "Vers3Dynamics is open"; the **?** moves to the lab door | Not run |
+| Enter the HQ | Location card, room tone and score at the saved levels; teal station lights | Not run |
+| Christopher in the lab | Walks his stations, turns to CJ, talks on **Y** | Not run |
+| Research terminal | An assignment from brief to audit; the paper reports it on the way out | Not run |
+| Cymatics rig | Tone follows the dial, sand patterns at the six modes, the hum trap | Not run |
+| Audio settings | Music, ambience, voices and effects change at once and are kept after saving | Not run |
+| Story mission handoff | Christopher's marker starts the next mission | Not run |
+| Missions 2-5 | Each plays to an ending; failures offer a retry from the checkpoint | Not run |
+| Save and load | Progress kept per save slot (CLEO's own save file); game saves load normally | Not run |
+| Normal play | No leftover blips, people, cars or sounds; controls and camera normal | Not run |
 
-See TESTING.md in the source repository for the full in-game checklist and
-historical headless results. This playtest package is not a claim of actual
-GTA execution. Music levels and loop behavior must be checked in the game.
+The full checklist is in TESTING.md in the source repository. Positions in
+missions 2-5 are approximate; note anything floating, sunk or unreachable,
+using the calibration overlay (CALIBRATION.md).
