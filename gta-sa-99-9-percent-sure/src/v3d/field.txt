@@ -140,6 +140,19 @@ oKind = OBJ_DRIVE
 fOX = fDX
 fOY = fDY
 fOZ = fDZ
+if iPendLine > 0
+then
+    if dActive == 0
+    then
+        if dQNext == 0
+        then
+            dLine = iPendLine
+            dQEnd = iPendLine
+            gosub @SAY_QUEUE
+            iPendLine = 0
+        end
+    end
+end
 // in a vehicle without Christopher, while he is close: wait for him
 if iNeedChris == 2
 then

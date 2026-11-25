@@ -1,0 +1,84 @@
+// ============================================================================
+// The Open Experiment - mission variables (200@..239@)
+// Speaker slots: hNpc1 Bracket / the teacher, hNpc2 Halvorsen / the ham radio
+// president, hNpc3 the science fair winner / the saboteur.
+// ============================================================================
+
+var
+    200@: int
+    201@: int
+    202@: int
+    203@: int
+    204@: int
+    205@: int
+    206@: int
+    207@: int
+    208@: int
+    209@: int
+    210@: int
+    211@: int
+    212@: int
+    213@: int
+end
+
+const
+    iKits          = 200@   // replication kits still intact (1..3)
+    iDelivered     = 201@   // bit k-1: kit k delivered
+    hSedan         = 202@
+    hSedanDriver   = 203@
+    iSedanOn       = 204@   // 1 while Ovid's sedan is after the van, 2 once it has gone
+    iEscapeT       = 205@
+    iCaught        = 206@   // the saboteur: 1 caught, 2 got away
+    iFee           = 207@   // Bracket's offer to CJ: 1 refused, 2 taken
+    iRepGain       = 208@
+    iVanHpMark     = 209@   // van health when a kit last broke
+    iDel           = 210@   // the delivery in progress
+    iCalls         = 211@
+    gPlate         = 212@   // the plate tone at the demonstration
+    iSteerT        = 213@
+
+    ST_INTRO       = 1
+    ST_DELIVER     = 2
+    ST_DEMO        = 3
+    ST_CHASE_PED   = 4
+    ST_OFFER       = 5
+    ST_RETURN      = 6
+    ST_FINALE      = 7
+    ST_SUCCESS     = 10
+    ST_FAILURE     = 11
+
+    // checkpoints: 1 + delivered bits + 8 x broken kits while delivering;
+    // 30 + kits at the pier; 40 + kits + 4 x caught at the offer; 60 + ... + 8 x fee home
+    CP_DELIVER     = 1
+    CP_DEMO        = 30
+    CP_OFFER       = 40
+    CP_RETURN      = 60
+
+    FAIL_CHRIS     = 1
+    FAIL_VAN       = 2
+    FAIL_ABANDON   = 3
+    FAIL_HURT      = 4
+
+    // [approx; snapped at runtime - docs/CALIBRATION.md]
+    KIT1_X         = -2260.0    // Garcia High
+    KIT1_Y         = 140.0
+    KIT1_Z         = 35.0
+    KIT2_X         = -2680.0    // the ham radio club, Ocean Flats
+    KIT2_Y         = -60.0
+    KIT2_Z         = 8.0
+    KIT3_X         = -1960.0    // Downtown
+    KIT3_Y         = 660.0
+    KIT3_Z         = 40.0
+    PIER_X         = -1640.0    // Esplanade East, by the pier
+    PIER_Y         = 1320.0
+    PIER_Z         = 7.0
+
+    KIT_BREAK_HP   = 350        // van damage that cracks a kit
+    ESCAPE_DIST    = 170.0
+    ESCAPE_MS      = 6000
+    CATCH_DIST     = 1.8
+    GOTAWAY_DIST   = 120.0
+    REWARD_BASE    = 8000
+    REWARD_KIT     = 1000
+    FEE            = 50000
+end

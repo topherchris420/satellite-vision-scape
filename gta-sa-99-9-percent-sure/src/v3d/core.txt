@@ -917,6 +917,7 @@ dPed = -1
 iSfxStream = 0
 iMusicStream = 0
 iAmbStream = 0
+iPendLine = 0
 uMode = 0
 uHud = 0
 uTask = 0

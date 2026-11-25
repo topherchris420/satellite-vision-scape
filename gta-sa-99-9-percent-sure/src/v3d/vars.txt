@@ -247,6 +247,7 @@ var
     445@: int
     446@: int
     447@: int
+    448@: int
 end
 
 const
@@ -509,4 +510,5 @@ const
     iWeapon        = 445@
     iCamGiven      = 446@   // the camera has been handed over
     iShowT         = 447@
+    iPendLine      = 448@   // a line to say when nobody is talking (DRIVE_TO plays it)
 end

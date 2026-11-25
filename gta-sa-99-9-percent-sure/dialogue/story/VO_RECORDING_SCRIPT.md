@@ -334,6 +334,67 @@ Original performances only: do not imitate the original game cast.
 
 | File | Speaker | Target | Line | Notes |
 |---|---|---|---|---|
+| `VOE0101.mp3` | CHRIS | 7.5 s | Tomorrow we run the plate experiment in public. Everything open: the method, the data, the mistakes. |  |
+| `VOE0102.mp3` | CHRIS | 9.6 s | And three independent groups run the same experiment at the same time, across town. If they get our result, it's real. |  |
+| `VOE0103.mp3` | CJ | 2.0 s | And if they don't? |  |
+| `VOE0104.mp3` | CHRIS | 6.6 s | Then we were wrong in front of everybody, and we learn something. Win-win. |  |
+| `VOE0105.mp3` | BRACKET | 6.4 s | Gentlemen! Lyle Bracket, Ovid Venture Partners. The door was open. I love an open door. |  |
+| `VOE0106.mp3` | BRACKET | 10.4 s | Two hundred and fifty thousand dollars for an exclusive licence on R.A.I.N. We close the code, we polish the brand, everybody gets rich. |  |
+| `VOE0107.mp3` | CHRIS | 2.4 s | That's generous. And no. |  |
+| `VOE0108.mp3` | BRACKET | 6.8 s | Closed systems sell, Mister Woodyard. Open ones get copied. The offer stands. For your friend, too. |  |
+| `VOE0109.mp3` | CJ | 1.7 s | He seems nice. |  |
+| `VOE0110.mp3` | CHRIS | 8.2 s | He seems like a man who's never been told no by a garage. Let's get the kits out. |  |
+| `VOE0201.mp3` | CHRIS | 7.8 s | Three replication kits: a plate, a generator, a pinch of sand, and instructions a teenager can follow. |  |
+| `VOE0202.mp3` | CHRIS | 11.4 s | One to the physics teacher at Garcia High, one to the ham radio club in Ocean Flats, one to the kid who won the science fair. |  |
+| `VOE0211.mp3` | TEACHER | 5.8 s | Real equipment? For my class? Oh, they are going to lose their minds. |  |
+| `VOE0212.mp3` | CJ | 5.2 s | Four forty-two hertz, tomorrow at noon. Write down whatever you see. |  |
+| `VOE0213.mp3` | TEACHER | 2.0 s | Even if it's nothing? |  |
+| `VOE0214.mp3` | CJ | 3.7 s | Especially if it's nothing. That's what he says. |  |
+| `VOE0221.mp3` | HAM | 6.0 s | A Chladni plate. We'll calibrate the generator against our frequency standard. To the hertz. |  |
+| `VOE0222.mp3` | CJ | 3.2 s | Man, you're gonna be good at this. |  |
+| `VOE0231.mp3` | KID | 4.7 s | If your result doesn't replicate, I'm putting that in my report. |  |
+| `VOE0232.mp3` | CJ | 2.9 s | Kid, that's exactly what he wants. |  |
+| `VOE0241.mp3` | CHRIS | 5.0 s | Black sedan, three cars back. It's been there since Garcia. |  |
+| `VOE0242.mp3` | CHRIS | 6.8 s | Ovid's people. If they rattle the van hard enough, the kits crack. Lose them. |  |
+| `VOE0243.mp3` | CHRIS | 4.0 s | That knock broke a kit. One group fewer. |  |
+| `VOE0244.mp3` | CHRIS | 2.9 s | They've dropped off. Good driving. |  |
+| `VOE0301.mp3` | CHRIS | 6.7 s | The pier. Look at all these people. Some of them even came on purpose. |  |
+| `VOE0302.mp3` | OFFICIAL | 6.5 s | Deputy Commissioner Halvorsen, procurement. This event has no permit for experimental equipment. Shut it down. |  |
+| `VOE0303.mp3` | CHRIS | 8.8 s | It's a speaker and a metal plate, Commissioner. The schematics are on the registry. You're welcome to check them. |  |
+| `VOE0304.mp3` | OFFICIAL | 5.5 s | I am not here to check things. I am here to stop things. |  |
+| `VOE0305.mp3` | CJ | 3.6 s | Lady, that's the whole problem with this city. |  |
+| `VOE0306.mp3` | CHRIS | 6.5 s | The generator's dead. Somebody pulled the fuse. There! The guy in the overalls! |  |
+| `VOE0307.mp3` | CHRIS | 4.2 s | Carl, get that fuse back. Don't hurt him. |  |
+| `VOE0308.mp3` | CJ | 2.7 s | Give it here, man! Now! |  |
+| `VOE0309.mp3` | CHRIS | 2.9 s | Fuse is in. We're live. |  |
+| `VOE0310.mp3` | CHRIS | 7.6 s | He got away. We'll run it off the van battery. It'll be quieter, but it'll work. |  |
+| `VOE0401.mp3` | CHRIS | 4.5 s | Four hundred and forty-two hertz. Watch the sand. |  |
+| `VOE0402.mp3` | CROWD | 2.6 s | Whoa! It's making a pattern! |  |
+| `VOE0403.mp3` | TEACHER | 5.4 s | Garcia High here! Same pattern! Crosses and curves, exactly like your picture! |  |
+| `VOE0404.mp3` | HAM | 6.3 s | Ocean Flats Amateur Radio Club. Mode confirmed at four forty-two, plus or minus one. |  |
+| `VOE0405.mp3` | KID | 5.0 s | It worked. I hate that it worked. It's in my report. |  |
+| `VOE0406.mp3` | CHRIS | 7.5 s | R.A.I.N.'s question for all of us: does the result hold up? |  |
+| `VOE0411.mp3` | CHRIS | 6.0 s | Accepted. Independent groups, independent equipment, same result. That's what real looks like. |  |
+| `VOE0412.mp3` | CHRIS | 6.0 s | Reject it? Carl, they all got the pattern. On their own kit. |  |
+| `VOE0413.mp3` | CHRIS | 6.7 s | We don't need to abstain. More than one independent replication. We can say it. |  |
+| `VOE0414.mp3` | CHRIS | 7.6 s | Abstained. One replication is a promising start, not a confirmation. We publish it as exactly that. |  |
+| `VOE0415.mp3` | CHRIS | 6.0 s | Accept, on one replication? I'd love to. That's exactly why we shouldn't. |  |
+| `VOE0416.mp3` | CHRIS | 6.2 s | Reject? One group confirmed it. That's not nothing. It's not enough, either. |  |
+| `VOE0417.mp3` | OFFICIAL | 4.0 s | ...The city will be reviewing its permit process. |  |
+| `VOE0501.mp3` | BRACKET | 5.3 s | Carl. A word. Your friend won't sell. But friends can be persuaded. |  |
+| `VOE0502.mp3` | BRACKET | 5.5 s | Fifty thousand dollars. Cash. All you have to do is talk him round. |  |
+| `VOE0503.mp3` | CJ | 1.9 s | ...Fifty thousand? |  |
+| `VOE0504.mp3` | BRACKET | 5.3 s | Pleasure doing business. Do your best with him. Or don't. I'll know. |  |
+| `VOE0505.mp3` | CJ | 6.2 s | He already told you no. That's the only answer you're getting from either of us. |  |
+| `VOE0506.mp3` | BRACKET | 3.3 s | Shame. Open systems get copied, you know. |  |
+| `VOE0507.mp3` | CJ | 2.7 s | Yeah. That's the point, genius. |  |
+| `VOE0601.mp3` | NEWS | 11.1 s | An independent San Fierro lab demonstrated a sound experiment live at the pier, while schools and a radio club across the city reproduced it at the same time. |  |
+| `VOE0602.mp3` | NEWS | 8.9 s | The lab's code and data are freely available on an open registry. A venture firm's offer to license the work was declined. |  |
+| `VOE0603.mp3` | CHRIS | 5.8 s | Forty thousand downloads. Three replications. Two of them by people under eighteen. |  |
+| `VOE0604.mp3` | CJ | 2.6 s | So what now? More experiments? |  |
+| `VOE0605.mp3` | CHRIS | 9.1 s | Always. The lab's open whenever you want it, Carl. R.A.I.N. has questions nobody's asked yet. |  |
+| `VOE0606.mp3` | CJ | 4.2 s | Long as none of them gets the cops on me. |  |
+| `VOE0607.mp3` | CHRIS | 6.1 s | I can't promise that. But I can promise we'll check the evidence first. |  |
 
 ## Voices
 

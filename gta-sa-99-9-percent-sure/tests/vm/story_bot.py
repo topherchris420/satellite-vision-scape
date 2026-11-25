@@ -138,11 +138,12 @@ class StoryBot:
     def inject_planned(self):
         for step in self.plan.get("inject", []):
             what = step["what"]
-            if what in self.injected:
+            key = step.get("id", what)
+            if key in self.injected:
                 continue
             if step.get("when") and not step["when"](self):
                 continue
-            self.injected.add(what)
+            self.injected.add(key)
             self.log.append((self.vm.time, "inject", what))
             if what == "kill_player":
                 self.e.kill_player("wasted")
@@ -153,6 +154,11 @@ class StoryBot:
                 if ent is not None:
                     ent.dead = True
                     ent.health = 0
+            elif what.startswith("damage:"):
+                _, var, amount = what.split(":")
+                ent = self.e.ent(self.L(var))
+                if ent is not None:
+                    ent.health -= int(amount)                  # a hard knock the mock does not simulate
             elif what.startswith("flee:"):
                 ent = self.e.ent(self.L(what.split(":")[1]))
                 if ent is not None:
@@ -418,6 +424,9 @@ class StoryBot:
     SCRIPT_JSON = {"V3DGHST": "ghost", "V3DFALS": "false", "V3DLINK": "link", "V3DOPEN": "open"}
 
     def field(self, script):
+        if self.L("oKind") == 13:                             # a Y/N prompt, even inside a cutscene
+            self.tap(PAD_YES if self.plan.get("choice", "yes") == "yes" else PAD_NO)
+            return
         if self.L("iInCs") == 1:
             if self.plan.get("skip"):
                 self.tap(PAD_ENTER)
@@ -505,6 +514,11 @@ class StoryBot:
                 self.board(van)
                 return
             self.move_to(ent.x, ent.y, ent.z, stop_at=25.0, speed=14.0)
+        elif kind == 12:                                      # catch someone on foot
+            ent = self.e.ent(self.L("oEnt"))
+            if ent is not None:
+                self.leave_car()
+                self.move_to(ent.x, ent.y, None, stop_at=1.0)
         elif kind == 13:                                      # Y / N
             self.tap(PAD_YES if self.plan.get("choice", "yes") == "yes" else PAD_NO)
         elif kind == 7:                                       # talk to someone

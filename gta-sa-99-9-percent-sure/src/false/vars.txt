@@ -48,7 +48,6 @@ const
     iEndA          = 204@   // when each countdown ends (game time)
     iEndB          = 205@
     iEndC          = 206@
-    iPendLine      = 207@   // a radio line to play when nobody is talking
     iWarned        = 208@   // bit s-1: the two-minute warning was given
     hBike          = 209@
     hCar1          = 210@

@@ -34,7 +34,8 @@ SV_RESULT, SV_MISSION, SV_HANDOFF = 952, 958, 959
 REC = dict(MAGIC=960, STORY=961, CASES=962, VERDICT=963, CAREFUL=964, REP=965, MODES=966, FLAGS=967,
            AUDIO=968, BEST=969, VISITS=970)
 REC_MAGIC_V1 = 39931
-F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_M3_DETAINED, F_M4_CHASED, F_WELCOMED = 1, 2, 4, 8, 16, 32, 128
+F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_M3_DETAINED, F_M4_CHASED, F_M5_FEE, F_WELCOMED = \
+    1, 2, 4, 8, 16, 32, 64, 128
 SCRIPTS = {"99sure.cm": True, "99sure_launcher.cs": False, "v3dhq.cm": True, "v3dghost.cm": True,
            "v3dfalse.cm": True, "v3dlink.cm": True, "v3dopen.cm": True}
 
@@ -197,6 +198,44 @@ def scenarios():
         inject=[dict(what="kill_player", when=lambda b: b.L("iState") == 7)]), expect="death")
     add("link_from_hq_handoff", record=record_preset(story=7), via_launcher=True, launches=2,
         plan=dict(tasks=[("start",)]), expect="pass", expect_results=[3, 1], expect_rec=dict(STORY=15))
+
+    # ---- The Open Experiment (story mission 5) ----------------------------------------------
+    m4 = record_preset(story=15)
+    op = dict(start="v3dopen", record=m4)
+    sedan_on = lambda b: b.L("iSedanOn") == 1                       # noqa: E731
+    add("open_refuse_the_fee", **op, plan=dict(choice="no"), expect="pass",
+        expect_rec=dict(STORY=15 | 16 | 256, REP=64), expect_flags_clear=F_M5_FEE, expect_score=(10, 1, 1),
+        expect_money=8000 + 3 * 1000 + 10 * 25,
+        expect_lines=[101, 105, 108, 110, 211, 221, 231, 241, 244, 302, 306, 308, 309, 401, 403, 404, 405, 411,
+                      417, 505, 507, 601, 605, 607])
+    add("open_take_the_fee", **op, plan=dict(choice="yes"), expect="pass",
+        expect_rec=dict(STORY=15 | 16 | 512, REP=59), expect_flags_set=F_M5_FEE,
+        expect_money=50000 + 8000 + 3 * 1000 + 10 * 25, expect_lines=[503, 504])
+    add("open_two_kits_crack", **op, expect="pass",
+        plan=dict(choice="no", inject=[dict(what="damage:hVan:400", id="hit1", when=sedan_on),
+                                       dict(what="damage:hVan:400", id="hit2",
+                                            when=lambda b: b.L("iSedanOn") == 1 and b.L("iKits") == 2)]),
+        expect_rec=dict(REP=60), expect_score=(10, 1, 1), expect_money=8000 + 1000 + 10 * 25,
+        expect_lines=[243, 403, 414])
+    add("open_saboteur_gets_away", **op, expect="pass",
+        plan=dict(choice="no", inject=[dict(what="flee:hNpc3", when=lambda b: b.L("iState") == 4)]),
+        expect_rec=dict(REP=61), expect_lines=[310])
+    add("open_skip_cutscenes", **op, plan=dict(choice="no", skip=True), expect="pass",
+        expect_rec=dict(STORY=15 | 16 | 256))
+    for cp in (1, 2, 33, 47, 75):
+        add(f"open_from_checkpoint_{cp}", start="v3dopen", checkpoint=cp, record=m4, plan=dict(choice="no"),
+            expect="pass", expect_rec=dict(STORY=15 | 16 | 256))
+    add("open_fail_recipient_hurt", **op, expect="fail:4",
+        plan=dict(inject=[dict(what="kill:hNpc2", when=lambda b: b.L("iState") == 2 and b.L("hNpc2") != -1)]))
+    add("open_fail_saboteur_hurt", **op, expect="fail:4",
+        plan=dict(inject=[dict(what="kill:hNpc3", when=lambda b: b.L("iState") == 4)]))
+    add("open_fail_chris_killed", **op, expect="fail:1",
+        plan=dict(inject=[dict(what="kill:hChris", when=sedan_on)]))
+    add("open_wasted_delivering", **op, expect="death",
+        plan=dict(inject=[dict(what="kill_player", when=sedan_on)]))
+    add("open_from_hq_handoff", record=record_preset(story=15), via_launcher=True, launches=2,
+        plan=dict(tasks=[("start",)], choice="no"), expect="pass", expect_results=[3, 1],
+        expect_rec=dict(STORY=15 | 16 | 256))
     return s
 
 
