@@ -16,7 +16,8 @@ permissions:
 
 jobs:
   capture:
-    runs-on: ubuntu-latest
+    # Playwright 1.56 ships Chromium for 24.04, not the newer default image.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
