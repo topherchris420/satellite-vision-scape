@@ -77,3 +77,4 @@ One `localStorage` key, `99sure.hidden.v1`, separate from Pine Gap's own progres
 
 - `tests/hidden-case.test.ts`: discovery, the save, objectives, endings and grading, bearings and the crossing. Pure, fast.
 - `tests/hidden-case-play.test.ts`: a headless playthrough on the real `Game`: start at the van, the title card, every piece of evidence, the verdict, saving, resuming and replaying, and that nothing is left behind after the case stops.
+- `scripts/playtest-hidden-case.mjs`: a browser playtest that plays the case in headless Chromium through its real buttons, keys and touch controls, on desktop and phone, with a screenshot per step. Run it against `bun run dev` with `node scripts/playtest-hidden-case.mjs --out playtest` (needs Playwright's Chromium). It is not part of CI: software WebGL makes a run take half an hour or more.
