@@ -4,6 +4,8 @@ import { ChevronDown, Compass, Flag, Footprints, MoonStar } from "lucide-react";
 import { createRaceTarget } from "@/game/freeroam/RaceTracker";
 import { readBest } from "@/lib/freeroam-ui";
 import { formatRaceTime, parseRaceLink } from "@/lib/freeroam/race";
+import { CHAPTER_HREF } from "@/lib/chapters";
+import { ChapterSwitch } from "./ChapterSwitch";
 
 /**
  * The first thing a visitor sees once the site has loaded: one thing to do, the
@@ -62,6 +64,7 @@ export function Landing({
 
   return (
     <>
+      <ChapterSwitch current="pine-gap" className="mb-4" />
       <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[.26em] text-sky-300">
         <Flag size={11} /> 99.9% SURE · Chapter II: Pine Gap
       </div>
@@ -72,11 +75,6 @@ export function Landing({
         reach the checkpoint and shake the site&apos;s response, on the same seed, with its recorded run beside you.
       </p>
 
-      <div className="mt-4 rounded-xl border border-teal-300/30 bg-teal-400/10 p-3">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-200">Campaign · Chapter I: San Fierro</p>
-        <p className="mt-1 text-xs text-white/70">{campaign.verdict ? `R.A.I.N. dossier received: ${campaign.verdict}. Investigate signals in Pine Gap to test your next hypothesis.` : "Investigate CERTAIN in an original playable 3D browser prototype. Collect evidence, then decide."}</p>
-        <a href="/?chapter=san-fierro" className="mt-2 inline-block rounded bg-teal-300 px-4 py-2 text-xs font-bold text-black">{campaign.verdict ? "Revisit San Fierro" : "Play San Fierro"}</a>
-      </div>
       <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-4">
         <button
           onClick={onRace}
@@ -127,6 +125,25 @@ export function Landing({
           onClick={onSurvey}
         />
       </div>
+
+      <a
+        href={CHAPTER_HREF["san-fierro"]}
+        className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-teal-300/30 bg-teal-400/10 px-3.5 py-3 transition hover:border-teal-200/60 hover:bg-teal-400/15"
+      >
+        <span className="max-w-md">
+          <span className="block text-[10px] font-bold uppercase tracking-[.16em] text-teal-200">
+            Chapter I · San Fierro: the CERTAIN case
+          </span>
+          <span className="mt-1 block font-sans text-[11px] leading-snug text-white/65">
+            {campaign.verdict
+              ? `Your San Fierro verdict: ${campaign.verdict}. R.A.I.N. kept it on file; play the case again any time.`
+              : "A predictive-policing AI flags a family van. Walk or drive the district, collect three observations and decide whether the evidence backs the machine."}
+          </span>
+        </span>
+        <span className="rounded-lg bg-teal-300 px-4 py-2 text-[11px] font-bold uppercase tracking-[.14em] text-black">
+          {campaign.verdict ? "Revisit San Fierro" : "Play San Fierro"}
+        </span>
+      </a>
 
       <details className="group mt-4" open={openMore}>
         <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-white/55 transition hover:text-white [&::-webkit-details-marker]:hidden">

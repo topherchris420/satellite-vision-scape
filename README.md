@@ -8,7 +8,8 @@
 </p>
 
 <p align="center">
-  <a href="https://geotwn.vercel.app/"><strong>Race Jev in your browser</strong></a> ·
+  <a href="https://geotwn.vercel.app/?chapter=san-fierro"><strong>Play Chapter I: San Fierro</strong></a> ·
+  <a href="https://geotwn.vercel.app/"><strong>Play Chapter II: Pine Gap</strong></a> ·
   <a href="https://geotwn.vercel.app/?controller=mock"><strong>Watch the scripted baseline</strong></a> ·
   <a href="#recorded-runs"><strong>Inspect the evidence</strong></a> ·
   <a href="#run-locally"><strong>Run locally</strong></a>
@@ -28,7 +29,18 @@ A human and an agent share the world's controls, physics, collisions and task ru
 
 **Status:** experimental. One site, two task modes, recorded live-model sessions and scripted experiments. The agent receives structured observations and uses local movement controllers, so these runs measure decision-making within that setup—not human-equivalent perception or motor skill.
 
-[Explore Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
+[Two chapters to play](#two-chapters-to-play) · [San Fierro](#chapter-i--san-fierro) · [Pine Gap](#chapter-ii--pine-gap--browser-experience) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
+
+## Two chapters to play
+
+Both chapters run in the browser, need no account or key, and work on desktop and phone. Each one has a chapter switch at the top, so you can move between them at any time.
+
+| Chapter | Start here | What you do |
+| --- | --- | --- |
+| **I · San Fierro: the CERTAIN case** | [Play San Fierro](https://geotwn.vercel.app/?chapter=san-fierro) | A predictive-policing AI flags a family van. Walk or drive the district, collect three independent observations and decide whether the evidence backs the machine. About five minutes. |
+| **II · Pine Gap** | [Play Pine Gap](https://geotwn.vercel.app/) | Race Jev's recorded run, work the After Hours night shift, roam 16 seeded scenarios or survey the reconstruction from above. |
+
+San Fierro also exists as a longer five-mission storyline for a separately installed PC game; [that edition](#the-full-cleo-storyline) is described below.
 
 ## One story, two environments
 
@@ -38,9 +50,23 @@ In San Fierro, CERTAIN claims to know what people will do. In the proposed conti
 
 ## Chapter I · San Fierro
 
-[**Play the browser prototype**](https://geotwn.vercel.app/?chapter=san-fierro) (once deployed). Walk or drive through a compact original 3D district, collect three independent observations and return to R.A.I.N. to submit a verdict. WASD/arrow keys, E to interact, and touch controls. Your conclusion appears in Pine Gap's landing menu. No installed game or API key is required for the browser prototype. The full five-mission CLEO edition below still requires its host game.
+[**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You start at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
 
-**An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab.
+| Arriving at the case | Collecting evidence |
+| --- | --- |
+| ![San Fierro opening: the player at R.A.I.N.'s teal field HQ, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![The sensor audit collected at an amber evidence marker on the centre street](docs/media/screens/san-fierro/evidence.jpg) |
+| ![Driving the red car up the district's centre street](docs/media/screens/san-fierro/driving.jpg) | ![Back at HQ with all three observations: accept, reject or abstain](docs/media/screens/san-fierro/verdict.jpg) |
+| **Driving the district** | **The verdict** |
+
+<p align="center"><img src="docs/media/screens/san-fierro/phone.jpg" alt="San Fierro on a phone: chapter switch, case card, map and on-screen arrows" width="260" /></p>
+
+*Actual captures of the browser San Fierro chapter, filmed from the running game with [`scripts/capture-san-fierro-shots.mjs`](scripts/capture-san-fierro-shots.mjs) (headless Chromium, software WebGL). The last one is the phone layout.*
+
+**Controls:** `W A S D` or arrow keys to walk and drive, `E` to collect evidence, enter or leave the car and talk to Christopher at HQ. On a phone, hold the on-screen arrows and tap the action button.
+
+### The full CLEO storyline
+
+**An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab. It runs on CLEO 5 inside a separately installed copy of Grand Theft Auto: San Andreas (PC), so it is not playable in the browser.
 
 [Story, installation and playtest guide](gta-sa-99-9-percent-sure/README.md)
 
@@ -49,7 +75,7 @@ In San Fierro, CERTAIN claims to know what people will do. In the proposed conti
 | ![Evidence board preview](gta-sa-99-9-percent-sure/docs/media/preview_evidence.png) | ![Validation console preview](gta-sa-99-9-percent-sure/docs/media/preview_console.png) |
 | ![Cymatics rig preview](gta-sa-99-9-percent-sure/docs/media/preview_rig.png) | ![Signal receiver preview](gta-sa-99-9-percent-sure/docs/media/preview_receiver.png) |
 
-*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Actual gameplay captures await a playtest in the separately installed Grand Theft Auto: San Andreas PC runtime. The host game is not the title of this original storyline. Pine Gap gameplay captures appear below.*
+*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Gameplay captures of this edition await a playtest in the host game, which is not the title of this original storyline.*
 
 ## Chapter II · Pine Gap — browser experience
 
@@ -94,6 +120,8 @@ The vehicle radio features **_Green Machine_ by Indigo People**, original music 
 </details>
 
 ### Controls
+
+These are Pine Gap's controls. San Fierro's are in [Chapter I](#chapter-i--san-fierro).
 
 | Action | On foot | In a vehicle |
 | --- | --- | --- |
@@ -197,7 +225,8 @@ Open the URL printed by Vite. If your environment cannot bind IPv6, use `bun run
 
 | Local entry point | Purpose |
 | --- | --- |
-| `/` | Human play and the mode selector |
+| `/` | Chapter II: Pine Gap, human play and the mode selector |
+| `/?chapter=san-fierro` | Chapter I: the browser San Fierro case |
 | `/?controller=mock` | Scripted After Hours baseline; press **After Hours** |
 | `/?controller=random&seed=42` | Seeded random After Hours policy |
 | `/?agentHud=1` | Show the After Hours trace panel during human play |

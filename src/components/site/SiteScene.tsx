@@ -8,6 +8,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { CHAPTER_HREF } from "@/lib/chapters";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import { EffectComposer, EffectGroup, Bloom, N8AO, SMAA } from "@react-three/postprocessing";
@@ -729,6 +730,12 @@ export function SiteScene() {
         <p className="relative mt-5 max-w-xs px-6 text-center font-sans text-[12px] leading-relaxed text-white/55">
           Next: race an AI agent&apos;s recorded run through this site, or walk it in your own time.
         </p>
+        <a
+          href={CHAPTER_HREF["san-fierro"]}
+          className="relative mt-4 rounded-lg border border-teal-300/40 px-4 py-2 font-sans text-[11px] text-teal-200 transition hover:bg-teal-400/10"
+        >
+          Or play Chapter I: San Fierro now
+        </a>
       </div>
 
       {deviceProfile && <Canvas
