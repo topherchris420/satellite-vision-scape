@@ -83,7 +83,9 @@ then
 end
 if not is_char_in_car hChris hVan
 then
+    // wait here for him
     oKind = OBJ_HOLD
+    fOX, fOY, fOZ = get_char_coordinates $scplayer
     if iT1 <> 2
     then
         print_now 'VXO03' 5000 1
@@ -96,12 +98,199 @@ oKind = OBJ_NONE
 clear_small_prints
 return
 
-:GROUND_AT
-fTmp = fAZ
-fTmp += 4.0
-fSZ = get_ground_z_for_3d_coord fSX fSY fTmp
-if fSZ == 0.0
+
+// ---------------------------------------------------------------------------
+// DRIVE_TO: a blip at an approximate point (fDX fDY fDZ), snapped to the road
+// (iTmp3 = 1 car node, 2 pedestrian node, 0 as given) once its path data is
+// streamed in; returns when CJ is within fDist2 metres. Christopher must come
+// along (the watchdog handles leaving him behind). Call from depth 2.
+// ---------------------------------------------------------------------------
+:DRIVE_TO
+remove_blip bDest
+bDest = add_blip_for_coord fDX fDY fDZ
+iT2 = 0
+if iTmp3 == 0
 then
-    fSZ = fAZ
+    iT2 = 1
 end
+:DRIVE_TO_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+gosub @GET_PLAYER_POS
+fDist = get_distance_between_coords_2d fPX fPY fDX fDY
+if iT2 == 0
+then
+    if 250.0 > fDist
+    then
+        if iTmp3 == 1
+        then
+            fDX, fDY, fDZ = get_closest_car_node fDX fDY fDZ
+        else
+            fDX, fDY, fDZ = get_closest_char_node fDX fDY fDZ
+        end
+        remove_blip bDest
+        bDest = add_blip_for_coord fDX fDY fDZ
+        iT2 = 1
+    end
+end
+oKind = OBJ_DRIVE
+fOX = fDX
+fOY = fDY
+fOZ = fDZ
+// in a vehicle without Christopher, while he is close: wait for him
+if iNeedChris == 2
+then
+    if is_char_in_any_car $scplayer
+    then
+        hTmpCar = store_car_char_is_in_no_save $scplayer
+        if not is_char_in_car hChris hTmpCar
+        then
+            if locate_char_any_means_char_2d $scplayer hChris 30.0 30.0 false
+            then
+                oKind = OBJ_HOLD
+                fOX = fPX
+                fOY = fPY
+                fOZ = fPZ
+                if iNow > iHintT
+                then
+                    print_now 'VXO03' 3000 1
+                    iHintT = iNow
+                    iHintT += 8000
+                end
+            end
+        end
+    end
+end
+if iT2 == 1
+then
+    if locate_char_any_means_3d $scplayer fDX fDY fDZ fDist2 fDist2 8.0 true
+    then
+        remove_blip bDest
+        bDest = -1
+        oKind = OBJ_NONE
+        return
+    end
+end
+jump @DRIVE_TO_LOOP
+
+// HOLD_STILL: stay stopped (on foot or in a vehicle) within fDist2 of fDX fDY
+// for iWaitMs. uTask = 6 shows the progress. Returns when done.
+:HOLD_STILL
+iHoldT = 0
+iPrevT = get_game_timer
+uTask = 6
+:HOLD_STILL_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    uTask = 0
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+oKind = OBJ_HOLD
+fOX = fDX
+fOY = fDY
+fOZ = fDZ
+iTmp = 0
+if locate_char_any_means_3d $scplayer fDX fDY fDZ fDist2 fDist2 8.0 true
+then
+    if is_char_in_any_car $scplayer
+    then
+        hTmpCar = store_car_char_is_in_no_save $scplayer
+        if is_car_stopped hTmpCar
+        then
+            iTmp = 1
+        end
+    else
+        if is_char_stopped $scplayer
+        then
+            iTmp = 1
+        end
+    end
+end
+if iTmp == 1
+then
+    iHoldT += iDt
+else
+    if iHoldT > 0
+    then
+        if iNow > iLastWarnT
+        then
+            iLastWarnT = iNow
+            iLastWarnT += 6000
+            print_now 'VGFH2' 3000 1
+        end
+    end
+    iHoldT = 0
+end
+uTaskVal = iHoldT
+uTaskVal *= 100
+uTaskVal /= iWaitMs
+if iHoldT >= iWaitMs
+then
+    uTask = 0
+    oKind = OBJ_NONE
+    return
+end
+jump @HOLD_STILL_LOOP
+
+// Teleport CJ (and whatever he drives) for a checkpoint restart. In: fSX fSY fSZ fHead.
+:TELEPORT_PLAYER
+set_area_visible 0
+set_char_area_visible $scplayer 0
+if is_char_in_any_car $scplayer
+then
+    warp_char_from_car_to_coord $scplayer fSX fSY fSZ
+else
+    set_char_coordinates $scplayer fSX fSY fSZ
+end
+set_char_heading $scplayer fHead
+load_scene fSX fSY fSZ
+request_collision fSX fSY
+wait 1500
+return
+
+// Checkpoint restarts: the research van at the nearest road, Christopher aboard.
+:RESUME_IN_VAN
+gosub @TELEPORT_PLAYER
+gosub @GET_PLAYER_POS
+fVanX, fVanY, fVanZ, fVanH = get_closest_car_node_with_heading fPX fPY fPZ
+if fVanX == 0.0
+then
+    fVanX = fPX
+    fVanY = fPY
+    fVanZ = fPZ
+    fVanH = 0.0
+end
+gosub @SPAWN_VAN
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.2 0.5 0.0
+fHead = 0.0
+gosub @SPAWN_CHRIS
+gosub @CHRIS_JOIN_GROUP
+warp_char_into_car $scplayer hVan
+warp_char_into_car_as_passenger hChris hVan 0
+return
+
+// The passed screen, the reward and the record. In: iReward.
+:MISSION_PASSED_COMMON
+iResult = 1
+set_cleo_shared_var SV_RESULT 1
+gosub @PUBLISH
+play_mission_passed_tune 1
+print_with_number_big 'VXP00' iReward 5000 1
+add_score $player1 iReward
+award_player_mission_respect 8
+iTmp = iMissionId
+iTmp -= 1
+iBit2 = 1
+iBit2 <<= iTmp
+rStory |= iBit2
+gosub @REC_SAVE
+iWaitMs = 5500
+gosub @WAIT_MS
 return

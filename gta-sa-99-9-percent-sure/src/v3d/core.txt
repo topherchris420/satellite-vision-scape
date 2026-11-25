@@ -830,6 +830,7 @@ return
 
 // Into interior 18; the anchor is where CJ stands, facing into the room.
 :LAB_ROOM_ENTER
+iInLab = 1
 if iLabSet == 0
 then
     gosub @FIND_LAB_EXT
@@ -861,6 +862,7 @@ return
 
 // Back outside, facing the kerb.
 :LAB_ROOM_LEAVE
+iInLab = 0
 set_area_visible 0
 set_char_area_visible $scplayer 0
 set_char_coordinates $scplayer fLabX fLabY fLabZ
@@ -927,6 +929,7 @@ iSkipOk = 0
 iSkipReq = 0
 iInCs = 0
 iLabSet = 0
+iInLab = 0
 iAnimsReady = 0
 iRoadsOff = 0
 iCustomModel = 0

@@ -1014,6 +1014,17 @@ class Engine:
         if a.car is None:
             a.heading = heading_of(bx - ax, by - ay)
 
+    def c_task_hands_up(self, s, h, ms):
+        self.dead_task(h, "TASK_HANDS_UP")
+        self.ents[h].task = None
+
+    def c_is_char_stopped(self, s, h):
+        e = self.ents[h]
+        if e is self.player:
+            self.cond(s, (e.car.speed if e.car else self.player_speed) < 0.05)
+        else:
+            self.cond(s, e.task is None and (e.car is None or e.car.speed < 0.05))
+
     def c_task_use_mobile_phone(self, s, h, on): self.dead_task(h, "TASK_USE_MOBILE_PHONE")
 
     def c_task_play_anim(self, s, h, anim, block, delta, loop, lx, ly, lf, ms):
@@ -1080,6 +1091,21 @@ class Engine:
     c_car_goto_coordinates_accurate = c_car_goto_coordinates
 
     def c_car_wander_randomly(self, s, h): self.ents[h].mode = "wander"
+    def c_get_offset_from_car_in_world_coords(self, s, h, ox, oy, oz):
+        c = self.ents[h]
+        a = math.radians(c.heading)
+        x = c.x + ox * math.cos(a) - oy * math.sin(a)
+        y = c.y + ox * math.sin(a) + oy * math.cos(a)
+        return f32(x), f32(y), f32(c.z + oz)
+
+    def c_store_car_char_is_in_no_save(self, s, h):
+        e = self.ents[h]
+        if e.car is None:
+            raise VMError("STORE_CAR_CHAR_IS_IN_NO_SAVE on a character who is not in a vehicle")
+        return e.car.h
+
+    def c_get_car_speed(self, s, h): return f32(self.ents[h].speed)
+
     def c_car_set_idle(self, s, h):
         c = self.ents[h]
         c.mode = "idle"

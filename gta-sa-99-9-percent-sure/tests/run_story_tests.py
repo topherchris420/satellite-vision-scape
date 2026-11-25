@@ -34,7 +34,7 @@ SV_RESULT, SV_MISSION, SV_HANDOFF = 952, 958, 959
 REC = dict(MAGIC=960, STORY=961, CASES=962, VERDICT=963, CAREFUL=964, REP=965, MODES=966, FLAGS=967,
            AUDIO=968, BEST=969, VISITS=970)
 REC_MAGIC_V1 = 39931
-F_RETRACT, F_GOODNEWS, F_ATLAS, F_WELCOMED = 1, 2, 4, 128
+F_RETRACT, F_GOODNEWS, F_ATLAS, F_M2_VERIFIED, F_WELCOMED = 1, 2, 4, 8, 128
 SCRIPTS = {"99sure.cm": True, "99sure_launcher.cs": False, "v3dhq.cm": True, "v3dghost.cm": True,
            "v3dfalse.cm": True, "v3dlink.cm": True, "v3dopen.cm": True}
 
@@ -99,6 +99,47 @@ def scenarios():
     add("hq_with_sprites_and_audio", record=record_preset(), sprites=True, audio=True, custom_model=True,
         plan=dict(tasks=[("rig", [170]), ("diagrams",), ("case", 1, "careful")]),
         expect_rec=dict(CASES=1, MODES=1))
+
+    # ---- Ghost Frequency (story mission 2) -------------------------------------------------
+    m1 = record_preset(story=1)
+    g = dict(start="v3dghost", record=m1)
+    add("ghost_verify_in_time", **g, plan=dict(choice="yes"), expect="pass",
+        expect_rec=dict(STORY=3, REP=58), expect_flags_set=F_M2_VERIFIED, expect_money=6000 + 20 * 25,
+        expect_score=(20, 2, 2), expect_lines=[101, 108, 241, 261, 305, 321, 325, 401, 407, 452, 471, 473, 501, 505, 508])
+    add("ghost_publish_now", **g, plan=dict(choice="no"), expect="pass",
+        expect_rec=dict(STORY=3, REP=52), expect_flags_clear=F_M2_VERIFIED, expect_money=3500 + 500,
+        expect_lines=[481, 482, 506, 507])
+    add("ghost_relay_wipes_itself", **g, expect="pass",
+        plan=dict(choice="yes", idle_until=lambda b: b.L("iState") == 7 and b.L("iTimerOn") == 1),
+        expect_rec=dict(STORY=3, REP=50), expect_flags_clear=F_M2_VERIFIED, expect_money=3000 + 500,
+        expect_lines=[472, 474, 506])
+    add("ghost_wrong_first_answers", **g, plan=dict(choice="yes", wrong={1: 1, 2: 2}), expect="pass",
+        expect_score=(0, 0, 2), expect_lines=[262, 322, 321], expect_money=6000)
+    add("ghost_skip_cutscenes", **g, plan=dict(choice="yes", skip=True), expect="pass", expect_rec=dict(STORY=3))
+    for cp in (1, 2, 3, 4):
+        add(f"ghost_from_checkpoint_{cp}", start="v3dghost", checkpoint=cp, record=m1,
+            plan=dict(choice="yes"), expect="pass", expect_rec=dict(STORY=3))
+    add("ghost_fail_technician_killed", **g, expect="fail:4",
+        plan=dict(inject=[dict(what="kill:hNpc1", when=lambda b: b.L("oKind") == 9)]))
+    add("ghost_fail_relay_destroyed", **g, expect="fail:5",
+        plan=dict(inject=[dict(what="wreck:hRelayVan", when=lambda b: b.L("oKind") == 9)]))
+    add("ghost_fail_relay_got_away", **g, expect="fail:6",
+        plan=dict(inject=[dict(what="flee:hRelayVan", when=lambda b: b.L("oKind") == 9)]))
+    add("ghost_fail_chris_killed", **g, expect="fail:1",
+        plan=dict(inject=[dict(what="kill:hChris", when=lambda b: b.L("iState") == 4)]))
+    add("ghost_fail_van_wrecked", **g, expect="fail:2",
+        plan=dict(inject=[dict(what="wreck:hVan", when=lambda b: b.L("iState") == 2 and b.L("oKind") == 2)]))
+    add("ghost_wasted_during_posts", **g, expect="death",
+        plan=dict(inject=[dict(what="kill_player", when=lambda b: b.L("iState") == 2 and b.L("oKind") == 5)]))
+    add("ghost_busted_during_chase", **g, expect="death",
+        plan=dict(inject=[dict(what="bust_player", when=lambda b: b.L("oKind") == 9)]))
+    add("ghost_from_hq_handoff", record=record_preset(story=1), via_launcher=True,
+        plan=dict(tasks=[("start",)], choice="yes"), expect="pass", launches=2,
+        expect_rec=dict(STORY=3), expect_results=[3, 1])
+    add("ghost_retry_after_failure", record=record_preset(story=1), via_launcher=True, launches=3,
+        plan=dict(tasks=[("start",)], choice="yes", retry=True,
+                  inject=[dict(what="kill:hChris", when=lambda b: b.L("iState") == 5 and b.L("oKind") == 9)]),
+        expect="pass", expect_results=[3, 2, 1], expect_retry_checkpoint=3, expect_rec=dict(STORY=3))
     return s
 
 
@@ -156,10 +197,14 @@ def run(sc, lib, fxt, models, anims, manifest, names):
     plan = dict(sc.get("plan", {}))
     bot = StoryBot(vm, engine, names, manifest, plan)
     vm.start_script("cleo\\99sure_launcher.cs", False)
+    if sc.get("start"):
+        cp = sc.get("checkpoint", 0)
+        vm.shared[SV_MISSION] = 0
+        vm.start_script(f"cleo\\{sc['start']}.cm", True, [(cp, False), (0, False), (0, False), (0, False)])
     t0 = time.time()
     ends, error, said, money0 = [], None, [], engine.money
-    max_ms = plan.get("max_ms", 40 * 60 * 1000)
-    visits = plan.get("visits", 1)
+    max_ms = plan.get("max_ms", 60 * 60 * 1000)
+    launches = sc.get("launches", plan.get("visits", 1))
     did_save = False
     try:
         while vm.time < max_ms:
@@ -168,13 +213,19 @@ def run(sc, lib, fxt, models, anims, manifest, names):
             vm.step_frame()
             m = vm.mission()
             if m is not None:
-                line = u2i(vm.mission_locals[names["dLine"][0]]) if u2i(vm.mission_locals[names["dActive"][0]]) else 0
-                if line and (not said or said[-1] != line):
-                    said.append(line)
+                nm = bot.names
+                if u2i(vm.mission_locals[nm["dActive"][0]]):
+                    line = u2i(vm.mission_locals[nm["dLine"][0]])
+                    if line and (not said or said[-1] != line):
+                        said.append(line)
             if m_before is not None and m is None:
-                ends.append(dict(time=vm.time, name=m_before.name, result=u2i(vm.shared[SV_RESULT]),
+                fail = u2i(vm.mission_locals[5])
+                ends.append(dict(time=vm.time, name=m_before.name, result=u2i(vm.shared[SV_RESULT]), fail=fail,
                                  leftovers=engine.leftovers(m_before), state=engine.global_state_problems(),
                                  onmission=vm.gvar(409), max_depth=m_before.max_depth,
+                                 checkpoint=u2i(vm.shared[951]), score=u2i(vm.mission_locals[6]),
+                                 right=u2i(vm.mission_locals[7]), total=u2i(vm.mission_locals[8]),
+                                 death_reset=any(k == "death_arrest_reset" for _, k, _ in engine.log),
                                  news=(engine.messages.get("now") or {}).get("key")))
                 plan["_visits_done"] = plan.get("_visits_done", 0) + 1
                 plan["_leave_marker"] = True
@@ -183,7 +234,7 @@ def run(sc, lib, fxt, models, anims, manifest, names):
                 if sc.get("save_load") and not did_save:
                     save_and_load(vm, engine)
                     did_save = True
-                if len(ends) >= visits:
+                if len(ends) >= launches:
                     for _ in range(int(3000 / vm.frame_ms)):
                         bot.step()
                         vm.step_frame()
@@ -199,7 +250,7 @@ def judge(sc, r):
     if r["error"]:
         problems.append(f"VM error: {r['error']}")
     if not r["ends"] and not sc.get("expect_timeout_ok"):
-        problems.append("no visit ended within the time limit")
+        problems.append("nothing ended within the time limit")
     rec = r["record"]
     for k, v in sc.get("expect_rec", {}).items():
         if rec[k] != v:
@@ -224,10 +275,36 @@ def judge(sc, r):
             problems.append(f"expected the news {sc['expect_news']} on the way out, got {news}")
     if "expect_visits_ended" in sc and len(r["ends"]) != sc["expect_visits_ended"]:
         problems.append(f"expected {sc['expect_visits_ended']} visits, got {len(r['ends'])}")
-    want_result = sc.get("expect_result", 4)
+    exp = sc.get("expect")
+    last = r["ends"][-1] if r["ends"] else None
+    if "expect_results" in sc:
+        got = [e["result"] for e in r["ends"]]
+        if got != sc["expect_results"]:
+            problems.append(f"results: expected {sc['expect_results']}, got {got}")
+    elif exp is None:
+        want_result = sc.get("expect_result", 4)
+        for e in r["ends"]:
+            if e["result"] != want_result:
+                problems.append(f"{e['name']} ended with result {e['result']}, expected {want_result}")
+    if last is not None and exp:
+        if exp == "pass" and last["result"] != 1:
+            problems.append(f"expected a pass, got result {last['result']} (iFail={last['fail']})")
+        elif exp.startswith("fail:") and (last["result"] != 2 or last["fail"] != int(exp[5:])):
+            problems.append(f"expected failure {exp[5:]}, got result {last['result']} iFail={last['fail']}")
+        elif exp == "death" and not (last["result"] == 2 and last["fail"] == -1 and last["death_reset"]):
+            problems.append(f"expected wasted/busted, got result {last['result']} iFail={last['fail']}")
+    if "expect_score" in sc and last is not None:
+        got = (last["score"], last["right"], last["total"])
+        if got != sc["expect_score"]:
+            problems.append(f"evidence score: expected {sc['expect_score']}, got {got}")
+    if "expect_retry_checkpoint" in sc:
+        fails = [e for e in r["ends"] if e["result"] == 2]
+        if not fails or fails[0]["checkpoint"] != sc["expect_retry_checkpoint"]:
+            problems.append(f"retry checkpoint: expected {sc['expect_retry_checkpoint']}, got "
+                            f"{fails[0]['checkpoint'] if fails else None}")
+    if "expect_flags_clear" in sc and rec["FLAGS"] & sc["expect_flags_clear"]:
+        problems.append(f"record flags {rec['FLAGS']:#x} should not have {sc['expect_flags_clear']:#x}")
     for e in r["ends"]:
-        if e["result"] != want_result:
-            problems.append(f"{e['name']} ended with result {e['result']}, expected {want_result}")
         problems += [f"left behind: {x}" for x in e["leftovers"]]
         problems += [f"not restored: {x}" for x in e["state"]]
         if e["onmission"] != 0:
@@ -251,8 +328,13 @@ def main():
     anims = json.load(open(os.path.join(HERE, "data", "anims_used.json")))["anims"]
     manifest = json.load(open(os.path.join(ROOT, "build", "story_manifest.json")))
     src = os.path.join(ROOT, "src")
-    names = parse_names(os.path.join(src, "v3d", "vars.txt"), os.path.join(src, "hq", "vars.txt"),
-                        os.path.join(src, "gen", "hq_scene_vars.txt"))
+    names = {}
+    for tag, folder in (("V3DHQ", "hq"), ("V3DGHST", "ghost"), ("V3DFALS", "false"), ("V3DLINK", "link"),
+                        ("V3DOPEN", "open")):
+        files = [os.path.join(src, "v3d", "vars.txt"), os.path.join(src, folder, "vars.txt"),
+                 os.path.join(src, "gen", f"{folder}_scene_vars.txt")]
+        if all(os.path.exists(f) for f in files):
+            names[tag] = parse_names(*files)
     report, ok_all = [], True
     for sc in scenarios():
         if args.k not in sc["name"]:

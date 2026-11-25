@@ -1,0 +1,233 @@
+{
+  "about": "Ghost Frequency prop layouts (same format as data/scenes.json).",
+  "scenes": {
+    "GLAB": {
+      "ground": "flat",
+      "comment": "The lab for Ghost Frequency's opening and ending (the HQ's base layout).",
+      "objects": [
+        {
+          "model": "OFFICEDESK1",
+          "dx": 0.0,
+          "dy": 4.25,
+          "dz": 0.0,
+          "dh": 0,
+          "note": "main workstation"
+        },
+        {
+          "model": "PC_1",
+          "dx": -0.35,
+          "dy": 4.35,
+          "dz": 0.78,
+          "dh": 180,
+          "note": "CRT computer"
+        },
+        {
+          "model": "PC_1",
+          "dx": 0.45,
+          "dy": 4.4,
+          "dz": 0.78,
+          "dh": 200,
+          "note": "second screen"
+        },
+        {
+          "model": "WORK_LAMP1",
+          "dx": 0.95,
+          "dy": 4.35,
+          "dz": 0.78,
+          "dh": 160
+        },
+        {
+          "model": "MED_OFFICE_CHAIR",
+          "dx": 0.0,
+          "dy": 3.05,
+          "dz": 0.0,
+          "dh": 180,
+          "note": "Chris's chair, see CHAIR_* in docs/CALIBRATION.md"
+        },
+        {
+          "model": "OFFICEDESK2",
+          "dx": -3.4,
+          "dy": 3.4,
+          "dz": 0.0,
+          "dh": 90,
+          "note": "audio-analysis bench"
+        },
+        {
+          "model": "MED_HI_FI",
+          "dx": -3.45,
+          "dy": 3.7,
+          "dz": 0.78,
+          "dh": 90
+        },
+        {
+          "model": "PRINTER_1",
+          "dx": -3.4,
+          "dy": 2.9,
+          "dz": 0.78,
+          "dh": 90
+        },
+        {
+          "model": "SPEAKER_1",
+          "dx": -3.6,
+          "dy": 4.9,
+          "dz": 0.0,
+          "dh": 120
+        },
+        {
+          "model": "SPEAKER_2",
+          "dx": -3.6,
+          "dy": 1.9,
+          "dz": 0.0,
+          "dh": 60
+        },
+        {
+          "model": "CJ_TV_TABLE1",
+          "dx": 3.3,
+          "dy": 3.3,
+          "dz": 0.0,
+          "dh": 270,
+          "note": "oscilloscope bench"
+        },
+        {
+          "model": "CJ_SPHERE_TV",
+          "dx": 3.3,
+          "dy": 3.3,
+          "dz": 0.52,
+          "dh": 270
+        },
+        {
+          "model": "CJ_TV_TABLE2",
+          "dx": 3.3,
+          "dy": 4.9,
+          "dz": 0.0,
+          "dh": 270
+        },
+        {
+          "model": "MED_TV_1",
+          "dx": 3.3,
+          "dy": 4.9,
+          "dz": 0.52,
+          "dh": 270
+        },
+        {
+          "model": "LOW_CONSOLE",
+          "dx": 3.35,
+          "dy": 4.2,
+          "dz": 0.0,
+          "dh": 270
+        },
+        {
+          "model": "AB_WAREHOUSESHELF",
+          "dx": -1.9,
+          "dy": 7.2,
+          "dz": 0.0,
+          "dh": 0,
+          "note": "storage"
+        },
+        {
+          "model": "AB_WAREHOUSESHELF",
+          "dx": 1.9,
+          "dy": 7.2,
+          "dz": 0.0,
+          "dh": 0
+        },
+        {
+          "model": "MED_BOOKSHELF",
+          "dx": 4.4,
+          "dy": 6.6,
+          "dz": 0.0,
+          "dh": 270,
+          "note": "notebooks"
+        },
+        {
+          "model": "FILING_CAB_NU",
+          "dx": -4.4,
+          "dy": 6.4,
+          "dz": 0.0,
+          "dh": 90
+        },
+        {
+          "model": "CJ_CABLEROLL",
+          "dx": 2.1,
+          "dy": 2.2,
+          "dz": 0.0,
+          "dh": 30,
+          "note": "cables"
+        },
+        {
+          "model": "GENERATOR_LOW",
+          "dx": 4.6,
+          "dy": 1.4,
+          "dz": 0.0,
+          "dh": 270
+        },
+        {
+          "model": "CJ_O2TANKS",
+          "dx": -4.6,
+          "dy": 1.0,
+          "dz": 0.0,
+          "dh": 0
+        },
+        {
+          "model": "CARDBOARDBOX",
+          "dx": -2.6,
+          "dy": 6.0,
+          "dz": 0.0,
+          "dh": 15
+        },
+        {
+          "model": "CARDBOARDBOX2",
+          "dx": -3.1,
+          "dy": 5.5,
+          "dz": 0.0,
+          "dh": 40
+        },
+        {
+          "model": "DYN_CRATE_1",
+          "dx": 3.9,
+          "dy": 7.6,
+          "dz": 0.0,
+          "dh": 10
+        },
+        {
+          "model": "TV_UNIT_1",
+          "dx": 0.0,
+          "dy": 7.35,
+          "dz": 0.0,
+          "dh": 180,
+          "note": "diagram wall stand"
+        },
+        {
+          "model": "SWANK_TV_1",
+          "dx": 0.0,
+          "dy": 7.35,
+          "dz": 0.62,
+          "dh": 180,
+          "note": "diagram wall screen"
+        },
+        {
+          "model": "SPEAKER_2",
+          "dx": -2.9,
+          "dy": 5.05,
+          "dz": 0.0,
+          "dh": 90,
+          "note": "rig driver cabinet"
+        }
+      ]
+    },
+    "GRELAY": {
+      "ground": "flat",
+      "comment": "The recovered relay on the audio bench.",
+      "objects": [
+        {
+          "model": "SATDISHSML",
+          "dx": -3.3,
+          "dy": 3.15,
+          "dz": 0.78,
+          "dh": 120,
+          "note": "the relay, verified"
+        }
+      ]
+    }
+  }
+}

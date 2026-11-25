@@ -538,13 +538,10 @@ gosub @RIG_STREAMS_OFF
 gosub @HQ_DELETE_SCENES
 if is_player_playing $player1
 then
-    if iResult == 0
+    // ended inside (wasted, busted or a failure): put CJ back on the street
+    if iInLab == 1
     then
-        // ended inside (wasted, busted or a failure): put CJ back on the street
-        if iLabSet == 1
-        then
-            gosub @LAB_ROOM_LEAVE
-        end
+        gosub @LAB_ROOM_LEAVE
     end
 end
 gosub @REC_SAVE
@@ -612,6 +609,7 @@ return
 
 {$INCLUDE v3d/core.txt}
 {$INCLUDE v3d/ui.txt}
+{$INCLUDE v3d/panels.txt}
 {$INCLUDE hq/stations.txt}
 {$INCLUDE hq/chris.txt}
 {$INCLUDE hq/terminal.txt}

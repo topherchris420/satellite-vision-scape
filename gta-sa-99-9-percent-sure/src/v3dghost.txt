@@ -1,0 +1,1375 @@
+// ============================================================================
+//  GHOST FREQUENCY - Vers3Dynamics story mission 2
+//
+//  A seven-pulse signal on 166.25 MHz turns up in clock radios all over San
+//  Fierro; Radio Free Fierro calls it a ghost. CJ and Christopher hunt it by
+//  direction finding: bearings from the van (which lead to a neon sign that is
+//  loud but not the source), on-foot sweeps with a handheld (one points at an
+//  echo off the Gant Bridge), and a third bearing that finds a SureThing relay
+//  still uploading CERTAIN data. Stop the technician's van, recover the relay,
+//  then publish at once or race it back to the lab before it wipes itself.
+//
+//  CLEO custom mission, started by the launcher on a hand-over from the HQ.
+//  0@ = checkpoint (0..4), 1@ score, 2@ first-try right, 3@ verdicts.
+//  Compile with Sanny Builder 4 (GTA SA v1.0 - SBL). Needs CLEO 5.
+// ============================================================================
+{$CLEO .cm}
+{$NOSOURCE}
+{$INCLUDE v3d/vars.txt}
+{$INCLUDE ghost/vars.txt}
+{$INCLUDE gen/ghost_scene_vars.txt}
+{$INCLUDE v3d/config.txt}
+
+nop
+script_name 'V3DGHST'
+gosub @MISSION_START
+if has_deatharrest_been_executed
+then
+    iFail = -1
+end
+if iFail <> 0
+then
+    gosub @MISSION_FAILED
+end
+gosub @MISSION_CLEANUP
+terminate_this_script
+
+// ============================================================================
+:MISSION_START
+$onmission = 1
+iMissionId = 2
+gosub @INIT_COMMON
+gosub @GHOST_INIT
+if iArgCheckpoint > 0
+then
+    gosub @GHOST_RESUME
+end
+if iArgCheckpoint <= 0
+then
+    gosub @PH_INTRO
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= CP_POSTS
+then
+    gosub @PH_POSTS
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= CP_SWEEP
+then
+    gosub @PH_SWEEP
+    if iFail <> 0
+    then
+        return
+    end
+end
+if iArgCheckpoint <= CP_RELAY
+then
+    gosub @PH_RELAY
+    if iFail <> 0
+    then
+        return
+    end
+end
+gosub @PH_RETURN
+if iFail <> 0
+then
+    return
+end
+gosub @PH_FINALE
+if iFail <> 0
+then
+    return
+end
+gosub @GHOST_PASSED
+return
+
+:GHOST_INIT
+uPrefix = 'VGF'
+hRelayVan = -1
+hRelayDish = -1
+rxStatic = 0
+rxGhost = 0
+iRxOn = 0
+iApparent = 1
+iBearings = 0
+iHaveRelay = 0
+iVerify = 0
+iVerified = 0
+iWiped = 0
+iTimerOn = 0
+iTimerShown = 0
+fcTries = 0
+gosub @SCN_GLAB_RESET
+gosub @SCN_GRELAY_RESET
+iState = ST_INTRO
+gosub @PUBLISH
+return
+
+// Checkpoint restarts: CJ, Christopher and the van where the phase begins.
+:GHOST_RESUME
+gosub @FADE_OUT
+set_player_control $player1 false
+clear_wanted_level $player1
+fSX = LAB_REF_X
+fSY = LAB_REF_Y
+fSZ = LAB_REF_Z
+fSZ += 1.0
+fHead = 0.0
+gosub @TELEPORT_PLAYER
+gosub @FIND_LAB_EXT
+switch iArgCheckpoint
+    case CP_POSTS
+        fSX = fLabX
+        fSY = fLabY
+        fSZ = fLabZ
+    case CP_SWEEP
+        fSX = NEON_X
+        fSY = NEON_Y
+        fSZ = NEON_Z
+        iBearings = 2
+    case CP_RELAY
+        fSX = ESPL_X
+        fSY = ESPL_Y
+        fSZ = ESPL_Z
+        iBearings = 3
+    default
+        fSX = RELAY_X
+        fSY = RELAY_Y
+        fSZ = RELAY_Z
+        iBearings = 3
+        iHaveRelay = 1
+end
+fHead = 0.0
+gosub @RESUME_IN_VAN
+set_player_control $player1 true
+restore_camera_jumpcut
+gosub @FADE_IN
+if iCustomModel == 0
+then
+    print_help 'VHH08'
+end
+return
+
+// ============================================================================
+// The tape: in the lab, Radio Free Fierro's callers, and the plan.
+// ============================================================================
+:PH_INTRO
+iState = ST_INTRO
+iCheckpoint = 0
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+gosub @FIND_LAB_EXT
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.0
+fTmp8 = 1.5
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+set_char_heading $scplayer fAH
+gosub @SCN_GLAB_CREATE
+fTmp7 = 0.0
+fTmp8 = 3.55
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+fHead = fAH
+gosub @SPAWN_CHRIS
+set_char_area_visible hChris LAB_AREA
+task_char_slide_to_coord_and_play_anim hChris fSX fSY fSZ fAH 0.4 "OFF_Sit_Type_Loop" "INT_OFFICE" 4.0 true false false false -1
+// establishing: the dark lab, the scanner muttering
+fTmp7 = -3.0
+fTmp8 = 6.8
+fTmp6 = 2.4
+hCamTarget = hChris
+fCamTZ = 0.4
+gosub @CAM_ANCHOR
+gosub @MUSIC_START
+wait 300
+gosub @FADE_IN
+print_big 'VGF00' 3500 2
+dLine = 101
+gosub @SAY
+dLine = 102
+gosub @SAY
+dLine = 103
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = -0.3
+fCamOY = 1.2
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 104
+gosub @SAY
+// Christopher turns round with the tape
+if iSkipReq == 0
+then
+    task_play_anim_non_interruptable hChris "OFF_Sit_2Idle_180" "INT_OFFICE" 4.0 false false false false -1
+    iWaitMs = 2600
+    gosub @WAIT_MS
+end
+fTmp7 = 0.1
+fTmp8 = 2.9
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+clear_char_tasks_immediately hChris
+set_char_coordinates hChris fSX fSY fSZ
+task_turn_char_to_face_char hChris $scplayer
+task_turn_char_to_face_char $scplayer hChris
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.25
+fCamOY = 1.1
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 105
+gosub @SAY
+// the recording itself
+rxGhost = 0
+if load_audio_stream "cleo\99sure\sfx\rx_ghost.ogg" rxGhost
+then
+    set_audio_stream_volume rxGhost fSfxVol
+    set_audio_stream_looped rxGhost true
+    set_audio_stream_state rxGhost 1
+end
+iWaitMs = 3200
+gosub @WAIT_MS
+dLine = 106
+gosub @SAY
+gosub @RX_STOP
+hCamFrom = hChris
+hCamTarget = hPlayer
+fCamOX = -0.45
+fCamOY = -0.95
+fCamOZ = 0.7
+fCamTZ = 0.6
+gosub @CAM_SHOT
+dLine = 107
+gosub @SAY
+hCamFrom = hChris
+hCamTarget = hChris
+fCamOX = 0.3
+fCamOY = 1.25
+fCamOZ = 0.6
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 108
+gosub @SAY
+fTmp7 = 2.4
+fTmp8 = 1.4
+fTmp6 = 1.7
+hCamTarget = hChris
+fCamTZ = 0.5
+gosub @CAM_ANCHOR
+dLine = 109
+gosub @SAY
+dLine = 110
+gosub @SAY
+dLine = 111
+gosub @SAY
+// out to the van
+gosub @FADE_OUT
+gosub @MUSIC_STOP
+gosub @AMB_STOP
+gosub @SCN_GLAB_DELETE
+gosub @LAB_ROOM_LEAVE
+clear_char_tasks_immediately hChris
+set_char_area_visible hChris 0
+fSX, fSY, fSZ = get_offset_from_char_in_world_coords $scplayer 1.3 0.3 0.0
+set_char_coordinates hChris fSX fSY fSZ
+gosub @SPAWN_VAN
+gosub @CHRIS_JOIN_GROUP
+gosub @CS_END
+wait 500
+gosub @FADE_IN
+return
+
+// ============================================================================
+// Bearings from the van: two posts, a crossing in Queens, a loud neon sign.
+// ============================================================================
+:PH_POSTS
+iCheckpoint = CP_POSTS
+iState = ST_POSTS
+gosub @SAVE_CHECKPOINT
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+iApparent = 1
+fSrcX = NEON_X
+fSrcY = NEON_Y
+fSrcZ = NEON_Z
+gosub @RX_START
+uHud = 1
+dLine = 201
+dQEnd = 205
+gosub @SAY_QUEUE
+print_now 'VGFO1' 7000 1
+fDX = POST1_X
+fDY = POST1_Y
+fDZ = POST1_Z
+iTmp3 = 1
+fDist2 = 6.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+dLine = 221
+dQEnd = 221
+gosub @SAY_QUEUE
+iWaitMs = POST_HOLD_MS
+gosub @HOLD_STILL
+if iFail <> 0
+then
+    return
+end
+iBearings = 1
+iSfxId = SFX_LOCK
+gosub @SFX_PLAY
+dLine = 222
+dQEnd = 222
+gosub @SAY_QUEUE
+print_now 'VGFO2' 7000 1
+fDX = POST2_X
+fDY = POST2_Y
+fDZ = POST2_Z
+iTmp3 = 1
+fDist2 = 6.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+iWaitMs = POST_HOLD_MS
+gosub @HOLD_STILL
+if iFail <> 0
+then
+    return
+end
+iBearings = 2
+iSfxId = SFX_LOCK
+gosub @SFX_PLAY
+dLine = 223
+dQEnd = 223
+gosub @SAY_QUEUE
+print_now 'VGFO3' 7000 1
+fDX = NEON_X
+fDY = NEON_Y
+fDZ = NEON_Z
+iTmp3 = 1
+fDist2 = 12.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+iState = ST_NEON
+gosub @PUBLISH
+// the "source": loud, broadband, and no pattern in it
+fSrcX = fDX
+fSrcY = fDY
+dLine = 241
+gosub @SAY
+dLine = 242
+gosub @SAY
+dLine = 243
+gosub @SAY
+dLine = 244
+gosub @SAY
+fcId = 1
+fcTries = 0
+:PH_POSTS_DECIDE
+gosub @FIELD_DECIDE
+if iFail <> 0
+then
+    return
+end
+gosub @SAY
+gosub @FIELD_DECIDE_CLOSE
+if fcCorrect == 0
+then
+    if fcRetry == 1
+    then
+        jump @PH_POSTS_DECIDE
+    end
+end
+dLine = 264
+gosub @SAY
+dLine = 265
+gosub @SAY
+return
+
+// ============================================================================
+// On foot with the handheld: an echo off the bridge, then a clean bearing.
+// ============================================================================
+:PH_SWEEP
+iCheckpoint = CP_SWEEP
+iState = ST_SWEEP
+gosub @SAVE_CHECKPOINT
+if iRxOn == 0
+then
+    gosub @RX_START
+end
+uHud = 1
+iApparent = 2
+fSrcX = ECHO_X
+fSrcY = ECHO_Y
+fSrcZ = ECHO_Z
+print_now 'VGFO4' 7000 1
+fDX = BRIDGE_X
+fDY = BRIDGE_Y
+fDZ = BRIDGE_Z
+iTmp3 = 2
+fDist2 = 10.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+dLine = 301
+dQEnd = 301
+gosub @SAY_QUEUE
+gosub @SWEEP
+if iFail <> 0
+then
+    return
+end
+dLine = 303
+gosub @SAY
+dLine = 304
+gosub @SAY
+dLine = 305
+gosub @SAY
+dLine = 306
+gosub @SAY
+fcId = 2
+fcTries = 0
+:PH_SWEEP_DECIDE
+gosub @FIELD_DECIDE
+if iFail <> 0
+then
+    return
+end
+gosub @SAY
+gosub @FIELD_DECIDE_CLOSE
+if fcCorrect == 0
+then
+    if fcRetry == 1
+    then
+        jump @PH_SWEEP_DECIDE
+    end
+end
+iBearings = 1
+dLine = 324
+dQEnd = 324
+gosub @SAY_QUEUE
+// the real thing, from away from the cables
+iApparent = 3
+fSrcX = RELAY_X
+fSrcY = RELAY_Y
+fSrcZ = RELAY_Z
+print_now 'VGFO6' 7000 1
+fDX = ESPL_X
+fDY = ESPL_Y
+fDZ = ESPL_Z
+iTmp3 = 2
+fDist2 = 10.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+gosub @SWEEP
+if iFail <> 0
+then
+    return
+end
+iBearings = 3
+dLine = 325
+gosub @SAY
+return
+
+// SWEEP: on foot within 4 m of fDX.., turn until the handheld meter is above
+// 94 and hold still for SWEEP_HOLD_MS. Depth 3.
+:SWEEP
+iSweepT = 0
+iSweepOk = 0
+iPrevT = get_game_timer
+:SWEEP_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+iDt = iNow
+iDt -= iPrevT
+iPrevT = iNow
+iTmp = 0
+if not is_char_in_any_car $scplayer
+then
+    if locate_char_on_foot_3d $scplayer fDX fDY fDZ 4.0 4.0 4.0 true
+    then
+        iTmp = 1
+    end
+end
+if iTmp == 0
+then
+    iRxOn = 1
+    iSweepT = 0
+    oKind = OBJ_WALK
+    fOX = fDX
+    fOY = fDY
+    fOZ = fDZ
+    jump @SWEEP_LOOP
+end
+iRxOn = 2
+if iSweepOk == 0
+then
+    print_now 'VGFO5' 7000 1
+    iSweepOk = 1
+end
+oKind = OBJ_AIM
+oArg = gBear
+if gMeter >= 94
+then
+    if is_char_stopped $scplayer
+    then
+        iSweepT += iDt
+    else
+        iSweepT = 0
+    end
+else
+    iSweepT = 0
+end
+if iSweepT >= SWEEP_HOLD_MS
+then
+    iRxOn = 1
+    oKind = OBJ_NONE
+    iSfxId = SFX_LOCK
+    gosub @SFX_PLAY
+    dLine = 302
+    dQEnd = 302
+    gosub @SAY_QUEUE
+    return
+end
+jump @SWEEP_LOOP
+
+// ============================================================================
+// The relay: a SureThing van, a technician on his lunch, and the evidence.
+// ============================================================================
+:PH_RELAY
+iCheckpoint = CP_RELAY
+iState = ST_RELAY
+gosub @SAVE_CHECKPOINT
+if iRxOn == 0
+then
+    gosub @RX_START
+end
+uHud = 1
+iApparent = 3
+fSrcX = RELAY_X
+fSrcY = RELAY_Y
+fSrcZ = RELAY_Z
+print_now 'VGFO7' 7000 1
+fDX = RELAY_X
+fDY = RELAY_Y
+fDZ = RELAY_Z
+iTmp3 = 1
+fDist2 = 60.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+fSrcX = fDX
+fSrcY = fDY
+gosub @SPAWN_RELAY_VAN
+dLine = 401
+gosub @SAY
+dLine = 402
+gosub @SAY
+car_wander_randomly hRelayVan
+set_car_cruise_speed hRelayVan 17.0
+set_car_driving_style hRelayVan 2
+dLine = 403
+dQEnd = 404
+gosub @SAY_QUEUE
+print_now 'VGFO8' 8000 1
+gosub @STOP_RELAY_VAN
+if iFail <> 0
+then
+    return
+end
+dLine = 405
+gosub @SAY
+dLine = 406
+gosub @SAY
+dLine = 407
+gosub @SAY
+dLine = 408
+gosub @SAY
+dLine = 409
+gosub @SAY
+dLine = 410
+dQEnd = 410
+gosub @SAY_QUEUE
+print_now 'VGFO9' 7000 1
+gosub @TAKE_RELAY
+return
+
+:SPAWN_RELAY_VAN
+iMdl = #PONY
+gosub @LOAD_MODEL
+iMdl = #WMYMECH
+gosub @LOAD_MODEL
+iMdl = #SATDISHSML
+gosub @LOAD_MODEL
+fRelayX, fRelayY, fTmp, fHead = get_closest_car_node_with_heading fDX fDY fDZ
+if fRelayX == 0.0
+then
+    fRelayX = fDX
+    fRelayY = fDY
+    fTmp = fDZ
+    fHead = 0.0
+end
+hRelayVan = create_car #PONY fRelayX fRelayY fTmp
+set_car_heading hRelayVan fHead
+change_car_colour hRelayVan 1 3
+set_car_health hRelayVan 1000
+hNpc1 = create_char_inside_car hRelayVan 4 #WMYMECH
+set_char_health hNpc1 100
+fTmp += 3.0
+hRelayDish = create_object #SATDISHSML fRelayX fRelayY fTmp
+set_object_collision hRelayDish false
+attach_object_to_car hRelayDish hRelayVan 0.0 -0.9 1.15 0.0 0.0 0.0
+mark_model_as_no_longer_needed #PONY
+mark_model_as_no_longer_needed #WMYMECH
+mark_model_as_no_longer_needed #SATDISHSML
+bTarget = add_blip_for_car hRelayVan
+iVanStopped = 0
+return
+
+// Until the van is damaged enough to stop. Depth 3.
+:STOP_RELAY_VAN
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+oKind = OBJ_STOP_CAR
+oEnt = hRelayVan
+iRelayVanHp = get_car_health hRelayVan
+if STOP_HEALTH > iRelayVanHp
+then
+    iVanStopped = 1
+    oKind = OBJ_NONE
+    car_set_idle hRelayVan
+    if not is_char_dead hNpc1
+    then
+        task_leave_car hNpc1 hRelayVan
+    end
+    // (an inline wait keeps the HUD one gosub shallower than WAIT_MS would)
+    iT1 = iNow
+    iT1 += 1800
+    :STOP_RELAY_WAIT
+    gosub @TICK
+    if iFail <> 0
+    then
+        return
+    end
+    if iT1 > iNow
+    then
+        jump @STOP_RELAY_WAIT
+    end
+    if not is_char_dead hNpc1
+    then
+        task_hands_up hNpc1 12000
+    end
+    return
+end
+jump @STOP_RELAY_VAN
+
+// Walk to the back of the stopped van and take the relay. Depth 3.
+:TAKE_RELAY
+gosub @TICK
+if iFail <> 0
+then
+    return
+end
+fOX, fOY, fOZ = get_offset_from_car_in_world_coords hRelayVan 0.0 -3.3 0.0
+oKind = OBJ_USE
+gosub @MENU_INPUT
+if not is_char_in_any_car $scplayer
+then
+    if locate_char_on_foot_3d $scplayer fOX fOY fOZ 1.6 1.6 2.5 true
+    then
+        if uIn == 5
+        then
+            iHaveRelay = 1
+            oKind = OBJ_NONE
+            if does_object_exist hRelayDish
+            then
+                delete_object hRelayDish
+            end
+            hRelayDish = -1
+            remove_blip bTarget
+            bTarget = -1
+            iSfxId = SFX_OK
+            gosub @SFX_PLAY
+            // the technician goes back to his lunch; the van becomes the city's
+            if not is_char_dead hNpc1
+            then
+                clear_char_tasks hNpc1
+                task_wander_standard hNpc1
+            end
+            mark_char_as_no_longer_needed hNpc1
+            hNpc1 = -1
+            mark_car_as_no_longer_needed hRelayVan
+            hRelayVan = -1
+            return
+        end
+    end
+end
+jump @TAKE_RELAY
+
+// ============================================================================
+// The choice, and the drive back.
+// ============================================================================
+:PH_RETURN
+iCheckpoint = CP_RETURN
+iState = ST_CHOICE
+gosub @SAVE_CHECKPOINT
+uHud = 0
+gosub @RX_STOP
+iRxOn = 0
+dLine = 451
+gosub @SAY
+dLine = 452
+gosub @SAY
+dLine = 453
+gosub @SAY
+dLine = 454
+gosub @SAY
+gosub @CHOICE_YN
+if iFail <> 0
+then
+    return
+end
+iState = ST_RETURN
+gosub @PUBLISH
+if iVerify == 1
+then
+    iTimerOn = 1
+    iTimerEnd = get_game_timer
+    iTimerEnd += VERIFY_MS
+    iTimerShown = 0
+    dLine = 471
+    dQEnd = 471
+    gosub @SAY_QUEUE
+    print_now 'VGFOA' 7000 1
+else
+    dLine = 481
+    gosub @SAY
+    dLine = 482
+    dQEnd = 482
+    gosub @SAY_QUEUE
+    print_now 'VGFOB' 7000 1
+end
+gosub @BOARD_VAN
+if iFail <> 0
+then
+    return
+end
+gosub @FIND_LAB_EXT
+fDX = fLabX
+fDY = fLabY
+fDZ = fLabZ
+iTmp3 = 0
+fDist2 = 5.0
+gosub @DRIVE_TO
+if iFail <> 0
+then
+    return
+end
+if iVerify == 1
+then
+    if iTimerOn == 1
+    then
+        iTimerOn = 0
+        iVerified = 1
+        dLine = 473
+        gosub @SAY
+    end
+end
+return
+
+// Y: verify in the lab. N: publish now. Depth 3.
+:CHOICE_YN
+print_help 'VGFH1'
+oKind = OBJ_CHOICE
+gosub @MENU_ARM
+:CHOICE_YN_LOOP
+gosub @TICK
+if iFail <> 0
+then
+    clear_help
+    return
+end
+gosub @MENU_INPUT
+if uIn == 7
+then
+    iVerify = 1
+end
+if uIn == 6
+then
+    iVerify = 2
+end
+if iVerify == 0
+then
+    jump @CHOICE_YN_LOOP
+end
+clear_help
+oKind = OBJ_NONE
+iSfxId = SFX_OK
+gosub @SFX_PLAY
+return
+
+// ============================================================================
+// The lab: the control run, the news, and Rex.
+// ============================================================================
+:PH_FINALE
+iState = ST_FINALE
+gosub @PUBLISH
+gosub @CS_BEGIN
+gosub @FADE_OUT
+iTimerOn = 0
+gosub @CHRIS_LEAVE_GROUP
+gosub @LAB_ROOM_ENTER
+fTmp7 = 0.6
+fTmp8 = 2.2
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+set_char_coordinates $scplayer fSX fSY fSZ
+gosub @SCN_GLAB_CREATE
+if iVerified == 1
+then
+    gosub @SCN_GRELAY_CREATE
+end
+fTmp7 = -2.6
+fTmp8 = 3.6
+gosub @ANCHOR_TO_WORLD
+fSZ = fAZ
+fSZ += 1.0
+if not is_char_dead hChris
+then
+    if is_char_in_any_car hChris
+    then
+        warp_char_from_car_to_coord hChris fSX fSY fSZ
+    end
+    set_char_coordinates hChris fSX fSY fSZ
+    set_char_area_visible hChris LAB_AREA
+    task_turn_char_to_face_char hChris $scplayer
+    task_turn_char_to_face_char $scplayer hChris
+end
+fTmp7 = -0.8
+fTmp8 = 5.6
+fTmp6 = 2.0
+hCamTarget = hChris
+fCamTZ = 0.45
+gosub @CAM_ANCHOR
+gosub @AMB_START
+wait 300
+gosub @FADE_IN
+if iVerified == 1
+then
+    dLine = 501
+    gosub @SAY
+    dLine = 502
+    gosub @SAY
+    hCamFrom = hChris
+    hCamTarget = hPlayer
+    fCamOX = -0.45
+    fCamOY = -0.95
+    fCamOZ = 0.7
+    fCamTZ = 0.6
+    gosub @CAM_SHOT
+    dLine = 503
+    gosub @SAY
+    hCamFrom = hChris
+    hCamTarget = hChris
+    fCamOX = 0.25
+    fCamOY = 1.1
+    fCamOZ = 0.62
+    fCamTZ = 0.62
+    gosub @CAM_SHOT
+    dLine = 504
+    gosub @SAY
+    dLine = 505
+    gosub @SAY
+else
+    if iWiped == 1
+    then
+        dLine = 474
+        gosub @SAY
+    end
+    dLine = 506
+    gosub @SAY
+end
+dLine = 507
+gosub @SAY
+hCamFrom = hPlayer
+hCamTarget = hPlayer
+fCamOX = -0.3
+fCamOY = 1.2
+fCamOZ = 0.62
+fCamTZ = 0.62
+gosub @CAM_SHOT
+dLine = 508
+gosub @SAY
+gosub @FADE_OUT
+gosub @AMB_STOP
+gosub @SCN_GLAB_DELETE
+gosub @SCN_GRELAY_DELETE
+if does_char_exist hChris
+then
+    delete_char hChris
+end
+hChris = -1
+iNeedChris = 0
+gosub @LAB_ROOM_LEAVE
+gosub @CS_END
+wait 400
+gosub @FADE_IN
+return
+
+:GHOST_PASSED
+iState = ST_SUCCESS
+if iVerified == 1
+then
+    iReward = REWARD_VERIFIED
+    iRepGain = 8
+    rFlags |= REC_F_M2_VERIFIED
+    print_now 'VGFP1' 6000 1
+else
+    if iWiped == 1
+    then
+        iReward = REWARD_WIPED
+        iRepGain = 0
+        print_now 'VGFP3' 6000 1
+    else
+        iReward = REWARD_PUBLISH
+        iRepGain = 2
+        print_now 'VGFP2' 6000 1
+    end
+end
+iTmp = iScore
+iTmp *= 25
+iReward += iTmp
+rRep += iRepGain
+gosub @MISSION_PASSED_COMMON
+register_mission_passed 'VGF00'
+return
+
+:MISSION_FAILED
+iState = ST_FAILURE
+set_cleo_shared_var SV_RESULT 2
+gosub @PUBLISH
+gosub @DLG_CANCEL
+print_big 'VXF00' 5000 1
+switch iFail
+    case FAIL_CHRIS
+        print_now 'VXF01' 5000 1
+    case FAIL_VAN
+        print_now 'VXF02' 5000 1
+    case FAIL_ABANDON
+        print_now 'VXF03' 5000 1
+    case FAIL_TECH
+        print_now 'VGFF1' 5000 1
+    case FAIL_RELAY
+        print_now 'VGFF2' 5000 1
+    case FAIL_GOTAWAY
+        print_now 'VGFF3' 5000 1
+end
+return
+
+:MISSION_CLEANUP
+iState = 12
+gosub @RX_STOP
+iTimerOn = 0
+gosub @SCN_GLAB_DELETE
+gosub @SCN_GRELAY_DELETE
+if does_object_exist hRelayDish
+then
+    delete_object hRelayDish
+end
+hRelayDish = -1
+mark_car_as_no_longer_needed hRelayVan
+hRelayVan = -1
+if is_player_playing $player1
+then
+    if iInLab == 1
+    then
+        gosub @LAB_ROOM_LEAVE
+    end
+end
+gosub @CLEANUP_COMMON
+return
+
+// ============================================================================
+// The receiver, every frame (from WATCHDOG): signal, pattern, bearing, sound.
+// ============================================================================
+:WATCH_MISSION
+if hRelayVan <> -1
+then
+    if iHaveRelay == 0
+    then
+        if is_car_dead hRelayVan
+        then
+            iFail = FAIL_RELAY
+            return
+        end
+        if is_char_dead hNpc1
+        then
+            iFail = FAIL_TECH
+            return
+        end
+        if not locate_char_any_means_car_2d $scplayer hRelayVan GOTAWAY_DIST GOTAWAY_DIST false
+        then
+            iFail = FAIL_GOTAWAY
+            return
+        end
+    end
+end
+if iTimerOn == 1
+then
+    iTimerLeft = iTimerEnd
+    iTimerLeft -= iNow
+    if 120000 > iTimerLeft
+    then
+        if iTimerShown == 0
+        then
+            iTimerShown = 1
+            // (DLG_START directly: SAY_QUEUE would nest too deep under the watchdog)
+            if dActive == 0
+            then
+                if dQNext == 0
+                then
+                    dLine = 472
+                    gosub @DLG_START
+                end
+            end
+        end
+    end
+    if 0 >= iTimerLeft
+    then
+        iTimerOn = 0
+        iWiped = 1
+        print_now 'VGFOB' 6000 1
+    end
+end
+if iRxOn == 0
+then
+    return
+end
+fPX, fPY, fPZ = get_char_coordinates $scplayer
+fTmp = fSrcX
+fTmp -= fPX
+fTmp2 = fSrcY
+fTmp2 -= fPY
+fDist = get_distance_between_coords_2d fPX fPY fSrcX fSrcY
+fTmp3 = fDist
+fTmp3 /= 12.0
+if fTmp3 > 95.0
+then
+    fTmp3 = 95.0
+end
+iTmp =# fTmp3
+gSig = 100
+gSig -= iTmp
+fHead = get_heading_from_vector_2d fTmp fTmp2
+gBear =# fHead
+switch iApparent
+    case 1
+        gPat = 55
+        if 160.0 > fDist
+        then
+            gPat = 18
+        end
+    case 2
+        gPat = 50
+    default
+        gPat = gSig
+        gPat *= 35
+        gPat /= 100
+        gPat += 60
+end
+// the handheld: how squarely CJ faces the bearing
+fHead2 = get_char_heading $scplayer
+fTmp4 = fHead2
+fTmp4 -= fHead
+if 0.0 > fTmp4
+then
+    fTmp4 *= -1.0
+end
+if fTmp4 > 180.0
+then
+    fTmp5 = 360.0
+    fTmp5 -= fTmp4
+    fTmp4 = fTmp5
+end
+iTmp =# fTmp4
+gMeter = 100
+gMeter -= iTmp
+if 0 > gMeter
+then
+    gMeter = 0
+end
+// what CJ hears: the pattern rises out of the hiss
+if rxGhost <> 0
+then
+    fTmp5 =# gSig
+    fTmp5 *= fSfxVol
+    fTmp6 =# gPat
+    fTmp5 *= fTmp6
+    fTmp5 /= 10000.0
+    if iRxOn == 2
+    then
+        fTmp6 =# gMeter
+        fTmp5 *= fTmp6
+        fTmp5 /= 100.0
+    end
+    set_audio_stream_volume rxGhost fTmp5
+end
+if rxStatic <> 0
+then
+    iTmp = 100
+    iTmp -= gPat
+    fTmp5 =# iTmp
+    fTmp5 *= fSfxVol
+    fTmp5 *= 0.0045
+    set_audio_stream_volume rxStatic fTmp5
+end
+return
+
+:RX_START
+iRxOn = 1
+if rxStatic == 0
+then
+    if load_audio_stream "cleo\99sure\sfx\rx_static.ogg" rxStatic
+    then
+        set_audio_stream_looped rxStatic true
+        set_audio_stream_volume rxStatic 0.0
+        set_audio_stream_state rxStatic 1
+    end
+end
+if rxGhost == 0
+then
+    if load_audio_stream "cleo\99sure\sfx\rx_ghost.ogg" rxGhost
+    then
+        set_audio_stream_looped rxGhost true
+        set_audio_stream_volume rxGhost 0.0
+        set_audio_stream_state rxGhost 1
+    end
+end
+return
+
+:RX_STOP
+iRxOn = 0
+if rxStatic <> 0
+then
+    set_audio_stream_state rxStatic 0
+    remove_audio_stream rxStatic
+    rxStatic = 0
+end
+if rxGhost <> 0
+then
+    set_audio_stream_state rxGhost 0
+    remove_audio_stream rxGhost
+    rxGhost = 0
+end
+return
+
+:DLG_LOOKUP
+{$INCLUDE gen/ghost_dialogue.txt}
+return
+
+:CLAIM_LOOKUP
+{$INCLUDE gen/ghost_claims.txt}
+return
+
+// ============================================================================
+// HUD: the receiver, the verdict console, hold progress, the relay's memory.
+// ============================================================================
+:HUD_DRAW
+if uMode == 0
+then
+    if uHud == 0
+    then
+        if uTask == 0
+        then
+            if iTimerOn == 0
+            then
+                return
+            end
+        end
+    end
+end
+use_text_commands true
+if uMode == 9
+then
+    gosub @DRAW_DECIDE
+    return
+end
+if uHud == 1
+then
+    gosub @DRAW_RX
+end
+if uTask == 6
+then
+    gosub @DRAW_HOLD
+end
+if iTimerOn == 1
+then
+    gosub @DRAW_TIMER
+end
+return
+
+:DRAW_RX
+draw_rect 562.0 186.0 140.0 118.0 6 20 22 210
+draw_rect 562.0 131.0 140.0 4.0 11 93 99 255
+gosub @TS_HEAD
+set_text_scale 0.24 1.0
+display_text 496.0 136.0 'VGFU1'
+gosub @TS_DIM
+display_text 496.0 152.0 'VGFU2'
+uX = 562.0
+uY = 170.0
+uW = 124.0
+uV = gSig
+uR = 90
+uG = 220
+uB = 210
+gosub @DRAW_METER
+// pattern against noise
+uF =# gPat
+uF *= 1.24
+uF2 = 124.0
+uF2 -= uF
+uF3 = uF
+uF3 /= 2.0
+uF3 += 500.0
+draw_rect uF3 184.0 uF 8.0 120 230 150 255
+uF3 = uF2
+uF3 /= 2.0
+uF3 += 500.0
+uF3 += uF
+draw_rect uF3 184.0 uF2 8.0 110 110 112 255
+gosub @TS_DIM
+set_text_scale 0.2 0.84
+display_text 500.0 192.0 'VGFU3'
+gosub @TS_DIM
+set_text_scale 0.2 0.84
+set_text_right_justify true
+display_text 624.0 192.0 'VGFU4'
+// compass: sixteen points, north up, the bearing lit
+uI = gBear
+uI *= 10
+uI += 112
+uI /= 225
+uI %= 16
+uI2 = 0
+:DRAW_RX_DOT
+uF =# uI2
+uF *= 22.5
+uF2 = sin uF
+uF3 = cos uF
+uF2 *= -18.0
+uF3 *= -18.0
+uF2 += 526.0
+uF3 += 224.0
+if uI2 == uI
+then
+    draw_rect uF2 uF3 5.0 5.0 240 170 40 255
+else
+    draw_rect uF2 uF3 3.0 3.0 70 110 110 255
+end
+uI2 += 1
+if 16 > uI2
+then
+    jump @DRAW_RX_DOT
+end
+draw_rect 526.0 206.0 2.0 4.0 170 240 220 255
+gosub @TS_BODY
+set_text_scale 0.22 0.92
+display_text_with_number 552.0 210.0 'VGFU5' gBear
+gosub @TS_BODY
+set_text_scale 0.22 0.92
+display_text_with_number 552.0 226.0 'VGFU7' iBearings
+if iRxOn == 2
+then
+    uX = 562.0
+    uY = 252.0
+    uW = 124.0
+    uV = gMeter
+    uR = 240
+    uG = 170
+    uB = 40
+    gosub @DRAW_METER
+end
+return
+
+:DRAW_HOLD
+uX = 320.0
+uY = 380.0
+uW = 200.0
+uV = uTaskVal
+uR = 90
+uG = 220
+uB = 210
+gosub @DRAW_METER
+gosub @TS_HINT
+display_text_with_number 320.0 360.0 'VXT01' uTaskVal
+return
+
+:DRAW_TIMER
+uI = iTimerLeft
+if 0 > uI
+then
+    uI = 0
+end
+uI /= 1000
+uI2 = uI
+uI2 /= 60
+uI3 = uI2
+uI3 *= 60
+uI -= uI3
+gosub @TS_TITLE
+set_text_colour 240 170 40 255
+set_text_right_justify true
+if 10 > uI
+then
+    display_text_with_2_numbers 620.0 100.0 'VGFU8' uI2 uI
+else
+    display_text_with_2_numbers 620.0 100.0 'VGFU6' uI2 uI
+end
+return
+
+{$INCLUDE v3d/core.txt}
+{$INCLUDE v3d/field.txt}
+{$INCLUDE v3d/decide.txt}
+{$INCLUDE v3d/ui.txt}
+{$INCLUDE gen/ghost_scenes.txt}

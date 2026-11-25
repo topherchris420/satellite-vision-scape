@@ -239,6 +239,9 @@ var
     437@: int
     438@: int
     439@: int
+    440@: int
+    441@: int
+    442@: int
 end
 
 const
@@ -493,4 +496,7 @@ const
     iTimerOn       = 437@   // a countdown on the HUD
     iTimerEnd      = 438@
     iTimerLeft     = 439@
+    hTmpCar        = 440@
+    iBit2          = 441@
+    iInLab         = 442@   // 1 while CJ is inside the lab interior
 end

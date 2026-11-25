@@ -2857,6 +2857,21 @@
     }
    ]
   },
+  "02A0": {
+   "name": "IS_CHAR_STOPPED",
+   "extension": "default",
+   "attrs": {
+    "is_condition": true
+   },
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
   "02A3": {
    "name": "SWITCH_WIDESCREEN",
    "extension": "default",
@@ -3728,6 +3743,25 @@
     }
    ]
   },
+  "03C0": {
+   "name": "STORE_CAR_CHAR_IS_IN_NO_SAVE",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "handle",
+     "type": "Car",
+     "source": "var_any",
+     "out": true
+    }
+   ]
+  },
   "03CA": {
    "name": "DOES_OBJECT_EXIST",
    "extension": "default",
@@ -3880,6 +3914,55 @@
      "type": "bool",
      "source": null,
      "out": false
+    }
+   ]
+  },
+  "0407": {
+   "name": "GET_OFFSET_FROM_CAR_IN_WORLD_COORDS",
+   "extension": "default",
+   "attrs": {},
+   "params": [
+    {
+     "name": "self",
+     "type": "Car",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "xOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "yOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "zOffset",
+     "type": "float",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "x",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "y",
+     "type": "float",
+     "source": "var_any",
+     "out": true
+    },
+    {
+     "name": "z",
+     "type": "float",
+     "source": "var_any",
+     "out": true
     }
    ]
   },
@@ -4373,6 +4456,27 @@
     {
      "name": "src",
      "type": "string",
+     "source": null,
+     "out": false
+    }
+   ]
+  },
+  "05C4": {
+   "name": "TASK_HANDS_UP",
+   "extension": "default",
+   "attrs": {
+    "is_static": true
+   },
+   "params": [
+    {
+     "name": "handle",
+     "type": "Char",
+     "source": null,
+     "out": false
+    },
+    {
+     "name": "time",
+     "type": "int",
      "source": null,
      "out": false
     }

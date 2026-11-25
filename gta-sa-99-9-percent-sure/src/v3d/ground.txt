@@ -1,0 +1,10 @@
+// Ground height under fSX fSY, searching down from fAZ + 4 m -> fSZ (outdoor "probe" scenes).
+:GROUND_AT
+fTmp = fAZ
+fTmp += 4.0
+fSZ = get_ground_z_for_3d_coord fSX fSY fTmp
+if fSZ == 0.0
+then
+    fSZ = fAZ
+end
+return

@@ -30,9 +30,14 @@ ANSWER = {"ACCEPT": 1, "REJECT": 2, "ABSTAIN": 3}
 
 class StoryBot:
     def __init__(self, vm, engine, names, manifest, plan):
+        """names: {script tag (first 7 letters of its script_name): {variable: (index, kind)}}."""
         self.vm = vm
         self.e = engine
-        self.names = names
+        self.names_by_script = names
+        self.names = names["V3DHQ"]
+        self.claims = {n: {c["id"]: c for c in sc.get("claims", [])} for n, sc in manifest["scripts"].items()}
+        self.decisions = []
+        self.ram_t = 0
         self.cases = {c["id"]: c for c in manifest["cases"]}
         self.plan = dict(plan or {})
         self.tasks = list(self.plan.get("tasks", []))
@@ -109,11 +114,16 @@ class StoryBot:
             self.apply_inputs()
             return
         m = self.vm.mission()
+        if m is not None and self.names_by_script:
+            key = m.name.upper()[:7]
+            self.names = self.names_by_script.get(key, self.names)
         self.inject_planned()
         if m is None:
             self.outside()
         elif m.name.upper().startswith("V3DHQ"):
             self.hq()
+        else:
+            self.field(m.name.upper()[:7])
         self.apply_inputs()
 
     def inject_planned(self):
@@ -129,9 +139,25 @@ class StoryBot:
                 self.e.kill_player("wasted")
             elif what == "bust_player":
                 self.e.kill_player("busted")
+            elif what.startswith("kill:") or what.startswith("wreck:"):
+                ent = self.e.ent(self.L(what.split(":")[1]))
+                if ent is not None:
+                    ent.dead = True
+                    ent.health = 0
+            elif what.startswith("flee:"):
+                ent = self.e.ent(self.L(what.split(":")[1]))
+                if ent is not None:
+                    ent.x += 900.0
 
     # ---- outside: walk into the contact point ----------------------------------------------
     def outside(self):
+        # the launcher's retry prompt after a failed story mission
+        help_msg = self.e.messages.get("help")
+        if self.plan.get("retry") and help_msg and help_msg["key"] == "V3L02":
+            if self.cool == 0:
+                self.inputs[("pad", PAD_YES)] = 255
+                self.cool = 3
+            return
         if not self.plan.get("enter", True):
             return
         if self.plan.get("enter_after_ms") and self.vm.time < self.plan["enter_after_ms"]:
@@ -378,3 +404,105 @@ class StoryBot:
             if self.vm.time - self.t_task > 7000:
                 self.tap(PAD_NO)
                 self.sub = 99
+
+    # ---- story missions: follow the objective channel ----------------------------------------
+    SCRIPT_JSON = {"V3DGHST": "ghost", "V3DFALS": "false", "V3DLINK": "link", "V3DOPEN": "open"}
+
+    def field(self, script):
+        if self.L("iInCs") == 1:
+            if self.plan.get("skip"):
+                self.tap(PAD_ENTER)
+            return
+        kind = self.L("oKind")
+        if self.L("uMode") == 9 and self.L("uMenu") == 30:
+            self.field_decide(script)
+            return
+        if self.plan.get("idle_until") and self.plan["idle_until"](self):
+            self.stop()
+            return
+        p = self.p
+        fx, fy, fz = self.F("fOX"), self.F("fOY"), self.F("fOZ")
+        van = self.e.ent(self.L("hVan"))
+        if kind == 3:                                         # get in vehicle oEnt
+            car = self.e.ent(self.L("oEnt"))
+            if car is not None:
+                self.board(car)
+        elif kind == 2:                                       # drive to a point
+            if p.car is None and van is not None and not van.dead:
+                self.board(van)
+            else:
+                self.move_to(fx, fy, fz, stop_at=1.0, speed=self.plan.get("drive_speed"))
+        elif kind == 5:                                       # hold still on a point
+            if self.move_to(fx, fy, fz, stop_at=1.0):
+                self.stop()
+        elif kind == 1:                                       # walk somewhere
+            self.leave_car()
+            self.move_to(fx, fy, fz + 1.0, stop_at=0.5)
+        elif kind == 6:                                       # face a bearing, on foot
+            self.leave_car()
+            if self.move_to(fx, fy, fz + 1.0, stop_at=1.5):
+                want = float(self.L("oArg"))
+                d = (want - p.heading + 540.0) % 360.0 - 180.0
+                p.heading = (p.heading + max(-25.0, min(25.0, d))) % 360.0
+                self.stop()
+        elif kind == 9:                                       # stop a vehicle by ramming it
+            car = self.e.ent(self.L("oEnt"))
+            if car is None:
+                return
+            if p.car is None and van is not None and not van.dead:
+                self.board(van)
+                return
+            if self.move_to(car.x, car.y, car.z, stop_at=5.0, speed=30.0):
+                if self.vm.time >= self.ram_t:
+                    car.health -= 120                         # the collision the mock does not simulate
+                    self.ram_t = self.vm.time + 400
+                    self.log.append((self.vm.time, "ram", car.health))
+        elif kind == 10:                                      # walk up and use
+            self.leave_car()
+            if self.move_to(fx, fy, fz + 1.0, stop_at=0.3):
+                self.tap(PAD_ENTER)
+        elif kind == 13:                                      # Y / N
+            self.tap(PAD_YES if self.plan.get("choice", "yes") == "yes" else PAD_NO)
+        elif kind == 7:                                       # talk to someone
+            ent = self.e.ent(self.L("oEnt"))
+            if ent is not None:
+                self.leave_car()
+                if self.move_to(ent.x + 1.0, ent.y, None, stop_at=0.3):
+                    self.tap(PAD_YES)
+
+    def field_decide(self, script):
+        fc = self.L("fcId")
+        tries = self.plan.setdefault("_tries", {})
+        claim = self.claims[self.SCRIPT_JSON[script]][fc]
+        right = ANSWER[claim["answer"]]
+        n_wrong = self.plan.get("wrong", {}).get(fc, 0)
+        done = tries.get(fc, 0)
+        want = right if done >= n_wrong else (1 if right != 1 else 2)
+        sel = self.L("uSel")
+        if sel != want:
+            self.tap(PAD_STICK_X, -128 if sel > want else 128)
+        elif self.tap(PAD_ENTER):
+            tries[fc] = done + 1
+            self.decisions.append((script, fc, want, want == right))
+
+    def board(self, car):
+        p = self.p
+        if p.car is car:
+            return True
+        self.leave_car()
+        if math.hypot(car.x - p.x, car.y - p.y) < 3.0:
+            self.stop()
+            self.e.put_in_car(p, car, -1)
+            return True
+        self.move_to(car.x, car.y, car.z, stop_at=2.0)
+        return False
+
+    def leave_car(self):
+        if self.p.car is not None:
+            self.stop()
+            self.e.leave_car(self.p)
+
+    def stop(self):
+        self.e.player_speed = 0.0
+        if self.p.car is not None:
+            self.p.car.speed = 0.0
