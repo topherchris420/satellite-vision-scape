@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { readCampaign } from "@/game/campaign/sanFierro";
 import { ChevronDown, Compass, Flag, Footprints, MoonStar } from "lucide-react";
 import { createRaceTarget } from "@/game/freeroam/RaceTracker";
 import { readBest } from "@/lib/freeroam-ui";
@@ -52,6 +53,7 @@ export function Landing({
   /** Every other way in: all challenges, Jev playing live, traces, characters, the full controls. */
   children: ReactNode;
 }) {
+  const [campaign] = useState(readCampaign);
   const [target] = useState(createRaceTarget);
   const [best] = useState(() => readBest(target.id));
   const [claimed] = useState(() => parseRaceLink(window.location.search)?.sharedS ?? null);
@@ -70,6 +72,11 @@ export function Landing({
         reach the checkpoint and shake the site&apos;s response, on the same seed, with its recorded run beside you.
       </p>
 
+      <div className="mt-4 rounded-xl border border-teal-300/30 bg-teal-400/10 p-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-teal-200">Campaign · Chapter I: San Fierro</p>
+        <p className="mt-1 text-xs text-white/70">{campaign.verdict ? `R.A.I.N. dossier received: ${campaign.verdict}. Investigate signals in Pine Gap to test your next hypothesis.` : "Investigate CERTAIN in an original playable 3D browser prototype. Collect evidence, then decide."}</p>
+        <a href="/?chapter=san-fierro" className="mt-2 inline-block rounded bg-teal-300 px-4 py-2 text-xs font-bold text-black">{campaign.verdict ? "Revisit San Fierro" : "Play San Fierro"}</a>
+      </div>
       <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-4">
         <button
           onClick={onRace}
@@ -131,7 +138,7 @@ export function Landing({
 
       <p className="mt-5 border-t border-white/10 pt-3 font-sans text-[10px] leading-relaxed text-white/35">
         A fictionalised interpretation built from publicly observable exterior features. No interiors or operational
-        detail. The San Fierro chapter is a separate runtime; shared campaign progression is not yet available.
+        detail. The browser San Fierro prototype shares a local case dossier with this menu; the full CLEO storyline is a separate runtime.
       </p>
     </>
   );
