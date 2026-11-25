@@ -28,6 +28,14 @@ what is being collected, and the lab introduction gives Christopher a full
 figure reveal beside the CRT bench before his close-up. See
 [the gameplay changes](docs/IMPROVEMENTS.md).
 
+## Playtest edition: original lab score
+
+The GTA playtest workflow builds a staged ZIP with the existing mission and an
+original procedural laboratory soundtrack, **Evidence in the Quiet**. It does
+not include GTA assets or a synthetic character model. See [Playtest guide](docs/PLAYTEST.md)
+for local packaging, installation and a first real-game checklist. The music
+uses the existing lab audio hook; no mission bytecode was changed.
+
 ## Quick start
 
 1. Install CLEO 5 (with Silent's ASI Loader) on GTA SA PC v1.0 US.
