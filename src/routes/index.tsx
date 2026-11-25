@@ -1,4 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { SanFierro } from "@/components/game/SanFierro";
+import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { SiteScene } from "@/components/site/SiteScene";
 
 export const Route = createFileRoute("/")({
@@ -24,5 +26,10 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const search = useLocation({ select: (location) => location.searchStr });
+  const sanFierro = new URLSearchParams(search).get("chapter") === "san-fierro";
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (sanFierro) return mounted ? <SanFierro /> : <main className="min-h-screen bg-black p-8 text-white">Loading San Fierro…</main>;
   return <SiteScene />;
 }
