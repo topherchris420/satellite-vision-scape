@@ -1,6 +1,10 @@
 # 99.9% SURE
 
-**An original Vers3Dynamics game storyline.**
+**Chapter I: San Fierro · An original Vers3Dynamics game storyline.**
+
+[Chapter II: Pine Gap browser experience](https://geotwn.vercel.app/) · [Campaign bridge proposal](../docs/CAMPAIGN_BRIDGE.md)
+
+The chapters belong to one intended game universe. Cross-runtime save and narrative progression are not yet implemented.
 
 *Requires Grand Theft Auto: San Andreas (PC, v1.0, CLEO 5) as its host runtime.*
 
