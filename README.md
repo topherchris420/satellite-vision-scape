@@ -30,7 +30,29 @@ A human and an agent share the world's controls, physics, collisions and task ru
 
 [Explore the world](#explore-the-world) · [Controls](#controls) · [How it works](#how-it-works) · [Recorded runs](#recorded-runs) · [Development](#development) · [Documentation](#documentation)
 
+## 99.9% SURE
+
+**An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab.
+
+[Story, installation and playtest guide](gta-sa-99-9-percent-sure/README.md)
+
+| R.A.I.N. evidence board | Field validation |
+| --- | --- |
+| ![Evidence board preview](gta-sa-99-9-percent-sure/docs/media/preview_evidence.png) | ![Validation console preview](gta-sa-99-9-percent-sure/docs/media/preview_console.png) |
+| ![Cymatics rig preview](gta-sa-99-9-percent-sure/docs/media/preview_rig.png) | ![Signal receiver preview](gta-sa-99-9-percent-sure/docs/media/preview_receiver.png) |
+
+*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Actual gameplay captures await a playtest in the separately installed Grand Theft Auto: San Andreas PC runtime. The host game is not the title of this original storyline.*
+
 ## Explore the world
+
+### Browser gameplay screenshots
+
+| Free Roam | Driving |
+| --- | --- |
+| ![Browser Free Roam gameplay](docs/media/screens/free-roam.jpg) | ![Browser driving gameplay](docs/media/screens/driving.jpg) |
+| ![Browser concert gameplay](docs/media/screens/concert.jpg) | ![Browser terminal gameplay](docs/media/screens/terminal.jpg) |
+
+*These captures show the separate Satellite Vision Scape browser experience, not 99.9% SURE.*
 
 Human play, the race and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/): the first screen offers the race, and everything else is one click further in.
 
