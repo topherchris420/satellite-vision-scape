@@ -1,6 +1,8 @@
 # 99.9% SURE — Campaign bridge
 
-Status: proposed integration, not a shipped cross-runtime save system.
+Status: first browser-to-browser prototype implemented on the feature branch; cross-runtime CLEO save import remains proposed.
+
+The browser chapter at `/?chapter=san-fierro` uses original procedural geometry and a three-observation case. It stores evidence and the verdict in a separate versioned local-storage key, `99sure.browser.campaign.v1`. The Pine Gap landing reads that record and displays it as narrative context, without changing After Hours progress. This is not the full San Fierro storyline, nor does the verdict yet change Pine Gap objectives.
 
 ## Narrative continuity
 
