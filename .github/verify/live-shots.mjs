@@ -19,7 +19,7 @@ async function page(url) {
   return p;
 }
 // Pine Gap
-p = await page(BASE);
+let p = await page(BASE);
 await p.waitForTimeout(20000);
 await p.screenshot({ path: `${OUT}/pine-gap-loading.png` });
 const building = () => p.evaluate(() => /building pine gap/i.test(document.body.innerText));
