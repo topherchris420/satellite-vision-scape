@@ -652,6 +652,7 @@ export function SiteScene() {
         case "KeyH":
           // While an agent holds the controls, H is "take control" (handled by
           // the game input), not the shortcuts overlay.
+          if (hiddenCaseRef.current?.hud.getSnapshot().rover?.autonomous) break;
           if (gameRef.current?.agent.runtime.mode !== "human") break;
           if (gameRef.current.freeRoam.active && gameRef.current.roam.hud.getSnapshot().mode !== "HUMAN") break;
           setShowHelp((v) => !v);

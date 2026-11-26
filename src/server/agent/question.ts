@@ -312,6 +312,7 @@ export function describeOption(
     case "navigate_to":
       return `Walk to ${name(intent.target)}${where}. A local controller walks the route and stops there.`;
     case "drive_to":
+      if (o.task.id === CALIBRATION_TASK) return `Drive along the test strip to ${name(intent.target)}${where} and park the pickup on the pad.`;
       return `Drive this vehicle to ${name(intent.target)}${where}. A local controller steers and brakes, and parks nearby; you step out and walk the last metres.`;
     case "enter_vehicle":
       return `Get into ${name(intent.target)} (you are at its door).`;
@@ -320,6 +321,7 @@ export function describeOption(
     case "stop_vehicle":
       return "Brake gently to a stop and stay in the vehicle.";
     case "interact":
+      if (o.task.id === CALIBRATION_TASK) return `Sample ${name(intent.target)} with the parked rover and log the reading.`;
       return `Press E${prompt ? ` for the on-screen prompt ${quote(prompt)}` : ""} at ${name(intent.target)}.`;
     case "start_concert":
       return `Press E${prompt ? ` for the on-screen prompt ${quote(prompt)}` : ""}.`;

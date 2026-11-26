@@ -31,6 +31,20 @@ const press = async (name) => {
 };
 const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("99sure.hidden.v1")));
 const log = (s) => console.log(new Date().toISOString(), s);
+async function touchStick() {
+  const box = await page.getByLabel("Movement joystick").boundingBox();
+  const cdp = await context.newCDPSession(page);
+  const point = { x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 };
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [point] });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchMove",
+    touchPoints: [{ ...point, y: point.y - 40 }],
+  });
+  return async () => {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await cdp.detach();
+  };
+}
 async function at(x, z) {
   await page.evaluate(([x, z]) => window.__pineGapGame.resetForScenario({ x, z, yaw: 0 }), [x, z]);
   await page.evaluate(
@@ -46,7 +60,7 @@ async function use() {
   await page.keyboard.up("KeyE");
 }
 async function survey() {
-  if (phone) await page.evaluate(() => window.__pineGapCapture.setMode("fly"));
+  if (phone) await page.getByRole("button", { name: /Survey from above/ }).tap();
   else await page.keyboard.press("Digit2");
   await page.waitForFunction(() => window.__pineGapCapture.status().mode === "fly");
 }
@@ -57,6 +71,7 @@ try {
       JSON.stringify({ tier: "low", step: 3, renderer: "software", manual: true }),
     );
   });
+  log(phone ? "Opening phone landing" : "Opening desktop landing");
   await page.goto(url);
   await page
     .getByText(/Beat the AI/i)
@@ -65,6 +80,18 @@ try {
   await page.waitForFunction(() => window.__pineGapGame && window.__pineGapCapture);
   assert.equal(await btn("Unlisted carrier").count(), 0);
   await survey();
+  if (!phone) {
+    await page.getByRole("button", { name: /^Assets/ }).click();
+    const registry = page.getByRole("region", { name: "Asset index" });
+    await registry.getByRole("button").nth(1).click();
+    await page.getByRole("region", { name: /^Selected asset:/ }).waitFor();
+    await press("Close inspector");
+    await page.keyboard.press("KeyI");
+    await page.keyboard.press("Digit4");
+    await page.waitForFunction(() => window.__pineGapCapture.status().mode === "overhead");
+    await survey();
+    log("Asset registry, inspector and plan view passed");
+  }
   await btn("Unlisted carrier").waitFor();
   assert(
     !requests.some((u) =>
@@ -83,14 +110,8 @@ try {
   const pos = () => page.evaluate(() => window.__pineGapGame.player.position.toArray());
   const before = await pos();
   if (phone) {
-    const box = await page.getByLabel("Movement joystick").boundingBox();
-    const cdp = await context.newCDPSession(page);
-    const point = { x: box.x + box.width / 2, y: box.y + box.height / 2, id: 1 };
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [point] });
-    await cdp.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ ...point, y: point.y - 35 }],
-    });
+    await press("Boost");
+    const release = await touchStick();
     await page.waitForFunction(
       ([x, , z]) =>
         Math.hypot(
@@ -99,7 +120,7 @@ try {
         ) > 0.4,
       before,
     );
-    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    await release();
   } else {
     await page.keyboard.down("Shift");
     await page.keyboard.down("KeyW");
@@ -115,13 +136,20 @@ try {
     await page.keyboard.up("Shift");
   }
   log("Movement passed");
+  if (!phone) {
+    await page.keyboard.down("Space");
+    await page.waitForFunction(() => !window.__pineGapGame.player.grounded);
+    await page.keyboard.up("Space");
+    await page.waitForFunction(() => window.__pineGapGame.player.grounded);
+    log("Jump and landing passed");
+  }
   const m = await page.evaluate(() => ({ ...window.__pineGapCase.poses.mara }));
   await at(m.x + 1, m.z);
   await use();
   await press("Where were you last night?");
   await press("That's all for now.");
   assert((await saved()).collected.includes("witness"));
-  if (!phone) {
+  {
     const t = await page.evaluate(() => {
       const { x, z, yaw } = window.__pineGapGame.vehicles.vehicles[0].physics;
       return { x, z, yaw };
@@ -129,7 +157,8 @@ try {
     await at(t.x + Math.cos(t.yaw) * 2.4, t.z - Math.sin(t.yaw) * 2.4);
     await use();
     await page.waitForFunction(() => !!window.__pineGapGame.interaction.driven);
-    await page.keyboard.down("KeyW");
+    const release = phone ? await touchStick() : async () => page.keyboard.up("KeyW");
+    if (!phone) await page.keyboard.down("KeyW");
     await page.waitForFunction(
       ([x, z]) => {
         const p = window.__pineGapGame.interaction.driven.physics;
@@ -137,7 +166,7 @@ try {
       },
       [t.x, t.z],
     );
-    await page.keyboard.up("KeyW");
+    await release();
     await use();
     await page.waitForFunction(() => !window.__pineGapGame.interaction.driven);
     log("Vehicle entry, driving and exit passed");
@@ -198,8 +227,15 @@ try {
       await press("Back to the field");
     }
   }
-  await page.keyboard.press("Digit2");
+  if (phone) await press("Pause");
+  else await page.keyboard.press("KeyJ");
+  await press("Return to the survey");
   await btn("Unlisted carrier").waitFor();
+  assert(
+    await page.evaluate(
+      () => !window.__pineGapCase && !window.__pineGapGame.root.getObjectByName("hidden-case"),
+    ),
+  );
   const file = await saved();
   await page.reload();
   await page.waitForFunction(() => window.__pineGapCapture && window.__pineGapGame);
@@ -210,6 +246,14 @@ try {
   assert.deepEqual((await saved()).expeditions, file.expeditions);
   assert.equal(errors.length, 0, errors.join("\n"));
   log("Survey return and reload/resume passed");
+} catch (err) {
+  console.error(
+    await page
+      .locator("body")
+      .innerText({ timeout: 5000 })
+      .catch(() => "Page unavailable"),
+  );
+  throw err;
 } finally {
   await browser.close();
 }

@@ -274,6 +274,7 @@ export function mergeCase(mine: CaseData, theirs: CaseData): CaseData {
     const [newer, older] = theirs.epoch > mine.epoch ? [theirs, mine] : [mine, theirs];
     return {
       ...newer,
+      calibration: newer.calibration || older.calibration,
       found: true,
       documents: union(newer.documents, older.documents),
       endingsSeen: union(newer.endingsSeen, older.endingsSeen),

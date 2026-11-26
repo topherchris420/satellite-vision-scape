@@ -1,7 +1,7 @@
 import { CALIBRATION_TASK } from "@/agent/tasks/calibrationSchema";
 import { OBSERVATION_SCHEMA, observationHash, type WorldObservation } from "@/agent/observation";
 import { intentKey, legalIntent, parseIntent, type AgentIntent } from "@/agent/contract";
-import { alternativesOf, TraceRecorder } from "@/agent/trace";
+import { alternativesOf, TraceRecorder, type DecisionRecord } from "@/agent/trace";
 import { type AgentProvider } from "@/agent/provider";
 import { ActionBus, createActionState } from "../freeroam/ActionBus";
 
@@ -24,6 +24,7 @@ export class CalibrationRover {
   private pending: AbortController | null = null;
   private clock = 0;
   private nextDecision = 0;
+  private activeDecision: DecisionRecord | null = null;
   private sequence = 0;
   private callsLeft = 0;
 
@@ -48,6 +49,7 @@ export class CalibrationRover {
   }
   legal(): AgentIntent[] {
     const options: AgentIntent[] = [{ intent: "wait" }, { intent: "request_human" }];
+    if (this.target || this.sample) return options;
     for (const id of ids)
       if (!this.samples.has(id))
         options.push({
@@ -63,6 +65,7 @@ export class CalibrationRover {
   }
 
   handover(provider: AgentProvider | null): void {
+    this.finishDecision("cancelled");
     this.pending?.abort();
     this.pending = null;
     this.provider = provider;
@@ -83,7 +86,18 @@ export class CalibrationRover {
     this.changed();
   }
 
+  private finishDecision(outcome: DecisionRecord["outcome"]): void {
+    if (!this.activeDecision) return;
+    this.activeDecision.actionEnd = this.clock;
+    this.activeDecision.outcome = outcome;
+    this.activeDecision = null;
+  }
+
   private accept(action: AgentIntent): void {
+    if (action.intent === "wait") {
+      this.finishDecision("waited");
+      return;
+    }
     if (action.intent === "request_human") {
       this.handover(null);
       return;
@@ -93,7 +107,6 @@ export class CalibrationRover {
     this.trace.event(this.clock, action.intent, this.autonomous ? "agent" : "human", { pad });
     if (action.intent === "drive_to") {
       this.target = pad;
-      this.heading = Math.sign(PADS[pad] - this.distance);
       this.message = "Driving to " + pad + " pad.";
     }
     if (action.intent === "interact") this.sample = pad;
@@ -103,10 +116,15 @@ export class CalibrationRover {
   step(dt: number): void {
     this.clock += dt * 1000;
     const source = this.autonomous ? "agent" : "human";
-    if (this.target) this.bus.submit(source, [{ type: "ACCELERATE", amount: 1 }]);
+    if (this.target)
+      this.bus.submit(source, [
+        { type: "STEER", amount: Math.sign(PADS[this.target] - this.distance) },
+        { type: "ACCELERATE", amount: 1 },
+      ]);
     if (this.sample) this.bus.submit(source, [{ type: "INTERACT" }]);
     this.bus.resolve(dt, this.controls);
     if (this.target && this.controls.accelerate) {
+      this.heading = this.controls.steer < 0 ? -1 : 1;
       const remaining = Math.abs(PADS[this.target] - this.distance);
       this.speed = Math.min(this.speed + dt * 1.3, 2.8, Math.sqrt(3.6 * remaining));
       const travel = Math.min(this.speed * dt, remaining);
@@ -115,6 +133,7 @@ export class CalibrationRover {
         this.distance = PADS[this.target];
         this.message = "Parked at " + this.target + ". Ready to sample.";
         this.target = null;
+        this.finishDecision("arrived");
         this.speed = 0;
         this.changed();
       }
@@ -124,6 +143,7 @@ export class CalibrationRover {
       this.controls.interact &&
       Math.abs(this.distance - PADS[this.sample]) < 0.25
     ) {
+      this.finishDecision("input_sent");
       this.samples.add(this.sample);
       this.trace.event(this.clock, "sample", source, { pad: this.sample });
       this.sample = null;
@@ -134,7 +154,7 @@ export class CalibrationRover {
       } else this.message = "96 Hz recorded. Compare the other pad.";
       this.changed();
     }
-    this.trace.pathSample(this.clock, 0, this.distance, "driving", source);
+    this.trace.pathSample(this.clock, 0, -this.distance, "driving", source);
     if (
       this.provider &&
       !this.pending &&
@@ -200,8 +220,9 @@ export class CalibrationRover {
       execution: null,
       legal,
     };
-    const signal = AbortSignal.any([request.signal, AbortSignal.timeout(10000)]);
-    const start = this.clock;
+    const signal = request.signal;
+    const timeout = setTimeout(() => request.abort(), 10000);
+    const start = performance.now();
     try {
       const reply = await provider.decide({ sequence: observation.sequence, observation, signal });
       if (this.pending !== request) return;
@@ -214,7 +235,7 @@ export class CalibrationRover {
         !legalIntent(intent, this.legal())
       )
         throw new Error("decision unavailable");
-      this.trace.decision(
+      this.activeDecision = this.trace.decision(
         {
           sequence: observation.sequence,
           t: this.clock,
@@ -228,7 +249,7 @@ export class CalibrationRover {
           target: "target" in intent ? intent.target : null,
           confidence: reply.decision.confidence,
           alternatives: alternativesOf(reply.decision.alternatives),
-          latencyMs: this.clock - start,
+          latencyMs: Math.round(performance.now() - start),
           serverLatencyMs: reply.decision.serverLatencyMs,
           disposition: "executed",
           rejection: null,
@@ -249,8 +270,11 @@ export class CalibrationRover {
       this.message = "Jev’s link is unavailable. The manual controls are yours.";
       this.changed();
     } finally {
-      if (this.pending === request) this.pending = null;
-      this.nextDecision = this.clock + 2500;
+      clearTimeout(timeout);
+      if (this.pending === request) {
+        this.pending = null;
+        this.nextDecision = this.clock + 2500;
+      }
     }
   }
 }

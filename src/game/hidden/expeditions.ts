@@ -373,12 +373,14 @@ export function fieldEnding(runs: FieldRun[]): string {
   const last = runs.at(-1);
   if (!last || last.verdict === null) return "";
   const mission = EXPEDITIONS[last.chapter];
-  const supported = mission.stations.filter((s) => s.choices[last.records[s.id]]?.supported).length;
+  const controlled = mission.stations
+    .filter((s) => !s.optional)
+    .every((s) => s.choices[last.records[s.id]]?.supported);
   const verdict = mission.verdicts[last.verdict];
   if (last.chapter < 3)
     return (
       verdict.result +
-      (verdict.supported && supported < 2
+      (verdict.supported && !controlled
         ? " Ines attaches a correction: the conclusion outran the experiment."
         : "")
     );
@@ -386,16 +388,21 @@ export function fieldEnding(runs: FieldRun[]): string {
   if (last.verdict === 2)
     return (
       verdict.result +
-      (supported < 2
+      (!controlled
         ? " The missing controls are on the new trial sheet."
         : " The earlier replications go with them.")
     );
-  if (supported < 2)
+  if (!controlled)
     return "The notebooks are open. A reader spots the missing control before lunch. Your first public result is a correction.";
   const careful = runs
     .slice(0, 3)
     .filter(
-      (r) => r.verdict !== null && EXPEDITIONS[r.chapter].verdicts[r.verdict].supported,
+      (r) =>
+        r.verdict !== null &&
+        EXPEDITIONS[r.chapter].verdicts[r.verdict].supported &&
+        EXPEDITIONS[r.chapter].stations.every(
+          (s) => s.optional || s.choices[r.records[s.id]]?.supported,
+        ),
     ).length;
   return (
     verdict.result +

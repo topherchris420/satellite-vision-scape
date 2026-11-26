@@ -184,7 +184,7 @@ export class HiddenCase implements GameLayer {
       g.lockMovement(TITLE_OWNER, true);
       this.orbit = 0;
       this.queue.length = 0;
-      for (const line of BRIEFING) this.queue.push({ ...line });
+      for (const line of BRIEFING) this.say(line.speaker, line.text, line.seconds);
     } else if (this.data.stage === "closed") {
       this.say("ines", this.field ? EXPEDITIONS[this.field.chapter].briefing : "Another tape just came in. Check the board when you’re ready.", 6);
     } else {
@@ -583,6 +583,7 @@ export class HiddenCase implements GameLayer {
 
   /** Only a filed assignment unlocks the next tape, including pre-expansion saves. */
   nextTransmission(): void {
+    this.syncFromStorage();
     if (!this.active || this.data.stage !== "closed" || !(this.panel?.kind === "ending" || this.panel?.kind === "field")) return;
     const previous = this.field;
     if (previous && (previous.verdict === null || this.panel.kind !== "field" ||
@@ -606,6 +607,7 @@ export class HiddenCase implements GameLayer {
   }
 
   recordFieldChoice(index: number, dial?: number): void {
+    this.syncFromStorage();
     const run = this.field;
     const panel = this.panel;
     if (!this.active || !run || panel?.kind !== "field" || panel.chapter !== run.chapter || run.verdict !== null) return;
@@ -636,7 +638,7 @@ export class HiddenCase implements GameLayer {
     let next = "";
     if (run && run.verdict === null) {
       const p = this.game.focusPoint;
-      const stations = availableStations(run).filter(s => !s.optional || !canFile(run));
+      const stations = availableStations(run).filter(s => !s.optional);
       const targets = stations.length ? stations : [{ ...VAN_BOARD, place: "Van board" }];
       const delta = (s: { x: number; z: number }) => Math.hypot(p.x - s.x, p.z - s.z);
       const target = targets.reduce((a, b) => delta(a) <= delta(b) ? a : b);
@@ -690,6 +692,7 @@ export class HiddenCase implements GameLayer {
   }
 
   private openPanel(panel: CasePanel): void {
+    if (this.panel?.kind === "field") this.audio?.carrier(0);
     this.panel = panel;
     this.settle = null;
     this.game.lockMovement(MOVEMENT_OWNER, true);

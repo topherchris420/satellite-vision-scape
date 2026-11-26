@@ -9,7 +9,7 @@ import {
   fieldEnding,
   instrumentFor,
 } from "../src/game/hidden/expeditions";
-import { CASE_STORAGE_KEY, emptyCase, parseCase } from "../src/game/hidden/caseFile";
+import { CASE_STORAGE_KEY, emptyCase, mergeCase, parseCase } from "../src/game/hidden/caseFile";
 import { VAN_BOARD } from "../src/game/hidden/story";
 import { CalibrationRover } from "../src/game/hidden/CalibrationRover";
 import { decided, type AgentProvider } from "../src/agent/provider";
@@ -80,6 +80,23 @@ describe("field campaign", () => {
     game.dispose();
   });
 
+  test("a replay preserves a calibration completed in an older tab", () => {
+    const a = { ...emptyCase(), calibration: true };
+    const b = { ...emptyCase(), epoch: 1 };
+    expect(mergeCase(a, b).calibration).toBe(true);
+    expect(mergeCase(b, a).calibration).toBe(true);
+  });
+  test("a side investigation cannot replace the missing experimental control", () => {
+    for (const chapter of [0, 2, 3]) {
+      const mission = EXPEDITIONS[chapter];
+      const run = freshRun(chapter);
+      for (const [index, s] of mission.stations.entries()) {
+        run.records[s.id] = s.choices.findIndex((c) => Boolean(c.supported) === (index !== 1));
+      }
+      run.verdict = 0;
+      expect(fieldEnding([run])).toContain("correction");
+    }
+  });
   test("untrusted saves and concurrent files keep the chapter dependency chain and sealed verdicts", () => {
     expect(parseRuns([null])).toEqual([]);
     expect(parseRuns([{ chapter: 0, records: { relay: 0 }, verdict: 1 }, freshRun(1)])).toEqual([
@@ -110,6 +127,31 @@ describe("calibration rover authority", () => {
       return r.trace.path;
     });
     expect(paths[0]).toEqual(paths[1]);
+  });
+  test("a provider can complete the optional experiment only through the rover controls", async () => {
+    const r = new CalibrationRover("1234567890123456", "test", () => {});
+    const provider: AgentProvider = {
+      id: "test",
+      label: "Fixture",
+      source: "test",
+      async decide({ observation }) {
+        expect(validateObservation(observation).ok).toBe(true);
+        return decided(observation.legal.find((a) => "target" in a));
+      },
+    };
+    r.handover(provider);
+    for (let frame = 0; frame < 2000 && !r.complete; frame++) {
+      r.step(dt);
+      await Promise.resolve();
+    }
+    expect(r.complete).toBe(true);
+    expect(r.trace.decisions.map((d) => d.outcome)).toEqual([
+      "arrived",
+      "input_sent",
+      "arrived",
+      "input_sent",
+    ]);
+    expect(r.trace.header.controlMode).toBe("human");
   });
   test("taking over rejects an outstanding provider decision before it can move the rover", async () => {
     let release!: () => void;

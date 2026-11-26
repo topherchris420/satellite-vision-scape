@@ -139,7 +139,7 @@ export default function HiddenCaseHUD({
               onSurvey={onReturnToSurvey}
             />
           )}
-          {snap.panel.kind === "file" && <CaseFilePanel hiddenCase={hiddenCase} snap={snap} onClose={close} />}
+          {snap.panel.kind === "file" && <CaseFilePanel hiddenCase={hiddenCase} snap={snap} onClose={close} onSurvey={onReturnToSurvey} />}
         </Modal>
       )}
 
@@ -494,7 +494,7 @@ function FieldDesk({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap
         {instrument.label}<span>{value} {instrument.unit}</span>
       </label>
       <input id="field-dial" className="mt-3 w-full accent-[#7fd6d0]" type="range" min={instrument.low} max={instrument.high}
-        onKeyDown={e => e.stopPropagation()} value={value} onChange={e => { const v = Number(e.target.value); setDial(v); hiddenCase.listenToDial(v); }} />
+        value={value} onChange={e => { const v = Number(e.target.value); setDial(v); hiddenCase.listenToDial(v); }} />
       <meter aria-label="Signal coherence" value={level} min={0} max={1} className="w-full" />
       <p className="mt-1 text-xs text-white/70">{level >= .88 ? "Stable trace · ready to record" : instrument.hint}</p>
     </div>}
@@ -511,12 +511,12 @@ function FieldDesk({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap
   </Panel>;
 }
 
-function CaseFilePanel({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap: CaseSnapshot; onClose: () => void }) {
+function CaseFilePanel({ hiddenCase, snap, onClose, onSurvey }: { hiddenCase: HiddenCase; snap: CaseSnapshot; onClose: () => void; onSurvey: () => void }) {
   return (
     <Panel label="Case file · Fiction" title="99.9% SURE" onClose={onClose}>
-      <div className="mb-4"><QuietButton onClick={() => hiddenCase.toggleRadio()}>
+      <div className="mb-4 flex flex-wrap gap-2"><QuietButton onClick={() => hiddenCase.toggleRadio()}>
         {snap.radioEnabled ? "Mute field commentary" : "Hear R.A.I.N. on the field radio"}
-      </QuietButton></div>
+      </QuietButton><QuietButton onClick={onSurvey}>Return to the survey</QuietButton></div>
       <h3 className="text-[8px] font-bold uppercase tracking-[.2em] text-white/45">Evidence</h3>
       <ul className="mt-1.5 space-y-1 font-sans text-[12px] text-white/75">
         <li className="text-rose-200/80">{CLAIM.title}</li>
