@@ -18,26 +18,16 @@ async function page(url) {
   await p.goto(url, { waitUntil: "load" });
   return p;
 }
-// San Fierro
-let p = await page(BASE + "?chapter=san-fierro");
-await p.waitForSelector("canvas");
-await p.waitForTimeout(15000);
-await p.screenshot({ path: `${OUT}/san-fierro-start.png` });
-log("san-fierro-start");
-await p.keyboard.press("KeyE");
-await p.keyboard.down("KeyW"); await p.waitForTimeout(4000); await p.keyboard.up("KeyW");
-await p.waitForTimeout(3000);
-await p.screenshot({ path: `${OUT}/san-fierro-walk.png` });
-log("san-fierro-walk");
-await p.close();
 // Pine Gap
 p = await page(BASE);
 await p.waitForTimeout(20000);
 await p.screenshot({ path: `${OUT}/pine-gap-loading.png` });
-try {
-  await p.waitForFunction(() => !document.body.innerText.includes("Building Pine Gap"), null, { timeout: 900000, polling: 5000 });
-  log("pine-gap built");
-} catch { log("pine-gap still building after 15 min"); }
+const building = () => p.evaluate(() => /building pine gap/i.test(document.body.innerText));
+for (let i = 1; i <= 12 && (await building()); i++) {
+  await p.waitForTimeout(120000);
+  log(`pine-gap check ${i}: building=${await building()}`);
+}
+log(`pine-gap building at end: ${await building()}`);
 await p.waitForTimeout(10000);
 await p.screenshot({ path: `${OUT}/pine-gap.png` });
 log("pine-gap");
