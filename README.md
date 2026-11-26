@@ -43,7 +43,7 @@ Everything runs in the browser, needs no account or key, and works on desktop an
 
 Pine Gap rewards a careful look. Take your time with the instruments. Discoveries you choose to follow are saved in this browser, and you can return to the survey whenever you like.
 
-The same repository also holds an earlier San Fierro prototype and a CLEO storyline for a PC game; both are described [further down](#chapter-i--san-fierro).
+There are two ways into **99.9% SURE**. [Open Pine Gap in a browser](https://geotwn.vercel.app/) on desktop or phone, with no download or account. Or [get the San Andreas PC playtest](#the-full-cleo-storyline) to play the mod in your own copy of classic GTA: San Andreas. The PC story does not run in the browser.
 
 ## Chapter I · San Fierro
 
@@ -65,7 +65,9 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 
 **An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab. It runs on CLEO 5 inside a separately installed copy of Grand Theft Auto: San Andreas (PC), so it is not playable in the browser.
 
-[Story, installation and playtest guide](gta-sa-99-9-percent-sure/README.md)
+[Download the PC playtest](https://github.com/topherchris420/satellite-vision-scape/actions/workflows/gta-playtest.yml) · [Install the mod](gta-sa-99-9-percent-sure/docs/INSTALL.md) · [First in-game checklist](gta-sa-99-9-percent-sure/docs/PLAYTEST.md)
+
+Sign in to GitHub, open the latest successful run on `main`, and download **99sure-vers3dynamics** under **Artifacts**. This is a mod-only playtest for classic GTA: San Andreas PC v1.0 US with CLEO 5, not a standalone game or a Definitive Edition mod. In the current PC story you play CJ. [Try Chris as the player in an opt-in free-roam test](gta-sa-99-9-percent-sure/docs/PLAYABLE_CHRIS.md) before testing any story-role changes.
 
 | R.A.I.N. evidence board | Field validation |
 | --- | --- |

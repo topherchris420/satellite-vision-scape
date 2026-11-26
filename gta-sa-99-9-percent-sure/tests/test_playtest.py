@@ -96,5 +96,41 @@ class SoundDesignTests(unittest.TestCase):
         self.assertTrue((a == b).all())
 
 
+class ChrisPlayerStageTests(unittest.TestCase):
+    def test_stage_uses_same_local_model_with_a_separate_name(self):
+        root = Path(__file__).resolve().parents[1]
+        character = root / "tools" / "character"
+        sys.path.insert(0, str(character))
+        from validate_chris import make_standin_reference, rw
+
+        with tempfile.TemporaryDirectory() as tmp:
+            work = Path(tmp)
+            archive = work / "gta3.img"
+            rw.write_img({"male01.dff": make_standin_reference().to_bytes()}, str(archive))
+            before = archive.read_bytes()
+            build = [sys.executable, "-I", str(character / "build_chris.py")]
+            subprocess.run(build + ["--img", str(archive), "--out", str(work / "npc")],
+                           check=True, capture_output=True)
+            subprocess.run(build + ["--img", str(archive), "--out", str(work / "test"), "--player-test"],
+                           check=True, capture_output=True)
+            stage = work / "test" / "modloader" / "99sure Chris Player Test" / "skin.img"
+            self.assertEqual({p.name for p in stage.iterdir()}, {"v3dplay.dff", "v3dplay.txd"})
+            for ext in ("dff", "txd"):
+                self.assertEqual((stage / f"v3dplay.{ext}").read_bytes(),
+                                 (work / "npc" / f"chrisw.{ext}").read_bytes())
+            self.assertEqual(archive.read_bytes(), before)
+
+    def test_refuses_preview_rig_for_player_test(self):
+        script = Path(__file__).resolve().parents[1] / "tools" / "character" / "build_chris.py"
+        with tempfile.TemporaryDirectory() as tmp:
+            dest = Path(tmp) / "test"
+            result = subprocess.run([sys.executable, "-I", str(script), "--synthetic",
+                                     "--out", str(dest), "--player-test"],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("--player-test requires --img", result.stderr)
+            self.assertFalse(dest.exists())
+
+
 if __name__ == "__main__":
     unittest.main()
