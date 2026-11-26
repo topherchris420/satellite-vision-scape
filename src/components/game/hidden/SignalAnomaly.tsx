@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { readGlimpse, signalRevealed, type CaseGlimpse } from "@/game/hidden/discovery";
 
 /**
@@ -9,8 +9,7 @@ import { readGlimpse, signalRevealed, type CaseGlimpse } from "@/game/hidden/dis
  * back in. Everything it leads to is fiction, and the inspector says so.
  *
  * This component ships with every visit, so it holds no game code: the case
- * is fetched when the line first shows and started from the click that
- * accepts it.
+ * loads on acceptance.
  */
 
 const TRANSMISSION = [
@@ -28,7 +27,6 @@ export function SignalAnomaly({
   surveying,
   inspections,
   caseActive,
-  onPrefetch,
   onAccept,
 }: {
   /** The visitor is in a survey mode (Explore, Tour or Plan) right now. */
@@ -37,8 +35,6 @@ export function SignalAnomaly({
   inspections: number;
   /** The case is already running (paused behind the survey). */
   caseActive: boolean;
-  /** Fetch the case code ahead of the click. */
-  onPrefetch: () => void;
   /** Start or resume the case. Called from the click. */
   onAccept: () => void;
 }) {
@@ -46,7 +42,6 @@ export function SignalAnomaly({
   const [surveyed, setSurveyed] = useState(0);
   const [view, setView] = useState<View>("line");
   const [typed, setTyped] = useState(0);
-  const prefetched = useRef(false);
 
   // localStorage is read after mount so the server render and the first client render agree.
   useEffect(() => setGlimpse(readGlimpse()), []);
@@ -60,12 +55,6 @@ export function SignalAnomaly({
     const id = window.setInterval(() => setSurveyed((s) => s + 1), 1000);
     return () => window.clearInterval(id);
   }, [revealed, surveying]);
-
-  useEffect(() => {
-    if (!revealed || prefetched.current) return;
-    prefetched.current = true;
-    onPrefetch();
-  }, [revealed, onPrefetch]);
 
   // Type the transmission out a character at a time (all at once with reduced motion).
   const total = TRANSMISSION.reduce((n, l) => n + l.length, 0);

@@ -37,7 +37,7 @@ export class ChrisVisual implements PlayerVisual {
   readonly bones: THREE.Bone[];
   private readonly body = new THREE.Group();
   private readonly geometry: THREE.BufferGeometry;
-  private readonly materials: THREE.MeshStandardMaterial[];
+  private readonly materials: THREE.Material[];
   private readonly textures: THREE.Texture[];
   private readonly rest: Map<THREE.Bone, THREE.Vector3> = new Map();
   private readonly armRest: [THREE.Quaternion, THREE.Quaternion];
@@ -69,12 +69,18 @@ export class ChrisVisual implements PlayerVisual {
     this.textures = Object.values(textures).filter((t): t is THREE.Texture => !!t);
     this.materials = data.materials.map((m) => {
       const map = textures[m.name] ?? null;
-      return new THREE.MeshStandardMaterial({
+      const surface = {
         name: m.name,
         map,
         color: map ? "#ffffff" : (PLAIN[m.name] ?? "#808080"),
-        roughness: m.transparent ? 0.15 : m.name === "chrisw_acc" ? 0.55 : 0.88,
-        metalness: m.name === "chrisw_acc" ? 0.2 : 0,
+      };
+      // Keep the painted folds and facial shading legible in the desert sun.
+      // Only the frames, pendant and tinted glass catch small highlights.
+      if (!m.transparent && m.name !== "chrisw_acc") return new THREE.MeshLambertMaterial(surface);
+      return new THREE.MeshPhongMaterial({
+        ...surface,
+        specular: m.transparent ? "#57514b" : "#35302d",
+        shininess: m.transparent ? 48 : 18,
         transparent: m.transparent,
         opacity: m.transparent && !map ? 0.35 : 1,
         depthWrite: !m.transparent,

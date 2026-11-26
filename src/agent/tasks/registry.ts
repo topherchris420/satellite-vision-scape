@@ -1,3 +1,4 @@
+import { CALIBRATION_TASK, CalibrationSchema } from "./calibrationSchema";
 import {
   parseObservation,
   type TaskSchemaRegistry,
@@ -12,6 +13,7 @@ import { AFTER_HOURS_TASK, AfterHoursTaskSchema } from "./afterHoursSchema";
  * change.
  */
 export const TASK_SCHEMAS: TaskSchemaRegistry = {
+  [CALIBRATION_TASK]: CalibrationSchema,
   [AFTER_HOURS_TASK]: AfterHoursTaskSchema,
 };
 

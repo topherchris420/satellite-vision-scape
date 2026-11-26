@@ -1,3 +1,4 @@
+import { CALIBRATION_TASK } from "../../agent/tasks/calibrationSchema";
 import { intentKey, type AgentIntent } from "../../agent/contract";
 import { describeIntent } from "../../agent/describe";
 import type { WorldObservation } from "../../agent/observation";
@@ -213,6 +214,7 @@ function renderAfterHours(
 }
 
 const TASK_NAMES: Record<string, string> = {
+  [CALIBRATION_TASK]: "Field calibration — drive a small research vehicle to each unsampled pad and measure it.",
   [AFTER_HOURS_TASK]:
     "After Hours — a fictional night shift: deliver a coffee, find a hidden radio signal, tune four terminals, start a midnight transmission",
 };
@@ -310,6 +312,7 @@ export function describeOption(
     case "navigate_to":
       return `Walk to ${name(intent.target)}${where}. A local controller walks the route and stops there.`;
     case "drive_to":
+      if (o.task.id === CALIBRATION_TASK) return `Drive along the test strip to ${name(intent.target)}${where} and park the pickup on the pad.`;
       return `Drive this vehicle to ${name(intent.target)}${where}. A local controller steers and brakes, and parks nearby; you step out and walk the last metres.`;
     case "enter_vehicle":
       return `Get into ${name(intent.target)} (you are at its door).`;
@@ -318,6 +321,7 @@ export function describeOption(
     case "stop_vehicle":
       return "Brake gently to a stop and stay in the vehicle.";
     case "interact":
+      if (o.task.id === CALIBRATION_TASK) return `Sample ${name(intent.target)} with the parked rover and log the reading.`;
       return `Press E${prompt ? ` for the on-screen prompt ${quote(prompt)}` : ""} at ${name(intent.target)}.`;
     case "start_concert":
       return `Press E${prompt ? ` for the on-screen prompt ${quote(prompt)}` : ""}.`;
@@ -411,7 +415,9 @@ export function buildQuestion(
       questions: {
         intent: {
           type: "choice",
-          instructions: { context: context(assists), question: QUESTION },
+          instructions: { context: o.task.id === CALIBRATION_TASK
+            ? "You operate a fictional calibration rover. Drive to an unsampled pad, then take its reading. The researcher can take control at any time."
+            : context(assists), question: QUESTION },
           criteria,
         },
       },

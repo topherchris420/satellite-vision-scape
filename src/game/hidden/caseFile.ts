@@ -1,3 +1,4 @@
+import { mergeRuns, parseRuns, type FieldRun } from "./expeditions";
 import {
   CONFIDENCE_CHOICES,
   ENDINGS,
@@ -47,6 +48,8 @@ export interface CaseData {
   filed: EvidenceId[];
   /** Bumped by each replay, so an older copy of the file can't undo one. */
   epoch: number;
+  expeditions: FieldRun[];
+  calibration: boolean;
 }
 
 export function emptyCase(): CaseData {
@@ -66,6 +69,8 @@ export function emptyCase(): CaseData {
     attempts: 0,
     filed: [],
     epoch: 0,
+    expeditions: [],
+    calibration: false,
   };
 }
 
@@ -121,6 +126,8 @@ export function parseCase(text: string | null): CaseData {
     attempts: count(r.attempts),
     filed: list<EvidenceId>(r.filed, EVIDENCE_IDS),
     epoch: count(r.epoch),
+    expeditions: stage === "closed" && ending && ENDINGS[ending].closes ? parseRuns(r.expeditions) : [],
+    calibration: r.calibration === true,
   };
 }
 
@@ -235,6 +242,7 @@ export function replayCase(data: CaseData): void {
     endingsSeen: data.endingsSeen,
     attempts: data.attempts,
     epoch: data.epoch + 1,
+    calibration: data.calibration,
   };
   Object.assign(data, emptyCase(), { found: true }, keep);
 }
@@ -266,6 +274,7 @@ export function mergeCase(mine: CaseData, theirs: CaseData): CaseData {
     const [newer, older] = theirs.epoch > mine.epoch ? [theirs, mine] : [mine, theirs];
     return {
       ...newer,
+      calibration: newer.calibration || older.calibration,
       found: true,
       documents: union(newer.documents, older.documents),
       endingsSeen: union(newer.endingsSeen, older.endingsSeen),
@@ -299,5 +308,7 @@ export function mergeCase(mine: CaseData, theirs: CaseData): CaseData {
     attempts: Math.max(mine.attempts, theirs.attempts),
     filed: [...verdictFrom.filed],
     epoch: mine.epoch,
+    expeditions: mergeRuns(mine.expeditions, theirs.expeditions),
+    calibration: mine.calibration || theirs.calibration,
   };
 }
