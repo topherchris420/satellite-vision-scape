@@ -30,6 +30,7 @@ import {
 import { diagnose, type Finding } from "./diagnose";
 import { recordedLatencies } from "./latency";
 import { controlOf, goalReachedAt, measure, type TraceLike } from "./metrics";
+import { stageProgress, type StageProgress } from "./progress";
 import { runEpisode, type EpisodeOptions, type Termination } from "./runner";
 
 /**
@@ -457,6 +458,7 @@ export interface Evidence {
   summaries: Record<string, ConditionSummary>;
   predictions: PredictionResult[];
   findings: Record<string, Finding[]>;
+  progress: Record<string, StageProgress>;
   /** Runs excluded from aggregates, and why. */
   excluded: { runId: string; reason: string }[];
 }
@@ -468,6 +470,7 @@ export function evidence(dir: string): Evidence {
   const ctx = { until: def.episode.until };
   const measurements: RunMeasurement[] = [];
   const findings: Record<string, Finding[]> = {};
+  const progress: Evidence["progress"] = {};
   const excluded: Evidence["excluded"] = [];
   for (const run of result.runs) {
     let status: RunMeasurement["status"] = run.status;
@@ -481,6 +484,7 @@ export function evidence(dir: string): Evidence {
         const trace = JSON.parse(text) as TraceLike;
         metrics = measure(trace, def.dependentMetrics, ctx);
         findings[run.runId] = diagnose(trace);
+        if (status === "ok") progress[run.runId] = stageProgress(trace, ctx.until);
       }
     }
     if (status !== "ok")
@@ -515,5 +519,5 @@ export function evidence(dir: string): Evidence {
   const predictions = def.predictions.map((p) =>
     judge(p, measurements, def.minRunsForVerdict, deterministic),
   );
-  return { result, measurements, summaries, predictions, findings, excluded };
+  return { result, measurements, summaries, predictions, findings, progress, excluded };
 }

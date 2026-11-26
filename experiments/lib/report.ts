@@ -1,6 +1,7 @@
 import type { NumberSummary, RateSummary } from "./aggregate";
 import { EPISODE_GOALS, VARIABLES } from "./definition";
 import { METRICS } from "./metrics";
+import { stagesThrough } from "./progress";
 import type { Evidence } from "./store";
 
 /**
@@ -153,6 +154,29 @@ export function renderReport(ev: Evidence): string {
     out.push("");
   }
 
+  const stages = stagesThrough(def.episode.until);
+  const progressRuns = conds.map((c) =>
+    ev.measurements.filter((r) => r.condition === c.id && ev.progress[r.runId]),
+  );
+  if (progressRuns.some((runs) => runs.length > 0)) {
+    out.push("## Where runs got to", "");
+    out.push(
+      "Each verified trace counts once at its furthest recorded milestone for this goal. A missing milestone is not evidence that it never happened. These are descriptive counts, not a second success criterion.",
+      "",
+      `| Furthest recorded milestone | ${conds.map((c) => `\`${c.id}\``).join(" | ")} |`,
+      `| :-- | ${conds.map(() => "--:").join(" | ")} |`,
+    );
+    for (const stage of [{ id: null, label: "None recorded" }, ...stages]) {
+      const cells = progressRuns.map((runs) =>
+        runs.length
+          ? `${runs.filter((r) => ev.progress[r.runId].highest === stage.id).length}/${runs.length}`
+          : "—",
+      );
+      out.push(`| ${stage.label} | ${cells.join(" | ")} |`);
+    }
+    out.push("");
+  }
+
   out.push("## What the traces show", "");
   let any = false;
   for (const c of conds) {
@@ -246,7 +270,7 @@ export function summaryJson(ev: Evidence): unknown {
       config: c.config,
       runs: ev.measurements
         .filter((m) => m.condition === c.id)
-        .map((m) => ({ runId: m.runId, status: m.status })),
+        .map((m) => ({ runId: m.runId, status: m.status, progress: ev.progress[m.runId] ?? null })),
       metrics: ev.summaries[c.id],
     })),
     predictions: ev.predictions,

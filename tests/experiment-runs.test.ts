@@ -10,7 +10,7 @@ import {
   DEFAULT_COMPARE_METRICS,
 } from "../experiments/lib/compare";
 import { METRICS, controlOf, measure, type TraceLike } from "../experiments/lib/metrics";
-import { renderReport } from "../experiments/lib/report";
+import { renderReport, summaryJson } from "../experiments/lib/report";
 import { buildProvider, runEpisode } from "../experiments/lib/runner";
 import {
   LiveRunRefused,
@@ -160,6 +160,10 @@ describe("running an experiment", () => {
     expect(md).toContain("## Hypothesis");
     expect(md).toContain("We would reconsider it if");
     expect(md).toContain("## Evidence level");
+    expect(md).toContain("| Coffee delivered | 2/2 | 2/2 |");
+    expect(ev.progress["instant-01"].highest).toBe("coffee_delivered");
+    const json = summaryJson(ev) as { conditions: { runs: { progress: unknown }[] }[] };
+    expect(json.conditions[0].runs[0].progress).toEqual(ev.progress["instant-01"]);
     expect(md).toContain("n = 2");
     // Two pairs, five needed: the rules forbid a verdict.
     expect(ev.predictions[0].verdict).toBe("INCONCLUSIVE");
@@ -177,6 +181,9 @@ describe("running an experiment", () => {
     expect(ev.measurements.find((m) => m.runId === "slow-01")?.status).toBe("missing_trace");
     expect(ev.measurements.find((m) => m.runId === "slow-02")?.status).toBe("trace_mismatch");
     expect(ev.summaries.slow.goalSeconds.n).toBe(0);
+    expect(ev.progress["slow-01"]).toBeUndefined();
+    expect(ev.progress["slow-02"]).toBeUndefined();
+    expect(renderReport(ev)).toContain("| Coffee delivered | 2/2 | — |");
     expect(ev.excluded.map((e) => e.runId).sort()).toEqual(["slow-01", "slow-02"]);
     expect(renderReport(ev)).toContain("no evidence, no number");
   });
@@ -222,6 +229,7 @@ describe("failures are recorded, not hidden", () => {
     expect(slow.terminatedBy).toBe("time_budget");
     const ev = evidence(outDir);
     expect(ev.excluded.find((e) => e.runId === "slow-01")?.reason).toContain("never answered");
+    expect(ev.progress["slow-01"]).toBeUndefined();
     const trace = readTrace(join(outDir, slow.trace!.file));
     expect(trace.events.some((e) => e.type === "provider_unavailable")).toBe(true);
   }, 30_000);
