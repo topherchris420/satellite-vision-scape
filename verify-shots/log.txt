@@ -1,0 +1,11 @@
+[ 256s] page ready
+[ 327s] briefing.jpg
+[ 422s] explore.jpg
+[ 446s] arrival: {"gameState":"ON_FOOT","prompt":null,"mission":"available","objective":"Collect the coffee from the canteen cart","caption":"Evening, visitor. The technician at the north antenna hut has requested coffee. The cart is by the south hall.","altered":false,"concert":"idle","frequency":367.5,"heardClue":false,"pos":[-61,175],"status":{"status":"running","mode":"play"}}
+[ 447s] driving 44s: {"gameState":"DRIVING","prompt":"Exit vehicle","mission":"active","objective":"Deliver the coffee to the north antenna hut","caption":null,"altered":false,"concert":"idle","frequency":367.5,"heardClue":false,"pos":[-69,168],"status":{"status":"running","mode":"play"}}
+[ 475s] driving.jpg
+[ 478s] frequency-420: {"gameState":"ON_FOOT","prompt":null,"mission":"completed","objective":"Tune the receiver to 420 and hold it there","caption":"Frequency 420","altered":false,"concert":"idle","frequency":419.8000000000019,"heardClue":true,"pos":[63,-342],"status":{"status":"running","mode":"play"}}
+[ 478s] terminal: {"gameState":"ON_FOOT","prompt":null,"mission":"completed","objective":"Tune the rhythm terminal","caption":"Frequency 420 acquired. The signal is coming from four antennas. Altered Signal unlocked (O).","altered":true,"concert":"idle","frequency":419.8000000000019,"heardClue":true,"pos":[-118,110],"status":{"status":"running","mode":"play"}}
+[ 479s] terminals tuned: {"gameState":"ON_FOOT","prompt":null,"mission":"completed","objective":"Go to the listening point among the radomes","caption":"All four layers locked. Something is waiting at the listening point among the radomes.","altered":true,"concert":"idle","frequency":419.8000000000019,"heardClue":true,"pos":[-410,214],"status":{"status":"running","mode":"play"}}
+[ 563s] concert 56s (position 56.0 s): {"gameState":"ON_FOOT","prompt":"End the transmission","mission":"completed","objective":"Midnight transmission · Melody arrives","caption":null,"altered":true,"concert":"running","frequency":419.8000000000019,"heardClue":true,"pos":[-118,-20],"status":{"status":"running","mode":"play"}}
+[ 564s] done
