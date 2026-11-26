@@ -21,7 +21,7 @@ export interface Spot {
 
 export const SPEAKERS = {
   rain: "R.A.I.N.",
-  christopher: "Christopher Woodyard",
+  ines: "Ines Calder · R.A.I.N.",
   mara: "Mara Quill",
   tobin: "Tobin Hale · SureThing",
   certain: "CERTAIN-PG",
@@ -33,7 +33,7 @@ export const VAN: Spot = { x: -130, z: 182, yaw: Math.PI / 2 };
 /** The evidence board under the awning, on the van's north side. */
 export const VAN_BOARD = { x: -130.2, z: 179.6 } as const;
 export const VAN_STAND: Spot = { x: -128.6, z: 177.4, yaw: 0 };
-export const CHRISTOPHER: Spot = { x: -132.2, z: 179.0, yaw: 0.6 };
+export const INES: Spot = { x: -132.2, z: 179.0, yaw: 0.6 };
 
 /** Mara walks a cable inspection between these two points, pausing at each. */
 export const MARA_ROUTE: readonly Spot[] = [
@@ -364,7 +364,7 @@ export const TOBIN_TOPICS: readonly Topic[] = [
   },
 ];
 
-export const CHRISTOPHER_HINTS = {
+export const INES_HINTS = {
   start:
     "Three things would settle this: what Mara says, where the carrier really is, and what U-2's own log shows. Any order.",
   some: "Keep going. The board takes whatever you bring back, and so does the verdict.",
@@ -388,14 +388,14 @@ export const TITLE = {
 } as const;
 
 export const BRIEFING: readonly Line[] = [
-  { speaker: "christopher", text: "You made it. This is the van, and that's the board.", seconds: 4 },
+  { speaker: "ines", text: "You made it, Christopher. This is the van, and that's the board.", seconds: 4.5 },
   { speaker: "certain", text: "Attribution: utility truck U-2, operator M. Quill. Confidence 99.9%.", seconds: 5 },
   {
     speaker: "rain",
     text: "Before anyone acts on that, find out what would change your mind. Then go and look for it.",
     seconds: 5.5,
   },
-  { speaker: "christopher", text: CHRISTOPHER_HINTS.start, seconds: 6 },
+  { speaker: "ines", text: INES_HINTS.start, seconds: 6 },
 ];
 
 export const RADIO = {

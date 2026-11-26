@@ -30,7 +30,7 @@ const teal = "text-[#7fd6d0]";
 
 const SPEAKER_TONE: Record<keyof typeof SPEAKERS, string> = {
   rain: "text-[#7fd6d0]",
-  christopher: "text-amber-200",
+  ines: "text-amber-200",
   mara: "text-sky-200",
   tobin: "text-orange-300",
   certain: "text-rose-300",

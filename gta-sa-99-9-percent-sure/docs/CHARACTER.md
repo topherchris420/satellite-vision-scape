@@ -23,6 +23,7 @@ renderer.
 | `tools/character/photo_face.py` | Photo cleanup (glasses removal, eyes and brows) and camera fit for the face |
 | `tools/character/raster.py` | numpy software rasteriser (previews and texture baking) |
 | `tools/character/preview_chris.py` | Preview renders, the facial animation sheet (jaw and brow test) and the comparison sheet |
+| `tools/character/export_web.py` | Browser export of the mesh on the synthetic skeleton, for the hidden case on the Pine Gap site |
 | `tools/character/validate_chris.py`, `librw_texcheck.cpp` | Validation (rw, facial animation, DragonFF, librw) |
 | `assets/character/textures/*.png` | Painted textures, the source of the TXD |
 | `assets/character/previews/*.png` | Renders (see [Previews](#previews)) |
@@ -125,6 +126,18 @@ on his right chest, the emblem on his left. The prebuilt is therefore a mirror
 image of what a stock skeleton gives. Its previews are flipped horizontally
 (and labelled) to show the intended handedness. The stand-in skeleton used to
 test the `--img` path is right-handed and needs no flip.
+
+## The browser export (Pine Gap's hidden case)
+
+`python3 -I tools/character/export_web.py` builds the same mesh on the
+synthetic skeleton and writes `src/game/hidden/chris/chrisw-mesh.json` at the
+repository root, for the browser game, where Christopher is the player of the
+hidden case. No game file is read. The browser poses its own bones with its
+own animator, so the made-up bind orientations do not matter there; the export
+converts the mirror-image skeleton to a right-handed frame and keeps every part
+on the side its bone name says. The browser loads the painted PNGs in
+`assets/character/textures/` directly. See `docs/HIDDEN_CAMPAIGN.md` at the
+repository root.
 
 ## Pipeline
 

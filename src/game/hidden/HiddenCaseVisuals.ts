@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { CharacterAnimator } from "../player/CharacterAnimator";
 import { CharacterVisual } from "../player/CharacterVisual";
-import { CHRISTOPHER, FIELD_NOTES, POSTS, SONDE, VAN, type DocumentId, type PostId } from "./story";
+import { INES, FIELD_NOTES, POSTS, SONDE, VAN, type DocumentId, type PostId } from "./story";
 
 /**
  * Scene objects for the hidden case: the R.A.I.N. field van and its board,
@@ -22,7 +22,7 @@ export interface CaseVisualState {
   time: number;
   mara: PersonPose;
   tobin: PersonPose;
-  christopher: PersonPose;
+  ines: PersonPose;
   bearings: readonly PostId[];
   /** Where the bearing lines end (their crossing), once known. */
   crossing: { x: number; z: number } | null;
@@ -151,8 +151,8 @@ export class HiddenCaseVisuals {
     this.root.add(van);
 
     // --- People -------------------------------------------------------------------------
-    const christopher = new CharacterVisual({ variant: "technician", palette: "visitor" });
-    christopher.root.name = "christopher-woodyard";
+    const ines = new CharacterVisual({ variant: "technician", palette: "visitor" });
+    ines.root.name = "ines-calder";
     const mara = new CharacterVisual({ variant: "technician", palette: "staff" });
     mara.root.name = "mara-quill";
     const tobin = new CharacterVisual({ variant: "technician", palette: "visitor" });
@@ -161,11 +161,11 @@ export class HiddenCaseVisuals {
     const vest = new THREE.Mesh(box(0.42, 0.42, 0.26), mat(new THREE.MeshStandardMaterial({ color: "#e0702c", roughness: 0.8 })));
     vest.position.set(0, 1.25, 0);
     tobin.root.add(vest);
-    for (const visual of [christopher, mara, tobin]) {
+    for (const visual of [ines, mara, tobin]) {
       this.people.push({ visual, animator: new CharacterAnimator() });
       this.root.add(visual.root);
     }
-    christopher.root.position.set(CHRISTOPHER.x, heightAt(CHRISTOPHER.x, CHRISTOPHER.z), CHRISTOPHER.z);
+    ines.root.position.set(INES.x, heightAt(INES.x, INES.z), INES.z);
 
     // --- Survey posts and their bearing lines -------------------------------------------
     const pole = geo(new THREE.CylinderGeometry(0.035, 0.045, 1.7, 6));
@@ -312,7 +312,7 @@ export class HiddenCaseVisuals {
 
   update(dt: number, s: CaseVisualState): void {
     if (!this.root.visible) return;
-    const poses = [s.christopher, s.mara, s.tobin];
+    const poses = [s.ines, s.mara, s.tobin];
     this.people.forEach(({ visual, animator }, i) => {
       const p = poses[i];
       visual.root.position.set(p.x, this.heightAt(p.x, p.z), p.z);
