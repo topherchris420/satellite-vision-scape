@@ -15,6 +15,7 @@ type Interaction = "hq" | "car" | (typeof evidence)[number]["id"] | null;
 const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
 /** Ines Calder, R.A.I.N.'s field lead, waits at HQ, turned toward where the player starts. */
 const INES = { x: 1.8, z: -1.4, yaw: Math.atan2(-1.8, 1.4) };
+const INES_AT = { x: HQ.x + INES.x, z: HQ.z + INES.z };
 const STILL: Omit<AnimationParams, "speed"> = { grounded: true, airTime: 0, verticalVelocity: 0, turnRate: 0, seatWeight: 0, steer: 0, style: "technician" };
 
 /**
@@ -55,7 +56,7 @@ function District({ keys, position, car, driving, onNear, campaign }: {
   const ines = useMemo(() => {
     const v = new CharacterVisual({ variant: "technician", palette: "visitor" });
     v.root.name = "ines-calder";
-    v.root.position.set(HQ.x + INES.x, 0, HQ.z + INES.z);
+    v.root.position.set(INES_AT.x, 0, INES_AT.z);
     v.root.rotation.y = INES.yaw;
     return v;
   }, []);
@@ -95,7 +96,7 @@ function District({ keys, position, car, driving, onNear, campaign }: {
     camera.position.lerp(cameraTarget.current, 1 - Math.exp(-dt * 8));
     camera.lookAt(p.x, 0.8, p.z - 3);
     const e = evidence.find((v) => !campaign.collected.includes(v.id) && near(p, v));
-    const id: Interaction = driving ? "car" : e?.id ?? (near(p, HQ) ? "hq" : near(p, car.current) ? "car" : null);
+    const id: Interaction = driving ? "car" : e?.id ?? (near(p, HQ) || near(p, INES_AT, 2) ? "hq" : near(p, car.current) ? "car" : null);
     if (id !== last.current) { last.current = id; onNear(id); }
   });
   return <>
