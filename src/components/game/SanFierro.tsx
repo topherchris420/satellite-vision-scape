@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState, type MutableRefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { buildings, canMove, CAR, collectEvidence, evidence, freshCampaign, HQ, readCampaign, saveCampaign, submitVerdict, type Campaign, type Verdict } from "@/game/campaign/sanFierro";
+import { CharacterAnimator, type AnimationParams } from "@/game/player/CharacterAnimator";
+import { CharacterVisual } from "@/game/player/CharacterVisual";
+import type { PlayerVisual } from "@/game/player/PlayerVisual";
 import { CHAPTER_HREF } from "@/lib/chapters";
 import { ChapterSwitch } from "./ChapterSwitch";
 
@@ -10,6 +13,31 @@ const OPENING = "CERTAIN has flagged a family vehicle. R.A.I.N. needs independen
 const near = (a: Point, b: Point, radius = 3) => Math.hypot(a.x - b.x, a.z - b.z) < radius;
 type Interaction = "hq" | "car" | (typeof evidence)[number]["id"] | null;
 const movementKeys = ["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
+/** Ines Calder, R.A.I.N.'s field lead, waits at HQ, turned toward where the player starts. */
+const INES = { x: 1.8, z: -1.4, yaw: Math.atan2(-1.8, 1.4) };
+const STILL: Omit<AnimationParams, "speed"> = { grounded: true, airTime: 0, verticalVelocity: 0, turnRate: 0, seatWeight: 0, steer: 0, style: "technician" };
+
+/**
+ * The player is Christopher Woodyard in his own model (the mod's CHRISW, the
+ * same figure the hidden case uses), fetched as its own chunk after the
+ * district is up. The plain stand-in shows until it arrives, or for good if
+ * it fails to load.
+ */
+function useChristopher(): PlayerVisual | null {
+  const [chris, setChris] = useState<PlayerVisual | null>(null);
+  useEffect(() => {
+    let alive = true;
+    let loaded: PlayerVisual | null = null;
+    import("@/game/hidden/chris/loadChris")
+      .then((m) => m.loadChris())
+      .then((visual) => {
+        if (alive) { loaded = visual; setChris(visual); } else visual.dispose();
+      })
+      .catch((e) => console.warn("San Fierro: Christopher's figure did not load; keeping the stand-in.", e));
+    return () => { alive = false; loaded?.dispose(); };
+  }, []);
+  return chris;
+}
 
 function District({ keys, position, car, driving, onNear, campaign }: {
   keys: MutableRefObject<Set<string>>;
@@ -23,6 +51,22 @@ function District({ keys, position, car, driving, onNear, campaign }: {
   const vehicle = useRef<THREE.Group>(null);
   const last = useRef<Interaction>(null);
   const cameraTarget = useRef(new THREE.Vector3());
+  const chris = useChristopher();
+  const ines = useMemo(() => {
+    const v = new CharacterVisual({ variant: "technician", palette: "visitor" });
+    v.root.name = "ines-calder";
+    v.root.position.set(HQ.x + INES.x, 0, HQ.z + INES.z);
+    v.root.rotation.y = INES.yaw;
+    return v;
+  }, []);
+  useEffect(() => () => ines.dispose(), [ines]);
+  // Development-only: lets the README capture script wait for the real figure.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as unknown as { __sanFierroPlayer?: string }).__sanFierroPlayer = chris ? "christopher" : "stand-in";
+  }, [chris]);
+  const animators = useRef({ chris: new CharacterAnimator(), ines: new CharacterAnimator() });
+  const previous = useRef<Point>({ ...position.current });
   useFrame(({ camera }, dt) => {
     const k = keys.current;
     let x = Number(k.has("KeyD") || k.has("ArrowRight")) - Number(k.has("KeyA") || k.has("ArrowLeft"));
@@ -39,6 +83,11 @@ function District({ keys, position, car, driving, onNear, campaign }: {
       if (driving && vehicle.current) vehicle.current.rotation.y = Math.atan2(x, z);
     }
     const p = position.current;
+    // Walk cycle from the distance actually covered (walls stop the feet too).
+    const speed = dt > 0 ? Math.min(Math.hypot(p.x - previous.current.x, p.z - previous.current.z) / dt, 8) : 0;
+    previous.current = { ...p };
+    if (chris && !driving) chris.applyPose(animators.current.chris.update(dt, { ...STILL, speed }));
+    ines.applyPose(animators.current.ines.update(dt, { ...STILL, speed: 0 }));
     if (driving) car.current = { ...p };
     avatar.current?.position.set(p.x, 0, p.z);
     vehicle.current?.position.set(car.current.x, 0, car.current.z);
@@ -74,9 +123,12 @@ function District({ keys, position, car, driving, onNear, campaign }: {
       <mesh position={[0, 2.3, 0]}><octahedronGeometry args={[0.7]} /><meshBasicMaterial color="#ffbd55" /></mesh>
     </group>)}
     <group ref={avatar} visible={!driving}>
-      <mesh position={[0, 1.05, 0]}><capsuleGeometry args={[0.35, 0.8, 4, 8]} /><meshStandardMaterial color="#23394d" /></mesh>
-      <mesh position={[0, 1.8, 0]}><sphereGeometry args={[0.27, 12, 8]} /><meshStandardMaterial color="#865e43" /></mesh>
+      {chris ? <primitive object={chris.root} /> : <>
+        <mesh position={[0, 1.05, 0]}><capsuleGeometry args={[0.35, 0.8, 4, 8]} /><meshStandardMaterial color="#23394d" /></mesh>
+        <mesh position={[0, 1.8, 0]}><sphereGeometry args={[0.27, 12, 8]} /><meshStandardMaterial color="#865e43" /></mesh>
+      </>}
     </group>
+    <primitive object={ines.root} />
     <group ref={vehicle}>
       <mesh position={[0, 0.65, 0]}><boxGeometry args={[1.8, 0.65, 3.5]} /><meshStandardMaterial color="#7c3834" /></mesh>
       <mesh position={[0, 1.13, 0.15]}><boxGeometry args={[1.55, 0.55, 1.65]} /><meshStandardMaterial color="#304c58" /></mesh>
@@ -105,7 +157,7 @@ export function SanFierro() {
       setDriving(!driving);
       setMessage(driving ? "On foot." : "Vehicle ready. Use the same movement controls.");
     } else if (interaction === "hq") {
-      setMessage(campaign.collected.length === evidence.length ? "Review the three independent observations and submit a verdict." : "Christopher: Visit the three amber markers. Do not confuse confidence with evidence.");
+      setMessage(campaign.collected.length === evidence.length ? "Review the three independent observations and submit a verdict." : "Ines: Visit the three amber markers. Do not confuse confidence with evidence.");
     } else if (interaction) {
       const item = evidence.find((e) => e.id === interaction);
       if (item && !campaign.collected.includes(item.id)) {
@@ -190,7 +242,7 @@ export function SanFierro() {
             <button className="rounded bg-white/15 px-3 py-2" onClick={playAgain}>Play the case again</button>
           </div>
         </> : <>
-          {ready && interaction === "hq" ? <><p className="mb-2">CERTAIN claims the vehicle is implicated. Does the evidence justify the claim?</p><div className="flex flex-wrap gap-1">{(["accept", "reject", "abstain"] as Verdict[]).map((v) => <button key={v} className="rounded bg-white/15 px-2 py-2 capitalize" onClick={() => { update(submitVerdict(campaign, v)); setMessage(v === "accept" ? "R.A.I.N.: confidence is not independent corroboration." : "R.A.I.N.: keep the uncertainty in your record."); }}>{v}</button>)}</div></> : <button disabled={!interaction} className="rounded bg-teal-300 px-4 py-3 font-bold text-black disabled:opacity-40" onClick={interact}>{interaction === "car" ? (driving ? "Exit vehicle" : "Enter vehicle") : interaction === "hq" ? "Speak to Christopher" : interaction ? "Collect evidence" : "Approach marker"} (E)</button>}
+          {ready && interaction === "hq" ? <><p className="mb-2">CERTAIN claims the vehicle is implicated. Does the evidence justify the claim?</p><div className="flex flex-wrap gap-1">{(["accept", "reject", "abstain"] as Verdict[]).map((v) => <button key={v} className="rounded bg-white/15 px-2 py-2 capitalize" onClick={() => { update(submitVerdict(campaign, v)); setMessage(v === "accept" ? "R.A.I.N.: confidence is not independent corroboration." : "R.A.I.N.: keep the uncertainty in your record."); }}>{v}</button>)}</div></> : <button disabled={!interaction} className="rounded bg-teal-300 px-4 py-3 font-bold text-black disabled:opacity-40" onClick={interact}>{interaction === "car" ? (driving ? "Exit vehicle" : "Enter vehicle") : interaction === "hq" ? "Speak to Ines" : interaction ? "Collect evidence" : "Approach marker"} (E)</button>}
         </>}
         <p className="mt-2 text-white/60">WASD / arrows · E interact · touch controls</p>
       </div>

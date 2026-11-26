@@ -66,6 +66,8 @@ async function open(context, campaign) {
   );
   await page.reload({ waitUntil: "load" });
   await page.waitForFunction(() => window.__sanFierroCapture && document.querySelector("canvas"));
+  // Christopher's figure is its own chunk; film him, not the stand-in.
+  await page.waitForFunction(() => window.__sanFierroPlayer === "christopher");
   await page.waitForTimeout(3000);
   return page;
 }

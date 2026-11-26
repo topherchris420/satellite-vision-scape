@@ -47,11 +47,11 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 
 ## Chapter I · San Fierro
 
-[**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You start at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
+[**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
 
 | Arriving at the case | Collecting evidence |
 | --- | --- |
-| ![San Fierro opening: the player at R.A.I.N.'s teal field HQ, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![The sensor audit collected at an amber evidence marker on the centre street](docs/media/screens/san-fierro/evidence.jpg) |
+| ![San Fierro opening: Christopher Woodyard at R.A.I.N.'s teal field HQ beside Ines, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![The sensor audit collected at an amber evidence marker on the centre street](docs/media/screens/san-fierro/evidence.jpg) |
 | ![Driving the red car up the district's centre street](docs/media/screens/san-fierro/driving.jpg) | ![Back at HQ with all three observations: accept, reject or abstain](docs/media/screens/san-fierro/verdict.jpg) |
 | **Driving the district** | **The verdict** |
 
@@ -59,7 +59,7 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 
 *Actual captures of the browser San Fierro chapter, filmed from the running game with [`scripts/capture-san-fierro-shots.mjs`](scripts/capture-san-fierro-shots.mjs) (headless Chromium, software WebGL). The last one is the phone layout.*
 
-**Controls:** `W A S D` or arrow keys to walk and drive, `E` to collect evidence, enter or leave the car and talk to Christopher at HQ. On a phone, hold the on-screen arrows and tap the action button.
+**Controls:** `W A S D` or arrow keys to walk and drive, `E` to collect evidence, enter or leave the car and talk to Ines at HQ. On a phone, hold the on-screen arrows and tap the action button.
 
 ### The full CLEO storyline
 
