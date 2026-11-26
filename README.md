@@ -51,7 +51,7 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 
 | Arriving at the case | Collecting evidence |
 | --- | --- |
-| ![San Fierro opening: Christopher Woodyard at R.A.I.N.'s teal field HQ beside Ines, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![The sensor audit collected at an amber evidence marker on the centre street](docs/media/screens/san-fierro/evidence.jpg) |
+| ![San Fierro opening: Christopher Woodyard at R.A.I.N.'s teal field HQ beside Ines, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![Christopher on the centre street just after collecting the sensor audit, the first of three pieces of evidence](docs/media/screens/san-fierro/evidence.jpg) |
 | ![Driving the red car up the district's centre street](docs/media/screens/san-fierro/driving.jpg) | ![Back at HQ with all three observations: accept, reject or abstain](docs/media/screens/san-fierro/verdict.jpg) |
 | **Driving the district** | **The verdict** |
 
