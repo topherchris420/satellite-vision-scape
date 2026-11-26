@@ -10,6 +10,7 @@ import { clamp } from "./core/math";
 import { ThirdPersonCamera, createCameraFocus } from "./camera/ThirdPersonCamera";
 import { CharacterAnimator } from "./player/CharacterAnimator";
 import { CharacterVisual } from "./player/CharacterVisual";
+import type { PlayerVisual } from "./player/PlayerVisual";
 import { PlayerController, createMoveIntent } from "./player/PlayerController";
 import { Locomotion } from "./player/PlayerState";
 import { InteractionManager } from "./interaction/InteractionManager";
@@ -131,6 +132,8 @@ export class Game {
   private alpha = 1;
   private time: TimeOfDay = "day";
   private characterVisual: CharacterVisual | null;
+  /** A layer's own figure for the player (the hidden case's Christopher), shown in place of the default. */
+  private visualOverride: PlayerVisual | null = null;
   private kind: CharacterKind = "soldier";
   private carrying = false;
   private dustOverride: string | null = null;
@@ -305,7 +308,7 @@ export class Game {
     const visible = this.characterVisual.visible;
     this.characterVisual.dispose();
     this.characterVisual = new CharacterVisual({ variant: kind });
-    this.characterVisual.visible = visible;
+    this.characterVisual.visible = visible && !this.visualOverride;
     this.characterVisual.setCarrying(this.carrying);
     this.root.add(this.characterVisual.root);
   }
@@ -314,6 +317,30 @@ export class Game {
     if (carrying === this.carrying) return;
     this.carrying = carrying;
     this.characterVisual?.setCarrying(carrying);
+    this.visualOverride?.setCarrying(carrying);
+  }
+
+  /**
+   * Show another figure for the player (null restores the default). The
+   * caller owns the figure and disposes it; movement, seating and collision
+   * are unchanged.
+   */
+  setPlayerVisual(visual: PlayerVisual | null): void {
+    if (visual === this.visualOverride) return;
+    this.visualOverride?.root.removeFromParent();
+    this.visualOverride = visual;
+    if (visual) {
+      visual.setCarrying(this.carrying);
+      visual.visible = this.characterVisual?.visible ?? true;
+      this.root.add(visual.root);
+    }
+    // The frame loop settles visibility (camera occlusion) from here on.
+    if (this.characterVisual) this.characterVisual.visible = !visual;
+  }
+
+  /** The figure currently standing in for the player (null headless). */
+  get playerVisual(): PlayerVisual | null {
+    return this.visualOverride ?? this.characterVisual;
   }
 
   /** Presentation-only dust colour (Altered Signal); null restores the time-of-day tint. */
@@ -627,9 +654,9 @@ export class Game {
         this.look.aim = this.freeRoam.aiming ? 1 : 0;
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
-      if (this.characterVisual)
-        this.characterVisual.visible =
-          this.afterHours.cinematic || this.layerCinematic || !this.camera.characterOccluded;
+      const shown = this.afterHours.cinematic || this.layerCinematic || !this.camera.characterOccluded;
+      if (this.characterVisual) this.characterVisual.visible = shown && !this.visualOverride;
+      if (this.visualOverride) this.visualOverride.visible = shown;
       this.updateListener(options.camera);
     }
     this.freeRoamAudio?.frame(dt);
@@ -698,9 +725,9 @@ export class Game {
       carry: this.carrying ? 1 : 0,
       aim: this.freeRoam.active && this.freeRoam.aiming ? 1 : 0,
       aimPitch: -this.camera.pitch,
-      style: this.kind,
+      style: this.visualOverride?.style ?? this.kind,
     });
-    const c = this.characterVisual;
+    const c = this.visualOverride ?? this.characterVisual;
     if (!c) return;
     // Free Roam: the sidearm is in the hand while it is out (on foot only).
     c.setSidearm(this.freeRoam.active && !vehicle);

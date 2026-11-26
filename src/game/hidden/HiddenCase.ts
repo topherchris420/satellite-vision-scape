@@ -4,6 +4,7 @@ import type { InputState } from "../core/Input";
 import { GameplayState } from "../core/GameState";
 import type { InteractionOffer } from "../interaction/InteractionManager";
 import type { KeyValueStorage } from "../afterhours/progress";
+import type { PlayerVisual } from "../player/PlayerVisual";
 import {
   CASE_STORAGE_KEY,
   auditOnFile,
@@ -28,8 +29,8 @@ import { HiddenCaseVisuals, type PersonPose } from "./HiddenCaseVisuals";
 import {
   BEARING_SETTLE,
   BRIEFING,
-  CHRISTOPHER,
-  CHRISTOPHER_HINTS,
+  INES,
+  INES_HINTS,
   ENDINGS,
   EVIDENCE,
   EVIDENCE_ORDER,
@@ -112,8 +113,8 @@ export class HiddenCase implements GameLayer {
   /** Whether play is on screen (switching to a survey view hides the case's props). */
   private viewing = true;
   private readonly offer: InteractionOffer = { label: "", distance: 0, priority: true, act: () => undefined };
-  private readonly poses: Record<"christopher" | "mara" | "tobin", PersonPose> = {
-    christopher: { x: CHRISTOPHER.x, z: CHRISTOPHER.z, yaw: CHRISTOPHER.yaw, speed: 0 },
+  private readonly poses: Record<"ines" | "mara" | "tobin", PersonPose> = {
+    ines: { x: INES.x, z: INES.z, yaw: INES.yaw, speed: 0 },
     mara: { x: MARA_ROUTE[0].x, z: MARA_ROUTE[0].z, yaw: MARA_ROUTE[0].yaw, speed: 0 },
     tobin: { x: TOBIN.x, z: TOBIN.z, yaw: TOBIN.yaw, speed: 0 },
   };
@@ -121,12 +122,26 @@ export class HiddenCase implements GameLayer {
   private readonly camTarget = new THREE.Vector3();
   private orbit = 0;
   private audio: CaseAudio | null = null;
+  /** Christopher's own figure for the player, once loaded (kept between visits). */
+  private player: PlayerVisual | null = null;
+  private playerLoading = false;
+  private disposed = false;
+  private readonly loadPlayer: (() => Promise<PlayerVisual>) | null;
 
   constructor(
     private readonly game: Game,
     private readonly storage: KeyValueStorage | null,
     visuals: boolean,
+    loadPlayer?: (() => Promise<PlayerVisual>) | null,
   ) {
+    // The player is Christopher Woodyard, in the mod's own model; it streams in
+    // only when the case starts, and the default figure stands in until then.
+    this.loadPlayer =
+      loadPlayer !== undefined
+        ? loadPlayer
+        : visuals
+          ? () => import("./chris/loadChris").then((m) => m.loadChris())
+          : null;
     this.lastText = this.readStored();
     this.data = parseCase(this.lastText);
     this.hud = new CaseHudStore(this.buildSnapshot());
@@ -150,6 +165,7 @@ export class HiddenCase implements GameLayer {
     if (!g.interaction.providers.includes(this.provide)) g.interaction.providers.push(this.provide);
     this.active = true;
     this.visuals?.setActive(this.viewing);
+    this.showPlayer();
     this.flaggedDrivenThisVisit = false;
     this.sondeNearSaid = this.data.collected.includes("sonde");
     this.ensureAudio();
@@ -160,10 +176,10 @@ export class HiddenCase implements GameLayer {
       this.queue.length = 0;
       for (const line of BRIEFING) this.queue.push({ ...line });
     } else if (this.data.stage === "closed") {
-      this.say("christopher", CHRISTOPHER_HINTS.closed, 5);
+      this.say("ines", INES_HINTS.closed, 5);
     } else {
       this.say("rain", "Back on the ground. The board kept everything you brought in.", 4);
-      this.say("christopher", this.hint(), 5);
+      this.say("ines", this.hint(), 5);
     }
     this.save();
     this.dirty = true;
@@ -181,6 +197,7 @@ export class HiddenCase implements GameLayer {
     g.lockMovement(MOVEMENT_OWNER, false);
     g.lockMovement(TITLE_OWNER, false);
     this.visuals?.setActive(false);
+    g.setPlayerVisual(null);
     this.active = false;
     this.titleLeft = 0;
     this.panel = null;
@@ -204,6 +221,35 @@ export class HiddenCase implements GameLayer {
     this.stop();
     this.audio?.dispose();
     this.visuals?.dispose();
+    this.player?.dispose();
+    this.player = null;
+    this.disposed = true;
+  }
+
+  /** Put Christopher in the player's place, loading his figure the first time. */
+  private showPlayer(): void {
+    if (this.player) {
+      this.game.setPlayerVisual(this.player);
+      return;
+    }
+    if (!this.loadPlayer || this.playerLoading) return;
+    this.playerLoading = true;
+    this.loadPlayer().then(
+      (figure) => {
+        this.playerLoading = false;
+        if (this.disposed) {
+          figure.dispose();
+          return;
+        }
+        this.player = figure;
+        if (this.active) this.game.setPlayerVisual(figure);
+      },
+      (error: unknown) => {
+        // The default figure stays; the case plays the same either way.
+        this.playerLoading = false;
+        console.warn("hidden case: Christopher's figure did not load", error);
+      },
+    );
   }
 
   // --- Layer hooks ------------------------------------------------------------------
@@ -238,7 +284,7 @@ export class HiddenCase implements GameLayer {
     const truck = this.game.vehicles.vehicles[FLAGGED_VEHICLE];
     this.visuals.update(dt, {
       time: this.time,
-      christopher: this.poses.christopher,
+      ines: this.poses.ines,
       mara: this.poses.mara,
       tobin: this.poses.tobin,
       bearings: this.data.bearings,
@@ -288,8 +334,8 @@ export class HiddenCase implements GameLayer {
       this.data.stage === "closed" ? "Read the verdict" : "Open the evidence board",
       () => this.openBoard(),
     );
-    const c = this.poses.christopher;
-    consider("case:christopher", c.x, c.z, RANGES.talk, "Talk to Christopher", () => this.talkToChristopher());
+    const c = this.poses.ines;
+    consider("case:ines", c.x, c.z, RANGES.talk, "Talk to Ines", () => this.talkToInes());
     const m = this.poses.mara;
     consider("case:mara", m.x, m.z, RANGES.talk, "Talk to Mara Quill", () => this.openDialog("mara"));
     const t = this.poses.tobin;
@@ -327,17 +373,17 @@ export class HiddenCase implements GameLayer {
 
   // --- Actions (from prompts and from the HUD) --------------------------------------
 
-  private talkToChristopher(): void {
-    this.say("christopher", this.hint(), 5.5);
+  private talkToInes(): void {
+    this.say("ines", this.hint(), 5.5);
   }
 
   private hint(): string {
     const d = this.data;
-    if (d.stage === "closed") return CHRISTOPHER_HINTS.closed;
-    if (observationsComplete(d) && d.collected.includes("sonde")) return CHRISTOPHER_HINTS.ready;
-    if (d.bearings.length >= 2 && !d.collected.includes("sonde")) return CHRISTOPHER_HINTS.bearings;
-    if (d.collected.length > 0) return CHRISTOPHER_HINTS.some;
-    return CHRISTOPHER_HINTS.start;
+    if (d.stage === "closed") return INES_HINTS.closed;
+    if (observationsComplete(d) && d.collected.includes("sonde")) return INES_HINTS.ready;
+    if (d.bearings.length >= 2 && !d.collected.includes("sonde")) return INES_HINTS.bearings;
+    if (d.collected.length > 0) return INES_HINTS.some;
+    return INES_HINTS.start;
   }
 
   openDialog(who: Who): void {
@@ -512,9 +558,9 @@ export class HiddenCase implements GameLayer {
       this.maraClock += dt;
       routePose(this.maraClock, mara);
     }
-    for (const who of ["christopher", "tobin"] as const) {
+    for (const who of ["ines", "tobin"] as const) {
       const pose = this.poses[who];
-      const home = who === "christopher" ? CHRISTOPHER : TOBIN;
+      const home = who === "ines" ? INES : TOBIN;
       const near = Math.hypot(p.x - pose.x, p.z - pose.z) < 9;
       const want = near ? Math.atan2(p.x - pose.x, p.z - pose.z) : home.yaw;
       pose.yaw = turnTowards(pose.yaw, want, dt * 3);
@@ -596,7 +642,7 @@ export class HiddenCase implements GameLayer {
     if (id === "witness") this.say("rain", RADIO.witness, 4.5);
     if (id === "rerun") this.say("rain", RADIO.rerun, 4);
     if (observationsComplete(this.data) && this.data.collected.includes("sonde"))
-      this.say("christopher", CHRISTOPHER_HINTS.ready, 4.5);
+      this.say("ines", INES_HINTS.ready, 4.5);
     this.save();
     this.dirty = true;
     return true;
