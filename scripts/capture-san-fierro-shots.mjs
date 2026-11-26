@@ -66,6 +66,8 @@ async function open(context, campaign) {
   );
   await page.reload({ waitUntil: "load" });
   await page.waitForFunction(() => window.__sanFierroCapture && document.querySelector("canvas"));
+  // Christopher's figure is its own chunk; film him, not the stand-in.
+  await page.waitForFunction(() => window.__sanFierroPlayer === "christopher");
   await page.waitForTimeout(3000);
   return page;
 }
@@ -94,6 +96,11 @@ const hold = async (page, code, ms) => {
   await page.waitForTimeout(ms);
   await page.keyboard.up(code);
 };
+// Software rendering runs at a few frames a second, so wait for the HUD to
+// offer an action before pressing E, and for the result before shooting.
+const offered = (page, label) =>
+  page.waitForFunction((l) => [...document.querySelectorAll("button")].some((b) => b.textContent?.startsWith(l)), label);
+const shows = (page, text) => page.waitForFunction((t) => document.body.innerText.includes(t), text);
 const place = (page, x, z) =>
   page.evaluate(([x, z]) => window.__sanFierroCapture.teleport(x, z), [x, z]);
 
@@ -106,13 +113,16 @@ await shoot(page, "start");
 // Walk up the centre street onto the sensor-audit marker and collect it with E.
 await place(page, 0, 27);
 await hold(page, "KeyW", 600);
+await offered(page, "Collect evidence");
 await page.keyboard.press("KeyE");
+await shows(page, "Evidence 1/3");
 await shoot(page, "evidence");
 
 // Take the car and drive north up the centre street.
 await place(page, 0, 6.5);
-await page.waitForTimeout(500);
+await offered(page, "Enter vehicle");
 await page.keyboard.press("KeyE");
+await offered(page, "Exit vehicle");
 await hold(page, "KeyW", 1800);
 await shoot(page, "driving");
 await page.close();

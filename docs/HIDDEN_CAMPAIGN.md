@@ -20,7 +20,7 @@ The rules live in `src/game/hidden/discovery.ts`, which is the only hidden-case 
 - `SiteScene` imports the case module with `import("@/game/hidden/HiddenCase")` and the screens with `lazy(() => import(".../HiddenCaseHUD"))`. The acceptance click fetches both chunks. Waiting in Explore or simply reading the transmission loads neither chunk.
 - Until then the case adds no geometry, no layer, no interaction provider and no per-frame work. `Game.addLayer` keeps an empty array on ordinary visits.
 - The parked field van has a removable collision shape so Christopher, passing vehicles and the orbit camera stay outside its body. Returning to a survey view disables it, and leaving the campaign removes it.
-- Christopher's figure (mesh about 180 KB, textures about 400 KB) is a separate chunk, `src/game/hidden/chris/loadChris.ts`, fetched when the case first starts. The default figure stands in until it arrives, and if it fails to load the case plays the same with the default figure.
+- Christopher's figure (mesh about 180 KB, textures about 400 KB) is a separate chunk, `src/game/hidden/chris/loadChris.ts`, fetched when the case first starts. The San Fierro prototype (`src/components/game/SanFierro.tsx`) loads the same chunk for its player. The default figure stands in until it arrives, and if it fails to load the case plays the same with the default figure.
 
 ## Architecture
 
