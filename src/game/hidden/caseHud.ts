@@ -1,3 +1,4 @@
+import type { FieldRun } from "./expeditions";
 import type { Objective } from "./caseFile";
 import type {
   Confidence,
@@ -23,6 +24,8 @@ export interface CaseCaption {
 }
 
 export type CasePanel =
+  | { kind: "field"; station: string | null; chapter: number }
+  | { kind: "receipt"; title: string; text: string }
   | { kind: "dialog"; speaker: SpeakerId; line: string; options: { id: string; label: string; asked: boolean }[] }
   | { kind: "board" }
   | { kind: "note"; id: DocumentId; title: string; body: string }
@@ -44,6 +47,11 @@ export interface CaseSnapshot {
   title: boolean;
   stage: "briefing" | "investigating" | "closed";
   objectives: Objective[];
+  expeditions: FieldRun[];
+  guidance: string;
+  rover: {message: string; autonomous: boolean; complete: boolean; choices: {label: string; target: string}[]} | null;
+  calibration: boolean;
+  radioEnabled: boolean;
   /** Metres to the bearings' crossing, once both are taken and until it is found. */
   crossingDistance: number | null;
   caption: CaseCaption | null;
