@@ -9,6 +9,7 @@ import { GameplayState } from "../core/GameState";
 import type { InteractionOffer } from "../interaction/InteractionManager";
 import type { KeyValueStorage } from "../afterhours/progress";
 import type { PlayerVisual } from "../player/PlayerVisual";
+import { CollisionLayer, createBox, type Collider } from "../world/colliders";
 import {
   CASE_STORAGE_KEY,
   auditOnFile,
@@ -82,9 +83,8 @@ type Who = "mara" | "tobin";
  * The hidden case, run as a layer on the live game. Loaded only after the
  * visitor accepts the transmission, so an ordinary visit never downloads it.
  * It adds people, props and prompts on top of the reconstruction and reads
- * the player's position; it never changes movement, vehicle physics,
- * collision or the surveyed site data, and it stops After Hours or Free Roam
- * before it starts, because all three share the avatar.
+ * the player's position. Its van participates in collision only during play.
+ * It stops After Hours or Free Roam before taking over the shared avatar.
  */
 export class HiddenCase implements GameLayer {
   readonly data: CaseData;
@@ -94,6 +94,7 @@ export class HiddenCase implements GameLayer {
   /** Asked to free the mouse while a panel is up (the HUD recaptures it from a click). */
   onPointer: ((free: boolean) => void) | null = null;
 
+  private readonly vanHull: Collider;
   private removeLayer: (() => void) | null = null;
   private rover: CalibrationRover | null = null;
   private equipment: FieldEquipment | null = null;
@@ -152,6 +153,13 @@ export class HiddenCase implements GameLayer {
         : visuals
           ? () => import("./chris/loadChris").then((m) => m.loadChris())
           : null;
+    // The parked body's local Z extent is -2.55 to +2.95 m, including the cab.
+    const floor = game.ground.heightAt(VAN.x, VAN.z);
+    this.vanHull = createBox({
+      x: VAN.x + 0.2 * Math.sin(VAN.yaw), z: VAN.z + 0.2 * Math.cos(VAN.yaw),
+      hx: 1.025, hz: 2.75, rot: VAN.yaw, y0: floor, y1: floor + 2.3,
+      layer: CollisionLayer.Vehicle,
+    });
     this.lastText = this.readStored();
     this.data = parseCase(this.lastText);
     this.hud = new CaseHudStore(this.buildSnapshot());
@@ -171,6 +179,8 @@ export class HiddenCase implements GameLayer {
     this.syncFromStorage();
     markFound(this.data);
     g.resetForScenario(VAN_STAND);
+    this.vanHull.enabled = this.viewing;
+    g.collision.addDynamic(this.vanHull);
     this.removeLayer = g.addLayer(this);
     if (!g.interaction.providers.includes(this.provide)) g.interaction.providers.push(this.provide);
     this.active = true;
@@ -201,6 +211,7 @@ export class HiddenCase implements GameLayer {
     if (!this.active) return;
     const g = this.game;
     this.rover?.handover(null);
+    g.collision.removeDynamic(this.vanHull);
     this.removeLayer?.();
     this.removeLayer = null;
     const at = g.interaction.providers.indexOf(this.provide);
@@ -225,6 +236,7 @@ export class HiddenCase implements GameLayer {
   /** Show or hide the case's props with play (a survey view shows Pine Gap alone). */
   setViewing(viewing: boolean): void {
     this.viewing = viewing;
+    this.vanHull.enabled = viewing;
     if (!viewing) {
       this.suspendRover();
       this.audio?.carrier(0);

@@ -45,6 +45,22 @@ async function touchStick() {
     await cdp.detach();
   };
 }
+async function expectChristopher() {
+  await page.waitForFunction(() => {
+    const { playerVisual, root } = window.__pineGapGame;
+    const mesh = playerVisual?.mesh;
+    return (
+      playerVisual?.root.name === "christopher-woodyard-player" &&
+      playerVisual.root.parent === root &&
+      playerVisual.visible &&
+      mesh?.isSkinnedMesh &&
+      mesh.skeleton.bones.length === 32 &&
+      ["chrisw_body", "chrisw_head", "chrisw_acc", "chrisw_lens"].every((name) =>
+        mesh.material.some((m) => m.name === name && m.map?.name === name && m.map.image?.width > 0),
+      )
+    );
+  });
+}
 async function at(x, z) {
   await page.evaluate(([x, z]) => window.__pineGapGame.resetForScenario({ x, z, yaw: 0 }), [x, z]);
   await page.evaluate(
@@ -135,7 +151,8 @@ try {
     await page.keyboard.up("KeyW");
     await page.keyboard.up("Shift");
   }
-  log("Movement passed");
+  await expectChristopher();
+  log("Movement and textured Christopher avatar passed");
   if (!phone) {
     await page.keyboard.down("Space");
     await page.waitForFunction(() => !window.__pineGapGame.player.grounded);
@@ -222,6 +239,7 @@ try {
       await use();
       await press(rulings[i]);
       assert.notEqual((await saved()).expeditions[i].verdict, null);
+      await expectChristopher();
       log("Filed case " + (i + 2));
       if (i < 3) await press("Open the next transmission");
       await press("Back to the field");
@@ -243,6 +261,7 @@ try {
   await press("Unlisted carrier");
   await press("Return to the case");
   await page.getByRole("region", { name: "Case objectives" }).waitFor();
+  await expectChristopher();
   assert.deepEqual((await saved()).expeditions, file.expeditions);
   assert.equal(errors.length, 0, errors.join("\n"));
   log("Survey return and reload/resume passed");

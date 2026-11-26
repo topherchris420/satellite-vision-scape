@@ -4,7 +4,8 @@ import { Game } from "../src/game/Game";
 import type { KeyValueStorage } from "../src/game/afterhours/progress";
 import { CASE_STORAGE_KEY, parseCase } from "../src/game/hidden/caseFile";
 import { HiddenCase, routePose } from "../src/game/hidden/HiddenCase";
-import { BEARING_SETTLE, FLAGGED_VEHICLE, POSTS, SONDE, VAN_STAND } from "../src/game/hidden/story";
+import { BEARING_SETTLE, FLAGGED_VEHICLE, POSTS, SONDE, VAN, VAN_STAND } from "../src/game/hidden/story";
+import { CollisionMask } from "../src/game/world/colliders";
 
 const FRAME = 1 / 60;
 
@@ -160,4 +161,24 @@ describe("hidden case: a whole playthrough (headless)", () => {
     run(game, camera, 0.5);
     expect(offerAt(game, VAN_STAND.x, VAN_STAND.z)).toBeNull();
   });
+});
+
+test("the field van keeps the camera outside its body only while the campaign is visible", () => {
+  const game = new Game({ visuals: false });
+  const hidden = new HiddenCase(game, null, false);
+  const cameraClearance = () => game.collision.raycast(
+    VAN.x, game.ground.heightAt(VAN.x, VAN.z) + 1.5, VAN.z - 3,
+    0, 0, 1, 3, 0.1, CollisionMask.Camera, null,
+  );
+  const original = cameraClearance();
+  expect(original).toBe(3);
+  hidden.start();
+  expect(cameraClearance()).toBeLessThan(2);
+  hidden.setViewing(false);
+  expect(cameraClearance()).toBe(original);
+  hidden.setViewing(true);
+  expect(cameraClearance()).toBeLessThan(2);
+  hidden.dispose();
+  expect(cameraClearance()).toBe(original);
+  game.dispose();
 });

@@ -19,7 +19,7 @@ The rules live in `src/game/hidden/discovery.ts`, which is the only hidden-case 
 
 - `SiteScene` imports the case module with `import("@/game/hidden/HiddenCase")` and the screens with `lazy(() => import(".../HiddenCaseHUD"))`. The acceptance click fetches both chunks. Waiting in Explore or simply reading the transmission loads neither chunk.
 - Until then the case adds no geometry, no layer, no interaction provider and no per-frame work. `Game.addLayer` keeps an empty array on ordinary visits.
-- The case's props add no colliders, so the simulation, Free Roam determinism and recorded traces are untouched.
+- The parked field van has a removable collision shape so Christopher, passing vehicles and the orbit camera stay outside its body. Returning to a survey view disables it, and leaving the campaign removes it.
 - Christopher's figure (mesh about 180 KB, textures about 400 KB) is a separate chunk, `src/game/hidden/chris/loadChris.ts`, fetched when the case first starts. The default figure stands in until it arrives, and if it fails to load the case plays the same with the default figure.
 
 ## Architecture
@@ -67,7 +67,7 @@ The audit notes call out the echo, the number of lines and calibration (a 99.9% 
 
 ## Christopher's figure
 
-The player in the case is Christopher Woodyard in the model made for the San Andreas mod (`gta-sa-99-9-percent-sure`, see its `docs/CHARACTER.md`): the same procedural mesh and the same four painted textures (`assets/character/textures/chrisw_*.png`, loaded as they are).
+The player in all five cases is Christopher Woodyard in the model made for the San Andreas mod (`gta-sa-99-9-percent-sure`, see its `docs/CHARACTER.md`): the same procedural mesh and the same four painted textures (`assets/character/textures/chrisw_*.png`, loaded as they are).
 
 | At a survey post | Handing in the verdict at the van |
 | --- | --- |
@@ -80,6 +80,10 @@ The player in the case is Christopher Woodyard in the model made for the San And
 - `ChrisVisual` applies the existing animator's `CharacterPose` to those bones with the same rotations the procedural figures use, so he walks, runs, sits and drives with the animations already in the game. The model is bound in a T-pose, so the upper arms carry a fixed rest rotation (80° down) under the pose's shoulder and elbow angles.
 - He is shown only while the case is in play; a survey view shows the default figure, like the case's props it hides, and switching back to play brings him back.
 - He carries no cup and no sidearm (After Hours and Free Roam stop before the case starts). The jaw and brow bones stay at rest.
+
+![Full-body and close-up views of Christopher’s playable model in neutral light](media/screens/hidden-case/christopher.jpg)
+
+The character study above uses the same browser loader, rig and four textures as the campaign. The browser lights his painted face and clothing with diffuse materials. The glasses and pendant catch a small highlight. The four original texture atlases and 32-bone rig follow him through every assignment and load again when a saved case resumes.
 
 ## Save
 

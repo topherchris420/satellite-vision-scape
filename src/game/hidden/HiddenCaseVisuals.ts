@@ -6,9 +6,8 @@ import { INES, FIELD_NOTES, POSTS, SONDE, VAN, type DocumentId, type PostId } fr
 /**
  * Scene objects for the hidden case: the R.A.I.N. field van and its board,
  * three people, two survey posts with their bearing lines, a fallen
- * radiosonde and five field notes. All fictional, all on open ground, and
- * none of them adds a collider. Presentation only: the case reads nothing
- * back from here.
+ * radiosonde and five field notes. These fictional props are presentation
+ * only. HiddenCase separately registers the parked van with collision.
  */
 
 export interface PersonPose {
