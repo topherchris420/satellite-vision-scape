@@ -1,6 +1,7 @@
 """Tests for the original audio and the release package, not the GTA engine."""
 import hashlib
 import json
+import shutil
 from pathlib import Path
 import struct
 import subprocess
@@ -43,6 +44,34 @@ class PlaytestTests(unittest.TestCase):
                 with self.assertRaises(FileNotFoundError):
                     package_playtest.package(Path(tmp) / "out.zip", Path(tmp))
                 render.assert_not_called()
+
+    def test_shared_zip_excludes_locally_built_christopher(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            release = Path(tmp) / "stage"
+            shutil.copytree(package_playtest.ROOT / "release/99sure", release)
+            local_paths = (
+                "modloader/99sure/chrisw.dff",
+                "modloader/99sure/chrisw.txd",
+                "ModLoader/99sure/CHRISW.DFF",
+                "extras/model-preview/chrisw.dff",
+            )
+            for name in local_paths:
+                path = release / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(b"local model fixture")
+
+            archive = Path(tmp) / "playtest.zip"
+            manifest = package_playtest.package(archive, release)
+            with zipfile.ZipFile(archive) as z:
+                archived = set(z.namelist())
+                index = json.loads(z.read("MANIFEST.json"))
+                for name in local_paths:
+                    self.assertNotIn(name, archived)
+                    self.assertNotIn(name, index)
+                    self.assertEqual((release / name).read_bytes(), b"local model fixture")
+                self.assertEqual(index, manifest)
+                for name in package_playtest.REQUIRED:
+                    self.assertIn(name, archived)
 
     def test_release_archive(self):
         with tempfile.TemporaryDirectory() as tmp:

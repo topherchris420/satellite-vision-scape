@@ -5,8 +5,9 @@
 Packages release/99sure/ (built by tools/build.py) in its game-folder layout,
 with docs/PLAYTEST.md and docs/STORY.md alongside INSTALL.md. Never modifies a
 GTA installation and never includes the synthetic-skeleton preview model or
-any game file. If the lab score is missing from the release folder it is
-rendered here (tools/lab_score.py, needs ffmpeg).
+locally generated Christopher assets staged for Mod Loader. If the lab score
+is missing from the release folder it is rendered here
+(tools/lab_score.py, needs ffmpeg).
 """
 from __future__ import annotations
 
@@ -38,6 +39,7 @@ REQUIRED = (
 )
 MUSIC = "cleo/99sure/music/lab.mp3"
 EXCLUDE_PREFIXES = ("extras/model-preview/",)
+LOCAL_MODEL_FILES = frozenset(("modloader/99sure/chrisw.dff", "modloader/99sure/chrisw.txd"))
 DOCS = {"PLAYTEST.md": "docs/PLAYTEST.md", "STORY.md": "docs/STORY.md"}
 
 
@@ -55,7 +57,8 @@ def package(output, release=ROOT / "release/99sure"):
         if not path.is_file():
             continue
         name = path.relative_to(release).as_posix()
-        if name.startswith(EXCLUDE_PREFIXES) or name.lower().endswith("gta3.img"):
+        key = name.casefold()
+        if key.startswith(EXCLUDE_PREFIXES) or key in LOCAL_MODEL_FILES or key.endswith("gta3.img"):
             continue
         payload[name] = path.read_bytes()
     output.parent.mkdir(parents=True, exist_ok=True)
