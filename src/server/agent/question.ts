@@ -1,3 +1,4 @@
+import { CALIBRATION_TASK } from "../../agent/tasks/calibrationSchema";
 import { intentKey, type AgentIntent } from "../../agent/contract";
 import { describeIntent } from "../../agent/describe";
 import type { WorldObservation } from "../../agent/observation";
@@ -213,6 +214,7 @@ function renderAfterHours(
 }
 
 const TASK_NAMES: Record<string, string> = {
+  [CALIBRATION_TASK]: "Field calibration — drive a small research vehicle to each unsampled pad and measure it.",
   [AFTER_HOURS_TASK]:
     "After Hours — a fictional night shift: deliver a coffee, find a hidden radio signal, tune four terminals, start a midnight transmission",
 };
@@ -411,7 +413,9 @@ export function buildQuestion(
       questions: {
         intent: {
           type: "choice",
-          instructions: { context: context(assists), question: QUESTION },
+          instructions: { context: o.task.id === CALIBRATION_TASK
+            ? "You operate a fictional calibration rover. Drive to an unsampled pad, then take its reading. The researcher can take control at any time."
+            : context(assists), question: QUESTION },
           criteria,
         },
       },

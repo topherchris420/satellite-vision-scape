@@ -62,7 +62,8 @@ const noSnapshot = () => null;
 
 // The hidden case and its screens load only when someone follows the signal.
 const loadHiddenCase = () => import("@/game/hidden/HiddenCase");
-const HiddenCaseHUD = lazy(() => import("@/components/game/hidden/HiddenCaseHUD"));
+const loadCaseHUD = () => import("@/components/game/hidden/HiddenCaseHUD");
+const HiddenCaseHUD = lazy(loadCaseHUD);
 const noCase = () => false;
 
 /** Whether the hidden case is running (it may be paused behind the survey). */
@@ -487,7 +488,7 @@ export function SiteScene() {
   );
   const leaveFreeRoam = useCallback(() => game?.roam.stop(), [game]);
 
-  // The hidden case. Nothing of it is fetched until the signal shows in the survey.
+  // The hidden case. Nothing of it is fetched until a visitor accepts the transmission.
   const [hiddenCase, setHiddenCase] = useState<HiddenCase | null>(null);
   const hiddenCaseRef = useRef<HiddenCase | null>(null);
   hiddenCaseRef.current = hiddenCase;
@@ -497,20 +498,20 @@ export function SiteScene() {
     if (!selected) return;
     setInspected((seen) => (seen.has(selected.name) ? seen : new Set(seen).add(selected.name)));
   }, [selected]);
-  const prefetchCase = useCallback(() => {
-    void loadHiddenCase().catch(() => undefined);
-    void import("@/components/game/hidden/HiddenCaseHUD").catch(() => undefined);
-  }, []);
+  const [signalError, setSignalError] = useState(false);
   const acceptCase = useCallback(() => {
     if (!game) return;
+    setSignalError(false);
     // Audio and pointer lock may only start inside the click that asked.
     game.unlockAudio();
     setSelected(null);
+    modeRef.current = "play";
     setMode("play");
     if (isMobile) session.startUnlocked();
     else session.start();
     game.setPaused(false);
-    void loadHiddenCase().then(({ HiddenCase: Case }) => {
+    void Promise.all([loadHiddenCase(), loadCaseHUD()]).then(([{ HiddenCase: Case }]) => {
+      if (gameRef.current !== game || modeRef.current !== "play") return;
       let c = hiddenCaseRef.current;
       if (!c) {
         c = new Case(game, browserStorage(), true);
@@ -522,19 +523,31 @@ export function SiteScene() {
         if (free) sessionRef.current.releasePointer();
       };
       c.start();
+    }).catch(() => {
+      if (gameRef.current === game && modeRef.current === "play") {
+        sessionRef.current.releasePointer();
+        setMode("fly");
+        setSignalError(true);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [game, isMobile, session.start, session.startUnlocked]);
+  const disposeCase = useCallback(() => {
+    hiddenCaseRef.current?.dispose();
+    hiddenCaseRef.current = null;
+    setHiddenCase(null);
+    if (import.meta.env.DEV) delete (window as unknown as { __pineGapCase?: HiddenCase }).__pineGapCase;
+  }, []);
   const leaveCase = useCallback(() => {
-    hiddenCaseRef.current?.stop();
+    disposeCase();
     if (isMobile) session.startUnlocked();
     else session.start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMobile, session.start, session.startUnlocked]);
+  }, [disposeCase, isMobile, session.start, session.startUnlocked]);
   const caseToSurvey = useCallback(() => {
-    hiddenCaseRef.current?.stop();
+    disposeCase();
     setMode("fly");
-  }, []);
+  }, [disposeCase]);
   const resumeCase = useCallback(
     (unlocked: boolean) => (unlocked ? session.startUnlocked() : session.start()),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -709,7 +722,6 @@ export function SiteScene() {
               surveying={!playing}
               inspections={inspected.size}
               caseActive={caseActive}
-              onPrefetch={prefetchCase}
               onAccept={acceptCase}
             />
           ) : null
@@ -753,6 +765,7 @@ export function SiteScene() {
         </Suspense>
       )}
 
+      {signalError && !playing && <p role="alert" className="absolute bottom-3 left-3 z-30 bg-black/80 p-2 text-xs text-white">Transmission interrupted. Reopen the carrier to retry.</p>}
       {showDebug && <TerrainDebugHUD onClose={() => setShowDebug(false)} />}
 
       {gameError && (

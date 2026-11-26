@@ -1,4 +1,8 @@
+import { CalibrationRover, TRANSECT } from "./CalibrationRover";
+import { JevProvider } from "@/agent/providers/jev";
 import * as THREE from "three";
+import { EXPEDITIONS, availableStations, canFile, freshRun, instrumentFor, responseAt } from "./expeditions";
+import { FieldEquipment } from "./FieldEquipment";
 import type { Game, GameLayer } from "../Game";
 import type { InputState } from "../core/Input";
 import { GameplayState } from "../core/GameState";
@@ -91,6 +95,12 @@ export class HiddenCase implements GameLayer {
   onPointer: ((free: boolean) => void) | null = null;
 
   private removeLayer: (() => void) | null = null;
+  private rover: CalibrationRover | null = null;
+  private equipment: FieldEquipment | null = null;
+  private guidance = "";
+  private guideTimer = 0;
+  private radioEnabled = true;
+  private get field() { return this.data.expeditions.at(-1); }
   private time = 0;
   private titleLeft = 0;
   private caption: (CaseCaption & { left: number }) | null = null;
@@ -176,7 +186,7 @@ export class HiddenCase implements GameLayer {
       this.queue.length = 0;
       for (const line of BRIEFING) this.queue.push({ ...line });
     } else if (this.data.stage === "closed") {
-      this.say("ines", INES_HINTS.closed, 5);
+      this.say("ines", this.field ? EXPEDITIONS[this.field.chapter].briefing : "Another tape just came in. Check the board when you’re ready.", 6);
     } else {
       this.say("rain", "Back on the ground. The board kept everything you brought in.", 4);
       this.say("ines", this.hint(), 5);
@@ -190,6 +200,7 @@ export class HiddenCase implements GameLayer {
   stop(): void {
     if (!this.active) return;
     const g = this.game;
+    this.rover?.handover(null);
     this.removeLayer?.();
     this.removeLayer = null;
     const at = g.interaction.providers.indexOf(this.provide);
@@ -214,6 +225,10 @@ export class HiddenCase implements GameLayer {
   /** Show or hide the case's props with play (a survey view shows Pine Gap alone). */
   setViewing(viewing: boolean): void {
     this.viewing = viewing;
+    if (!viewing) {
+      this.suspendRover();
+      this.audio?.carrier(0);
+    }
     this.visuals?.setActive(this.active && viewing);
     // Christopher belongs to the case's play view, like its props.
     if (this.active) {
@@ -225,6 +240,7 @@ export class HiddenCase implements GameLayer {
   dispose(): void {
     this.stop();
     this.audio?.dispose();
+    this.equipment?.dispose();
     this.visuals?.dispose();
     this.player?.dispose();
     this.player = null;
@@ -262,6 +278,7 @@ export class HiddenCase implements GameLayer {
   update(dt: number, input: InputState): void {
     if (!this.active) return;
     this.time += dt;
+    if (input.wasPressed("takeover") && this.rover?.autonomous) this.suspendRover();
     if (this.titleLeft > 0) {
       this.titleLeft -= dt;
       // E or Space skips the card.
@@ -280,13 +297,76 @@ export class HiddenCase implements GameLayer {
     this.advanceCaptions(dt);
     this.updatePeople(dt);
     this.updateBearing(dt);
-    this.updateField();
+    if (!this.field) this.updateField();
+    else {
+      this.guideTimer -= dt;
+      if (this.guideTimer <= 0) {
+        this.guideTimer = .4;
+        this.updateGuide();
+      }
+    }
     this.publish();
   }
 
+  fixedStep(dt: number): void {
+    if (this.active && this.viewing && this.rover && !this.rover.complete) this.rover.step(dt);
+  }
+
+  toggleRadio(): void {
+    if (!this.active || this.panel?.kind !== "file") return;
+    this.radioEnabled = !this.radioEnabled;
+    if (!this.radioEnabled) {
+      this.caption = null;
+      this.queue.length = 0;
+    }
+    this.dirty = true;
+    this.publish();
+  }
+
+  suspendRover(): void {
+    if (this.rover?.autonomous) this.rover.handover(null);
+  }
+
+  activateRover(): void {
+    if (!this.active || this.panel?.kind !== "file" || this.rover) return;
+    const {session, build} = this.game.agent.trace.header;
+    this.rover = new CalibrationRover(session, build, () => {
+      if (this.rover?.complete && !this.data.calibration) {
+        this.data.calibration = true;
+        this.save();
+        this.say("ines", "The rover heard its own motor at both pads. That blank just saved us a bad result.", 6);
+      }
+      this.dirty = true;
+      this.publish();
+    });
+    this.dirty = true;
+    this.publish();
+  }
+
+  operateRover(target: string): void {
+    if (!this.active || !this.viewing || this.panel?.kind !== "file" || !this.rover || this.rover.complete) return;
+    if (target === "jev") this.rover.handover(new JevProvider(this.rover.trace.header.session));
+    else if (target === "human") this.suspendRover();
+    else {
+      const action = this.rover.legal().find(a => "target" in a && a.target === target);
+      if (action) this.rover.human(action);
+    }
+  }
+
+  roverTrace(): string | undefined {
+    return this.rover?.trace.export({samples: this.rover.samples.size, complete: this.rover.complete});
+  }
+
   present(dt: number): void {
-    if (!this.active || !this.visuals) return;
+    if (!this.active || !this.viewing || !this.visuals) return;
+    this.equipment?.present(this.time, dt);
     const truck = this.game.vehicles.vehicles[FLAGGED_VEHICLE];
+    this.visuals.rover.visible = !!this.rover;
+    if (this.rover) {
+      const z = TRANSECT.z - this.rover.distance;
+      this.visuals.rover.position.set(TRANSECT.x, this.game.ground.heightAt(TRANSECT.x, z), z);
+      this.visuals.rover.rotation.y = this.rover.heading > 0 ? Math.PI : 0;
+    }
     this.visuals.update(dt, {
       time: this.time,
       ines: this.poses.ines,
@@ -307,7 +387,8 @@ export class HiddenCase implements GameLayer {
   cinematic(dt: number, camera: THREE.PerspectiveCamera): boolean {
     if (!this.active) return false;
     const ending = this.panel?.kind === "ending";
-    if (this.titleLeft <= 0 && !ending) return false;
+    const filed = this.panel?.kind === "field" && this.panel.station === null && this.field?.verdict != null;
+    if (this.titleLeft <= 0 && !ending && !filed) return false;
     this.orbit += dt * (ending ? 0.06 : 0.11);
     const radius = ending ? 34 : 15;
     const height = ending ? 16 : 4.2;
@@ -329,6 +410,11 @@ export class HiddenCase implements GameLayer {
       if (d > range || (best && d >= best.distance)) return;
       best = { id, label, distance: d, act };
     };
+    const run = this.field;
+    if (run) for (const station of availableStations(run)) {
+      consider("case:" + station.id, station.x, station.z, 3.2, "Inspect " + station.place,
+        () => this.openPanel({ kind: "field", station: station.id, chapter: run.chapter }));
+    }
     const has = (id: EvidenceId) => this.data.collected.includes(id);
 
     consider(
@@ -336,7 +422,7 @@ export class HiddenCase implements GameLayer {
       VAN_BOARD.x,
       VAN_BOARD.z,
       RANGES.van,
-      this.data.stage === "closed" ? "Read the verdict" : "Open the evidence board",
+      run ? "Open the transmission log" : this.data.stage === "closed" ? "Read the verdict" : "Open the evidence board",
       () => this.openBoard(),
     );
     const c = this.poses.ines;
@@ -384,7 +470,8 @@ export class HiddenCase implements GameLayer {
 
   private hint(): string {
     const d = this.data;
-    if (d.stage === "closed") return INES_HINTS.closed;
+    if (this.field) return EXPEDITIONS[this.field.chapter].briefing;
+    if (d.stage === "closed") return "Another transmission is waiting at the board.";
     if (observationsComplete(d) && d.collected.includes("sonde")) return INES_HINTS.ready;
     if (d.bearings.length >= 2 && !d.collected.includes("sonde")) return INES_HINTS.bearings;
     if (d.collected.length > 0) return INES_HINTS.some;
@@ -467,6 +554,10 @@ export class HiddenCase implements GameLayer {
 
   openBoard(): void {
     if (!this.active) return;
+    if (this.field) {
+      this.openPanel({ kind: "field", station: null, chapter: this.field.chapter });
+      return;
+    }
     if (this.data.stage === "closed") {
       this.auditNotes = auditOnFile(this.data)?.notes ?? [];
       this.openPanel({ kind: "ending" });
@@ -488,6 +579,72 @@ export class HiddenCase implements GameLayer {
       return;
     }
     this.openPanel({ kind: "file" });
+  }
+
+  /** Only a filed assignment unlocks the next tape, including pre-expansion saves. */
+  nextTransmission(): void {
+    if (!this.active || this.data.stage !== "closed" || !(this.panel?.kind === "ending" || this.panel?.kind === "field")) return;
+    const previous = this.field;
+    if (previous && (previous.verdict === null || this.panel.kind !== "field" ||
+      this.panel.chapter !== previous.chapter || this.panel.station !== null)) return;
+    const chapter = this.data.expeditions.length;
+    if (chapter >= EXPEDITIONS.length) return;
+    this.data.expeditions.push(freshRun(chapter));
+    this.audio?.carrier(0);
+    this.carrier = 0;
+    this.caption = null;
+    this.queue.length = 0;
+    this.say("ines", EXPEDITIONS[chapter].briefing, 8);
+    this.save();
+    this.openPanel({ kind: "field", chapter, station: null });
+  }
+
+  listenToDial(value: number): void {
+    if (this.panel?.kind !== "field" || !this.panel.station) return;
+    const instrument = instrumentFor(this.panel.station);
+    if (instrument && Number.isFinite(value)) this.audio?.instrument(value, responseAt(value, instrument.center));
+  }
+
+  recordFieldChoice(index: number, dial?: number): void {
+    const run = this.field;
+    const panel = this.panel;
+    if (!this.active || !run || panel?.kind !== "field" || panel.chapter !== run.chapter || run.verdict !== null) return;
+    const mission = EXPEDITIONS[run.chapter];
+    if (!Number.isInteger(index) || index < 0) return;
+    const station = availableStations(run).find(s => s.id === panel.station);
+    if (panel.station !== null) {
+      if (!station || !station.choices[index]) return;
+      const instrument = instrumentFor(station.id);
+      if (instrument && station.choices[index].supported && (dial === undefined || !Number.isFinite(dial) || responseAt(dial, instrument.center) < .88)) return;
+      run.records[station.id] = index;
+      this.save();
+      this.audio?.carrier(0);
+      this.audio?.chime();
+      this.openPanel({ kind: "receipt", title: station.place, text: station.choices[index].result });
+    } else if (canFile(run) && mission.verdicts[index]) {
+      run.verdict = index;
+      this.save();
+      this.orbit = 0;
+      this.audio?.chime();
+      this.dirty = true;
+      this.publish();
+    }
+  }
+
+  private updateGuide(): void {
+    const run = this.field;
+    let next = "";
+    if (run && run.verdict === null) {
+      const p = this.game.focusPoint;
+      const stations = availableStations(run).filter(s => !s.optional || !canFile(run));
+      const targets = stations.length ? stations : [{ ...VAN_BOARD, place: "Van board" }];
+      const delta = (s: { x: number; z: number }) => Math.hypot(p.x - s.x, p.z - s.z);
+      const target = targets.reduce((a, b) => delta(a) <= delta(b) ? a : b);
+      const angle = Math.atan2(target.x - p.x, p.z - target.z);
+      const direction = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][(Math.round(angle / (Math.PI / 4)) + 8) % 8];
+      next = target.place + " · " + direction + " · " + Math.round(delta(target) / 5) * 5 + " m";
+    }
+    if (next !== this.guidance) { this.guidance = next; this.dirty = true; }
   }
 
   toggleWeigh(id: EvidenceId): void {
@@ -523,6 +680,7 @@ export class HiddenCase implements GameLayer {
 
   closePanel(): void {
     if (!this.panel) return;
+    if (this.panel.kind === "field") this.audio?.carrier(0);
     this.panel = null;
     this.dialogWho = null;
     this.game.lockMovement(MOVEMENT_OWNER, false);
@@ -656,6 +814,7 @@ export class HiddenCase implements GameLayer {
   // --- Captions, toasts, snapshot ---------------------------------------------------
 
   private say(speaker: SpeakerId, text: string, seconds: number): void {
+    if (!this.radioEnabled) return;
     if (this.queue.length > 4) this.queue.shift();
     this.queue.push({ speaker, text, seconds });
   }
@@ -684,6 +843,11 @@ export class HiddenCase implements GameLayer {
   private publish(): void {
     if (!this.dirty) return;
     this.dirty = false;
+    if (this.visuals && this.field && !this.equipment) {
+      this.equipment = new FieldEquipment((x, z) => this.game.ground.heightAt(x, z));
+      this.visuals.root.add(this.equipment.root);
+    }
+    this.equipment?.sync(this.field);
     this.hud.set(this.buildSnapshot());
   }
 
@@ -698,6 +862,14 @@ export class HiddenCase implements GameLayer {
       title: this.titleLeft > 0,
       stage: d.stage,
       objectives: objectives(d),
+      expeditions: d.expeditions.map(r => ({ ...r, records: { ...r.records } })),
+      guidance: this.guidance,
+      calibration: d.calibration,
+      radioEnabled: this.radioEnabled,
+      rover: this.rover ? {
+        message: this.rover.message, autonomous: this.rover.autonomous, complete: this.rover.complete,
+        choices: this.rover.legal().flatMap(a => "target" in a ? [{target: a.target, label: (a.intent === "drive_to" ? "Drive to " : "Measure ") + a.target}] : []),
+      } : null,
       crossingDistance: this.crossingShown,
       caption: this.caption ? { id: this.caption.id, speaker: this.caption.speaker, text: this.caption.text } : null,
       bearing: this.settle ? { post: this.settle.post, progress: this.settle.progress, moved: this.settle.moved } : null,
@@ -822,6 +994,11 @@ class CaseAudio {
 
   carrier(level: number): void {
     this.toneGain.gain.setTargetAtTime(0.035 * level * level, this.ctx.currentTime, 0.3);
+  }
+
+  instrument(dial: number, level: number): void {
+    this.tone.frequency.setTargetAtTime(dial * 2, this.ctx.currentTime, .04);
+    this.carrier(level * .8);
   }
 
   chirp(level: number): void {

@@ -41,7 +41,7 @@ Everything runs in the browser, needs no account or key, and works on desktop an
 | **Free Roam** | Sixteen seeded scenarios that you, a scripted baseline or a live model can play, then replay and compare. |
 | **Explore, Tour and Plan** | Survey the reconstruction from above: antennas from a public 2016 survey, terrain and buildings approximate. |
 
-Pine Gap rewards a careful look. Not everything the instruments pick up is on a menu.
+Pine Gap rewards a careful look. Take your time with the instruments. Discoveries you choose to follow are saved in this browser, and you can return to the survey whenever you like.
 
 The same repository also holds an earlier San Fierro prototype and a CLEO storyline for a PC game; both are described [further down](#chapter-i--san-fierro).
 

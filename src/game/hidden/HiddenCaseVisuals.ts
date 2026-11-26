@@ -45,6 +45,7 @@ type Height = (x: number, z: number) => number;
 
 export class HiddenCaseVisuals {
   readonly root = new THREE.Group();
+  readonly rover = new THREE.Group();
   private readonly geometries: THREE.BufferGeometry[] = [];
   private readonly materials: THREE.Material[] = [];
   private readonly people: { visual: CharacterVisual; animator: CharacterAnimator }[] = [];
@@ -76,6 +77,21 @@ export class HiddenCaseVisuals {
     const trim = mat(new THREE.MeshStandardMaterial({ color: "#2b3033", roughness: 0.7 }));
     const glass = mat(new THREE.MeshStandardMaterial({ color: "#1c2a30", roughness: 0.2, metalness: 0.5 }));
     const rubber = mat(new THREE.MeshStandardMaterial({ color: "#1a1a1a", roughness: 0.9 }));
+    const chassis = new THREE.Mesh(box(.72, .26, 1.04), paint);
+    chassis.position.y = .39;
+    this.rover.add(chassis);
+    const sensor = new THREE.Mesh(box(.22, .28, .17), glass);
+    sensor.position.set(.15, .66, .32);
+    this.rover.add(sensor);
+    const tyre = geo(new THREE.CylinderGeometry(.19, .19, .13, 12));
+    for (const x of [-.38,.38]) for (const z of [-.32,.32]) {
+      const wheel = new THREE.Mesh(tyre, rubber);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(x,.19,z);
+      this.rover.add(wheel);
+    }
+    this.rover.visible = false;
+    this.root.add(this.rover);
     const van = new THREE.Group();
     van.name = "rain-field-van";
     const body = new THREE.Mesh(box(2.05, 1.9, 4.2), paint);

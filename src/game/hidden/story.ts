@@ -454,11 +454,3 @@ export const FIELD_NOTES: readonly FieldNote[] = [
     at: { x: -75, z: -341 },
   },
 ];
-
-/** The rest of the campaign, shown honestly as not yet received. */
-export const LATER_CASES: readonly { title: string; line: string }[] = [
-  { title: "Ghost Frequency", line: "A signal that only appears when someone is listening for it." },
-  { title: "False Positive", line: "CERTAIN-PG flags a person, not a truck." },
-  { title: "Everything Is Connected", line: "Every clue fits. That is the problem." },
-  { title: "The Open Experiment", line: "R.A.I.N. asks you to test the machine in public." },
-];

@@ -17,7 +17,7 @@ The rules live in `src/game/hidden/discovery.ts`, which is the only hidden-case 
 
 ## Lazy loading and performance
 
-- `SiteScene` imports the case module with `import("@/game/hidden/HiddenCase")` and the screens with `lazy(() => import(".../HiddenCaseHUD"))`. Both are fetched when the signal line first appears (prefetch) and run only after "Go and look".
+- `SiteScene` imports the case module with `import("@/game/hidden/HiddenCase")` and the screens with `lazy(() => import(".../HiddenCaseHUD"))`. The acceptance click fetches both chunks. Waiting in Explore or simply reading the transmission loads neither chunk.
 - Until then the case adds no geometry, no layer, no interaction provider and no per-frame work. `Game.addLayer` keeps an empty array on ordinary visits.
 - The case's props add no colliders, so the simulation, Free Roam determinism and recorded traces are untouched.
 - Christopher's figure (mesh about 180 KB, textures about 400 KB) is a separate chunk, `src/game/hidden/chris/loadChris.ts`, fetched when the case first starts. The default figure stands in until it arrives, and if it fails to load the case plays the same with the default figure.
@@ -87,11 +87,26 @@ One `localStorage` key, `99sure.hidden.v1`, separate from Pine Gap's own progres
 
 Two tabs can play the same file. Before every save the case reads the file again and, if another tab saved in the meantime, merges: found evidence, bearings, notes and endings only accumulate, and the verdict comes from whichever copy got further. Each replay bumps an `epoch`, so an older copy cannot bring back evidence a replay cleared. "Replay the case" resets the investigation but keeps notes, endings seen and the found flag.
 
-## What is not built yet
+## The next four transmissions
 
-- Missions 2 to 5 (the San Fierro prototype, Free Roam, After Hours and Jev). The case file lists them as later transmissions, not yet received.
-- Optional Jev encounters inside the case.
-- Additional vehicles or NPC routines beyond Mara's walk and the others turning to face the player.
+File a closing verdict in case one, then open the next transmission on the verdict card. An older v1 save with a closed case can start here by visiting the van board. The same board issues every later assignment. The field log (J or the touch button) keeps the briefing, readings and the player's choices. The compass line leads to a required bench, then back to the van. Optional benches appear in the log before the player files a verdict.
+
+| Case | Fieldwork | Consequence |
+| --- | --- | --- |
+| Ghost Frequency | Tune the receiver at the west bench. Try removing the lamp, then compare the east repeater with an independently clocked receiver. An optional cassette dates the broadcast. | Publish the controlled interval or the loudest tape. Ines can append a correction when the experiment falls short. |
+| False Positive | Visit Marisol, Dex and Ray in any order. Each volunteer's statement and an independent record support a separate decision. | Individual findings leave an appeal trail. Sending an aggregate score obscures those decisions. |
+| Everything Is Connected | Compare heat-matched hours and investigate the cart's missing day. The folded lunar calendar offers a side investigation. | Rex broadcasts the causal explanation the player chooses. |
+| The Open Experiment | Run portable plate replications at two benches. Sweep the drive until the response stabilizes for a controlled recording, or accept an uncontrolled observation. A third crew has a thicker plate. | Open publication, exclusive licensing and a request for another trial lead to different outcomes. The published ending takes account of the fieldwork and previous rulings. |
+
+The names, seven-pulse tape, volunteer triage, live radio challenge and replication contract come from the four corresponding CLEO scripts. All instruments and locations in these missions belong to the invented field expedition. The case uses the existing Pine Gap terrain sampler, avatar, vehicle fleet and interaction prompts. The portable equipment is original procedural geometry.
+
+`expeditions.ts` holds the station definitions, dependencies, dial response and ending rules. The existing save gains an ordered list of field runs. Each sample and verdict is saved immediately. The parser discards invalid choice indices and stops at the first unfinished mission. A filed run seals its observations. Replaying case one resets the sequence and retains the player's collected notes. Switching survey views suspends the layer. Returning through the pause card disposes its meshes, audio and any pending companion request.
+
+### Optional field companion
+
+Open the case file and unpack the calibration rover. It drives along a short fictional test strip and samples a reference pad and a blank. The same 96 Hz reading from both pads exposes pickup from its own motor. The manual experiment and all five story missions run without a decision service. Field commentary can be muted from the case file.
+
+**Connect live Jev** delegates the rover to the existing same-origin decision service. The operator keeps control of Christopher. **Take control**, H, pausing or switching back to the survey cancels rover delegation. Without a configured service the rover returns to manual control. The provider receives a bounded observation in the rover's local frame. Each accepted drive or measurement passes through the existing action bus on fixed simulation steps. Campaign verdicts stay with the player. The rover exports a separate trace of decisions, control changes, samples and path. The calibration finding persists with the case.
 
 ## Tests
 
@@ -99,3 +114,6 @@ Two tabs can play the same file. Before every save the case reads the file again
 - `tests/hidden-case-chris.test.ts`: the exported figure (decoding, weights, frame, outward faces, draw groups), that the animator's pose moves his limbs as on the procedural rig, and that the case swaps him in and hands the default figure back.
 - `tests/hidden-case-play.test.ts`: a headless playthrough on the real `Game`: start at the van, the title card, every piece of evidence, the verdict, saving, resuming and replaying, and that nothing is left behind after the case stops.
 - `scripts/playtest-hidden-case.mjs`: a browser playtest that plays the case in headless Chromium through its real buttons, keys and touch controls, on desktop and phone, with a screenshot per step. Run it against `bun run dev` with `node scripts/playtest-hidden-case.mjs --out playtest` (needs Playwright's Chromium). It is not part of CI: software WebGL makes a run take half an hour or more.
+
+- `tests/hidden-expeditions.test.ts` plays the four follow-up cases from a legacy save, reloads after each reading, checks filing and replay, and exercises rover travel and takeover.
+- `PINE_PLAYTEST_URL=http://127.0.0.1:8080 node scripts/playtest-field-campaign.mjs` tests all five cases in Chromium against a running development server. Add `--phone` for touch discovery, movement, interaction, a closing verdict and a return visit. The harness places the avatar near distant benches between interactions to keep software-rendered runs practical.

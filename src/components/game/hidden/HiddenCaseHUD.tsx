@@ -1,3 +1,4 @@
+import { EXPEDITIONS, availableStations, canFile, fieldEnding, instrumentFor, responseAt } from "@/game/hidden/expeditions";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { HiddenCase } from "@/game/hidden/HiddenCase";
 import type { CaseSnapshot } from "@/game/hidden/caseHud";
@@ -7,7 +8,6 @@ import {
   CONFIDENCE_CHOICES,
   ENDINGS,
   FIELD_NOTES,
-  LATER_CASES,
   POSTS,
   RADIO,
   SPEAKERS,
@@ -69,6 +69,9 @@ export default function HiddenCaseHUD({
     return () => window.removeEventListener("keydown", onKey);
   }, [hiddenCase, snap.active, snap.panel, snap.title, running]);
 
+  useEffect(() => {
+    if (!running) hiddenCase.suspendRover();
+  }, [hiddenCase, running]);
   if (!snap.active) return null;
   const close = () => {
     hiddenCase.closePanel();
@@ -108,6 +111,10 @@ export default function HiddenCaseHUD({
 
       {running && snap.panel && (
         <Modal>
+          {snap.panel.kind === "field" && <FieldDesk hiddenCase={hiddenCase} snap={snap} onClose={close} />}
+          {snap.panel.kind === "receipt" && <Panel label="Field record" title={snap.panel.title} onClose={close}>
+            <p className="font-sans text-sm text-white/85">{snap.panel.text}</p>
+          </Panel>}
           {snap.panel.kind === "dialog" && (
             <Dialog snap={snap} onChoose={(id) => (id === "leave" ? close() : hiddenCase.choose(id))} />
           )}
@@ -128,6 +135,7 @@ export default function HiddenCaseHUD({
                 hiddenCase.replay();
                 onRecapture();
               }}
+              onNext={() => hiddenCase.nextTransmission()}
               onSurvey={onReturnToSurvey}
             />
           )}
@@ -137,7 +145,7 @@ export default function HiddenCaseHUD({
 
       {status === "paused" && (
         <Modal>
-          <Panel label="Paused · Fiction" title="Case 01: 99.9% SURE">
+          <Panel label="Paused · Fiction" title={snap.expeditions.length ? EXPEDITIONS[snap.expeditions.length - 1].title : "Case 01: 99.9% SURE"}>
             <p className="font-sans text-[12px] leading-relaxed text-white/60">
               Everything is saved as you go. Resume here, or step back out to the survey; the signal will still be there.
             </p>
@@ -184,17 +192,25 @@ function TitleCard() {
 }
 
 function Objectives({ snap, isMobile, onFile }: { snap: CaseSnapshot; isMobile: boolean; onFile: () => void }) {
+  const run = snap.expeditions.at(-1);
+  const mission = run && EXPEDITIONS[run.chapter];
   return (
     <section
       aria-label="Case objectives"
       className={`${glass} absolute right-3 top-16 w-[min(17rem,calc(100vw-1.5rem))] rounded-xl px-3 py-2.5 sm:right-5 sm:top-5`}
     >
       <div className="flex items-center justify-between">
-        <span className={`text-[8px] font-bold uppercase tracking-[.22em] ${teal}`}>Case 01 · 99.9% SURE</span>
+        <span className={`text-[8px] font-bold uppercase tracking-[.22em] ${teal}`}>{mission ? `Case 0${run!.chapter + 2} · ${mission.title}` : "Case 01 · 99.9% SURE"}</span>
         <span className="rounded-sm bg-[#0B5D63] px-1 text-[7px] uppercase tracking-[.18em] text-white/90">Fiction</span>
       </div>
       <ul className="mt-2 space-y-1">
-        {snap.objectives.map((o) => (
+        {run && mission ? (
+          <li className="font-sans text-xs text-white/80">
+            {run.verdict === null ? <>{canFile(run) ? "Return to the van to file your findings." : "Take a reading at the field benches."}
+              <span className="mt-1 block text-amber-200">{snap.guidance}</span></>
+              : run.chapter === 3 ? "All five cases filed." : "Next transmission at the van."}
+          </li>
+        ) : snap.objectives.map((o) => (
           <li key={o.id} className={`flex gap-2 font-sans text-[11px] leading-snug ${o.done ? "text-white/35 line-through" : "text-white/80"}`}>
             <span className={o.done ? "text-emerald-300" : teal}>{o.done ? "✓" : "·"}</span>
             <span>
@@ -413,11 +429,13 @@ function EndingCard({
   onClose,
   onReplay,
   onSurvey,
+  onNext,
 }: {
   snap: CaseSnapshot;
   onClose: () => void;
   onReplay: () => void;
   onSurvey: () => void;
+  onNext: () => void;
 }) {
   const ending = snap.ending ? ENDINGS[snap.ending] : null;
   if (!ending) return null;
@@ -447,6 +465,7 @@ function EndingCard({
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <PrimaryButton onClick={onClose}>{ending.closes ? "Walk the site" : "Back to the field"}</PrimaryButton>
+        {ending.closes && <PrimaryButton onClick={onNext}>Open the next transmission</PrimaryButton>}
         {ending.closes && <QuietButton onClick={onReplay}>Replay the case</QuietButton>}
         <QuietButton onClick={onSurvey}>Return to the survey</QuietButton>
       </div>
@@ -454,9 +473,50 @@ function EndingCard({
   );
 }
 
+function FieldDesk({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap: CaseSnapshot; onClose: () => void }) {
+  const [dial, setDial] = useState<number | null>(null);
+  const run = snap.expeditions.at(-1);
+  if (!run || snap.panel?.kind !== "field") return null;
+  const mission = EXPEDITIONS[run.chapter];
+  const stationId = snap.panel.station;
+  const station = mission.stations.find(s => s.id === stationId);
+  const instrument = station && instrumentFor(station.id);
+  const value = dial ?? instrument?.low ?? 0;
+  const level = instrument ? responseAt(value, instrument.center) : 1;
+  const verdict = run.verdict !== null;
+  const choices = station ? station.choices : canFile(run) && !verdict ? mission.verdicts : [];
+  return <Panel label={`Field transmission 0${run.chapter + 2} · Fiction`} title={station?.place ?? mission.title} onClose={onClose}>
+    <p className="font-sans text-[15px] leading-relaxed text-white/90">
+      {station ? station.prompt : verdict ? fieldEnding(snap.expeditions) : mission.briefing}
+    </p>
+    {instrument && <div className="my-3 rounded-lg border border-white/15 p-3">
+      <label className="flex justify-between text-xs text-amber-200" htmlFor="field-dial">
+        {instrument.label}<span>{value} {instrument.unit}</span>
+      </label>
+      <input id="field-dial" className="mt-3 w-full accent-[#7fd6d0]" type="range" min={instrument.low} max={instrument.high}
+        onKeyDown={e => e.stopPropagation()} value={value} onChange={e => { const v = Number(e.target.value); setDial(v); hiddenCase.listenToDial(v); }} />
+      <meter aria-label="Signal coherence" value={level} min={0} max={1} className="w-full" />
+      <p className="mt-1 text-xs text-white/70">{level >= .88 ? "Stable trace · ready to record" : instrument.hint}</p>
+    </div>}
+    {!station && !verdict && <ul className="my-3 space-y-2 text-xs">{mission.stations.map(s =>
+      <li key={s.id} className={Object.hasOwn(run.records, s.id) ? "text-[#7fd6d0]" : "text-white/65"}>
+        {s.place}{s.optional ? " (optional)" : ""} · {s.choices[run.records[s.id]]?.result ??
+          (availableStations(run).includes(s) ? "Awaiting field reading" : "Awaiting first reading")}</li>)}</ul>}
+    {!station && canFile(run) && !verdict && <p className="my-3 text-sm text-amber-200">{mission.question}</p>}
+    <div className="mt-4 flex flex-wrap gap-2">{choices.map((c, i) =>
+      <PrimaryButton key={c.label} disabled={!!instrument && c.supported && level < .88} onClick={() => hiddenCase.recordFieldChoice(i, value)}>{c.label}</PrimaryButton>)}
+      {verdict && run.chapter < EXPEDITIONS.length - 1 && <PrimaryButton onClick={() => hiddenCase.nextTransmission()}>Open the next transmission</PrimaryButton>}
+      {verdict && run.chapter === EXPEDITIONS.length - 1 && <QuietButton onClick={() => hiddenCase.replay()}>Replay from case one</QuietButton>}
+    </div>
+  </Panel>;
+}
+
 function CaseFilePanel({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; snap: CaseSnapshot; onClose: () => void }) {
   return (
     <Panel label="Case file · Fiction" title="99.9% SURE" onClose={onClose}>
+      <div className="mb-4"><QuietButton onClick={() => hiddenCase.toggleRadio()}>
+        {snap.radioEnabled ? "Mute field commentary" : "Hear R.A.I.N. on the field radio"}
+      </QuietButton></div>
       <h3 className="text-[8px] font-bold uppercase tracking-[.2em] text-white/45">Evidence</h3>
       <ul className="mt-1.5 space-y-1 font-sans text-[12px] text-white/75">
         <li className="text-rose-200/80">{CLAIM.title}</li>
@@ -492,14 +552,38 @@ function CaseFilePanel({ hiddenCase, snap, onClose }: { hiddenCase: HiddenCase; 
       <p className="mt-1 font-sans text-[12px] text-white/60">
         {snap.endingsSeen.length ? snap.endingsSeen.map((e) => ENDINGS[e].title).join(" · ") : "None yet."}
       </p>
-      <h3 className="mt-4 text-[8px] font-bold uppercase tracking-[.2em] text-white/45">Later transmissions</h3>
-      <ul className="mt-1.5 space-y-1">
-        {LATER_CASES.map((c, i) => (
-          <li key={c.title} className="font-sans text-[12px] text-white/40">
-            Case 0{i + 2} · {c.title} <span className="text-white/25">· not yet received</span>
-          </li>
-        ))}
-      </ul>
+      <section className="mt-4 border-t border-white/10 pt-3">
+        <h3 className="text-sm text-amber-200">Optional · Blind calibration</h3>
+        <p className="my-2 text-xs text-white/70">{snap.rover?.message ?? (snap.calibration
+          ? "Notebook: both sealed pads measured 96 Hz. The pickup heard its own motor."
+          : "Ines left a wheeled pickup on the short test strip beside the van. Measure both pads yourself or invite Jev to operate it.")}</p>
+        <div className="flex flex-wrap gap-2">
+          {!snap.rover && <QuietButton onClick={() => hiddenCase.activateRover()}>Unpack the rover</QuietButton>}
+          {snap.rover && !snap.rover.complete && (snap.rover.autonomous
+            ? <PrimaryButton onClick={() => hiddenCase.operateRover("human")}>Take control · H</PrimaryButton>
+            : <>{snap.rover.choices.map(c => <QuietButton key={c.target} onClick={() => hiddenCase.operateRover(c.target)}>{c.label}</QuietButton>)}
+              <QuietButton onClick={() => hiddenCase.operateRover("jev")}>Connect live Jev</QuietButton></>)}
+          {snap.rover && <QuietButton onClick={() => {
+            const trace = hiddenCase.roverTrace();
+            if (!trace) return;
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(new Blob([trace], {type: "application/json"}));
+            link.download = "calibration-trace.json";
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+          }}>Export rover trace</QuietButton>}
+        </div>
+      </section>
+      {snap.expeditions.map((r) => {
+        const m = EXPEDITIONS[r.chapter];
+        return <section key={m.id} className="mt-4 border-t border-white/10 pt-3">
+          <h3 className="text-sm text-amber-200">0{r.chapter + 2} · {m.title}</h3>
+          <p className="mt-1 text-xs text-white/70">{m.briefing}</p>
+          <ul className="mt-2 space-y-1 text-xs">{m.stations.map(station =>
+            <li key={station.id}>{station.place}{station.optional ? " (optional)" : ""} · {station.choices[r.records[station.id]]?.result ?? "No reading yet"}</li>)}</ul>
+          {r.verdict !== null && <p className="mt-2 text-xs text-[#7fd6d0]">{m.verdicts[r.verdict].label} · {fieldEnding(snap.expeditions.slice(0, r.chapter + 1))}</p>}
+        </section>;
+      })}
     </Panel>
   );
 }
