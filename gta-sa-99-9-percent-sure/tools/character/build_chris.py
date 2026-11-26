@@ -50,6 +50,9 @@ from layout import MATERIALS, TEX_LENS, TXD_NAME           # noqa: E402
 
 MOD_ROOT = os.path.dirname(TOOLS)
 DEFAULT_OUT = os.path.join(MOD_ROOT, "build", "models")
+PLAYER_TEST_OUT = os.path.join(MOD_ROOT, "build", "chris-player-test")
+PLAYER_TEST_FOLDER = "99sure Chris Player Test"
+PLAYER_TEST_MODEL = "v3dplay"
 DEFAULT_TEX = os.path.join(MOD_ROOT, "assets", "character", "textures")
 MODEL_NAME = "chrisw"
 
@@ -144,8 +147,10 @@ def build(args):
     tex = load_textures(args.textures)
     txd = make_txd(tex)
     os.makedirs(args.out, exist_ok=True)
-    dff_path = os.path.join(args.out, MODEL_NAME + ".dff")
-    txd_path = os.path.join(args.out, TXD_NAME + ".txd")
+    dff_name = PLAYER_TEST_MODEL if getattr(args, "player_test", False) else MODEL_NAME
+    txd_name = PLAYER_TEST_MODEL if getattr(args, "player_test", False) else TXD_NAME
+    dff_path = os.path.join(args.out, dff_name + ".dff")
+    txd_path = os.path.join(args.out, txd_name + ".txd")
     with open(dff_path, "wb") as fh:
         fh.write(dff)
     with open(txd_path, "wb") as fh:
@@ -173,10 +178,18 @@ def main(argv=None):
     src.add_argument("--synthetic", action="store_true", help="experimental prebuilt on rw.sa_ped_skeleton()")
     ap.add_argument("--reference", default="male01", help="ped DFF inside the IMG to take the skeleton from "
                                                            "(default male01)")
-    ap.add_argument("--out", default=DEFAULT_OUT, help="output directory (default build/models)")
+    ap.add_argument("--out", help="output directory (default build/models; build/chris-player-test for --player-test)")
+    ap.add_argument("--player-test", action="store_true",
+                    help="with --img, stage a separate skin for CLEO 5's example Skin Selector")
     ap.add_argument("--textures", default=DEFAULT_TEX, help="directory with the painted PNG textures")
     ap.add_argument("--json", action="store_true", help="print the build report as JSON")
     a = ap.parse_args(argv)
+    if a.player_test:
+        if not a.img:
+            ap.error("--player-test requires --img from your own GTA installation")
+        a.out = os.path.join(a.out or PLAYER_TEST_OUT, "modloader", PLAYER_TEST_FOLDER, "skin.img")
+    else:
+        a.out = a.out or DEFAULT_OUT
     rep = build(a)
     if a.json:
         print(json.dumps(rep, indent=2))

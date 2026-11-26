@@ -118,7 +118,10 @@ animation moves his face. The face texture is projected from the reference
 photo; he has glasses with translucent lenses, the pendant, and the open jacket
 with the emblem. His hands now have separate fingers. His habits (the
 glasses push, the head scratch) are stock animations, and they play in mission 1
-and in the lab. See [docs/CHARACTER.md](docs/CHARACTER.md).
+and in the lab. See [docs/CHARACTER.md](docs/CHARACTER.md). For the first
+step toward a playable Chris campaign, [stage the opt-in player model test](docs/PLAYABLE_CHRIS.md).
+It uses the same model on a separate streaming slot; it does not change the
+current story's protagonist or ship in the playtest ZIP.
 
 ## Sound
 
@@ -137,12 +140,13 @@ effects each have a 0-10 level on the terminal, saved with your progress.
 
 ## Playtest package
 
-The **GTA San Andreas expansion** workflow builds, tests and uploads
+The [**GTA San Andreas expansion** workflow](https://github.com/topherchris420/satellite-vision-scape/actions/workflows/gta-playtest.yml) builds, tests and uploads
 `99sure-vers3dynamics.zip`: the whole storyline, subtitles, textures, the lab
 score *Evidence in the Quiet* and the sound effects, with a SHA-256 manifest.
 It includes no GTA assets and no synthetic-skeleton character model. See the
 [playtest guide](docs/PLAYTEST.md) for local packaging, installation and a
-first real-game checklist.
+first real-game checklist. To download the artifact, sign in to GitHub and
+open the latest successful run on `main`.
 
 ## Quick start
 
