@@ -144,6 +144,31 @@ describe("hidden case: Christopher is the player", () => {
     game.dispose();
   });
 
+  test("a survey view shows the default figure and keeps the case; play brings him back", async () => {
+    const game = new Game({ visuals: false });
+    const figure = new FakeFigure();
+    let loads = 0;
+    const hidden = new HiddenCase(game, null, false, async () => {
+      loads++;
+      return figure;
+    });
+    hidden.setViewing(false);
+    hidden.start();
+    await new Promise((r) => setTimeout(r, 0));
+    expect(game.playerVisual).toBeNull();
+    hidden.setViewing(true);
+    expect(game.playerVisual).toBe(figure);
+    hidden.setViewing(false);
+    expect(game.playerVisual).toBeNull();
+    expect(figure.root.parent).toBeNull();
+    expect(hidden.active).toBe(true);
+    hidden.setViewing(true);
+    expect(game.playerVisual).toBe(figure);
+    expect(loads).toBe(1);
+    hidden.dispose();
+    game.dispose();
+  });
+
   test("a figure that fails to load leaves the default in place", async () => {
     const game = new Game({ visuals: false });
     const warn = console.warn;

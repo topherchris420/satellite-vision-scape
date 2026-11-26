@@ -215,6 +215,11 @@ export class HiddenCase implements GameLayer {
   setViewing(viewing: boolean): void {
     this.viewing = viewing;
     this.visuals?.setActive(this.active && viewing);
+    // Christopher belongs to the case's play view, like its props.
+    if (this.active) {
+      if (viewing) this.showPlayer();
+      else this.game.setPlayerVisual(null);
+    }
   }
 
   dispose(): void {
@@ -229,7 +234,7 @@ export class HiddenCase implements GameLayer {
   /** Put Christopher in the player's place, loading his figure the first time. */
   private showPlayer(): void {
     if (this.player) {
-      this.game.setPlayerVisual(this.player);
+      if (this.viewing) this.game.setPlayerVisual(this.player);
       return;
     }
     if (!this.loadPlayer || this.playerLoading) return;
@@ -242,7 +247,7 @@ export class HiddenCase implements GameLayer {
           return;
         }
         this.player = figure;
-        if (this.active) this.game.setPlayerVisual(figure);
+        if (this.active && this.viewing) this.game.setPlayerVisual(figure);
       },
       (error: unknown) => {
         // The default figure stays; the case plays the same either way.

@@ -72,6 +72,7 @@ The player in the case is Christopher Woodyard in the model made for the San And
 - `python3 -I gta-sa-99-9-percent-sure/tools/character/export_web.py` writes `src/game/hidden/chris/chrisw-mesh.json`. It builds the mesh on the repository's synthetic skeleton (`rw.sa_ped_skeleton()`, hand-placed joints), so no game file is read and nothing from GTA San Andreas is in the browser build. The output is deterministic.
 - The export converts to the browser rig's frame (+X his left, +Y up, +Z forward, feet at the origin) and scales him so the pelvis is at 0.98 m, the height seating assumes. Bones keep only positions at bind.
 - `ChrisVisual` applies the existing animator's `CharacterPose` to those bones with the same rotations the procedural figures use, so he walks, runs, sits and drives with the animations already in the game. The model is bound in a T-pose, so the upper arms carry a fixed rest rotation (80° down) under the pose's shoulder and elbow angles.
+- He is shown only while the case is in play; a survey view shows the default figure, like the case's props it hides, and switching back to play brings him back.
 - He carries no cup and no sidearm (After Hours and Free Roam stop before the case starts). The jaw and brow bones stay at rest.
 
 ## Save
