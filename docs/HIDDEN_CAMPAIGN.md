@@ -69,6 +69,12 @@ The audit notes call out the echo, the number of lines and calibration (a 99.9% 
 
 The player in the case is Christopher Woodyard in the model made for the San Andreas mod (`gta-sa-99-9-percent-sure`, see its `docs/CHARACTER.md`): the same procedural mesh and the same four painted textures (`assets/character/textures/chrisw_*.png`, loaded as they are).
 
+| At a survey post | Handing in the verdict at the van |
+| --- | --- |
+| ![Christopher Woodyard on foot beside the east survey post, waiting for the bearing to settle](media/screens/hidden-case/survey-post.jpg) | ![The evidence board open at the van, with Christopher standing beside it](media/screens/hidden-case/board.jpg) |
+
+*Captured from the running game by `scripts/playtest-hidden-case.mjs` (headless Chromium, software WebGL). These give the case away, so they stay on this page and out of the README.*
+
 - `python3 -I gta-sa-99-9-percent-sure/tools/character/export_web.py` writes `src/game/hidden/chris/chrisw-mesh.json`. It builds the mesh on the repository's synthetic skeleton (`rw.sa_ped_skeleton()`, hand-placed joints), so no game file is read and nothing from GTA San Andreas is in the browser build. The output is deterministic.
 - The export converts to the browser rig's frame (+X his left, +Y up, +Z forward, feet at the origin) and scales him so the pelvis is at 0.98 m, the height seating assumes. Bones keep only positions at bind.
 - `ChrisVisual` applies the existing animator's `CharacterPose` to those bones with the same rotations the procedural figures use, so he walks, runs, sits and drives with the animations already in the game. The model is bound in a T-pose, so the upper arms carry a fixed rest rotation (80° down) under the pose's shoulder and elbow angles.
