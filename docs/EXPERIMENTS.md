@@ -108,6 +108,18 @@ Local providers' latency is measured on the **simulation** clock: it is how long
 
 For a person an agent-only metric is **n/a, not zero**, and reports and comparisons print it that way. A metric a trace cannot support (an old trace without route samples) reads **missing**, never zero.
 
+### World-recorded stage progress
+
+The report's “Where runs got to” table counts each verified trace once, at its furthest recorded After Hours milestone for the declared goal. It uses world events, not inputs or agent narration. The JSON summary includes each run's milestone IDs and the first evidence time in simulation milliseconds. For cumulative terminal counts this time means “confirmed by,” not the exact prior transition time. Imports may start partway through a task, so missing events do not imply skipped stages. Excluded runs have no progress value and contribute no denominator. These counts do not change completion, prediction verdicts, or any gameplay.
+
+Run the offline pilot without overwriting a committed result:
+
+```sh
+bun run experiment coffee-stage-pilot --out "$(mktemp -d)"
+```
+
+The fixed pilot seeds are for diagnostics only. For an example with an intermediate stopping point, rebuild a copy of the [tuning-magnitude report](../experiments/results/tuning-control-magnitude/report.md): the always-long turns recorded receiver lock in all ten traces, but none recorded a completed terminal.
+
 ## 5. Evidence: the aggregate never outranks the runs
 
 ```text

@@ -1,0 +1,36 @@
+{
+  "schema": "svs-experiment/v1",
+  "id": "coffee-stage-pilot",
+  "title": "Coffee run stage progress pilot",
+  "question": "When a run does not deliver the coffee, does it record collection first?",
+  "hypothesis": "Exploratory: describe where traces stop before proposing a confirmatory comparison.",
+  "motivation": {
+    "observation": "A completion rate alone cannot distinguish a run that never picked up the coffee from one that picked it up but did not deliver it."
+  },
+  "environment": "pine-gap",
+  "task": "after-hours",
+  "episode": { "until": "coffee_delivered", "maxSimSeconds": 160 },
+  "independentVariable": "provider",
+  "controlled": {},
+  "conditions": [
+    {
+      "id": "baseline",
+      "label": "Scripted baseline (no latency)",
+      "set": { "provider": "baseline" }
+    },
+    {
+      "id": "random",
+      "label": "Seeded random agent (the chance floor)",
+      "set": { "provider": "random" }
+    }
+  ],
+  "runsPerCondition": 12,
+  "seed": 40219,
+  "dependentMetrics": ["completed", "goalSeconds"],
+  "predictions": [],
+  "limitations": [
+    "This fixed seed block is a diagnostic pilot, not a confirmatory study.",
+    "The scripted baseline is deterministic; exact repeats do not add independent evidence.",
+    "The seeded random agent may return control instead of attempting delivery. No live model or human was compared."
+  ]
+}
