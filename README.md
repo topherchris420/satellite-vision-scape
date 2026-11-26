@@ -67,12 +67,17 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 
 [Story, installation and playtest guide](gta-sa-99-9-percent-sure/README.md)
 
+<details>
+<summary>Development previews from the CLEO script test harness</summary>
+
 | R.A.I.N. evidence board | Field validation |
 | --- | --- |
 | ![Evidence board preview](gta-sa-99-9-percent-sure/docs/media/preview_evidence.png) | ![Validation console preview](gta-sa-99-9-percent-sure/docs/media/preview_console.png) |
 | ![Cymatics rig preview](gta-sa-99-9-percent-sure/docs/media/preview_rig.png) | ![Signal receiver preview](gta-sa-99-9-percent-sure/docs/media/preview_receiver.png) |
 
-*Development previews from the compiled scripts' headless test VM, not in-game screenshots. Gameplay captures of this edition await a playtest in the host game, which is not the title of this original storyline.*
+The script test harness renders these panels from the compiled mission scripts. The [PC playtest guide](gta-sa-99-9-percent-sure/docs/PLAYTEST.md) tracks verification inside GTA: San Andreas.
+
+</details>
 
 ## Chapter II · Pine Gap — browser experience
 
@@ -94,6 +99,24 @@ The same repository also holds an earlier San Fierro prototype and a CLEO storyl
 </table>
 
 *Actual captures of the Pine Gap browser game, played through its real controls by [`scripts/capture-readme-shots.mjs`](scripts/capture-readme-shots.mjs) at a fixed 60 Hz (1280×720, software WebGL). They do not depict the San Fierro missions.*
+
+<details>
+<summary>Field journal · gameplay screenshots (spoilers)</summary>
+
+**99.9% SURE · Pine Gap browser edition.** Christopher Woodyard follows a fictional case across the reconstruction. These frames were captured while playing in Chromium.
+
+![Christopher on foot in front of the survey dish and radomes, with his case objectives visible](docs/media/screens/hidden-case/on-foot.jpg)
+
+| Interviewing Mara Quill | Tuning the receiver |
+| --- | --- |
+| ![Mara gives Christopher the times of her shift. The dialogue offers questions about the truck and the system’s confidence.](docs/media/screens/hidden-case/mara.jpg) | ![At the west bench, Christopher can sweep the receiver dial and choose which trace to keep](docs/media/screens/hidden-case/west-bench.jpg) |
+
+<p align="center">
+  <img src="docs/media/screens/hidden-case/touch-driving.jpg" width="270" alt="The utility 4×4 in motion, with a radio caption, touch joystick and action buttons." /><br />
+  <sub>Driving with the touch controls in Chromium’s emulated iPhone viewport.</sub>
+</p>
+
+</details>
 
 Human play, the race and the scripted baseline need no API key. Open the [browser experience](https://geotwn.vercel.app/): the first screen offers the race, and everything else is one click further in.
 
