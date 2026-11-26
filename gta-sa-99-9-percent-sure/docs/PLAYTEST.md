@@ -31,7 +31,9 @@ numpy, Pillow, ffmpeg with libvorbis):
    the game folder.
 4. Christopher appears as a stock stand-in until you build his model from your
    own `gta3.img` (INSTALL.md, section 4). The ZIP leaves out the preview
-   model built on a synthetic skeleton.
+   model built on a synthetic skeleton and the installable model built using
+   your own game files. The latter remains in the local Mod Loader staging
+   folder for your own install.
 
 ## First session
 
