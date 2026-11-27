@@ -187,6 +187,11 @@ export class GroundQuery {
   private readonly normal = { x: 0, y: 1, z: 0 };
   private surfaceTotal = 0;
 
+  constructor(
+    private readonly baseHeight = terrainMeshHeight,
+    private readonly baseNormal = terrainMeshNormal,
+  ) {}
+
   addSurface(s: Surface): void {
     this.grid.insert(s);
     this.surfaceTotal++;
@@ -197,12 +202,12 @@ export class GroundQuery {
   }
 
   terrainHeight(x: number, z: number): number {
-    return terrainMeshHeight(x, z);
+    return this.baseHeight(x, z);
   }
 
   /** Walkable height at (x, z): the highest of terrain and covering surfaces. */
   heightAt(x: number, z: number): number {
-    const terrain = terrainMeshHeight(x, z);
+    const terrain = this.baseHeight(x, z);
     let best = terrain;
     const n = this.grid.query(x, z, x, z, this.candidates, 0, this.acceptAll);
     for (let i = 0; i < n; i++) {
@@ -216,7 +221,7 @@ export class GroundQuery {
 
   /** Height, surface kind and normal at (x, z). */
   sample(x: number, z: number, out: GroundSample): GroundSample {
-    const terrain = terrainMeshHeight(x, z);
+    const terrain = this.baseHeight(x, z);
     let best = terrain;
     let kind: SurfaceKind = "dirt";
     let flat = false;
@@ -238,7 +243,7 @@ export class GroundQuery {
       out.ny = 1;
       out.nz = 0;
     } else {
-      terrainMeshNormal(x, z, this.normal);
+      this.baseNormal(x, z, this.normal);
       out.nx = this.normal.x;
       out.ny = this.normal.y;
       out.nz = this.normal.z;

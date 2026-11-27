@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { SanFierro } from "@/components/game/SanFierro";
 import { createFileRoute, useLocation } from "@tanstack/react-router";
 import { SiteScene } from "@/components/site/SiteScene";
+
+const BakeryCity = lazy(() => import("@/components/game/BakeryCity").then(m => ({ default: m.BakeryCity })));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -30,6 +32,8 @@ function Index() {
   const sanFierro = new URLSearchParams(search).get("chapter") === "san-fierro";
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  if (sanFierro && mounted && new URLSearchParams(search).get("mission") === "bakery")
+    return <Suspense fallback={<main>Opening the waterfront...</main>}><BakeryCity /></Suspense>;
   if (sanFierro) return mounted ? <SanFierro /> : <main className="min-h-screen bg-black p-8 text-white">Loading San Fierro…</main>;
   return <SiteScene />;
 }

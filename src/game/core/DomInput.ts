@@ -36,6 +36,7 @@ export class DomInputBinding {
   constructor(
     private readonly input: InputState,
     private readonly element: HTMLElement,
+    private readonly onGameplayKey?: () => void,
   ) {}
 
   attach(): void {
@@ -89,7 +90,10 @@ export class DomInputBinding {
 
   private readonly onKeyDown = (e: KeyboardEvent) => {
     if (!this.enabled || e.ctrlKey || e.metaKey || e.altKey || isTextEntry(e.target)) return;
-    if (GAME_KEY_CODES.has(e.code)) e.preventDefault();
+    if (GAME_KEY_CODES.has(e.code)) {
+      e.preventDefault();
+      if (!e.repeat) this.onGameplayKey?.();
+    }
     this.input.keyDown(e.code);
   };
 

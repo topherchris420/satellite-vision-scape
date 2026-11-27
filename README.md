@@ -49,6 +49,8 @@ There are two ways into **99.9% SURE**. [Open Pine Gap in a browser](https://geo
 
 [**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
 
+Choose **Daily Bread** from the city case to play Christopher's waterfront assignment. Follow Dawn Bread in the research wagon, interview the driver at Harbor Table, collect the signed receipt and file both findings at the lab. The chapter saves checkpoints in this browser. The radar marks the current objective in gold. The white bar tracks the wagon, the red bar tracks Christopher, and the item icon equips or holsters his optional sidearm. Use WASD or arrows to move, E to interact and Space to brake, or use the on-screen touch controls.
+
 | Arriving at the case | Collecting evidence |
 | --- | --- |
 | ![San Fierro opening: Christopher Woodyard at R.A.I.N.'s teal field HQ beside Ines, with the case card, district map and touch controls](docs/media/screens/san-fierro/start.jpg) | ![Christopher on the centre street just after collecting the sensor audit, the first of three pieces of evidence](docs/media/screens/san-fierro/evidence.jpg) |

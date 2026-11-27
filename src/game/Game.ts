@@ -18,7 +18,7 @@ import { VehicleController } from "./vehicles/VehicleController";
 import { VehicleManager } from "./vehicles/VehicleManager";
 import { UTILITY_4X4 } from "./vehicles/VehicleSpec";
 import type { Vehicle } from "./vehicles/Vehicle";
-import { buildSiteWorld } from "./world/buildSiteWorld";
+import { buildSiteWorld, type SiteWorld } from "./world/buildSiteWorld";
 import type { CollisionWorld } from "./world/CollisionWorld";
 import { SURFACE_PROPERTIES, type GroundQuery } from "./world/GroundQuery";
 import type { GateSensorTarget } from "./world/BarrierGate";
@@ -58,7 +58,14 @@ export interface GameLayer {
   cinematic?(dt: number, camera: THREE.PerspectiveCamera): boolean;
 }
 
+export interface GameDistrict {
+  buildWorld: () => SiteWorld;
+  playerSpawn: typeof PLAYER_SPAWN;
+  vehicleSpawns: typeof VEHICLE_SPAWNS;
+}
+
 export interface GameOptions {
+  district?: GameDistrict;
   /** Build meshes, lights, particles and audio. False for headless tests. */
   visuals: boolean;
   /** Dust sprite texture (browser only). */
@@ -151,9 +158,13 @@ export class Game {
   private readonly layers: GameLayer[] = [];
   private layerCinematic = false;
 
+  private readonly vehicleSpawns: typeof VEHICLE_SPAWNS;
+
   constructor(options: GameOptions) {
     this.root.name = "game";
-    const site = buildSiteWorld();
+    const site = (options.district?.buildWorld ?? buildSiteWorld)();
+    const spawnPoint = options.district?.playerSpawn ?? PLAYER_SPAWN;
+    this.vehicleSpawns = options.district?.vehicleSpawns ?? VEHICLE_SPAWNS;
     this.collision = site.collision;
     this.ground = site.ground;
     this.world = new WorldManager(
@@ -196,12 +207,12 @@ export class Game {
       : null;
     this.audio = options.visuals ? new GameAudio() : null;
 
-    for (const spawn of VEHICLE_SPAWNS) {
+    for (const spawn of this.vehicleSpawns) {
       const vehicle = this.vehicles.spawn(UTILITY_4X4, spawn.variant, spawn.x, spawn.z, spawn.yaw);
       // Parked in gear with the handbrake on, so a shunted vehicle is held.
       this.vehicleController.applyParked(vehicle.controls);
     }
-    this.player.teleport(PLAYER_SPAWN.x, PLAYER_SPAWN.z, PLAYER_SPAWN.yaw);
+    this.player.teleport(spawnPoint.x, spawnPoint.z, spawnPoint.yaw);
     this.player.interpolate(1);
     this.updateFocus();
     this.camera.snapBehind(this.focus);
@@ -265,7 +276,7 @@ export class Game {
     this.vehicleController.reset();
     this.world.reset();
     this.vehicles.vehicles.forEach((v, i) => {
-      const home = VEHICLE_SPAWNS[i];
+      const home = this.vehicleSpawns[i];
       if (!home) return;
       v.resetState();
       v.place(home.x, home.z, home.yaw);
@@ -563,7 +574,7 @@ export class Game {
       this.intent.dirX = moving ? dx / length : 0;
       this.intent.dirZ = moving ? dz / length : 0;
       this.intent.magnitude = Math.min(1, length);
-      const aiming = this.freeRoam.aiming;
+      const aiming = this.freeRoam.aiming || this.storySidearmDrawn;
       this.intent.sprint = input.isDown("sprint") && !aiming;
       // Aiming slows the pace to a walk and turns the body to face the crosshair.
       this.intent.walk = (input.walkMode && !this.intent.sprint) || aiming;
@@ -651,7 +662,7 @@ export class Game {
         this.look.x = options.simulate ? this.agent.controls.input.lookX : 0;
         this.look.y = options.simulate ? this.agent.controls.input.lookY : 0;
         this.look.zoom = options.simulate ? this.agent.controls.input.zoom : 0;
-        this.look.aim = this.freeRoam.aiming ? 1 : 0;
+        this.look.aim = (this.freeRoam.aiming || this.storySidearmDrawn) ? 1 : 0;
         this.camera.update(cameraDt, this.focus, this.look, options.camera);
       }
       const shown = this.afterHours.cinematic || this.layerCinematic || !this.camera.characterOccluded;
@@ -711,6 +722,9 @@ export class Game {
     audio.setListener(p.x, p.y, p.z, f.x, f.y, f.z, u.x, u.y, u.z);
   }
 
+  /** A story layer can equip the shared player rig while its district is active. */
+  storySidearmDrawn = false;
+
   private updateCharacter(dt: number): void {
     const scripted = this.interaction.scripted;
     const vehicle = this.interaction.vehicle;
@@ -723,14 +737,14 @@ export class Game {
       seatWeight: this.interaction.seatWeight,
       steer: vehicle ? vehicle.controls.steer : 0,
       carry: this.carrying ? 1 : 0,
-      aim: this.freeRoam.active && this.freeRoam.aiming ? 1 : 0,
+      aim: (this.freeRoam.active && this.freeRoam.aiming) || this.storySidearmDrawn ? 1 : 0,
       aimPitch: -this.camera.pitch,
       style: this.visualOverride?.style ?? this.kind,
     });
     const c = this.visualOverride ?? this.characterVisual;
     if (!c) return;
     // Free Roam: the sidearm is in the hand while it is out (on foot only).
-    c.setSidearm(this.freeRoam.active && !vehicle);
+    c.setSidearm((this.freeRoam.active || this.storySidearmDrawn) && !vehicle);
     if (scripted) {
       c.root.position.copy(this.interaction.scriptedPosition);
       c.root.quaternion.copy(this.interaction.scriptedQuaternion);

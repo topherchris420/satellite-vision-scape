@@ -216,6 +216,7 @@ export function SanFierro() {
       <div className="max-w-[calc(100%-7rem)] rounded-lg bg-black/75 p-3 sm:max-w-md">
         <p className="text-[10px] uppercase tracking-widest text-teal-300">99.9% SURE · San Fierro prototype</p>
         <h1 className="text-lg font-bold">The CERTAIN case</h1>
+        <a href="/?chapter=san-fierro&mission=bakery" className="pointer-events-auto mt-1 inline-block rounded bg-teal-300 px-3 py-2 text-xs font-bold text-black">Play Daily Bread</a>
         <p className="text-xs text-white/80">{message}</p>
         <p className="mt-2 text-xs text-amber-200">Evidence {campaign.collected.length}/3 · {campaign.verdict ? "Case closed" : ready ? "Return to HQ (teal)" : "Visit amber markers"}</p>
         {!storageOK && <p className="text-xs text-red-200">Browser storage unavailable; progress is temporary.</p>}
