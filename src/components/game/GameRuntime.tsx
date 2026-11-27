@@ -19,11 +19,14 @@ export function GameRuntime({
   game,
   playing,
   status,
+  isRunning,
   time,
 }: {
   game: Game;
   playing: boolean;
   status: PlayStatus;
+  /** A DOM-owned pause/dialog can change before the next canvas render commits. */
+  isRunning?: () => boolean;
   time: TimeOfDay;
 }) {
   const camera = useThree((s) => s.camera) as THREE.PerspectiveCamera;
@@ -56,7 +59,8 @@ export function GameRuntime({
   }, [playing, status, game, camera]);
 
   useFrame((_, delta) => {
-    if (active) {
+    const simulate = isRunning ? isRunning() : active;
+    if (simulate) {
       const v = game.input.virtual;
       v.moveX = mobileInput.x;
       v.moveY = mobileInput.y;
@@ -68,7 +72,7 @@ export function GameRuntime({
       v.fire = consumeMobileFire();
     }
     game.frame(delta, {
-      simulate: active,
+      simulate,
       camera: playing && camera.isPerspectiveCamera ? camera : null,
       establishing: playing && status === "briefing",
     });

@@ -541,6 +541,7 @@ export class VehiclePhysics {
         speed: -vn,
         vehicleId: this.id,
         other: other ? "vehicle" : "world",
+        ...(other ? { otherVehicleId: other.id } : {}),
       });
     }
   }

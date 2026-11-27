@@ -408,7 +408,7 @@ function makeContainerSide() {
 
 // Soft radial puff used by both the cloud billboards and smoke/steam
 // particles. A cluster of offset blobs so sprites don't read as circles.
-function makePuffSprite(seed: number, blobs: number) {
+export function makePuffSprite(seed: number, blobs: number) {
   const size = 256;
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;

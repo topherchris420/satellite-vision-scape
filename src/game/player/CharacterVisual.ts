@@ -1,3 +1,4 @@
+import { createSidearmParts } from "./sidearmVisual";
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { MeshBatcher } from "../core/MeshBatcher";
@@ -951,20 +952,11 @@ export class CharacterVisual {
    * hanging at the side it points at the ground, as a lowered pistol does.
    */
   private buildSidearm(): void {
-    const metal = new THREE.MeshStandardMaterial({
-      color: "#20242a",
-      roughness: 0.4,
-      metalness: 0.55,
-    });
-    const grip = new THREE.MeshStandardMaterial({ color: "#3a2f28", roughness: 0.8 });
-    this.materials.push(metal, grip);
-    const slide = new THREE.Mesh(this.geometry(new THREE.BoxGeometry(0.034, 0.2, 0.044)), metal);
-    slide.position.set(0, -0.09, 0.016);
-    const handle = new THREE.Mesh(this.geometry(new THREE.BoxGeometry(0.032, 0.05, 0.078)), grip);
-    handle.position.set(0, 0.0, -0.012);
-    handle.rotation.x = -0.18;
-    slide.castShadow = handle.castShadow = true;
-    this.sidearm.add(slide, handle);
+    for(const part of createSidearmParts()) {
+      this.geometries.push(part.geometry);
+      this.materials.push(part.material);
+      this.sidearm.add(part);
+    }
     this.sidearm.position.set(0, -0.3, 0.05);
     this.sidearm.visible = false;
     this.elbows[1].add(this.sidearm);

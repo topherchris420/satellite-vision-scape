@@ -342,6 +342,26 @@ export class GameAudio {
     this.burst("bandpass", f * 0.8, q, Math.min(0.25, 0.06 + speed * 0.03), 0.14);
   }
 
+  /** Two short field-radio tones through the ordinary mute and volume controls. */
+  radioCall(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.sfx) return;
+    for (const [delay, frequency] of [[0, 740], [0.09, 980]]) {
+      const t = ctx.currentTime + delay;
+      const tone = ctx.createOscillator();
+      const gain = ctx.createGain();
+      tone.frequency.value = frequency;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.045, t + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+      tone.connect(gain);
+      gain.connect(this.sfx);
+      tone.onended = () => { tone.disconnect(); gain.disconnect(); };
+      tone.start(t);
+      tone.stop(t + 0.085);
+    }
+  }
+
   door(open: boolean): void {
     if (open) {
       this.burst("bandpass", 2600, 3, 0.08, 0.05);

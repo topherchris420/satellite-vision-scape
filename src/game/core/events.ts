@@ -19,6 +19,7 @@ export type GameEvents = {
     vehicleId: string | null;
     /** What was struck: another vehicle, or the static world. Absent for landings. */
     other?: "vehicle" | "world";
+    otherVehicleId?: string;
   };
   gateMove: { gateId: string; raising: boolean; x: number; z: number };
   headlights: { on: boolean };

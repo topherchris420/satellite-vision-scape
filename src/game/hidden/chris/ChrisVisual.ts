@@ -1,3 +1,4 @@
+import { createSidearmParts } from "../../player/sidearmVisual";
 import * as THREE from "three";
 import type { CharacterPose } from "../../player/CharacterAnimator";
 import type { PlayerVisual } from "../../player/PlayerVisual";
@@ -35,6 +36,7 @@ export class ChrisVisual implements PlayerVisual {
   readonly style = "technician" as const;
   readonly mesh: THREE.SkinnedMesh;
   readonly bones: THREE.Bone[];
+  private sidearm: ReturnType<typeof createSidearmParts> | null = null;
   private readonly body = new THREE.Group();
   private readonly geometry: THREE.BufferGeometry;
   private readonly materials: THREE.Material[];
@@ -164,8 +166,17 @@ export class ChrisVisual implements PlayerVisual {
   /** He carries nothing in the case; the figure keeps the interface. */
   setCarrying(_carrying: boolean): void {}
 
-  /** No sidearm in the case (Free Roam stops before it starts). */
-  setSidearm(_drawn: boolean): void {}
+  setSidearm(drawn: boolean): void {
+    if(drawn && !this.sidearm) {
+      const hand=this.bones.find(b=>b.name==="R Hand")!;
+      const mount=new THREE.Group();
+      mount.rotation.z = -ARM_REST;
+      hand.add(mount);
+      this.sidearm=createSidearmParts();
+      mount.add(...this.sidearm);
+    }
+    for(const part of this.sidearm ?? []) part.visible=drawn;
+  }
 
   set visible(v: boolean) {
     this.root.visible = v;
@@ -176,6 +187,7 @@ export class ChrisVisual implements PlayerVisual {
   }
 
   dispose(): void {
+    for(const part of this.sidearm ?? []) {part.geometry.dispose();part.material.dispose();}
     this.mesh.skeleton.dispose();
     this.geometry.dispose();
     for (const m of this.materials) m.dispose();
