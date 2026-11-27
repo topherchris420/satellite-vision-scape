@@ -13,6 +13,7 @@ import { BAKERY, CITY_DISTRICT, DELIVERY_ROUTE, LAB, SHELTER } from "../world/bu
 import type { Vehicle } from "../vehicles/Vehicle";
 import {
   BAKERY_KEY,
+  bakeryStep,
   fileAnswer,
   freshTail,
   parseBakery,
@@ -34,6 +35,14 @@ export type CityPhase =
   | "failed";
 const distance = (a: { x: number; z: number }, b: { x: number; z: number }) =>
   Math.hypot(a.x - b.x, a.z - b.z);
+
+const CHECKPOINT_PHASE = {
+  briefing: "meet",
+  departure: "board",
+  return: "return",
+  report: "report",
+  filed: "filed",
+} as const satisfies Record<BakerySave["checkpoint"], CityPhase>;
 
 export class CityStoryLayer implements GameLayer {
   readonly wagon: Vehicle;
@@ -101,6 +110,7 @@ export class CityStoryLayer implements GameLayer {
     if (!this.canEquip) this.game.storySidearmDrawn = false;
     if (input.wasPressed("fire") || input.virtual.fire) this.fire();
   }
+  private disposed = false;
   private driverTime = 0;
   private readonly world: DriverWorld;
   private readonly removeLayer: () => void;
@@ -110,6 +120,7 @@ export class CityStoryLayer implements GameLayer {
   constructor(
     readonly game: Game,
     private readonly storage: KeyValueStorage | null,
+    private readonly locks?: Pick<LockManager, "request">,
   ) {
     this.storageOK = !!storage;
     let raw: string | null = null;
@@ -149,8 +160,9 @@ export class CityStoryLayer implements GameLayer {
     this.removeImpact = game.events.on("impact", (event) => {
       if (
         event.other &&
-        game.interaction.driven === this.wagon &&
-        event.vehicleId === this.wagon.id &&
+        game.interaction.vehicle === this.wagon &&
+        this.wagon.driven &&
+        (event.vehicleId === this.wagon.id || event.otherVehicleId === this.wagon.id) &&
         event.speed > 5
       ) {
         this.wagon.damage((event.speed - 5) * 2);
@@ -166,26 +178,53 @@ export class CityStoryLayer implements GameLayer {
     this.restore();
   }
 
-  private save(record: BakerySave) {
-    this.record = record;
+  /** Storage events and writes both consult the current value, including first answers. */
+  syncSavedProgress(): boolean {
+    if (!this.storage || this.disposed) return false;
+    let saved: BakerySave;
     try {
-      this.storage?.setItem(BAKERY_KEY, JSON.stringify({ version: 1, ...record }));
+      saved = parseBakery(this.storage.getItem(BAKERY_KEY));
+      this.storageOK = true;
     } catch {
       this.storageOK = false;
+      return false;
     }
+    const step = bakeryStep(saved),
+      localStep = bakeryStep(this.record);
+    if (
+      step < localStep ||
+      (step === localStep && JSON.stringify(saved) === JSON.stringify(this.record))
+    )
+      return false;
+    this.record = saved;
+    this.restore();
+    return true;
+  }
+
+  private save(record: BakerySave) {
+    const before = this.record;
+    const commit = () => {
+      if (this.disposed || this.record !== before) return;
+      try {
+        if (this.syncSavedProgress()) return;
+        if (this.storageOK)
+          this.storage?.setItem(BAKERY_KEY, JSON.stringify({ version: 1, ...record }));
+      } catch {
+        // The mission can still advance in memory if storage becomes unavailable.
+        this.storageOK = false;
+      }
+      this.record = record;
+      this.phase = CHECKPOINT_PHASE[record.checkpoint];
+    };
+    if (this.storage && this.locks) {
+      // Serialize the read and write across same-origin tabs.
+      void this.locks.request(BAKERY_KEY, commit).catch(commit);
+    } else commit();
   }
 
   private restore() {
     const checkpoint = this.record.checkpoint;
-    this.phase = (
-      {
-        briefing: "meet",
-        departure: "board",
-        return: "return",
-        report: "report",
-        filed: "filed",
-      } as const
-    )[checkpoint];
+    this.phase = CHECKPOINT_PHASE[checkpoint];
     const atShelter = checkpoint === "return";
     this.game.resetForScenario(
       atShelter ? { x: SHELTER.x, z: SHELTER.z, yaw: Math.PI } : CITY_DISTRICT.playerSpawn,
@@ -225,7 +264,6 @@ export class CityStoryLayer implements GameLayer {
         else if (this.phase === "interview") this.phase = "receipt";
         else if (this.phase === "return") {
           this.save({ checkpoint: "report", cargo: null });
-          this.phase = "report";
         }
       },
     };
@@ -234,13 +272,11 @@ export class CityStoryLayer implements GameLayer {
   acceptBriefing() {
     if (this.phase !== "briefing") return;
     this.save({ checkpoint: "departure" });
-    this.phase = "board";
   }
 
   collectReceipt() {
     if (this.phase !== "receipt") return;
     this.save({ checkpoint: "return" });
-    this.phase = "return";
   }
 
   answer(id: number, value: Verdict) {
@@ -248,7 +284,6 @@ export class CityStoryLayer implements GameLayer {
     const next = fileAnswer(this.record, id, value);
     if (next === this.record) return;
     this.save(next);
-    if (next.checkpoint === "filed") this.phase = "filed";
   }
 
   retry() {
@@ -317,6 +352,7 @@ export class CityStoryLayer implements GameLayer {
   }
 
   dispose() {
+    this.disposed = true;
     this.game.storySidearmDrawn = false;
     this.removeLayer();
     this.removeImpact();

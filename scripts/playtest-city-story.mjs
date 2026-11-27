@@ -75,6 +75,38 @@ async function play(profile) {
       });
     } else await page.keyboard.down(key[dir]);
   }
+  // Start a fresh keyboard-only document from the checkpoint this run actually earned.
+  async function checkKeyboardAudio(checkpoint) {
+    const resumed = await browser.newContext({
+      ...options,
+      storageState: await context.storageState(),
+      serviceWorkers: "block",
+    });
+    try {
+      const restored = await resumed.newPage();
+      const sound = await resumed.newCDPSession(restored);
+      let running = false;
+      const listen = ({ context }) => {
+        if (context.contextType === "realtime" && context.contextState === "running")
+          running = true;
+      };
+      sound.on("WebAudio.contextCreated", listen);
+      sound.on("WebAudio.contextChanged", listen);
+      await sound.send("WebAudio.enable");
+      await restored.goto(page.url());
+      await restored
+        .locator('.city-overlay[data-phase="' + checkpoint + '"][data-figure="ready"]')
+        .waitFor({ timeout: 90000 });
+      assert.equal(running, false, "fresh document awaits a gameplay gesture");
+      await restored.keyboard.press("w");
+      for (let i = 0; i < 50 && !running; i++) await restored.waitForTimeout(100);
+      assert(running, "a keyboard gesture starts game audio after loading " + checkpoint);
+    } finally {
+      await resumed.close();
+    }
+    await page.bringToFront();
+    if (await button("Continue mission").isVisible()) await act("Continue mission");
+  }
   async function walkToWagon() {
     if (!(await button("Enter vehicle").isVisible())) {
       await hold("forward");
@@ -157,6 +189,7 @@ async function play(profile) {
     await act("Mute audio");
     await act("Continue mission");
     await waitPhase("board");
+    if (!touch) await checkKeyboardAudio("board");
     await shot("on-foot");
     const radar = await page.locator(".city-map").boundingBox();
     const status = await page.locator(".city-instruments").boundingBox();
@@ -195,6 +228,7 @@ async function play(profile) {
     await shot("receipt");
     await act("Collect signed receipt");
     await waitPhase("return");
+    if (!touch) await checkKeyboardAudio("return");
     await use("Enter vehicle");
     await page.locator('.city-overlay[data-locomotion="DRIVING"]').waitFor();
     await drive(true);
@@ -202,6 +236,7 @@ async function play(profile) {
     await use("File findings");
     await waitPhase("report");
     await act("reject");
+    await page.getByRole("heading", { name: "The delivery reached Harbor Table." }).waitFor();
     await page.reload();
     await waitPhase("report");
     await page.getByRole("heading", { name: "The delivery reached Harbor Table." }).waitFor();

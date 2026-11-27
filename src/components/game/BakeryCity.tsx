@@ -7,6 +7,7 @@ import { CharacterVisual } from "@/game/player/CharacterVisual";
 import { CharacterAnimator } from "@/game/player/CharacterAnimator";
 import type { PlayerVisual } from "@/game/player/PlayerVisual";
 import { browserStorage } from "@/game/afterhours/progress";
+import { BAKERY_KEY } from "@/game/campaign/bakery";
 import { CityStoryLayer } from "@/game/campaign/CityStoryLayer";
 import { CITY_DISTRICT, LAB, SHELTER } from "@/game/world/buildCityWorld";
 import { cityScenery } from "@/game/world/CityScenery";
@@ -19,7 +20,7 @@ function createSession() {
   const storage = browserStorage();
   const dustSprite = makePuffSprite(5309, 4);
   const game = new Game({ visuals: true, district: CITY_DISTRICT, storage, dustSprite });
-  const mission = new CityStoryLayer(game, storage);
+  const mission = new CityStoryLayer(game, storage, storage ? navigator.locks : undefined);
   const scenery = cityScenery();
   game.root.add(scenery.root);
   const npcs = [
@@ -116,7 +117,10 @@ export function BakeryCity() {
   const [paused, setPaused] = useState(false);
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const binding = useMemo(
-    () => (session && canvas ? new DomInputBinding(session.game.input, canvas) : null),
+    () =>
+      session && canvas
+        ? new DomInputBinding(session.game.input, canvas, () => session.game.audio?.unlock())
+        : null,
     [session, canvas],
   );
   useLayoutEffect(() => {
@@ -143,11 +147,16 @@ export function BakeryCity() {
     const escape = (e: KeyboardEvent) => {
       if (e.code === "Escape" && !e.repeat) setPaused((p) => !p);
     };
+    const sync = (e: StorageEvent) => {
+      if (e.key === BAKERY_KEY) s.mission.syncSavedProgress();
+    };
+    window.addEventListener("storage", sync);
     document.addEventListener("visibilitychange", hide);
     window.addEventListener("blur", blur);
     window.addEventListener("keydown", escape);
     return () => {
       clearInterval(timer);
+      window.removeEventListener("storage", sync);
       document.removeEventListener("visibilitychange", hide);
       window.removeEventListener("blur", blur);
       window.removeEventListener("keydown", escape);

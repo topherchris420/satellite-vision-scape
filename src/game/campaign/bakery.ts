@@ -20,6 +20,21 @@ export type BakerySave =
   | { checkpoint: "briefing" | "departure" | "return" }
   | { checkpoint: "report"; cargo: Verdict | null }
   | { checkpoint: "filed"; cargo: Verdict; delivery: Verdict };
+/** Committed steps, including the point between the two first-answer decisions. */
+export function bakeryStep(record: BakerySave) {
+  switch (record.checkpoint) {
+    case "briefing":
+      return 0;
+    case "departure":
+      return 1;
+    case "return":
+      return 2;
+    case "report":
+      return record.cargo === null ? 3 : 4;
+    case "filed":
+      return 5;
+  }
+}
 const verdict = (v: unknown): v is Verdict => v === "accept" || v === "reject" || v === "abstain";
 
 export function parseBakery(raw: string | null): BakerySave {

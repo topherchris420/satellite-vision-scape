@@ -10,8 +10,7 @@ import { CITY_DISTRICT } from "../src/game/world/buildCityWorld";
 import { createGroundSample } from "../src/game/world/GroundQuery";
 import { BAKERY_KEY } from "../src/game/campaign/bakery";
 
-function setup() {
-  const saves = new Map<string, string>();
+function setup(saves = new Map<string, string>()) {
   const storage = {
     getItem: (k: string) => saves.get(k) ?? null,
     setItem: (k: string, v: string) => {
@@ -290,5 +289,66 @@ test("reopening a shelter checkpoint restores the parked vehicles, interview evi
   } finally {
     layer.dispose();
     restored.dispose();
+  }
+});
+
+test("older city tabs keep the first answers and cannot roll back a filed case", () => {
+  const stale = setup();
+  stale.until(() => stale.game.interaction.prompt?.label === "Speak to Ines");
+  stale.interact();
+  stale.storage.setItem(
+    BAKERY_KEY,
+    JSON.stringify({ version: 1, checkpoint: "report", cargo: null }),
+  );
+  const first = setup(stale.saves),
+    second = setup(stale.saves);
+  try {
+    first.mission.answer(3, "reject");
+    second.mission.answer(3, "accept");
+    expect(second.mission.record).toEqual({ checkpoint: "report", cargo: "reject" });
+    second.mission.answer(4, "accept");
+    first.mission.answer(4, "reject");
+    stale.mission.acceptBriefing();
+    const expected = { checkpoint: "filed", cargo: "reject", delivery: "accept" };
+    for (const tab of [first, second, stale]) {
+      expect(tab.mission.phase).toBe("filed");
+      expect(tab.mission.record).toEqual(expected);
+    }
+    expect(JSON.parse(stale.saves.get(BAKERY_KEY)!)).toEqual({ version: 1, ...expected });
+  } finally {
+    for (const tab of [first, second, stale]) {
+      tab.mission.dispose();
+      tab.game.dispose();
+    }
+  }
+});
+
+test("exit braking keeps the wagon occupied for impacts until Christopher gets out", () => {
+  const { mission, game, enter, until, interact } = setup();
+  try {
+    enter();
+    game.input.keyDown("KeyW");
+    until(() => mission.wagon.physics.speed > 8);
+    game.input.keyUp("KeyW");
+    interact();
+    expect(game.interaction.state).toBe("EXITING_VEHICLE");
+    expect(mission.wagon.driven).toBe(true);
+    const impact = {
+      vehicleId: mission.wagon.id,
+      other: "world" as const,
+      speed: 8,
+      x: 0,
+      y: 0,
+      z: 0,
+    };
+    game.events.emit("impact", impact);
+    expect(mission.wagon.health).toBe(94);
+    expect(mission.health).toBe(97);
+    until(() => game.interaction.state === "ON_FOOT");
+    game.events.emit("impact", impact);
+    expect(mission.health).toBe(97);
+  } finally {
+    mission.dispose();
+    game.dispose();
   }
 });
