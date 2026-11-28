@@ -4,7 +4,7 @@ import type { CityStoryLayer } from "@/game/campaign/CityStoryLayer";
 import { StreetMap, CityInstruments } from "./CityInstruments";
 import { GameplayState } from "@/game/core/GameState";
 import { mobileInput } from "@/lib/mobile-input";
-import { CHAPTER_HREF } from "@/lib/chapters";
+import { CHAPTER_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
 
 const objectives = {
   meet: "Meet Ines outside the field lab.",
@@ -276,7 +276,11 @@ export function CityMissionHUD({
                 </strong>
                 <p>Case filed · $50 field allowance received.</p>
                 <div className="city-links">
-                  <a href={CHAPTER_HREF["pine-gap"]}>Explore Pine Gap ↗</a>
+                  {m.storageOK ? (
+                    <a href={DAILY_BREAD_BRIEFING_HREF}>Continue to Pine Gap briefing ↗</a>
+                  ) : (
+                    <a href={CHAPTER_HREF["pine-gap"]}>Explore Pine Gap ↗</a>
+                  )}
                 </div>
               </>
             )

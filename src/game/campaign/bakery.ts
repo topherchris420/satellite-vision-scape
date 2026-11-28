@@ -20,6 +20,18 @@ export type BakerySave =
   | { checkpoint: "briefing" | "departure" | "return" }
   | { checkpoint: "report"; cargo: Verdict | null }
   | { checkpoint: "filed"; cargo: Verdict; delivery: Verdict };
+export type FiledBakery = Extract<BakerySave, { checkpoint: "filed" }>;
+
+/** The briefing reads the filed report without writing to either chapter. */
+export function readDailyBreadReport(read: (key: string) => string | null): FiledBakery | null {
+  try {
+    const report = parseBakery(read(BAKERY_KEY));
+    return report.checkpoint === "filed" ? report : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Committed steps, including the point between the two first-answer decisions. */
 export function bakeryStep(record: BakerySave) {
   switch (record.checkpoint) {

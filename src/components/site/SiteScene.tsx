@@ -43,6 +43,8 @@ import { GameplayState } from "@/game/core/GameState";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
 import { warmScene, type WarmupOptions, type WarmupProgress } from "@/lib/shader-warmup";
+import { DailyBreadBriefing } from "@/components/game/DailyBreadBriefing";
+import { BAKERY_KEY, readDailyBreadReport, type FiledBakery } from "@/game/campaign/bakery";
 import { SignalAnomaly } from "@/components/game/hidden/SignalAnomaly";
 import type { HiddenCase } from "@/game/hidden/HiddenCase";
 import { browserStorage } from "@/game/afterhours/progress";
@@ -309,7 +311,17 @@ function SelectionRing({ sel }: { sel: Selection }) {
   );
 }
 
-export function SiteScene() {
+export function SiteScene({ dailyBreadEntry = false }: { dailyBreadEntry?: boolean }) {
+  const [dailyBreadReport, setDailyBreadReport] = useState<FiledBakery | null>(null);
+  useEffect(() => {
+    const read = () => setDailyBreadReport(readDailyBreadReport((key) => window.localStorage.getItem(key)));
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === BAKERY_KEY || event.key === null) read();
+    };
+    read();
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
   const isMobile = useIsMobile();
   // Wait for a client-side hardware profile before mounting WebGL or the game.
   // SSR starts without this information; mounting at desktop quality first can
@@ -499,7 +511,7 @@ export function SiteScene() {
     setInspected((seen) => (seen.has(selected.name) ? seen : new Set(seen).add(selected.name)));
   }, [selected]);
   const [signalError, setSignalError] = useState(false);
-  const acceptCase = useCallback(() => {
+  const acceptCase = useCallback((fromDailyBread = false) => {
     if (!game) return;
     setSignalError(false);
     // Audio and pointer lock may only start inside the click that asked.
@@ -522,7 +534,7 @@ export function SiteScene() {
       c.onPointer = (free) => {
         if (free) sessionRef.current.releasePointer();
       };
-      c.start();
+      c.start(fromDailyBread);
     }).catch(() => {
       if (gameRef.current === game && modeRef.current === "play") {
         sessionRef.current.releasePointer();
@@ -749,6 +761,10 @@ export function SiteScene() {
           markerRef={markerRef}
           vehicleMarkersRef={vehicleMarkersRef}
           caseActive={caseActive}
+          hasDailyBread={dailyBreadReport !== null}
+          dailyBreadBriefing={dailyBreadEntry && dailyBreadReport
+            ? <DailyBreadBriefing report={dailyBreadReport} onAccept={() => acceptCase(true)} />
+            : undefined}
         />
       )}
 

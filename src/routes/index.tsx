@@ -29,11 +29,12 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   const search = useLocation({ select: (location) => location.searchStr });
-  const sanFierro = new URLSearchParams(search).get("chapter") === "san-fierro";
+  const params = new URLSearchParams(search);
+  const sanFierro = params.get("chapter") === "san-fierro";
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (sanFierro && mounted && new URLSearchParams(search).get("mission") === "bakery")
+  if (sanFierro && mounted && params.get("mission") === "bakery")
     return <Suspense fallback={<main>Opening the waterfront...</main>}><BakeryCity /></Suspense>;
   if (sanFierro) return mounted ? <SanFierro /> : <main className="min-h-screen bg-black p-8 text-white">Loading San Fierro…</main>;
-  return <SiteScene />;
+  return <SiteScene dailyBreadEntry={params.get("briefing") === "daily-bread"} />;
 }

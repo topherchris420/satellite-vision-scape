@@ -171,7 +171,7 @@ export class HiddenCase implements GameLayer {
   // --- Lifecycle ------------------------------------------------------------------
 
   /** Start or resume the case at the van (from the click that accepted it). */
-  start(): void {
+  start(fromDailyBread = false): void {
     if (this.active) return;
     const g = this.game;
     if (g.freeRoam.active) g.roam.stop();
@@ -194,7 +194,12 @@ export class HiddenCase implements GameLayer {
       g.lockMovement(TITLE_OWNER, true);
       this.orbit = 0;
       this.queue.length = 0;
-      for (const line of BRIEFING) this.say(line.speaker, line.text, line.seconds);
+      for (const line of BRIEFING) {
+        const text = fromDailyBread && line.speaker === "rain"
+          ? "We have your Daily Bread findings. This carrier needs its own evidence. Find out where it came from before anyone acts."
+          : line.text;
+        this.say(line.speaker, text, line.seconds);
+      }
     } else if (this.data.stage === "closed") {
       this.say("ines", this.field ? EXPEDITIONS[this.field.chapter].briefing : "Another tape just came in. Check the board when you’re ready.", 6);
     } else {

@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
+  BAKERY_KEY,
   bakeryScore,
+  readDailyBreadReport,
   fileAnswer,
   freshTail,
   parseBakery,
@@ -52,4 +54,32 @@ describe("Dawn Bread observation and filing", () => {
     ])
       expect(parseBakery(bad)).toEqual({ checkpoint: "briefing" });
   });
+});
+
+test("only a valid filed Daily Bread report enters the Pine Gap briefing", () => {
+  for (const cargo of ["reject", "accept", "abstain"]) {
+    for (const delivery of ["reject", "accept", "abstain"]) {
+      const report = { checkpoint: "filed", cargo, delivery };
+      expect(
+        readDailyBreadReport((key) => {
+          expect(key).toBe(BAKERY_KEY);
+          return JSON.stringify({ version: 1, ...report });
+        }),
+      ).toEqual(report);
+    }
+  }
+  for (const raw of [
+    null,
+    "{",
+    '{"version":2,"checkpoint":"filed","cargo":"reject","delivery":"accept"}',
+    '{"version":1,"checkpoint":"report","cargo":"reject"}',
+    '{"version":1,"checkpoint":"filed","cargo":"reject"}',
+    '{"version":1,"collected":["witness","record","sensor"],"verdict":"reject"}',
+  ])
+    expect(readDailyBreadReport(() => raw)).toBeNull();
+  expect(
+    readDailyBreadReport(() => {
+      throw new Error("Storage blocked");
+    }),
+  ).toBeNull();
 });
