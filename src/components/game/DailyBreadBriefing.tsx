@@ -35,9 +35,14 @@ export function DailyBreadBriefing({
 }) {
   return (
     <section aria-labelledby="daily-bread-relay-title">
-      <p className="text-[10px] font-bold uppercase tracking-[.2em] text-teal-300">
-        R.A.I.N. Field relay
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[.2em] text-teal-300">
+          R.A.I.N. Field relay
+        </p>
+        <span className="rounded bg-teal-900 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-teal-100">
+          Fiction
+        </span>
+      </div>
       <h1 id="daily-bread-relay-title" className="mt-2 font-sans text-3xl font-light sm:text-4xl">
         Pine Gap briefing
       </h1>

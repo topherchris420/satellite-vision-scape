@@ -44,6 +44,7 @@ async function play(profile) {
         path: join(output, profile + "-" + name + ".jpg"),
         type: "jpeg",
         quality: 85,
+        animations: "disabled",
       });
   };
   const act = async (name) => {
@@ -275,6 +276,7 @@ async function play(profile) {
         .getByText(verdict, { exact: true })
         .waitFor();
     assert.deepEqual(await saves(), before, "opening the relay is read-only");
+    await relay.getByText("Fiction", { exact: true }).waitFor();
     await shot("pine-gap-briefing");
     await act("Go and look");
     await page
@@ -291,10 +293,34 @@ async function play(profile) {
     assert.deepEqual(field.expeditions, []);
     assert.deepEqual({ ...after, field: null }, before);
     await shot("pine-gap-field");
+
+    // Give the real saved case a prior observation and filing history, then resume via the landing.
+    const existingCase = { ...field, collected: ["witness"], weighed: ["witness"], attempts: 2 };
+    await page.evaluate(
+      (value) => localStorage.setItem("99sure.hidden.v1", JSON.stringify(value)),
+      existingCase,
+    );
+    const beforeResume = await saves();
+    await page.goto(new URL("/", base).href, { waitUntil: "domcontentloaded" });
+    const reopen = page.getByRole("link", { name: "Open Daily Bread field briefing" });
+    if (touch) await reopen.tap({ timeout: 120000 });
+    else await reopen.click({ timeout: 120000 });
+    await relay.waitFor({ timeout: 120000 });
+    assert.deepEqual(
+      await saves(),
+      beforeResume,
+      "reopening the relay leaves the existing save intact",
+    );
+    await act("Go and look");
+    await page.getByRole("region", { name: "Case objectives" }).waitFor({ timeout: 90000 });
+    await page.getByText(/The board kept everything you brought in/).waitFor({ timeout: 90000 });
+    const afterResume = await saves();
+    assert.deepEqual(JSON.parse(afterResume.field), existingCase);
+    assert.deepEqual({ ...afterResume, field: beforeResume.field }, beforeResume);
     assert.deepEqual(errors, []);
     console.log(
       profile,
-      "passed: 20/20 filed, both verdicts carried into Pine Gap, no field evidence or completions awarded",
+      "passed: 20/20 filed, both verdicts carried into Pine Gap, no field evidence or completions awarded, existing case resumed",
     );
   } catch (e) {
     await shot("failure");
