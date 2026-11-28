@@ -65,7 +65,7 @@ Choose **Daily Bread** from the city case to play Christopher's waterfront assig
 
 ### Daily Bread · browser gameplay
 
-[**Play Daily Bread**](https://geotwn.vercel.app/?chapter=san-fierro&mission=bakery) · [Watch the recorded desktop playthrough](docs/media/daily-bread-desktop.webm)
+[**Play Daily Bread**](https://geotwn.vercel.app/?chapter=san-fierro&mission=bakery) · [Download the desktop playthrough (WebM, 13 MB)](docs/media/daily-bread-desktop.webm?raw=true)
 
 | Follow the delivery | Stop at Harbor Table |
 | --- | --- |
