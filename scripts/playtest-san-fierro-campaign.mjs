@@ -232,16 +232,16 @@ async function playEpisode(title) {
         process.env.CITY_BREAD_SAVE,
         "CITY_BREAD_SAVE must come from a successful Daily Bread playthrough",
       );
-      await page.getByRole("link", { name: "Play Daily Bread" }).waitFor();
+      await page.getByRole("button", { name: "Play Daily Bread" }).waitFor();
       const bread = JSON.parse(await readFile(process.env.CITY_BREAD_SAVE, "utf8"));
       const raw = bread.origins
         .find((x) => x.origin === new URL(base).origin)
         ?.localStorage.find((x) => x.name === "99sure.city.bakery.v1")?.value;
       assert.equal(JSON.parse(raw).checkpoint, "filed");
       await page.evaluate((raw) => localStorage.setItem("99sure.city.bakery.v1", raw), raw);
-      await page.getByRole("link", { name: "Play Daily Bread" }).click();
+      await page.getByRole("button", { name: "Play Daily Bread" }).click();
       await page.getByRole("heading", { name: "Delivery report" }).waitFor();
-      await click(page.getByRole("link", { name: "Return to San Fierro story" }));
+      await click(page.getByRole("button", { name: "Return to San Fierro story" }));
       await page.getByRole("heading", { name: "Comparison readings" }).waitFor();
     } else if (t.kind === "choice") {
       if (t.title === "Christopher's file" && !touch) {
@@ -341,7 +341,7 @@ try {
   assert.equal(before.modes.length, 6);
   assert(before.control);
   if (output) await context.storageState({ path: join(output, mode + "-dossier-state.json") });
-  await click(page.getByRole("link", { name: "Continue to Pine Gap" }));
+  await click(page.getByRole("button", { name: "Continue to Pine Gap" }));
   const relay = page.getByRole("region", { name: "Pine Gap briefing" });
   await relay.getByText("Private fee", { exact: true }).waitFor({ timeout: 150000 });
   await relay

@@ -47,9 +47,13 @@ There are two ways into **99.9% SURE**. [Open Pine Gap in a browser](https://geo
 
 ## Chapter I · San Fierro
 
-[**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
+[**Play Christopher’s San Fierro story**](https://geotwn.vercel.app/?chapter=san-fierro&story=full). Take on five connected missions and eight Vers3Dynamics research assignments, then carry your decisions into Pine Gap. The full story needs writable browser storage for its checkpoints. See the [campaign guide](docs/CAMPAIGN_BRIDGE.md) for the handoff.
 
-[**Play Christopher's San Fierro story**](https://geotwn.vercel.app/?chapter=san-fierro&story=full) for five connected missions, eight Vers3Dynamics research assignments and the cymatics atlas. A complete dossier carries Christopher's choices into the Pine Gap briefing. See [Campaign bridge](docs/CAMPAIGN_BRIDGE.md) for checkpoints and the handoff.
+![Browser gameplay: Christopher frames a tai chi class beside its community noticeboard, with the framing meter and field radar still visible](docs/media/screens/san-fierro-courtyard.jpg)
+
+*In-game capture from the opening investigation. Look for the mats, the instructor and the community noticeboard before filing a judgment.*
+
+[**Try the original three-observation case**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
 
 Choose **Daily Bread** from the city case to play Christopher's waterfront assignment. Follow Dawn Bread in the research wagon, interview the driver at Harbor Table, collect the signed receipt and file both findings at the lab. The chapter saves checkpoints in this browser. The radar marks the current objective in gold. The white bar tracks the wagon, the red bar tracks Christopher, and the item icon equips or holsters his optional sidearm. Use WASD or arrows to move, E to interact and Space to brake, or use the on-screen touch controls.
 

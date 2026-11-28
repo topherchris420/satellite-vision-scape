@@ -276,12 +276,23 @@ export function CityMissionHUD({
                 </strong>
                 <p>Case filed · $50 field allowance received.</p>
                 <div className="city-links">
-                  <a href={CITY_CAMPAIGN_HREF}>Return to San Fierro story</a>
-                  {m.storageOK ? (
-                    <a href={DAILY_BREAD_BRIEFING_HREF}>Continue to Pine Gap briefing ↗</a>
-                  ) : (
-                    <a href={CHAPTER_HREF["pine-gap"]}>Explore Pine Gap ↗</a>
-                  )}
+                  <button
+                    onClick={async () => {
+                      if (await m.confirmTravel()) window.location.assign(CITY_CAMPAIGN_HREF);
+                      refresh();
+                    }}
+                  >
+                    Return to San Fierro story
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (await m.confirmTravel())
+                        window.location.assign(DAILY_BREAD_BRIEFING_HREF);
+                      refresh();
+                    }}
+                  >
+                    Continue to Pine Gap briefing ↗
+                  </button>
                 </div>
               </>
             )
@@ -294,7 +305,9 @@ export function CityMissionHUD({
         </section>
       )}
       {!m.storageOK && (
-        <small className="city-storage">Browser storage unavailable · this session only</small>
+        <small className="city-storage">
+          Save unavailable. Stay on this page, allow site storage, then try again.
+        </small>
       )}
       {figure === "unavailable" && (
         <small className="city-model-note">

@@ -10,6 +10,7 @@ import { CharacterAnimator } from "@/game/player/CharacterAnimator";
 import type { PlayerVisual } from "@/game/player/PlayerVisual";
 import { browserStorage, type KeyValueStorage } from "@/game/afterhours/progress";
 import { CITY_DISTRICT, LAB, SHELTER } from "@/game/world/buildCityWorld";
+import { cityCourtyard } from "@/game/world/CityCourtyard";
 import { cityScenery } from "@/game/world/CityScenery";
 import { makePuffSprite } from "@/lib/site-textures";
 import { resetMobileInput } from "@/lib/mobile-input";
@@ -23,6 +24,7 @@ type CityPlayProps<T extends Mission> = {
   onStorage: (mission: T, key: string | null) => void;
   bakery?: (mission: T) => boolean;
   waypoint?: (mission: T) => { x: number; z: number } | null;
+  courtyard?: (mission: T) => boolean;
   subject?: (mission: T) => { x: number; z: number } | null;
   renderHUD: (props: {
     mission: T;
@@ -36,6 +38,7 @@ function createSession<T extends Mission>({
   makeMission,
   bakery,
   waypoint,
+  courtyard,
   subject,
 }: CityPlayProps<T>) {
   const storage = browserStorage();
@@ -78,6 +81,8 @@ function createSession<T extends Mission>({
   torch.rotation.x = -Math.PI / 2;
   torch.visible = false;
   game.root.add(torch);
+  const practice = courtyard ? cityCourtyard() : null;
+  if (practice) game.root.add(practice.root);
   const subjectModel = new CharacterVisual({ variant: "technician", palette: "staff" });
   subjectModel.visible = false;
   game.root.add(subjectModel.root);
@@ -87,6 +92,10 @@ function createSession<T extends Mission>({
       npcShadows[1].visible = npcs[1].visible;
       const mark = waypoint?.(mission);
       torch.visible = !!mark;
+      if (practice) {
+        practice.root.visible = courtyard!(mission);
+        practice.update(dt);
+      }
       const subjectPoint = subject?.(mission);
       subjectModel.visible = !!subjectPoint;
       if (subjectPoint) subjectModel.root.position.set(subjectPoint.x, 0, subjectPoint.z);
@@ -132,8 +141,18 @@ function createSession<T extends Mission>({
     .catch(() => {
       figure = "unavailable";
     });
+  const { x, z } = game.player.position;
+  const yaw = game.player.yaw;
+  const initialCamera = {
+    position: [x - 5.8 * Math.sin(yaw), 3.3, z - 5.8 * Math.cos(yaw)] as [number, number, number],
+    rotation: [0, Math.PI + yaw, 0] as [number, number, number],
+    fov: 59,
+    near: 0.1,
+    far: 460,
+  };
   return {
     game,
+    initialCamera,
     mission,
     running: false,
     get figure() {
@@ -146,6 +165,7 @@ function createSession<T extends Mission>({
       chris?.dispose();
       for (const npc of npcs) npc.dispose();
       subjectModel.dispose();
+      practice?.dispose();
       torch.geometry.dispose();
       torch.material.dispose();
       torch.removeFromParent();
@@ -232,13 +252,7 @@ export function CityPlay<T extends Mission>(props: CityPlayProps<T>) {
         dpr={[1, 1.35]}
         gl={{ antialias: true }}
         onCreated={({ gl }) => setCanvas(gl.domElement)}
-        camera={{
-          position: [-5.7, 3.3, -5.8],
-          rotation: [0, Math.PI, 0],
-          fov: 59,
-          near: 0.1,
-          far: 460,
-        }}
+        camera={session.initialCamera}
         fallback={<p>WebGL is required to play this mission.</p>}
       >
         <color attach="background" args={["#e9bea0"]} />

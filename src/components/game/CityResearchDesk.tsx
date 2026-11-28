@@ -72,7 +72,13 @@ export function CityResearchDesk({ mission: m }: { mission: CityCampaignLayer })
           {m.episode && (
             <>
               <p>{m.episode.description}</p>
-              <button className="city-primary" disabled={m.busy} onClick={() => m.startEpisode()}>
+              <button
+                className="city-primary"
+                disabled={m.busy || (m.record.revision === 0 && !m.storageOK)}
+                onClick={async () => {
+                  if (m.record.revision > 0 || (await m.confirmTravel())) m.startEpisode();
+                }}
+              >
                 Start {m.episode.title}
               </button>
             </>
@@ -81,11 +87,15 @@ export function CityResearchDesk({ mission: m }: { mission: CityCampaignLayer })
             <>
               <h3>San Fierro dossier filed</h3>
               <p>Public hearing score {m.record.score} / 100. The field relay is ready.</p>
-              {m.storageOK && (
-                <a className="city-primary" href={CITY_BRIEFING_HREF}>
-                  Continue to Pine Gap
-                </a>
-              )}
+              <button
+                className="city-primary"
+                disabled={m.busy}
+                onClick={async () => {
+                  if (await m.confirmTravel()) window.location.assign(CITY_BRIEFING_HREF);
+                }}
+              >
+                Continue to Pine Gap
+              </button>
             </>
           )}
         </section>

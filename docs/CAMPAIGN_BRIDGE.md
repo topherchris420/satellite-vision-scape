@@ -14,7 +14,7 @@ Start at **Play Christopher's San Fierro story** on the San Fierro chapter menu 
 
 The HQ opens eight R.A.I.N. assignments in story order. Duplicate sources and weak observations alter the visible hypothesis scores. A careful ruling stands. A retracted, sloppy or cautious ruling can be reopened. The cymatics rig logs six modes and a generator-off control. The lab carries forward the last publication, research reputation and grants. A revised ruling can earn the remaining grant up to the award for a careful ruling.
 
-The campaign uses `99sure.city.campaign.v1`. A checkpoint keeps filed choices, field observations, and the last recorded triage clocks. An unfinished drive or observation restarts from the relevant marker. Daily Bread retains its existing record. A previously filed delivery counts once toward the city campaign.
+The full story requires writable browser storage. If a checkpoint write fails during play, the handoff stays on the current page; allow site storage and retry without reloading. The campaign uses `99sure.city.campaign.v1`. A checkpoint keeps filed choices, field observations, and the last recorded triage clocks. An unfinished drive or observation restarts from the relevant marker. Daily Bread retains its existing record. A previously filed delivery counts once toward the city campaign.
 
 After filing **The Open Experiment**, select **Continue to Pine Gap** at HQ. The receiving briefing shows the actual delivery verdicts, relay and triage outcomes, broadcast classification, independent results, power and fee choice, and HQ research. **Go and look** starts or resumes the field investigation with its own evidence and history.
 

@@ -19,7 +19,8 @@ export function CityCampaign() {
       }
       modal={(mission) => mission.modal}
       waypoint={(mission) => (!mission.modal ? mission.destination : null)}
-      subject={(mission) => (!mission.modal ? mission.subject : null)}
+      courtyard={(mission) => mission.courtyard && !mission.modal}
+      subject={(mission) => (!mission.modal && !mission.courtyard ? mission.subject : null)}
       onStorage={(mission, key) => {
         if (key === CITY_RECORD_KEY || key === null) mission.sync();
         if (key === BAKERY_KEY || key === null) mission.syncBread();
@@ -96,7 +97,9 @@ function CampaignHUD({
                 <small className="block">
                   {m.photoAimed
                     ? "Aligned. Hold steady or use at the marker."
-                    : "At the marker, drag to face the subject to the north."}
+                    : m.courtyard
+                      ? "At the marker, turn toward the practice mats on the sidewalk."
+                      : "At the marker, drag to face the subject to the north."}
                 </small>
               </>
             )}
@@ -121,7 +124,7 @@ function CampaignHUD({
               )}
             {m.courierActive && (
               <small className="block">
-                Follow Dex to the drop. Stay 5?20 m from the courier until the stop.
+                Follow Dex to the drop. Stay 5–20 m from the courier until the stop.
               </small>
             )}
             {m.feedback && (
@@ -269,9 +272,16 @@ function CampaignHUD({
                 Follow Dawn Bread to Harbor Table and file both verdicts. Your investigation
                 continues here after you file.
               </p>
-              <a className="city-primary" href={DAILY_BREAD_HREF}>
+              <button
+                className="city-primary"
+                disabled={m.busy}
+                onClick={async () => {
+                  if (await m.confirmTravel()) window.location.assign(DAILY_BREAD_HREF);
+                  refresh();
+                }}
+              >
                 Play Daily Bread
-              </a>
+              </button>
             </>
           ) : task?.kind === "choice" ? (
             <>
@@ -301,7 +311,11 @@ function CampaignHUD({
             </>
           ) : null}
           {!m.storageOK && (
-            <p role="status">Browser storage unavailable. Progress is kept for this visit.</p>
+            <p role="status">
+              {m.record.revision === 0
+                ? "This campaign needs browser storage to save progress between missions. Allow site storage, then reload to start."
+                : "Your latest checkpoint couldn’t be saved. Stay on this page, allow site storage, then try again."}
+            </p>
           )}
         </section>
       )}

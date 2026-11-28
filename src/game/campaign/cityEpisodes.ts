@@ -34,6 +34,8 @@ export type Task =
       teach?: boolean;
     };
 
+export const COURTYARD_SUBJECT = { x: -10, z: 82 };
+
 export const verdicts = ["accept", "reject", "abstain"] as const;
 const links = ["causes", "common cause", "coincidence", "can't tell"] as const;
 const at = (z: number, x = -5): Point => ({ x, z });
@@ -82,7 +84,7 @@ export const EPISODES: readonly { title: string; description: string; tasks: rea
       claim(0, "Christopher's file", "Christopher was at the reported incident.", "reject", true),
       dialog(
         "The courtyard class",
-        "Ines: CERTAIN saw people moving in unison. Frame the class from three marked positions. The front of the class is north of each marker.",
+        "Ines: CERTAIN saw people moving in unison. Frame the class from three marked positions. Look toward the practice mats and the community noticeboard beside the avenue.",
       ),
       visit(
         "photo",
@@ -94,13 +96,13 @@ export const EPISODES: readonly { title: string; description: string; tasks: rea
         "photo",
         "Frame the class from the walkway",
         68,
-        "Side photograph: a flyer identifies the courtyard tai chi class.",
+        "Side photograph: the Harbor Community noticeboard identifies a morning tai chi class open to everyone.",
       ),
       visit(
         "photo",
         "Frame the instructor from the rail",
         75,
-        "Close photograph: a blurred frame of the instructor. It says nothing about their plans.",
+        "Close photograph: the instructor guides a slow sequence. The image says nothing about their plans.",
       ),
       claim(1, "The courtyard class", "The group is conducting paramilitary training.", "reject"),
       claim(2, "The instructor", "The instructor is a flight risk.", "abstain"),

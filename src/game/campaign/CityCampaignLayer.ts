@@ -1,3 +1,4 @@
+import { confirmTravelCheckpoint } from "./travelCheckpoint";
 import type { Game, GameLayer } from "../Game";
 import type { KeyValueStorage } from "../afterhours/progress";
 import { GameplayState } from "../core/GameState";
@@ -8,12 +9,20 @@ import type { InteractableProvider } from "../interaction/InteractionManager";
 import type { Vehicle } from "../vehicles/Vehicle";
 import { LAB } from "../world/buildCityWorld";
 import { readDailyBreadReport } from "./bakery";
-import { EPISODES, TRIAGE, type Choice, type Point, type Task } from "./cityEpisodes";
+import {
+  COURTYARD_SUBJECT,
+  EPISODES,
+  TRIAGE,
+  type Choice,
+  type Point,
+  type Task,
+} from "./cityEpisodes";
 import {
   CITY_RECORD_KEY,
   addFirst,
   changeReputation,
   loadCityRecord,
+  parseCityRecord,
   postBread,
   strongLog,
   type CityRecord,
@@ -136,14 +145,19 @@ export class CityCampaignLayer implements GameLayer {
     const task = this.task;
     if (task?.kind !== "photo") return false;
     const { x, z } = this.game.player.position;
-    const dx = task.point.x - x,
-      dz = task.point.z + 7 - z;
+    const point = this.subject!;
+    const dx = point.x - x,
+      dz = point.z - z;
     const heading = this.game.camera.yaw;
     return Math.sin(heading) * dx + Math.cos(heading) * dz >= 0.84 * Math.hypot(dx, dz);
   }
   get subject(): Point | null {
     const task = this.task;
-    return task?.kind === "photo" ? { x: task.point.x, z: task.point.z + 7 } : null;
+    if (task?.kind !== "photo") return null;
+    return this.courtyard ? COURTYARD_SUBJECT : { x: task.point.x, z: task.point.z + 7 };
+  }
+  get courtyard() {
+    return this.record.episode === 0 && this.task?.kind === "photo";
   }
   get escapeDeadline() {
     const task = this.task;
@@ -236,6 +250,30 @@ export class CityCampaignLayer implements GameLayer {
         this.syncBread();
       },
     );
+  }
+
+  /** Cross-page mission links must not discard a checkpoint held only in memory. */
+  async confirmTravel() {
+    if (this.busy) return false;
+    const confirm = () =>
+      confirmTravelCheckpoint(
+        this.storage,
+        CITY_RECORD_KEY,
+        this.record,
+        parseCityRecord,
+        (r) => r.revision,
+        JSON.stringify,
+      );
+    this.busy = true;
+    try {
+      this.storageOK =
+        this.locks && this.storage ? await this.locks.request(CITY_RECORD_KEY, confirm) : confirm();
+    } catch {
+      this.storageOK = false;
+    } finally {
+      this.busy = false;
+    }
+    return this.storageOK;
   }
 
   startEpisode() {
