@@ -254,7 +254,7 @@ export class CityCampaignLayer implements GameLayer {
   }
 
   /** Cross-page mission links must not discard a checkpoint held only in memory. */
-  async confirmTravel() {
+  async confirmTravel(requireWrite = true) {
     if (this.busy) return false;
     const confirm = () =>
       confirmTravelCheckpoint(
@@ -264,6 +264,7 @@ export class CityCampaignLayer implements GameLayer {
         parseCityRecord,
         (r) => r.revision,
         JSON.stringify,
+        requireWrite,
       );
     this.busy = true;
     try {

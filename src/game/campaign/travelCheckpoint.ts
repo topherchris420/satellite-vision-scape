@@ -8,12 +8,14 @@ export function confirmTravelCheckpoint<T>(
   parse: (raw: string | null) => T,
   revision: (record: T) => number,
   encode: (record: T) => string,
+  requireWrite = true,
 ): boolean {
   if (!storage) return false;
   try {
     const raw = storage.getItem(key);
     const saved = parse(raw);
     const desired = encode(active);
+    if (!requireWrite && raw !== null && encode(saved) === desired) return true;
     if (raw !== null && revision(saved) >= revision(active) && encode(saved) !== desired)
       return false;
     storage.setItem(key, desired);
