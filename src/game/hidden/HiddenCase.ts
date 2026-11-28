@@ -1,7 +1,7 @@
 import { CalibrationRover, TRANSECT } from "./CalibrationRover";
 import { JevProvider } from "@/agent/providers/jev";
 import * as THREE from "three";
-import { EXPEDITIONS, availableStations, canFile, freshRun, instrumentFor, responseAt } from "./expeditions";
+import { EXPEDITIONS, availableStations, canFile, fieldEnding, freshRun, instrumentFor, responseAt } from "./expeditions";
 import { FieldEquipment } from "./FieldEquipment";
 import type { Game, GameLayer } from "../Game";
 import type { InputState } from "../core/Input";
@@ -171,7 +171,7 @@ export class HiddenCase implements GameLayer {
   // --- Lifecycle ------------------------------------------------------------------
 
   /** Start or resume the case at the van (from the click that accepted it). */
-  start(fromDailyBread = false): void {
+  start(source?: "daily-bread" | "san-fierro"): void {
     if (this.active) return;
     const g = this.game;
     if (g.freeRoam.active) g.roam.stop();
@@ -195,13 +195,21 @@ export class HiddenCase implements GameLayer {
       this.orbit = 0;
       this.queue.length = 0;
       for (const line of BRIEFING) {
-        const text = fromDailyBread && line.speaker === "rain"
-          ? "We have your Daily Bread findings. This carrier needs its own evidence. Find out where it came from before anyone acts."
-          : line.text;
+        let text = line.text;
+        if (line.speaker === "rain" && source === "daily-bread")
+          text = "We have your Daily Bread findings. This carrier needs its own evidence. Find out where it came from before anyone acts.";
+        if (line.speaker === "rain" && source === "san-fierro")
+          text = "The San Fierro dossier is on file. Check this carrier from the ground and keep an independent field record.";
         this.say(line.speaker, text, line.seconds);
       }
     } else if (this.data.stage === "closed") {
-      this.say("ines", this.field ? EXPEDITIONS[this.field.chapter].briefing : "Another tape just came in. Check the board when you’re ready.", 6);
+      const last = this.field;
+      const text = last?.verdict != null
+        ? fieldEnding(this.data.expeditions)
+        : last
+          ? EXPEDITIONS[last.chapter].briefing
+          : "Another tape just came in. Check the board when you are ready.";
+      this.say("ines", text, 6);
     } else {
       this.say("rain", "Back on the ground. The board kept everything you brought in.", 4);
       this.say("ines", this.hint(), 5);

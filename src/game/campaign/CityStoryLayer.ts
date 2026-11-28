@@ -1,3 +1,4 @@
+import { confirmTravelCheckpoint } from "./travelCheckpoint";
 import { RandomStream } from "../../lib/freeroam/rng";
 import { Attention } from "../freeroam/Attention";
 import { createAimSample, Sidearm } from "../freeroam/Weapons";
@@ -199,6 +200,25 @@ export class CityStoryLayer implements GameLayer {
     this.record = saved;
     this.restore();
     return true;
+  }
+
+  async confirmTravel() {
+    const confirm = () =>
+      confirmTravelCheckpoint(
+        this.storage,
+        BAKERY_KEY,
+        this.record,
+        parseBakery,
+        bakeryStep,
+        (record) => JSON.stringify({ version: 1, ...record }),
+      );
+    try {
+      this.storageOK =
+        this.locks && this.storage ? await this.locks.request(BAKERY_KEY, confirm) : confirm();
+    } catch {
+      this.storageOK = false;
+    }
+    return this.storageOK;
   }
 
   private save(record: BakerySave) {

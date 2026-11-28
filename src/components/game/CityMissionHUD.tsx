@@ -4,7 +4,7 @@ import type { CityStoryLayer } from "@/game/campaign/CityStoryLayer";
 import { StreetMap, CityInstruments } from "./CityInstruments";
 import { GameplayState } from "@/game/core/GameState";
 import { mobileInput } from "@/lib/mobile-input";
-import { CHAPTER_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
+import { CHAPTER_HREF, CITY_CAMPAIGN_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
 
 const objectives = {
   meet: "Meet Ines outside the field lab.",
@@ -19,7 +19,7 @@ const objectives = {
   failed: "Observation interrupted.",
 };
 
-function DrivePad({ driving }: { driving: boolean }) {
+export function DrivePad({ driving }: { driving: boolean }) {
   const held = useRef(new Map<number, string>());
   function axes() {
     const values = [...held.current.values()];
@@ -276,11 +276,23 @@ export function CityMissionHUD({
                 </strong>
                 <p>Case filed · $50 field allowance received.</p>
                 <div className="city-links">
-                  {m.storageOK ? (
-                    <a href={DAILY_BREAD_BRIEFING_HREF}>Continue to Pine Gap briefing ↗</a>
-                  ) : (
-                    <a href={CHAPTER_HREF["pine-gap"]}>Explore Pine Gap ↗</a>
-                  )}
+                  <button
+                    onClick={async () => {
+                      if (await m.confirmTravel()) window.location.assign(CITY_CAMPAIGN_HREF);
+                      refresh();
+                    }}
+                  >
+                    Return to San Fierro story
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (await m.confirmTravel())
+                        window.location.assign(DAILY_BREAD_BRIEFING_HREF);
+                      refresh();
+                    }}
+                  >
+                    Continue to Pine Gap briefing ↗
+                  </button>
                 </div>
               </>
             )
@@ -293,7 +305,9 @@ export function CityMissionHUD({
         </section>
       )}
       {!m.storageOK && (
-        <small className="city-storage">Browser storage unavailable · this session only</small>
+        <small className="city-storage">
+          Save unavailable. Stay on this page, allow site storage, then try again.
+        </small>
       )}
       {figure === "unavailable" && (
         <small className="city-model-note">

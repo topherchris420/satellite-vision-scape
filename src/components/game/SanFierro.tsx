@@ -5,7 +5,7 @@ import { buildings, canMove, CAR, collectEvidence, evidence, freshCampaign, HQ, 
 import { CharacterAnimator, type AnimationParams } from "@/game/player/CharacterAnimator";
 import { CharacterVisual } from "@/game/player/CharacterVisual";
 import type { PlayerVisual } from "@/game/player/PlayerVisual";
-import { CHAPTER_HREF } from "@/lib/chapters";
+import { CHAPTER_HREF, CITY_CAMPAIGN_HREF, DAILY_BREAD_HREF } from "@/lib/chapters";
 import { ChapterSwitch } from "./ChapterSwitch";
 
 type Point = { x: number; z: number };
@@ -216,7 +216,8 @@ export function SanFierro() {
       <div className="max-w-[calc(100%-7rem)] rounded-lg bg-black/75 p-3 sm:max-w-md">
         <p className="text-[10px] uppercase tracking-widest text-teal-300">99.9% SURE · San Fierro prototype</p>
         <h1 className="text-lg font-bold">The CERTAIN case</h1>
-        <a href="/?chapter=san-fierro&mission=bakery" className="pointer-events-auto mt-1 inline-block rounded bg-teal-300 px-3 py-2 text-xs font-bold text-black">Play Daily Bread</a>
+        <a href={CITY_CAMPAIGN_HREF} className="pointer-events-auto mr-2 mt-1 inline-block rounded bg-amber-200 px-3 py-2 text-xs font-bold text-black">Play Christopher&apos;s San Fierro story</a>
+        <a href={DAILY_BREAD_HREF} className="pointer-events-auto mt-1 inline-block rounded bg-teal-300 px-3 py-2 text-xs font-bold text-black">Play Daily Bread</a>
         <p className="text-xs text-white/80">{message}</p>
         <p className="mt-2 text-xs text-amber-200">Evidence {campaign.collected.length}/3 · {campaign.verdict ? "Case closed" : ready ? "Return to HQ (teal)" : "Visit amber markers"}</p>
         {!storageOK && <p className="text-xs text-red-200">Browser storage unavailable; progress is temporary.</p>}

@@ -5,6 +5,8 @@ import { SiteScene } from "@/components/site/SiteScene";
 
 const BakeryCity = lazy(() => import("@/components/game/BakeryCity").then(m => ({ default: m.BakeryCity })));
 
+const CityCampaign = lazy(() => import("@/components/game/CityCampaign").then(m => ({ default: m.CityCampaign })));
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -35,6 +37,8 @@ function Index() {
   useEffect(() => setMounted(true), []);
   if (sanFierro && mounted && params.get("mission") === "bakery")
     return <Suspense fallback={<main>Opening the waterfront...</main>}><BakeryCity /></Suspense>;
+  if (sanFierro && mounted && params.get("story") === "full")
+    return <Suspense fallback={<main>Opening Vers3Dynamics HQ...</main>}><CityCampaign /></Suspense>;
   if (sanFierro) return mounted ? <SanFierro /> : <main className="min-h-screen bg-black p-8 text-white">Loading San Fierro…</main>;
-  return <SiteScene dailyBreadEntry={params.get("briefing") === "daily-bread"} />;
+  return <SiteScene fieldEntry={params.get("briefing")} />;
 }

@@ -3,9 +3,6 @@ import { CITY_BLOCKS, CITY_BOUNDS, LAB, SHELTER } from "@/game/world/buildCityWo
 
 /** North-up radar. The engine looks along +Z with -X to the player's right. */
 export function StreetMap({ mission: m }: { mission: CityStoryLayer }) {
-  const rig = m.game.interaction.driven?.physics;
-  const p = rig ?? m.game.player.position;
-  const yaw = rig?.yaw ?? m.game.player.yaw;
   const van = m.van.physics;
   const dest =
     m.phase === "tail"
@@ -15,6 +12,33 @@ export function StreetMap({ mission: m }: { mission: CityStoryLayer }) {
         : m.phase === "interview"
           ? SHELTER
           : LAB;
+  return (
+    <CityRadar
+      game={m.game}
+      dest={dest}
+      wagon={m.wagon.physics}
+      traffic={van}
+      trafficLabel="Delivery van"
+    />
+  );
+}
+
+export function CityRadar({
+  game,
+  dest,
+  wagon,
+  traffic,
+  trafficLabel = "Target vehicle",
+}: {
+  game: CityStoryLayer["game"];
+  dest: { x: number; z: number };
+  wagon: { x: number; z: number };
+  traffic?: { x: number; z: number } | null;
+  trafficLabel?: string;
+}) {
+  const rig = game.interaction.driven?.physics;
+  const p = rig ?? game.player.position;
+  const yaw = rig?.yaw ?? game.player.yaw;
   const dx = p.x - dest.x,
     dy = p.z - dest.z;
   const scale = Math.min(1, 44 / Math.max(1, Math.hypot(dx, dy)));
@@ -51,17 +75,19 @@ export function StreetMap({ mission: m }: { mission: CityStoryLayer }) {
               strokeWidth="1"
             />
           ))}
-          <rect
-            aria-label="Delivery van"
-            x={van.x - 2.5}
-            y={-van.z - 3.5}
-            width="5"
-            height="7"
-            rx="1"
-            fill="#f7bd58"
-            stroke="#291c0c"
-          />
-          <g transform={`translate(${m.wagon.physics.x} ${-m.wagon.physics.z})`}>
+          {traffic && (
+            <rect
+              aria-label={trafficLabel}
+              x={traffic.x - 2.5}
+              y={-traffic.z - 3.5}
+              width="5"
+              height="7"
+              rx="1"
+              fill="#f7bd58"
+              stroke="#291c0c"
+            />
+          )}
+          <g transform={`translate(${wagon.x} ${-wagon.z})`}>
             <rect x="-2" y="-3" width="4" height="6" fill="#50bfb3" stroke="#143c38" />
           </g>
         </g>

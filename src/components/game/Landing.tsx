@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown, Compass, Flag, Footprints, MoonStar } from "lucide-react";
 import { createRaceTarget } from "@/game/freeroam/RaceTracker";
 import { readBest } from "@/lib/freeroam-ui";
-import { DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
+import { CITY_BRIEFING_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
 import { formatRaceTime, parseRaceLink } from "@/lib/freeroam/race";
 
 /**
@@ -39,6 +39,7 @@ export function Landing({
   isMobile,
   returning,
   hasDailyBread = false,
+  hasCityDossier = false,
   onRace,
   onWalk,
   onSurvey,
@@ -48,6 +49,7 @@ export function Landing({
   isMobile: boolean;
   returning: boolean;
   hasDailyBread?: boolean;
+  hasCityDossier?: boolean;
   onRace: () => void;
   onWalk: () => void;
   onSurvey: () => void;
@@ -72,7 +74,11 @@ export function Landing({
         reach the checkpoint and shake the site&apos;s response, on the same seed, with its recorded run beside you.
       </p>
 
-      {hasDailyBread && (
+      {hasCityDossier ? (
+        <a href={CITY_BRIEFING_HREF} className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-teal-200/35 bg-teal-950/75 px-4 text-xs font-bold text-teal-100 hover:bg-teal-900">
+          Open San Fierro field briefing
+        </a>
+      ) : hasDailyBread && (
         <a href={DAILY_BREAD_BRIEFING_HREF} className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-teal-200/35 bg-teal-950/75 px-4 text-xs font-bold text-teal-100 hover:bg-teal-900">
           Open Daily Bread field briefing
         </a>

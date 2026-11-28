@@ -47,7 +47,13 @@ There are two ways into **99.9% SURE**. [Open Pine Gap in a browser](https://geo
 
 ## Chapter I · San Fierro
 
-[**Play San Fierro in your browser**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
+[**Play Christopher’s San Fierro story**](https://geotwn.vercel.app/?chapter=san-fierro&story=full). Take on five connected missions and eight Vers3Dynamics research assignments, then carry your decisions into Pine Gap. The full story needs writable browser storage for its checkpoints. See the [campaign guide](docs/CAMPAIGN_BRIDGE.md) for the handoff.
+
+![Browser gameplay: Christopher frames a tai chi class beside its community noticeboard, with the framing meter and field radar still visible](docs/media/screens/san-fierro-courtyard.jpg)
+
+*In-game capture from the opening investigation. Look for the mats, the instructor and the community noticeboard before filing a judgment.*
+
+[**Try the original three-observation case**](https://geotwn.vercel.app/?chapter=san-fierro). You play Christopher Woodyard, starting at R.A.I.N.'s field HQ (teal) in a compact, original 3D district. CERTAIN has flagged a family vehicle. Visit the three amber markers for a witness statement, an independent record and a sensor audit, borrow the red car if you like, then return to HQ and choose **accept**, **reject** or **abstain**. Your verdict appears on Pine Gap's menu, and you can reopen the case any time.
 
 Choose **Daily Bread** from the city case to play Christopher's waterfront assignment. Follow Dawn Bread in the research wagon, interview the driver at Harbor Table, collect the signed receipt and file both findings at the lab. The chapter saves checkpoints in this browser. The radar marks the current objective in gold. The white bar tracks the wagon, the red bar tracks Christopher, and the item icon equips or holsters his optional sidearm. Use WASD or arrows to move, E to interact and Space to brake, or use the on-screen touch controls.
 
@@ -279,7 +285,9 @@ Open the URL printed by Vite. If your environment cannot bind IPv6, use `bun run
 | Local entry point | Purpose |
 | --- | --- |
 | `/` | Chapter II: Pine Gap, human play and the mode selector |
-| `/?chapter=san-fierro` | Chapter I: the browser San Fierro case |
+| `/?chapter=san-fierro` | Chapter I: San Fierro entry and original browser case |
+| `/?chapter=san-fierro&story=full` | Christopher's five-episode campaign and Vers3Dynamics HQ |
+| `/?briefing=san-fierro` | Pine Gap briefing for the locally filed city dossier |
 | `/?controller=mock` | Scripted After Hours baseline; press **After Hours** |
 | `/?controller=random&seed=42` | Seeded random After Hours policy |
 | `/?agentHud=1` | Show the After Hours trace panel during human play |

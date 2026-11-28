@@ -358,7 +358,7 @@
   text-transform: capitalize;
 }
 .city-score,
-.city-links a {
+.city-links :is(a, button) {
   color: var(--mint);
 }
 .city-back {

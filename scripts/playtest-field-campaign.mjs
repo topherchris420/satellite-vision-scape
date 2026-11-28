@@ -6,16 +6,23 @@ import { chromium, devices } from "playwright";
 const phone = process.argv.includes("--phone");
 const url = process.env.PINE_PLAYTEST_URL ?? "http://127.0.0.1:8080";
 const browser = await chromium.launch({
-  args: ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+  executablePath: process.env.CITY_BROWSER || undefined,
+  args: process.env.CITY_BROWSER
+    ? ["--enable-unsafe-swiftshader"]
+    : ["--use-gl=angle", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
 });
-const context = await browser.newContext(
-  phone
+const context = await browser.newContext({
+  ...(phone
     ? { ...devices["iPhone 13"], deviceScaleFactor: 1 }
-    : { viewport: { width: 832, height: 552 } },
-);
+    : { viewport: { width: 832, height: 552 } }),
+  storageState: process.env.PINE_STORAGE_STATE || undefined,
+  reducedMotion: "reduce",
+});
 const page = await context.newPage();
 page.setDefaultTimeout(180000);
 const errors = [];
+const fromCity = !!process.env.PINE_STORAGE_STATE;
+await context.route("**/api/agent/**", (route) => route.abort());
 const requests = [];
 page.on("request", (r) => requests.push(r.url()));
 page.on("pageerror", (err) => {
@@ -30,6 +37,11 @@ const press = async (name) => {
   else await b.click();
 };
 const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("99sure.hidden.v1")));
+const readCity = () =>
+  page.evaluate(() => ({
+    city: localStorage.getItem("99sure.city.campaign.v1"),
+    bakery: localStorage.getItem("99sure.city.bakery.v1"),
+  }));
 const log = (s) => console.log(new Date().toISOString(), s);
 async function touchStick() {
   const box = await page.getByLabel("Movement joystick").boundingBox();
@@ -56,7 +68,9 @@ async function expectChristopher() {
       mesh?.isSkinnedMesh &&
       mesh.skeleton.bones.length === 32 &&
       ["chrisw_body", "chrisw_head", "chrisw_acc", "chrisw_lens"].every((name) =>
-        mesh.material.some((m) => m.name === name && m.map?.name === name && m.map.image?.width > 0),
+        mesh.material.some(
+          (m) => m.name === name && m.map?.name === name && m.map.image?.width > 0,
+        ),
       )
     );
   });
@@ -88,41 +102,58 @@ try {
     );
   });
   log(phone ? "Opening phone landing" : "Opening desktop landing");
-  await page.goto(url);
-  await page
-    .getByText(/Beat the AI/i)
-    .first()
-    .waitFor();
-  await page.waitForFunction(() => window.__pineGapGame && window.__pineGapCapture);
-  assert.equal(await btn("Unlisted carrier").count(), 0);
-  await survey();
-  if (!phone) {
-    await page.getByRole("button", { name: /^Assets/ }).click();
-    const registry = page.getByRole("region", { name: "Asset index" });
-    await registry.getByRole("button").nth(1).click();
-    await page.getByRole("region", { name: /^Selected asset:/ }).waitFor();
-    await press("Close inspector");
-    await page.keyboard.press("KeyI");
-    await page.keyboard.press("Digit4");
-    await page.waitForFunction(() => window.__pineGapCapture.status().mode === "overhead");
+  await page.goto(fromCity ? new URL("/?briefing=san-fierro", url).href : url);
+  const cityBefore = fromCity ? await readCity() : null;
+  if (fromCity) {
+    const relay = page.getByRole("region", { name: "Pine Gap briefing" });
+    await relay.getByText("Private fee", { exact: true }).waitFor();
+    await relay
+      .getByText(phone ? "Refused" : "Accepted", { exact: true })
+      .last()
+      .waitFor();
+    const file = await saved();
+    assert(!file || !file.found, "the city dossier grants zero field progress");
+    await press("Go and look");
+  } else {
+    await page
+      .getByText(/Beat the AI/i)
+      .first()
+      .waitFor();
+    await page.waitForFunction(() => window.__pineGapGame && window.__pineGapCapture);
+    assert.equal(await btn("Unlisted carrier").count(), 0);
     await survey();
-    log("Asset registry, inspector and plan view passed");
-  }
-  await btn("Unlisted carrier").waitFor();
-  assert(
-    !requests.some((u) =>
-      /\/game\/hidden\/(HiddenCase|expeditions|FieldEquipment|CalibrationRover)|HiddenCaseHUD/.test(
-        u,
+    if (!phone) {
+      await page.getByRole("button", { name: /^Assets/ }).click();
+      const registry = page.getByRole("region", { name: "Asset index" });
+      await registry.getByRole("button").nth(1).click();
+      await page.getByRole("region", { name: /^Selected asset:/ }).waitFor();
+      await press("Close inspector");
+      await page.keyboard.press("KeyI");
+      await page.keyboard.press("Digit4");
+      await page.waitForFunction(() => window.__pineGapCapture.status().mode === "overhead");
+      await survey();
+      log("Asset registry, inspector and plan view passed");
+    }
+    await btn("Unlisted carrier").waitFor();
+    assert(
+      !requests.some((u) =>
+        /\/game\/hidden\/(HiddenCase|expeditions|FieldEquipment|CalibrationRover)|HiddenCaseHUD/.test(
+          u,
+        ),
       ),
-    ),
-  );
-  await press("Unlisted carrier");
-  await press("Open the transmission");
-  await page.getByText("How certain are you?", { exact: true }).waitFor();
-  await press("Go and look");
+    );
+    await press("Unlisted carrier");
+    await press("Open the transmission");
+    await page.getByText("How certain are you?", { exact: true }).waitFor();
+    await press("Go and look");
+  }
   await page.getByRole("heading", { name: "99.9% SURE", exact: true }).waitFor();
   await page.getByRole("region", { name: "Case objectives" }).waitFor();
-  log("Natural discovery, lazy loading and third-person activation passed");
+  log(
+    fromCity
+      ? "City dossier and third-person field activation passed"
+      : "Natural discovery, lazy loading and third-person activation passed",
+  );
   const pos = () => page.evaluate(() => window.__pineGapGame.player.position.toArray());
   const before = await pos();
   if (phone) {
@@ -195,7 +226,7 @@ try {
   await press("Hand in the verdict");
   await press("Open the next transmission");
   await press("Back to the field");
-  if (!phone) {
+  if (!phone || fromCity) {
     const assignments = [
       [
         [-124, 43, "Cut power to the lamp", 54],
@@ -226,11 +257,28 @@ try {
         await at(x, z);
         await use();
         if (dial) {
-          const slider = page.getByRole("slider");
-          await slider.focus();
-          await slider.press("Home");
-          const low = Number(await slider.getAttribute("min"));
-          for (let k = low; k < dial; k++) await slider.press("ArrowRight");
+          const slider = page.locator("#field-dial");
+          if (phone) {
+            await slider.scrollIntoViewIfNeeded();
+            const box = await slider.boundingBox();
+            const [low, high] = await Promise.all(
+              ["min", "max"].map((attr) => slider.getAttribute(attr).then(Number)),
+            );
+            // Chromium's standard slider has a 16px thumb.
+            await page.touchscreen.tap(
+              box.x + 8 + ((box.width - 16) * (dial - low)) / (high - low),
+              box.y + box.height / 2,
+            );
+            assert(
+              Math.abs(Number(await slider.inputValue()) - dial) <= 2,
+              "touch dial reached the signal peak",
+            );
+          } else {
+            await slider.focus();
+            await slider.press("Home");
+            const low = Number(await slider.getAttribute("min"));
+            for (let k = low; k < dial; k++) await slider.press("ArrowRight");
+          }
         }
         await press(label);
         await press("Back to the field");
@@ -255,14 +303,33 @@ try {
     ),
   );
   const file = await saved();
+  if (fromCity) {
+    assert.equal(file.expeditions.length, 4);
+    assert(file.expeditions.every((run) => run.verdict !== null));
+  }
   await page.reload();
   await page.waitForFunction(() => window.__pineGapCapture && window.__pineGapGame);
-  await survey();
-  await press("Unlisted carrier");
-  await press("Return to the case");
+  if (fromCity) await press("Go and look");
+  else {
+    await survey();
+    await press("Unlisted carrier");
+    await press("Return to the case");
+  }
   await page.getByRole("region", { name: "Case objectives" }).waitFor();
   await expectChristopher();
   assert.deepEqual((await saved()).expeditions, file.expeditions);
+  if (fromCity) {
+    await page.getByText("All five cases filed.", { exact: true }).waitFor();
+    await page.getByRole("status").getByText(/notebooks|fourth crew/i).waitFor();
+    assert.deepEqual(await readCity(), cityBefore);
+    if (process.env.PINE_SCREENSHOT)
+      await page.screenshot({
+        path: process.env.PINE_SCREENSHOT,
+        type: "jpeg",
+        quality: 90,
+        animations: "disabled",
+      });
+  }
   assert.equal(errors.length, 0, errors.join("\n"));
   log("Survey return and reload/resume passed");
 } catch (err) {

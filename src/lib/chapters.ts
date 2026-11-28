@@ -8,3 +8,7 @@ export const CHAPTER_HREF: Record<Chapter, string> = {
 
 /** Explicit entry to the field transmission from a filed city report. */
 export const DAILY_BREAD_BRIEFING_HREF = "/?briefing=daily-bread";
+
+export const DAILY_BREAD_HREF = "/?chapter=san-fierro&mission=bakery";
+export const CITY_CAMPAIGN_HREF = "/?chapter=san-fierro&story=full";
+export const CITY_BRIEFING_HREF = "/?briefing=san-fierro";

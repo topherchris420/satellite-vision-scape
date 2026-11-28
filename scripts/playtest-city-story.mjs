@@ -260,8 +260,10 @@ async function play(profile) {
         field: localStorage.getItem("99sure.hidden.v1"),
       }));
     const before = await saves();
+    if (output && process.env.CITY_BREAD_STATE === "1")
+      await context.storageState({ path: join(output, profile + "-bread-state.json") });
     assert.equal(before.field, null);
-    const link = page.getByRole("link", { name: "Continue to Pine Gap briefing" });
+    const link = page.getByRole("button", { name: "Continue to Pine Gap briefing" });
     if (touch) await link.tap();
     else await link.click();
     const relay = page.getByRole("region", { name: "Pine Gap briefing", exact: true });

@@ -43,8 +43,10 @@ import { GameplayState } from "@/game/core/GameState";
 import type { FreeRoamSnapshot } from "@/game/freeroam/FreeRoamHud";
 import { beginFreeRoam, checkController, type FrLaunch, type LaunchResult } from "@/lib/freeroam-ui";
 import { warmScene, type WarmupOptions, type WarmupProgress } from "@/lib/shader-warmup";
+import { CityDossierBriefing } from "@/components/game/CityDossierBriefing";
+import { readCityDossier, usesCityStorage } from "@/game/campaign/cityRecord";
 import { DailyBreadBriefing } from "@/components/game/DailyBreadBriefing";
-import { BAKERY_KEY, readDailyBreadReport, type FiledBakery } from "@/game/campaign/bakery";
+import { readDailyBreadReport, type FiledBakery } from "@/game/campaign/bakery";
 import { SignalAnomaly } from "@/components/game/hidden/SignalAnomaly";
 import type { HiddenCase } from "@/game/hidden/HiddenCase";
 import { browserStorage } from "@/game/afterhours/progress";
@@ -311,12 +313,17 @@ function SelectionRing({ sel }: { sel: Selection }) {
   );
 }
 
-export function SiteScene({ dailyBreadEntry = false }: { dailyBreadEntry?: boolean }) {
+export function SiteScene({ fieldEntry = null }: { fieldEntry?: string | null }) {
   const [dailyBreadReport, setDailyBreadReport] = useState<FiledBakery | null>(null);
+  const [cityDossier, setCityDossier] = useState<ReturnType<typeof readCityDossier>>(null);
   useEffect(() => {
-    const read = () => setDailyBreadReport(readDailyBreadReport((key) => window.localStorage.getItem(key)));
+    const load = (key: string) => window.localStorage.getItem(key);
+    const read = () => {
+      setDailyBreadReport(readDailyBreadReport(load));
+      setCityDossier(readCityDossier(load));
+    };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === BAKERY_KEY || event.key === null) read();
+      if (usesCityStorage(event.key)) read();
     };
     read();
     window.addEventListener("storage", onStorage);
@@ -511,7 +518,7 @@ export function SiteScene({ dailyBreadEntry = false }: { dailyBreadEntry?: boole
     setInspected((seen) => (seen.has(selected.name) ? seen : new Set(seen).add(selected.name)));
   }, [selected]);
   const [signalError, setSignalError] = useState(false);
-  const acceptCase = useCallback((fromDailyBread = false) => {
+  const acceptCase = useCallback((source?: "daily-bread" | "san-fierro") => {
     if (!game) return;
     setSignalError(false);
     // Audio and pointer lock may only start inside the click that asked.
@@ -534,7 +541,7 @@ export function SiteScene({ dailyBreadEntry = false }: { dailyBreadEntry?: boole
       c.onPointer = (free) => {
         if (free) sessionRef.current.releasePointer();
       };
-      c.start(fromDailyBread);
+      c.start(source);
     }).catch(() => {
       if (gameRef.current === game && modeRef.current === "play") {
         sessionRef.current.releasePointer();
@@ -762,9 +769,12 @@ export function SiteScene({ dailyBreadEntry = false }: { dailyBreadEntry?: boole
           vehicleMarkersRef={vehicleMarkersRef}
           caseActive={caseActive}
           hasDailyBread={dailyBreadReport !== null}
-          dailyBreadBriefing={dailyBreadEntry && dailyBreadReport
-            ? <DailyBreadBriefing report={dailyBreadReport} onAccept={() => acceptCase(true)} />
-            : undefined}
+          hasCityDossier={cityDossier !== null}
+          dailyBreadBriefing={fieldEntry === "san-fierro" && cityDossier
+            ? <CityDossierBriefing dossier={cityDossier} onAccept={() => acceptCase("san-fierro")} />
+            : fieldEntry === "daily-bread" && dailyBreadReport
+              ? <DailyBreadBriefing report={dailyBreadReport} onAccept={() => acceptCase("daily-bread")} />
+              : undefined}
         />
       )}
 
