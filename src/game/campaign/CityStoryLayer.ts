@@ -202,7 +202,7 @@ export class CityStoryLayer implements GameLayer {
     return true;
   }
 
-  async confirmTravel() {
+  async confirmTravel(requireWrite = true) {
     const confirm = () =>
       confirmTravelCheckpoint(
         this.storage,
@@ -211,6 +211,7 @@ export class CityStoryLayer implements GameLayer {
         parseBakery,
         bakeryStep,
         (record) => JSON.stringify({ version: 1, ...record }),
+        requireWrite,
       );
     try {
       this.storageOK =

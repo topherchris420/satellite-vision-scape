@@ -31,6 +31,14 @@ describe("cross-page city campaign checkpoint", () => {
     expect(verify(storage({ revision: 2, decision: "before handoff" }, "ignore"))).toBe(false);
   });
 
+  test("an optional exit can verify an existing exact save without writing", () => {
+    const exit = (disk: ReturnType<typeof storage>) =>
+      confirmTravelCheckpoint(disk, "city", latest, parse, (r) => r.revision, encode, false);
+    expect(exit(storage(latest, "throw"))).toBe(true);
+    expect(exit(storage({ revision: 2, decision: "old" }, "throw"))).toBe(false);
+    expect(exit(storage({ revision: 3, decision: "different" }, "throw"))).toBe(false);
+  });
+
   test("a retry saves the exact retained checkpoint once storage works", () => {
     const disk = storage({ revision: 2, decision: "before handoff" });
     expect(verify(disk)).toBe(true);

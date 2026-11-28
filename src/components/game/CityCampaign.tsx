@@ -1,3 +1,4 @@
+import { SafeCityExit } from "./SafeCityExit";
 import { CityPlay } from "./CityPlay";
 import { DrivePad } from "./CityMissionHUD";
 import { CityRadar } from "./CityInstruments";
@@ -213,9 +214,11 @@ function CampaignHUD({
               >
                 {m.game.audio?.isMuted ? "Unmute audio" : "Mute audio"}
               </button>
-              <a className="city-back" href={CHAPTER_HREF["san-fierro"]}>
-                Return to chapter menu
-              </a>
+              <SafeCityExit
+                href={CHAPTER_HREF["san-fierro"]}
+                label="Return to chapter menu"
+                save={() => m.confirmTravel(false)}
+              />
             </>
           ) : m.failure ? (
             <>

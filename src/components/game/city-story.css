@@ -445,3 +445,14 @@
     max-width: 31vw;
   }
 }
+
+.city-exit-choice {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--amber);
+  background: rgba(255, 255, 255, 0.055);
+}
+.city-exit-choice .city-choices button {
+  min-height: 44px;
+  text-transform: none;
+}

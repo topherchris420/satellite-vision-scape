@@ -1,3 +1,4 @@
+import { SafeCityExit } from "./SafeCityExit";
 import { useRef } from "react";
 import { bakeryScore, CLAIMS } from "@/game/campaign/bakery";
 import type { CityStoryLayer } from "@/game/campaign/CityStoryLayer";
@@ -298,9 +299,11 @@ export function CityMissionHUD({
             )
           )}
           {(paused || phase === "filed") && (
-            <a className="city-back" href={CHAPTER_HREF["san-fierro"]}>
-              Return to the city case
-            </a>
+            <SafeCityExit
+              href={CHAPTER_HREF["san-fierro"]}
+              label="Return to the city case"
+              save={() => m.confirmTravel(false)}
+            />
           )}
         </section>
       )}
