@@ -74,6 +74,24 @@ describe("San Fierro standalone campaign", () => {
     }
     expect(parseCityRecord('{"version":3,"episode":5}')).toEqual(emptyCityRecord());
   });
+  test("the classroom needs an intentional exposure with the class in frame", () => {
+    const c = setup(stage(0, "Frame the instructor from the rail"));
+    try {
+      expect(c.m.photoAimed).toBe(false);
+      const subject = c.m.subject!;
+      const player = c.game.player.position;
+      c.game.camera.yaw = Math.atan2(subject.x - player.x, subject.z - player.z);
+      expect(c.m.photoAimed).toBe(true);
+      for (let frame = 0; frame < 180; frame++) c.m.fixedStep(1 / 60);
+      expect(c.m.task?.title).toBe("Frame the instructor from the rail");
+      expect(c.m.progress).toBe(2.5);
+      c.game.input.keyDown("KeyE");
+      c.game.frame(1 / 60, { simulate: true, camera: null, establishing: false });
+      expect(c.m.task?.title).toBe("The courtyard class");
+    } finally {
+      c.dispose();
+    }
+  });
   test("Daily Bread imports both choices once and leaves the older city, Pine Gap and After Hours files alone", () => {
     const initial = stage(0, "Daily Bread");
     const files = new Map([

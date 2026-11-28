@@ -119,6 +119,31 @@ async function photoOrWalk(t) {
     await hold(null);
   }
   if ((await position()).step !== t.step) return;
+  if (t.kind === "photo" && t.episode === 0) {
+    const turn = await page.evaluate(() => {
+      const { game, mission } = window.__cityCampaign;
+      const p = game.player.position,
+        subject = mission.subject;
+      return game.camera.yaw - Math.atan2(subject.x - p.x, subject.z - p.z);
+    });
+    const { width, height } = page.viewportSize();
+    const x = Math.round(width * 0.38),
+      y = Math.round(height * 0.48);
+    const finish = x + turn / (touch ? 0.0055 : 0.0022);
+    if (touch) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchMove",
+        touchPoints: [{ x: finish, y }],
+      });
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+    } else {
+      await page.mouse.move(x, y);
+      await page.mouse.down();
+      await page.mouse.move(finish, y, { steps: 6 });
+      await page.mouse.up();
+    }
+  }
   await use(t.kind === "photo" ? "Record the framed observation" : t.title);
 }
 async function pilot(current, goal, speedLimit) {

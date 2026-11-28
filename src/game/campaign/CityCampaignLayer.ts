@@ -149,7 +149,8 @@ export class CityCampaignLayer implements GameLayer {
     const dx = point.x - x,
       dz = point.z - z;
     const heading = this.game.camera.yaw;
-    return Math.sin(heading) * dx + Math.cos(heading) * dz >= 0.84 * Math.hypot(dx, dz);
+    const minimum = this.courtyard ? 0.98 : 0.84;
+    return Math.sin(heading) * dx + Math.cos(heading) * dz >= minimum * Math.hypot(dx, dz);
   }
   get subject(): Point | null {
     const task = this.task;
@@ -609,13 +610,13 @@ export class CityCampaignLayer implements GameLayer {
     if (task.kind === "photo") {
       const framed =
         !this.driving && this.gap < 4.2 && this.photoAimed && this.game.player.speed < 0.65;
-      this.progress = framed ? this.progress + dt : 0;
+      this.progress = framed ? Math.min(2.5, this.progress + dt) : 0;
       if (framed && this.record.episode === 1 && !this.heardPulse) {
         this.heardPulse = true;
         this.game.audio?.radioCall(7);
       }
       if (!framed) this.heardPulse = false;
-      if (this.progress >= 2.5) this.logEvidence(task.evidence);
+      if (!this.courtyard && this.progress >= 2.5) this.logEvidence(task.evidence);
     }
     if (task.kind === "reading") {
       this.progress =

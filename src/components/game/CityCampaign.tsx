@@ -96,7 +96,9 @@ function CampaignHUD({
                 />
                 <small className="block">
                   {m.photoAimed
-                    ? "Aligned. Hold steady or use at the marker."
+                    ? m.courtyard
+                      ? "Class in frame. Record the observation when you’re ready."
+                      : "Aligned. Hold steady or use at the marker."
                     : m.courtyard
                       ? "At the marker, turn toward the practice mats on the sidewalk."
                       : "At the marker, drag to face the subject to the north."}
