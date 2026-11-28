@@ -1,8 +1,14 @@
 # 99.9% SURE — Campaign bridge
 
-Status: first browser-to-browser prototype implemented on the feature branch; cross-runtime CLEO save import remains proposed.
+## Browser handoff
 
-The browser chapter at `/?chapter=san-fierro` uses original procedural geometry and a three-observation case. It stores evidence and the verdict in a separate versioned local-storage key, `99sure.browser.campaign.v1`. The Pine Gap landing reads that record and displays it as narrative context, without changing After Hours progress. This is not the full San Fierro storyline, nor does the verdict yet change Pine Gap objectives.
+1. Open **Daily Bread** from the San Fierro city case. Follow the delivery and file both findings at the lab.
+2. Select **Continue to Pine Gap briefing** from the filed report. With a report saved on this browser and site, the Pine Gap landing also offers **Open Daily Bread field briefing**.
+3. Ines reads both judgments as filed and relates them to the new signal investigation. **Go and look** starts or resumes the Pine Gap case using its own progress.
+
+The briefing reads the version 1 Daily Bread record under `99sure.city.bakery.v1`. An incomplete, malformed or unknown-version record leads to the ordinary Pine Gap landing. Opening the relay is read-only. Entering the field case records discovery as usual and resumes any existing field progress. The city findings carry no field evidence, case completion or After Hours reward. Players can explore Pine Gap independently and discover the original signal through the survey.
+
+The earlier three-observation San Fierro case remains available and uses its own `99sure.browser.campaign.v1` record.
 
 ## Narrative continuity
 
@@ -10,9 +16,9 @@ Chapter I (San Fierro) introduces CERTAIN, competing explanations, R.A.I.N. and 
 
 All events and research tasks in the campaign are fictional. The exterior reference does not represent current operations, access or real-world investigative procedures.
 
-## Runtime boundary
+## Proposed CLEO save import
 
-San Fierro uses CLEO 5 and a separately installed PC game; Pine Gap uses the browser-based Satellite Vision Scape engine. Do not attempt to transfer engine snapshots, positions, credentials or game assets between them.
+The native San Fierro campaign uses CLEO 5 and a separately installed PC game; Pine Gap uses the browser-based Satellite Vision Scape engine. Do not attempt to transfer engine snapshots, positions, credentials or game assets between them.
 
 Proposed portable, player-controlled JSON handoff (version 1):
 
@@ -28,7 +34,7 @@ Proposed portable, player-controlled JSON handoff (version 1):
 
 Conclusion IDs and allowed verdicts must be mapped against the existing CLEO save semantics before implementation. An imported dossier is player-supplied narrative context, never independently verified scientific evidence. Reject malformed or unsupported versions; never execute imported content. Do not overwrite existing browser progress or game saves. No network account should be required.
 
-## Delivery sequence
+### Native delivery sequence
 
 1. Present the shared game title and a chapter entry point, retaining the existing browser experiences.
 2. Export a versioned dossier from the local San Fierro save at a safe checkpoint; use the existing slot-specific progression, without changing game saves.
@@ -36,7 +42,7 @@ Conclusion IDs and allowed verdicts must be mapped against the existing CLEO sav
 4. Add a R.A.I.N. briefing and adapt the existing signal investigation to react to imported conclusions; retain an independent starting option.
 5. Export a Pine Gap conclusion dossier for optional return to the lab, with an explicit import confirmation.
 
-## Acceptance
+### Native acceptance
 
 - Existing San Fierro mission endings, browser modes and saved progress still work.
 - Valid handoffs preserve supported decisions; malformed, incomplete and unknown-version files fail safely.

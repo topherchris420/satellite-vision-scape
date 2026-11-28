@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { ChevronDown, Compass, Flag, Footprints, MoonStar } from "lucide-react";
 import { createRaceTarget } from "@/game/freeroam/RaceTracker";
 import { readBest } from "@/lib/freeroam-ui";
+import { DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
 import { formatRaceTime, parseRaceLink } from "@/lib/freeroam/race";
 
 /**
@@ -37,6 +38,7 @@ function Option({
 export function Landing({
   isMobile,
   returning,
+  hasDailyBread = false,
   onRace,
   onWalk,
   onSurvey,
@@ -45,6 +47,7 @@ export function Landing({
 }: {
   isMobile: boolean;
   returning: boolean;
+  hasDailyBread?: boolean;
   onRace: () => void;
   onWalk: () => void;
   onSurvey: () => void;
@@ -68,6 +71,12 @@ export function Landing({
         Jev is an AI agent that plays this game with the same avatar, vehicles and rules you have. Take a vehicle,
         reach the checkpoint and shake the site&apos;s response, on the same seed, with its recorded run beside you.
       </p>
+
+      {hasDailyBread && (
+        <a href={DAILY_BREAD_BRIEFING_HREF} className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-teal-200/35 bg-teal-950/75 px-4 text-xs font-bold text-teal-100 hover:bg-teal-900">
+          Open Daily Bread field briefing
+        </a>
+      )}
 
       <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-4">
         <button

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useSyncExternalStore, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore, type ReactNode, type RefObject } from "react";
 import {
   CarFront,
   Footprints,
@@ -219,6 +219,8 @@ export function GameHUD({
   markerRef,
   vehicleMarkersRef,
   caseActive = false,
+  hasDailyBread = false,
+  dailyBreadBriefing,
 }: {
   game: Game;
   status: PlayStatus;
@@ -246,6 +248,8 @@ export function GameHUD({
   vehicleMarkersRef: RefObject<SVGGElement | null>;
   /** Another layer (the hidden case) draws its own briefing and pause cards. */
   caseActive?: boolean;
+  hasDailyBread?: boolean;
+  dailyBreadBriefing?: ReactNode;
 }) {
   const hud = useSyncExternalStore(game.hud.subscribe, game.hud.getSnapshot, game.hud.getSnapshot);
   const after = useAfterHours(game);
@@ -448,11 +452,13 @@ export function GameHUD({
         </>
       )}
 
-      {status === "briefing" && !caseActive && (
+      {status === "briefing" && !caseActive && dailyBreadBriefing && <Card>{dailyBreadBriefing}</Card>}
+      {status === "briefing" && !caseActive && !dailyBreadBriefing && (
         <Card>
           <Landing
             isMobile={isMobile}
             returning={returning}
+            hasDailyBread={hasDailyBread}
             onRace={onStartRace}
             onWalk={onStart}
             onSurvey={onExplore}

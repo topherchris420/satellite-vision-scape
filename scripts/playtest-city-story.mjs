@@ -44,6 +44,7 @@ async function play(profile) {
         path: join(output, profile + "-" + name + ".jpg"),
         type: "jpeg",
         quality: 85,
+        animations: "disabled",
       });
   };
   const act = async (name) => {
@@ -97,9 +98,13 @@ async function play(profile) {
       await restored
         .locator('.city-overlay[data-phase="' + checkpoint + '"][data-figure="ready"]')
         .waitFor({ timeout: 90000 });
+      await restored.bringToFront();
+      const resume = restored.getByRole("button", { name: "Continue mission", exact: true });
+      if (await resume.isVisible()) await resume.click();
+      await restored.locator(".city-objective").waitFor();
       assert.equal(running, false, "fresh document awaits a gameplay gesture");
       await restored.keyboard.press("w");
-      for (let i = 0; i < 50 && !running; i++) await restored.waitForTimeout(100);
+      for (let i = 0; i < 150 && !running; i++) await restored.waitForTimeout(100);
       assert(running, "a keyboard gesture starts game audio after loading " + checkpoint);
     } finally {
       await resumed.close();
@@ -247,8 +252,76 @@ async function play(profile) {
     await page.getByLabel("Field funds: $400").waitFor();
     await page.getByText("20 / 20 evidence points").waitFor();
     await shot("filed");
+    const saves = () =>
+      page.evaluate(() => ({
+        city: localStorage.getItem("99sure.city.bakery.v1"),
+        legacy: localStorage.getItem("99sure.browser.campaign.v1"),
+        afterHours: localStorage.getItem("pine-gap.after-hours"),
+        field: localStorage.getItem("99sure.hidden.v1"),
+      }));
+    const before = await saves();
+    assert.equal(before.field, null);
+    const link = page.getByRole("link", { name: "Continue to Pine Gap briefing" });
+    if (touch) await link.tap();
+    else await link.click();
+    const relay = page.getByRole("region", { name: "Pine Gap briefing", exact: true });
+    await relay.waitFor({ timeout: 180000 });
+    for (const [claim, verdict] of [
+      ["The van is carrying dangerous cargo.", "Rejected"],
+      ["The delivery reached Harbor Table.", "Accepted"],
+    ])
+      await relay
+        .locator("dl > div")
+        .filter({ hasText: claim })
+        .getByText(verdict, { exact: true })
+        .waitFor();
+    assert.deepEqual(await saves(), before, "opening the relay is read-only");
+    await relay.getByText("Fiction", { exact: true }).waitFor();
+    await shot("pine-gap-briefing");
+    await act("Go and look");
+    await page
+      .getByRole("heading", { name: "99.9% SURE", exact: true })
+      .waitFor({ timeout: 90000 });
+    await page.getByRole("region", { name: "Case objectives" }).waitFor({ timeout: 90000 });
+    await page.getByText(/We have your Daily Bread findings/).waitFor({ timeout: 90000 });
+    const after = await saves();
+    const field = JSON.parse(after.field);
+    assert.equal(field.found, true);
+    assert.equal(field.stage, "investigating");
+    assert.equal(field.attempts, 0);
+    assert.deepEqual(field.collected, []);
+    assert.deepEqual(field.expeditions, []);
+    assert.deepEqual({ ...after, field: null }, before);
+    await shot("pine-gap-field");
+
+    // Give the real saved case a prior observation and filing history, then resume via the landing.
+    const existingCase = { ...field, collected: ["witness"], weighed: ["witness"], attempts: 2 };
+    await page.evaluate(
+      (value) => localStorage.setItem("99sure.hidden.v1", JSON.stringify(value)),
+      existingCase,
+    );
+    const beforeResume = await saves();
+    await page.goto(new URL("/", base).href, { waitUntil: "domcontentloaded" });
+    const reopen = page.getByRole("link", { name: "Open Daily Bread field briefing" });
+    if (touch) await reopen.tap({ timeout: 120000 });
+    else await reopen.click({ timeout: 120000 });
+    await relay.waitFor({ timeout: 120000 });
+    assert.deepEqual(
+      await saves(),
+      beforeResume,
+      "reopening the relay leaves the existing save intact",
+    );
+    await act("Go and look");
+    await page.getByRole("region", { name: "Case objectives" }).waitFor({ timeout: 90000 });
+    await page.getByText(/The board kept everything you brought in/).waitFor({ timeout: 90000 });
+    const afterResume = await saves();
+    assert.deepEqual(JSON.parse(afterResume.field), existingCase);
+    assert.deepEqual({ ...afterResume, field: beforeResume.field }, beforeResume);
     assert.deepEqual(errors, []);
-    console.log(profile, "passed · both findings persisted · 20/20");
+    console.log(
+      profile,
+      "passed: 20/20 filed, both verdicts carried into Pine Gap, no field evidence or completions awarded, existing case resumed",
+    );
   } catch (e) {
     await shot("failure");
     console.error(
