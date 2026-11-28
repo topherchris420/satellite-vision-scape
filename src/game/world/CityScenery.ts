@@ -118,6 +118,14 @@ export function cityScenery() {
       labels.push(sign);
     }
   }
+  // Vers3Dynamics' exterior bench and canopy sit beside the original lab frontage.
+  box(-12.4, 2.65, 0, 2.3, 0.18, 7.2, "#244b45");
+  for (const z of [-3.1, 3.1]) box(-11.5, 1.35, z, 0.17, 2.7, 0.17, "#464a3d");
+  box(-12.6, 0.86, 0, 1.5, 0.14, 2.9, "#797b64");
+  for (const z of [-1.1, 1.1]) box(-12.6, 0.45, z, 1.16, 0.84, 0.16, "#3b4237");
+  box(-12.6, 1.09, -0.8, 0.64, 0.32, 0.72, "#232b25");
+  box(-12.28, 1.15, -0.8, 0.015, 0.12, 0.44, "#91d4a5");
+  box(-12.5, 0.97, 0.66, 0.88, 0.04, 0.88, "#b29a6b");
   const { halfWidth, minZ, maxZ } = CITY_BOUNDS;
   box(0, -0.14, (minZ + maxZ) / 2, 2 * halfWidth, 0.28, maxZ - minZ, "#57515a");
   for (let z = minZ + 10; z < maxZ; z += 10) {

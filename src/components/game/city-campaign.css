@@ -1,0 +1,149 @@
+.city-campaign .city-campaign-panel {
+  width: min(610px, calc(100% - 28px));
+  max-height: min(84dvh, 760px);
+  border: 1px solid #84b6a5;
+  border-top: 3px solid #e5b565;
+  background: #142321fa;
+}
+.city-campaign .city-objective {
+  width: min(360px, 56vw);
+}
+.city-campaign .city-field-note {
+  margin-top: 8px;
+  color: #dbd5bd;
+  font-size: 12px;
+  font-weight: 400;
+}
+.city-campaign .city-choices button {
+  min-height: 44px;
+}
+.city-campaign .city-choices button[aria-pressed="true"] {
+  background: #a3d4bb;
+}
+.city-campaign .city-choices button:disabled {
+  opacity: 0.5;
+}
+.city-hq-content {
+  margin: 16px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #b9d4c542;
+}
+.city-hq-content :is(h3, legend) {
+  margin: 9px 0;
+  color: #ecce8e;
+  font-weight: 700;
+}
+.city-hq-content ol {
+  display: grid;
+  gap: 4px;
+  margin: 12px 0;
+}
+.city-hq-content li,
+.hq-case {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 1px solid #b9d4c529;
+  padding: 7px 0;
+}
+.hq-case {
+  width: 100%;
+  min-height: 46px;
+  text-align: left;
+}
+.hq-case:disabled {
+  opacity: 0.56;
+}
+.city-hq-content small {
+  color: #afd1c1;
+}
+.hq-card {
+  display: flex;
+  gap: 9px;
+  min-height: 40px;
+  align-items: center;
+  margin: 4px 0;
+}
+.hq-card small {
+  display: block;
+  margin-top: 3px;
+}
+.hq-card input[type="number"] {
+  background: #071813;
+  border: 1px solid #92afa6;
+  padding: 5px 8px;
+  width: 6rem;
+}
+.city-campaign input {
+  accent-color: #a3d4bb;
+}
+.hq-dial {
+  width: 100%;
+}
+.hq-scores {
+  display: grid;
+  gap: 3px;
+  margin: 8px 0;
+}
+.hq-scores meter {
+  max-width: 34%;
+  accent-color: #dcad60;
+}
+.hq-plate {
+  display: block;
+  width: min(192px, 75%);
+  aspect-ratio: 1;
+  margin: 10px auto;
+  border: 1px solid #557b70;
+}
+.city-evidence {
+  padding-left: 19px;
+  list-style: disc;
+  color: #c9e0d4;
+}
+.city-evidence li {
+  margin: 4px 0;
+}
+.city-triage {
+  position: absolute;
+  top: max(var(--edge), env(safe-area-inset-top));
+  right: var(--edge);
+  display: grid;
+  gap: 4px;
+}
+.city-triage button {
+  background: #152925ef;
+  border: 1px solid #9cb7a6;
+  border-radius: 3px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3px 7px;
+  text-align: left;
+  padding: 6px 9px;
+  min-width: 110px;
+  min-height: 44px;
+}
+.city-triage button[aria-pressed="true"] {
+  border-color: #e1b86b;
+}
+.city-triage small {
+  grid-column: 1 / -1;
+  font-size: 10px;
+}
+.city-triage b {
+  color: #ffca77;
+}
+@media (max-width: 500px) {
+  .city-campaign .city-objective {
+    width: 53vw;
+  }
+  .city-campaign .city-objective h1 {
+    font-size: 17px;
+  }
+  .city-triage button {
+    min-width: 94px;
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+}

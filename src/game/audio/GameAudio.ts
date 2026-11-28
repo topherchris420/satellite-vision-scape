@@ -342,11 +342,13 @@ export class GameAudio {
     this.burst("bandpass", f * 0.8, q, Math.min(0.25, 0.06 + speed * 0.03), 0.14);
   }
 
-  /** Two short field-radio tones through the ordinary mute and volume controls. */
-  radioCall(): void {
+  /** A short field-radio pattern through the ordinary mute and volume controls. */
+  radioCall(pulses = 2): void {
     const ctx = this.ctx;
     if (!ctx || !this.sfx) return;
-    for (const [delay, frequency] of [[0, 740], [0.09, 980]]) {
+    for (let i = 0; i < pulses; i++) {
+      const delay = i * 0.09;
+      const frequency = i % 2 === 0 ? 740 : 980;
       const t = ctx.currentTime + delay;
       const tone = ctx.createOscillator();
       const gain = ctx.createGain();

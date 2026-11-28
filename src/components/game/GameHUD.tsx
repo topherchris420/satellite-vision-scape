@@ -220,6 +220,7 @@ export function GameHUD({
   vehicleMarkersRef,
   caseActive = false,
   hasDailyBread = false,
+  hasCityDossier = false,
   dailyBreadBriefing,
 }: {
   game: Game;
@@ -249,6 +250,7 @@ export function GameHUD({
   /** Another layer (the hidden case) draws its own briefing and pause cards. */
   caseActive?: boolean;
   hasDailyBread?: boolean;
+  hasCityDossier?: boolean;
   dailyBreadBriefing?: ReactNode;
 }) {
   const hud = useSyncExternalStore(game.hud.subscribe, game.hud.getSnapshot, game.hud.getSnapshot);
@@ -459,6 +461,7 @@ export function GameHUD({
             isMobile={isMobile}
             returning={returning}
             hasDailyBread={hasDailyBread}
+            hasCityDossier={hasCityDossier}
             onRace={onStartRace}
             onWalk={onStart}
             onSurvey={onExplore}

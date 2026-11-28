@@ -4,7 +4,7 @@ import type { CityStoryLayer } from "@/game/campaign/CityStoryLayer";
 import { StreetMap, CityInstruments } from "./CityInstruments";
 import { GameplayState } from "@/game/core/GameState";
 import { mobileInput } from "@/lib/mobile-input";
-import { CHAPTER_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
+import { CHAPTER_HREF, CITY_CAMPAIGN_HREF, DAILY_BREAD_BRIEFING_HREF } from "@/lib/chapters";
 
 const objectives = {
   meet: "Meet Ines outside the field lab.",
@@ -19,7 +19,7 @@ const objectives = {
   failed: "Observation interrupted.",
 };
 
-function DrivePad({ driving }: { driving: boolean }) {
+export function DrivePad({ driving }: { driving: boolean }) {
   const held = useRef(new Map<number, string>());
   function axes() {
     const values = [...held.current.values()];
@@ -276,6 +276,7 @@ export function CityMissionHUD({
                 </strong>
                 <p>Case filed · $50 field allowance received.</p>
                 <div className="city-links">
+                  <a href={CITY_CAMPAIGN_HREF}>Return to San Fierro story</a>
                   {m.storageOK ? (
                     <a href={DAILY_BREAD_BRIEFING_HREF}>Continue to Pine Gap briefing ↗</a>
                   ) : (
