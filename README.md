@@ -63,6 +63,25 @@ Choose **Daily Bread** from the city case to play Christopher's waterfront assig
 
 **Controls:** `W A S D` or arrow keys to walk and drive, `E` to collect evidence, enter or leave the car and talk to Ines at HQ. On a phone, hold the on-screen arrows and tap the action button.
 
+### Daily Bread · browser gameplay
+
+[**Play Daily Bread**](https://geotwn.vercel.app/?chapter=san-fierro&mission=bakery) · [Watch the recorded desktop playthrough](docs/media/daily-bread-desktop.webm)
+
+| Follow the delivery | Stop at Harbor Table |
+| --- | --- |
+| ![Driving the research wagon behind the gold Dawn Bread van, with the distance and tracking progress on the HUD](docs/media/screens/daily-bread-driving.jpg) | ![Christopher stands beside the delivery driver and the parked research wagon at Harbor Table](docs/media/screens/daily-bread-harbor-table.jpg) |
+
+*Captured in the running browser game, not in GTA: San Andreas. The Harbor Table frame is from 1:28 in the linked playthrough.*
+
+<details>
+<summary>See the Pine Gap handoff (mission spoilers)</summary>
+
+<p align="center"><img src="docs/media/screens/daily-bread-pine-gap-briefing.jpg" alt="Pine Gap briefing on mobile, showing the two Daily Bread findings and the Go and look button" width="320" /></p>
+
+The briefing carries your filed judgments into Chapter II. This capture shows the browser's mobile layout.
+
+</details>
+
 ### The full CLEO storyline
 
 **An original Vers3Dynamics game storyline set in San Fierro.** Investigate CERTAIN, a predictive-policing AI, alongside Christopher Woodyard and R.A.I.N. across five missions and an interactive research lab. It runs on CLEO 5 inside a separately installed copy of Grand Theft Auto: San Andreas (PC), so it is not playable in the browser.
@@ -72,7 +91,7 @@ Choose **Daily Bread** from the city case to play Christopher's waterfront assig
 Sign in to GitHub, open the latest successful run on `main`, and download **99sure-vers3dynamics** under **Artifacts**. This is a mod-only playtest for classic GTA: San Andreas PC v1.0 US with CLEO 5, not a standalone game or a Definitive Edition mod. In the current PC story you play CJ. [Try Chris as the player in an opt-in free-roam test](gta-sa-99-9-percent-sure/docs/PLAYABLE_CHRIS.md) before testing any story-role changes.
 
 <details>
-<summary>Development previews from the CLEO script test harness</summary>
+<summary>Development previews (not GTA gameplay screenshots)</summary>
 
 | R.A.I.N. evidence board | Field validation |
 | --- | --- |
